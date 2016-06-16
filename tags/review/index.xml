@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Review on rastamouse.me</title>
+    <link>http://rastamouse.me/tags/review/</link>
+    <description>Recent content in Review on rastamouse.me</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 30 May 2015 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/tags/review/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>SANS SEC542 Course Review</title>
+      <link>http://rastamouse.me/guff/2015/sans-sec542-course-review/</link>
+      <pubDate>Sat, 30 May 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/guff/2015/sans-sec542-course-review/</guid>
+      <description>
+
+&lt;p&gt;As some may be aware, in January 2015 I started the SANS &amp;lsquo;&lt;a href=&#34;http://www.sans.org/selfstudy/course/web-app-penetration-testing-ethical-hacking&#34;&gt;SEC542: Web App Penetration Testing and Ethical Hacking&lt;/a&gt;&amp;rsquo; SelfStudy course.  I passed the GWAPT (GIAC Web Application Penetration Tester) certification at the end of May; so I figured I would write up a review of the course and summerise my experience.&lt;/p&gt;
+
+&lt;h2 id=&#34;course-syllabus:47501a26d997bbf1752d1f0ff59bfc19&#34;&gt;Course Syllabus&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The Attacker&amp;rsquo;s View of the Web&lt;/li&gt;
+&lt;li&gt;Reconnaissance and Mapping&lt;/li&gt;
+&lt;li&gt;Server-Side Discovery&lt;/li&gt;
+&lt;li&gt;Client-Side Discovery&lt;/li&gt;
+&lt;li&gt;Exploitation&lt;/li&gt;
+&lt;li&gt;Capture the Flag&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;SEC542 was designed to be delivered in the traditional classroom style, over the period of 6 days.  Each syllabus area is covered in roughly 1 day.&lt;/p&gt;
+
+&lt;h2 id=&#34;course-material:47501a26d997bbf1752d1f0ff59bfc19&#34;&gt;Course Material&lt;/h2&gt;
+
+&lt;p&gt;The course material is covered with a number of different mediums.  The SelfStudy student receives:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Audio Recordings (Online)&lt;/li&gt;
+&lt;li&gt;Books&lt;/li&gt;
+&lt;li&gt;Data DVD (containing 2 VM&amp;rsquo;s)&lt;/li&gt;
+&lt;li&gt;VPN Certificates&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The audio recordings are taken from a live delivery of SEC542 and the &amp;lsquo;books&amp;rsquo; are bound print-outs of the instructors Powerpoint Presentation.  The idea is that you listen to the instructor and follow along with the slides.  Each page is dedicated to a slide, with space to make your own notes etc.  The online recordings can only be accessed for a period of 4 months from your start date; but you could actually download them for offline use (there is no built-in functionality in the portal to do this, but we&amp;rsquo;re hackers, right&amp;hellip;?).&lt;/p&gt;
+
+&lt;p&gt;The DVD contains 2 virtual machines, but unfortunately they are only in VMware format and not something more universal.  SANS stipulate that you require VMWare Player 3.x, VMWare Workstation 7.x or newer or VMWare Fusion.  But I was using VirtualBox on a personal Mac, for which I have not bought Fusion.  Therefore, I had to convert the VMs using a trial version of Fusion.&lt;/p&gt;
+
+&lt;p&gt;The first VM is a customised version of &lt;a href=&#34;http://www.samurai-wtf.org&#34;&gt;SamuraiWTF&lt;/a&gt; (that stands for Web Testing Framework people!), the second is an Ubuntu VM with lots of additional vulnerable applications installed on top.  So these are your &amp;lsquo;attacker&amp;rsquo; and &amp;lsquo;victim&amp;rsquo; VMs, which are used for all of the exercises throughout the course.&lt;/p&gt;
+
+&lt;p&gt;This seems like a good time to mention that even though SANS advertise to have a virtual lab as part of this course, it is only used for the CTF at the end.&lt;/p&gt;
+
+&lt;p&gt;This whole setup works ok for the most part, as you could transfer everything to a laptop and do bits of the course &amp;lsquo;offline&amp;rsquo;, which some people may find convenient.  However, I did experience a few niggly issues.  There appears to be a few instances where the slides/audio vary from the exercise on the VM, as if the material has been updated but the VM hasn&amp;rsquo;t.  For me, this led to a few situations where some of the exercises weren&amp;rsquo;t working as expected; and because you can&amp;rsquo;t &amp;lsquo;see&amp;rsquo; what the instructor is doing it obviously makes it hard for you to confirm what you are doing is correct.&lt;/p&gt;
+
+&lt;h2 id=&#34;topics:47501a26d997bbf1752d1f0ff59bfc19&#34;&gt;Topics&lt;/h2&gt;
+
+&lt;p&gt;The syllabus areas above are rather broad statements, so which topics are actually covered?  Well, a lot&amp;hellip; To list the major ones:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Spidering&lt;/li&gt;
+&lt;li&gt;Information leakage&lt;/li&gt;
+&lt;li&gt;Username harvesting&lt;/li&gt;
+&lt;li&gt;Command injection&lt;/li&gt;
+&lt;li&gt;SQL injection (inc. Blind)&lt;/li&gt;
+&lt;li&gt;Cross-Site Scripting (XSS)&lt;/li&gt;
+&lt;li&gt;Cross-Site Request Forgery (CSRF)&lt;/li&gt;
+&lt;li&gt;Session issues&lt;/li&gt;
+&lt;li&gt;Fuzzing&lt;/li&gt;
+&lt;li&gt;Client-Side Vulnerabilities (inc. Flash, Java, AJAX)&lt;/li&gt;
+&lt;li&gt;Coverage of Tools (inc. BEEF, ZAP, BurpSuite)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This is a &lt;em&gt;lot&lt;/em&gt; of information to digest, so you may not be surprised to hear that SEC542 is not designed to cover any of these areas in any serious depth.  It is certainly more of an entry level course.&lt;/p&gt;
+
+&lt;h2 id=&#34;capture-the-flag:47501a26d997bbf1752d1f0ff59bfc19&#34;&gt;Capture the Flag&lt;/h2&gt;
+
+&lt;p&gt;You can connect to the lab via VPN at any time during your 4 months of access, where you can practice all of the techniques covered in the course.  It&amp;rsquo;s more of a consolidatory exercise in my eyes, rather than a necessity of the course.  How much benefit you gain from it is going to be personal to you.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-exam:47501a26d997bbf1752d1f0ff59bfc19&#34;&gt;The Exam&lt;/h2&gt;
+
+&lt;p&gt;The GIAC Certification attempt is an optional extra when purchasing SEC542, so you can take the course and not attempt the certification if you wish.  The exam for the GIAC Silver Certification is a multiple choice test, where you must travel to a proctored test centre to complete.&lt;/p&gt;
+
+&lt;p&gt;What I did like, is that you get 2 free practice exams in your SANS portal, which you can take from home/work/wherever.  You can customise it to tell you when you get a question wrong, and it gives you a pretty good explanation as to why and what the correct answer was.  You can also make it tell you why you got a question correct (which is useful if you just happened to guess a question right).&lt;/p&gt;
+
+&lt;p&gt;At the end of the practice test it gives you a 5-star rating for the different topic areas, so you can identify your strongest areas and those where you may need to put more revision into.&lt;/p&gt;
+
+&lt;p&gt;Both the practice and actual exams give you a checkpoint of your progress at set intervals (I think it&amp;rsquo;s every 15 questions), so you can see if you are above or below the pass mark (which is 70%).&lt;/p&gt;
+
+&lt;p&gt;Oh yeah, and it&amp;rsquo;s open-book&amp;hellip;  You can take in all of the course slides, or any other paper resource (that could even include something like the Web Application Hackers Handbook).  You have a maximum time of 2 hours to complete the 75 questions, but since the course slides for example have no content or index pages there is a potential for you to waste a lot of time looking for things if you rely on them too much.&lt;/p&gt;
+
+&lt;p&gt;This actually makes the exam sound really easy, but there is a level of comprehension required as the information from the course can&amp;rsquo;t just be lifted and applied to the exam questions.&lt;/p&gt;
+
+&lt;h2 id=&#34;giac-gold:47501a26d997bbf1752d1f0ff59bfc19&#34;&gt;GIAC Gold&lt;/h2&gt;
+
+&lt;p&gt;Passing the exam gives you a &amp;lsquo;silver&amp;rsquo; certification, but if you fork over another ~$600 to SANS you can attempt the &amp;lsquo;gold&amp;rsquo; certification.  This involves writing a paper/technical report with guidance from a SANS Advisor which will then be published in their &lt;a href=&#34;http://www.sans.org/reading-room&#34;&gt;Reading Room&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Offensive Security: The Playground (Beta) Review</title>
+      <link>http://rastamouse.me/guff/2014/offensive-security-the-playground-beta-review/</link>
+      <pubDate>Sat, 06 Dec 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/guff/2014/offensive-security-the-playground-beta-review/</guid>
+      <description>&lt;p&gt;Offensive Security are launching a new Virtual Penetration Testing Lab, dubbed &lt;a href=&#34;http://www.offensive-security.com/offensive-security-solutions/virtual-penetration-testing-labs&#34;&gt;The Playground&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;For those who have already taken an Offensive Security course (e.g. PWK), you will already be familiar with the types of machines in the lab - mainly various flavours of Linux and Windows.  The Playground is even more versatile and also includes Citrix, Windows AD Domains, SCADA, IPS and anti-virus.&lt;/p&gt;
+
+&lt;p&gt;I was incredibly lucky and was offered the chance to join the private beta program for testing the Playground; which involved attacking as many of the machines as possible and providing appropriate feedback to Offensive Security.  The intricate details of the lab will obviously remain private, but we were permitted to publish this final review of our experience.&lt;/p&gt;
+
+&lt;p&gt;So without further ado&amp;hellip;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Many of the queries posed by aspiring students are based around whether or not they are &amp;lsquo;ready&amp;rsquo;, or &amp;lsquo;experienced enough&amp;rsquo; to take PWK.  An important distinction to make is that the Playground is &lt;em&gt;not&lt;/em&gt; a structured course, but a &amp;lsquo;product&amp;rsquo; which can be effectively rented by organisations - super useful for staff training for example.&lt;/p&gt;
+
+&lt;p&gt;The difficulty of the lab machines range from very easy to really very tough.  I say this based on my current level of experience:  a relatively inexperienced pentester - I started out as a hobbiest, and got a job pentesting full-time about a year ago.  I then passed PWK in April 2014.&lt;/p&gt;
+
+&lt;p&gt;I was only able to spend ~1.5 week in the lab, out of the allocated slot of ~3 weeks, and in that time I was able to fully compromise 17 boxes across 2 subnets (and one router).&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;So how does the difficulty of this lab compares to PWK?  In short, there are some machines in the Playground which I&amp;rsquo;d say are just as easy, if not easier, than those in the PWK lab.  But these don&amp;rsquo;t last long and the difficulty ramps up quite quickly.&lt;/p&gt;
+
+&lt;p&gt;Some significant experience will be required to penetrate into the deeper subnets.&lt;/p&gt;
+
+&lt;p&gt;I didn&amp;rsquo;t see any content from the PWK labs copied across to the Playground - this is all new content!  So if you have already completed PWK, don&amp;rsquo;t be concerned about repeated yourself.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Offensive Security recommend the use of their &lt;a href=&#34;https://www.offensive-security.com/kali-linux-vmware-arm-image-download/&#34;&gt;pre-built Kali VM images&lt;/a&gt;, but in truth a &lt;a href=&#34;https://www.kali.org/downloads/&#34;&gt;default Kali build&lt;/a&gt; from ISO is just as good.&lt;/p&gt;
+
+&lt;p&gt;Access to the Playground is by way of VPN - once registered you receive a &amp;lsquo;Connectivity Pack&amp;rsquo;, containing VPN certs, username and password.  Connecting creates a new tap interface on your host, which is assigned an IP in the Playground DMZ.&lt;/p&gt;
+
+&lt;p&gt;From there, you can port scan and attack the first subnet of the Playground.  Exploiting boxes in the DMZ reveals hosts which are &amp;lsquo;dual-honed&amp;rsquo;, allowing you to pivot into other networks.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;I want to mention the new Dashboard, as there are several improvements over the one currently found in PWK.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/guff/playground/dashboard.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;At it&amp;rsquo;s most basic level, the Dashboard lists all of the available machines in the lab.  Participants can reboot or revert them at will (although restricted to a particular number per 24 hour period).  There is also an &amp;lsquo;admin&amp;rsquo; level dashboard where statistics can be tracked, batch reverting carried out and other functions.&lt;/p&gt;
+
+&lt;p&gt;Each machine holds a text file, containing a short MD5 hash which can only be obtained when root/administrator privileges have been obtained.  This hash can be submitted against the relevant machine in the Dashboard, which then marks it as &amp;lsquo;owned&amp;rsquo; and increments your score.  For the beta test each box was given a score of 1 point, but when live they will have scores representative of their difficulty.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Without being able to talk about the machines in the lab, the technical review stops here.  I really enjoyed my experience with the parts of the lab I was able to interact with - the Offensive Security Team have done a really good job in creating a vibrant lab.&lt;/p&gt;
+
+&lt;p&gt;There is so much variety in what is exploitable (old software, weak creds, password re-use, custom applications, you name it).  There are also levels of interaction between boxes, which simulate real-life scenarios and open up different avenues for attack (e.g. using one rooted box to leverage an attack against another).&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Hand-on-heart, there was honestly not a single thing I out-right didn&amp;rsquo;t like about this lab.  Sure there were &amp;lsquo;issues&amp;rsquo; with some of the builds, but these will be fixed based on feedback from the beta program.  In terms of the overall design and implementation, I simply can&amp;rsquo;t fault it.&lt;/p&gt;
+
+&lt;p&gt;One slight annoyance is the issue of reverting.  Giving everybody the ability to revert machines has both advantages and disadvantages - reverting a machine resets it back to its default configuration, meaning any changes made to it by the participants are removed. Obviously this reduces the overhead of having an administrator do it all the time.&lt;/p&gt;
+
+&lt;p&gt;Also, it means that once a machine has been compromised, it can be reverted so the next participant can start from fresh. But since the lab is a shared environment multiple attackers can be working on it at the same time. Some like to revert a box before they start working on it to ensure it’s in a default state; but if somebody else is currently connected to it, they immediately lose their access and must re-exploit. This can be super-frustrating if you are trying to work on a privilege escalation; or using that box as a pivot into another subnet.&lt;/p&gt;
+
+&lt;p&gt;I don’t see a reasonable technical solution to this, it’s more logistical and will very much depend on the organisation and how they want to manage it. Organisations won&amp;rsquo;t share lab access with another organisations, they get their own instance, so the issue can be managed internally.  As a minimum, I would recommend a courtesy IM/IRC/email message to your fellow hackers before reverting.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Now, to finish off this waffle, I would like to extend my sincere gratitude to &lt;a href=&#34;https://twitter.com/kalilinux&#34;&gt;muts&lt;/a&gt; and &lt;a href=&#34;https://twitter.com/g0tmi1k&#34;&gt;g0tmi1k&lt;/a&gt; for inviting me to join the beta program; and to &lt;a href=&#34;https://twitter.com/loneferret&#34;&gt;loneferret&lt;/a&gt;, who also put a lot of work in the lab to make our lives a misery!&lt;/p&gt;
+
+&lt;p&gt;Kudos to Offensive Security, you should all be very proud of what you have achieved - now you just need get AWAE online!! :D&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

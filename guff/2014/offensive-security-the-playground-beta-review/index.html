@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Offensive Security: The Playground (Beta) Review - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2014-12-06">December 06, 2014</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/guff">guff</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/review">review</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">Offensive Security: The Playground (Beta) Review</h1>
+  <section class="body" itemprop="articleBody">
+    <p>Offensive Security are launching a new Virtual Penetration Testing Lab, dubbed <a href="http://www.offensive-security.com/offensive-security-solutions/virtual-penetration-testing-labs">The Playground</a>.</p>
+
+<p>For those who have already taken an Offensive Security course (e.g. PWK), you will already be familiar with the types of machines in the lab - mainly various flavours of Linux and Windows.  The Playground is even more versatile and also includes Citrix, Windows AD Domains, SCADA, IPS and anti-virus.</p>
+
+<p>I was incredibly lucky and was offered the chance to join the private beta program for testing the Playground; which involved attacking as many of the machines as possible and providing appropriate feedback to Offensive Security.  The intricate details of the lab will obviously remain private, but we were permitted to publish this final review of our experience.</p>
+
+<p>So without further ado&hellip;</p>
+
+<hr />
+
+<p>Many of the queries posed by aspiring students are based around whether or not they are &lsquo;ready&rsquo;, or &lsquo;experienced enough&rsquo; to take PWK.  An important distinction to make is that the Playground is <em>not</em> a structured course, but a &lsquo;product&rsquo; which can be effectively rented by organisations - super useful for staff training for example.</p>
+
+<p>The difficulty of the lab machines range from very easy to really very tough.  I say this based on my current level of experience:  a relatively inexperienced pentester - I started out as a hobbiest, and got a job pentesting full-time about a year ago.  I then passed PWK in April 2014.</p>
+
+<p>I was only able to spend ~1.5 week in the lab, out of the allocated slot of ~3 weeks, and in that time I was able to fully compromise 17 boxes across 2 subnets (and one router).</p>
+
+<hr />
+
+<p>So how does the difficulty of this lab compares to PWK?  In short, there are some machines in the Playground which I&rsquo;d say are just as easy, if not easier, than those in the PWK lab.  But these don&rsquo;t last long and the difficulty ramps up quite quickly.</p>
+
+<p>Some significant experience will be required to penetrate into the deeper subnets.</p>
+
+<p>I didn&rsquo;t see any content from the PWK labs copied across to the Playground - this is all new content!  So if you have already completed PWK, don&rsquo;t be concerned about repeated yourself.</p>
+
+<hr />
+
+<p>Offensive Security recommend the use of their <a href="https://www.offensive-security.com/kali-linux-vmware-arm-image-download/">pre-built Kali VM images</a>, but in truth a <a href="https://www.kali.org/downloads/">default Kali build</a> from ISO is just as good.</p>
+
+<p>Access to the Playground is by way of VPN - once registered you receive a &lsquo;Connectivity Pack&rsquo;, containing VPN certs, username and password.  Connecting creates a new tap interface on your host, which is assigned an IP in the Playground DMZ.</p>
+
+<p>From there, you can port scan and attack the first subnet of the Playground.  Exploiting boxes in the DMZ reveals hosts which are &lsquo;dual-honed&rsquo;, allowing you to pivot into other networks.</p>
+
+<hr />
+
+<p>I want to mention the new Dashboard, as there are several improvements over the one currently found in PWK.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/guff/playground/dashboard.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>At it&rsquo;s most basic level, the Dashboard lists all of the available machines in the lab.  Participants can reboot or revert them at will (although restricted to a particular number per 24 hour period).  There is also an &lsquo;admin&rsquo; level dashboard where statistics can be tracked, batch reverting carried out and other functions.</p>
+
+<p>Each machine holds a text file, containing a short MD5 hash which can only be obtained when root/administrator privileges have been obtained.  This hash can be submitted against the relevant machine in the Dashboard, which then marks it as &lsquo;owned&rsquo; and increments your score.  For the beta test each box was given a score of 1 point, but when live they will have scores representative of their difficulty.</p>
+
+<hr />
+
+<p>Without being able to talk about the machines in the lab, the technical review stops here.  I really enjoyed my experience with the parts of the lab I was able to interact with - the Offensive Security Team have done a really good job in creating a vibrant lab.</p>
+
+<p>There is so much variety in what is exploitable (old software, weak creds, password re-use, custom applications, you name it).  There are also levels of interaction between boxes, which simulate real-life scenarios and open up different avenues for attack (e.g. using one rooted box to leverage an attack against another).</p>
+
+<hr />
+
+<p>Hand-on-heart, there was honestly not a single thing I out-right didn&rsquo;t like about this lab.  Sure there were &lsquo;issues&rsquo; with some of the builds, but these will be fixed based on feedback from the beta program.  In terms of the overall design and implementation, I simply can&rsquo;t fault it.</p>
+
+<p>One slight annoyance is the issue of reverting.  Giving everybody the ability to revert machines has both advantages and disadvantages - reverting a machine resets it back to its default configuration, meaning any changes made to it by the participants are removed. Obviously this reduces the overhead of having an administrator do it all the time.</p>
+
+<p>Also, it means that once a machine has been compromised, it can be reverted so the next participant can start from fresh. But since the lab is a shared environment multiple attackers can be working on it at the same time. Some like to revert a box before they start working on it to ensure it’s in a default state; but if somebody else is currently connected to it, they immediately lose their access and must re-exploit. This can be super-frustrating if you are trying to work on a privilege escalation; or using that box as a pivot into another subnet.</p>
+
+<p>I don’t see a reasonable technical solution to this, it’s more logistical and will very much depend on the organisation and how they want to manage it. Organisations won&rsquo;t share lab access with another organisations, they get their own instance, so the issue can be managed internally.  As a minimum, I would recommend a courtesy IM/IRC/email message to your fellow hackers before reverting.</p>
+
+<hr />
+
+<p>Now, to finish off this waffle, I would like to extend my sincere gratitude to <a href="https://twitter.com/kalilinux">muts</a> and <a href="https://twitter.com/g0tmi1k">g0tmi1k</a> for inviting me to join the beta program; and to <a href="https://twitter.com/loneferret">loneferret</a>, who also put a lot of work in the lab to make our lives a misery!</p>
+
+<p>Kudos to Offensive Security, you should all be very proud of what you have achieved - now you just need get AWAE online!! :D</p>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2014  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

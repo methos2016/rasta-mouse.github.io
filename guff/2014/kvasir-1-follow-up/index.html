@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Kvasir: I Follow Up - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2014-11-16">November 16, 2014</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/guff">guff</a>
+
+    </span>
+
+
+  </div>
+  <h1 class="headline" itemprop="headline">Kvasir: I Follow Up</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>It&rsquo;s been about a month since Kvasir I was made available on <a href="https://www.vulnhub.com/entry/kvasir-i,106/">VulnHub</a>, so I thought I would write a follow-up post about it.  In some ways, it was a vulnerable VM which went in a different direction to the ones we are used to.  It was also the first VM I have produced, so I wanted to jot down a few notes about what I thought worked well and what didn&rsquo;t.</p>
+
+<p>These are my views, from being its &lsquo;author&rsquo; and from the feedback I&rsquo;ve had from those who have attempted the challenge.  If you disagree or have anything to add, please add a comment below.</p>
+
+<blockquote>
+<p>This post may contain spoilers.</p>
+</blockquote>
+
+<h2 id="the-good:f600fcc42cc6b1e6b27bbee9bc837ba2">The Good</h2>
+
+<p>I&rsquo;ll start with what I feel were the positives.</p>
+
+<ol>
+<li><p>After an external entry point, most VMs will have a form of privilege escalation.  This may involve hopping from a service account (such as apache) to a low priv user, to a higher priv user (e.g. with sudo rights) and finally to root.</p>
+
+<p>Longer VMs tend to require one to hop between multiple users, usually via SUID permissions.  <a href="https://www.vulnhub.com/entry/hell-1,95/">Hell</a> is a good example of this methodology.</p>
+
+<p>I wanted to do something different for Kvasir, so I introduced the use of <a href="https://linuxcontainers.org">LXC</a>, which allows one to simulate multiple running kernels within the same VM.  I combined this with some creative networking to simulate a LAN, with multiple boxes to exploit.</p>
+
+<p>I felt this was a nicely refreshing &lsquo;feature&rsquo; and allowed the player to solve new problems, such as pivoting.</p></li>
+
+<li><p>The variety.  Having a mix of multiple LANs/NICs and boxes, allowed me to fit a large variety of different vulnerabilities into the challenge.  I was able to include more network-based vulns to breach each box, and different local vulns on each of those.</p>
+
+<p>This was a double-edged sword however, as the sheer number of vulns made it very difficult to come up with exciting and unique challenges.  I therefore had to draw upon challenges that have made appearances in other places, but add slightl twists to them.</p>
+
+<p>Overall, I felt the variety was good for the player but they could have been more unique.</p></li>
+
+<li><p>The story.  One of the things I had tried to achieve with Kvasir, was to simulate something that could look like a real-life network.  To this end, I created a &lsquo;public-facing&rsquo; element and as the player steps through the network they find &lsquo;development&rsquo; boxes and finally an &lsquo;admin&rsquo; box.</p>
+
+<p>There was also evidence of users interacting with services and users on the other boxes, which I hope added to this feeling for the player.</p></li>
+</ol>
+
+<h2 id="the-bad-not-so-good:f600fcc42cc6b1e6b27bbee9bc837ba2">The <del>Bad</del> Not-so-Good</h2>
+
+<ol>
+<li><p>The length!  This VM was probably right on the edge of what people&rsquo;s patience and sanity could withstand.  Roughly counting, around 9 exploits are needed before the final flag can be reached - and it&rsquo;s not like all of them were short.</p>
+
+<p>After completing the VM, I hope the players felt a good sense of satisfaction and I am doubly-grateful for those who then went on to publish a write-up.</p>
+
+<p>I&rsquo;ve not had anybody say so, but I&rsquo;m sure there have been people who have completed the VM but not done a write-up because of the time it would take - which is absolutely fair enough.  We&rsquo;re not all made of time and a lot us have families etc.</p></li>
+
+<li><p>There are 5 containers in total, but only 2 of them are designed to be rootable.  Rooting a VM gives the player a feeling of acomplishment, but the information I wanted to give to the player (so they could proceed) was given to them as standard users on these other (un-rootable) boxes.</p>
+
+<p>I could have extended the challenge so that root had to be obtained before that information was disclosed, but it didn&rsquo;t really fit the &lsquo;story&rsquo;, it would&rsquo;ve increased the length of the VM even more and it would mean I&rsquo;d have to think up even more vulns.</p>
+
+<p>Given the trade-off, I decided it would be better to keep some containers un-rootable (by design anyway).</p></li>
+</ol>
+
+<h2 id="the-ugly:f600fcc42cc6b1e6b27bbee9bc837ba2">The Ugly</h2>
+
+<p>I don&rsquo;t think, and hopefully the players will agree, that there was nothing about this VM which was truly awful.  I&rsquo;ve not had any stronly negative feedback (maybe you&rsquo;re all too nice).</p>
+
+<p>If you feel differently - please say so!</p>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2014  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

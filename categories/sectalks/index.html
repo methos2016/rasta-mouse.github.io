@@ -1,0 +1,916 @@
+
+
+
+    
+        
+    
+
+
+
+
+<!DOCTYPE HTML>
+
+<html>
+    <head>
+        
+            <title>Sectalks Posts - Cheesy Rumbles</title>
+        
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="generator" content="Hugo 0.15" />
+        
+    
+        
+    
+
+    
+
+    <link rel="apple-touch-icon-precomposed"
+        href='/favicon/apple-touch-icon-precomposed.png'>
+    <link rel="icon" href='/favicon/favicon.png'>
+    
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="msapplication-TileImage"
+        content='/favicon/mstile.png'>
+
+
+
+        
+        
+            
+                <meta name="description" content="Infosec by Rasta Mouse">
+            
+        
+
+        
+        <meta property="og:title" content="Sectalks" />
+<meta property="og:description" content="Infosec by Rasta Mouse" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="http://rastamouse.me/categories/sectalks/" />
+
+
+<meta property="og:updated_time" content="2016-04-16T00:00:00&#43;00:00"/>
+
+
+
+
+
+
+
+
+
+        
+<meta itemprop="name" content="Sectalks">
+<meta itemprop="description" content="Infosec by Rasta Mouse">
+
+
+        
+
+        
+        
+
+        
+            
+                
+                    <link rel="stylesheet" href="/css/main.min.css" />
+                
+            
+        
+        
+        
+        
+            
+        
+    </head>
+    <body>
+
+        
+        <div id="wrapper">
+
+    
+<header id="header">
+    
+        <h2><a href="/">Cheesy Rumbles</i></a></h2>
+    
+
+    <nav class="links">
+        <ul>
+            
+                <li>
+                    <a href="/categories/writeup/">
+                        Writeups
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/categories/guff/">
+                        Guff
+                    </a>
+                </li>
+            
+                <li>
+                    <a href="/about/">
+                        About
+                    </a>
+                </li>
+            
+        </ul>
+    </nav>
+    <nav class="main">
+        <ul>
+            
+            <li class="search">
+                <a class="fa-search" href="#search">Search</a>
+                <form id="search" method="get" action="//google.com/search">
+                    <input type="text" name="q" placeholder="Search" />
+                    <input type="hidden" name="q" value="site:http://rastamouse.me/">
+                </form>
+            </li>
+            <li class="menu">
+                <a class="fa-bars" href="#menu">Menu</a>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+
+<section id="menu">
+
+    
+        <section>
+            <form class="search" method="get" action="//google.com/search">
+                <input type="text" name="q" placeholder="Search" />
+                <input type="hidden" name="q" value="site:http://rastamouse.me/">
+            </form>
+        </section>
+
+    
+        <section>
+            <ul class="links">
+                
+                    <li>
+                        <a href="/categories/writeup/">
+                            <h3>
+                                
+                                Writeups
+                            </h3>
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/categories/guff/">
+                            <h3>
+                                
+                                Guff
+                            </h3>
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a href="/about/">
+                            <h3>
+                                
+                                About
+                            </h3>
+                        </a>
+                    </li>
+                
+            </ul>
+        </section>
+
+    
+        <section>
+            <ul class="links">
+                <header>
+                    <h3>Recent Posts</h3>
+                </header>
+                
+                    
+                
+
+                
+                    <li>
+                        <a href="http://rastamouse.me/writeups/2016/simple/"><p>BNE0x03 - Simple</p></a>
+                    </li>
+                
+                    <li>
+                        <a href="http://rastamouse.me/writeups/2016/fuku/"><p>BNE0x02 - Fuku</p></a>
+                    </li>
+                
+                    <li>
+                        <a href="http://rastamouse.me/writeups/2016/minotaur/"><p>BNE0x00 - Minotaur</p></a>
+                    </li>
+                
+                    <li>
+                        <a href="http://rastamouse.me/writeups/2015/sickos-1-1/"><p>SickOs 1.1</p></a>
+                    </li>
+                
+                    <li>
+                        <a href="http://rastamouse.me/writeups/2015/the-wall/"><p>The Wall: 1</p></a>
+                    </li>
+                
+            </ul>
+        </section>
+
+    
+        
+</section>
+
+    
+    <div id="main">
+        <h1>Sectalks</h1>
+        
+        
+            <article class="post">
+    <header>
+    <div class="title">
+        
+            <h2><a href="http://rastamouse.me/writeups/2016/simple/">BNE0x03 - Simple</a></h2>
+        
+        
+    </div>
+    <div class="meta">
+        
+            
+        
+
+        <time class="published"
+            datetime='2016-04-16'>
+            April 16, 2016</time>
+        <span class="author"></span>
+        
+            <p>2 minute read</p>
+        
+        
+    </div>
+</header>
+
+    
+
+    <p><h3 id="simple-ctf:bec3ed8ba720b9073ab75abcf3ba5d97">Simple CTF</h3>
+
+<p>Simple CTF is a boot2root that focuses on the basics of web based hacking.  /root/flag.txt is your ultimate goal.</p>
+
+<h3 id="hints:bec3ed8ba720b9073ab75abcf3ba5d97">Hints</h3>
+
+<ul>
+<li>Get a user shell by uploading a reverse shell and executing it.</li>
+<li>A proxy may help you to upload the file you want, rather than the file that the server expects.</li>
+<li>There are 3 known privesc exploits that work. Some people have had trouble executing one of them unless it was over a reverse shell using a netcat listener.</li>
+</ul>
+</p>
+
+    <footer>
+        <ul class="actions">
+            <li><a href="http://rastamouse.me/writeups/2016/simple/" class="button big">Continue Reading</a></li>
+        </ul>
+        <ul class="stats">
+    
+
+    
+        
+
+                
+                    Categories
+                
+            </li>
+    
+
+    
+        <li><a href="/categories/writeup">writeup</a></li>
+    
+        <li><a href="/categories/sectalks">sectalks</a></li>
+    
+</ul>
+
+    </footer>
+</article>
+
+        
+            <article class="post">
+    <header>
+    <div class="title">
+        
+            <h2><a href="http://rastamouse.me/writeups/2016/fuku/">BNE0x02 - Fuku</a></h2>
+        
+        
+    </div>
+    <div class="meta">
+        
+            
+        
+
+        <time class="published"
+            datetime='2016-04-15'>
+            April 15, 2016</time>
+        <span class="author"></span>
+        
+            <p>4 minute read</p>
+        
+        
+    </div>
+</header>
+
+    
+
+    <p><h3 id="fuku-ctf:4620d038ef80856257f87c289da6c889">Fuku CTF</h3>
+
+<p>Fuku (pronounced &ldquo;far queue&rdquo;) CTF is designed to fuck with people.</p>
+
+<p>There are a few flag.txt files to grab. The final one is in the /root/ directory. However, the ultimate goal is to get a root shell.</p>
+
+<h3 id="scenario:4620d038ef80856257f87c289da6c889">Scenario</h3>
+
+<p>&ldquo;Bull was pissed when you broke into his Minotaur box. He has taken precautions with another website that he is hosting, implementing IDS, whitelisting, and obfuscation techniques. He is now taunting hackers to try and hack him, believing himself to be safe. It is up to you to put him in his place.&rdquo;</p>
+
+<h3 id="hints:4620d038ef80856257f87c289da6c889">Hints</h3>
+
+<p>Some scripting will probably be needed to find a useful port.
+If the machine seems to go down after a while, it probably hasn&rsquo;t. This CTF isn&rsquo;t called Fuku for nothing!</p>
+
+    <footer>
+        <ul class="actions">
+            <li><a href="http://rastamouse.me/writeups/2016/fuku/" class="button big">Continue Reading</a></li>
+        </ul>
+        <ul class="stats">
+    
+
+    
+        
+
+                
+                    Categories
+                
+            </li>
+    
+
+    
+        <li><a href="/categories/writeup">writeup</a></li>
+    
+        <li><a href="/categories/sectalks">sectalks</a></li>
+    
+</ul>
+
+    </footer>
+</article>
+
+        
+            <article class="post">
+    <header>
+    <div class="title">
+        
+            <h2><a href="http://rastamouse.me/writeups/2016/minotaur/">BNE0x00 - Minotaur</a></h2>
+        
+        
+    </div>
+    <div class="meta">
+        
+            
+        
+
+        <time class="published"
+            datetime='2016-04-15'>
+            April 15, 2016</time>
+        <span class="author"></span>
+        
+            <p>5 minute read</p>
+        
+        
+    </div>
+</header>
+
+    
+
+    <p><h3 id="minotaur-ctf:130852a9ee39e601e939903b24e77be6">Minotaur CTF</h3>
+
+<p>Minotaur is a boot2root CTF. There are a few flag.txt files around to grab. /root/flag.txt is your ultimate goal.</p>
+
+<h3 id="hints:130852a9ee39e601e939903b24e77be6">Hints</h3>
+
+<ul>
+<li>This CTF has a couple of fairly heavy password cracking challenges, and some red herrings.</li>
+<li>One password you will need is not on rockyou.txt or any other wordlist you may have out there. So you need to think of a way to generate it yourself.</li>
+</ul>
+</p>
+
+    <footer>
+        <ul class="actions">
+            <li><a href="http://rastamouse.me/writeups/2016/minotaur/" class="button big">Continue Reading</a></li>
+        </ul>
+        <ul class="stats">
+    
+
+    
+        
+
+                
+                    Categories
+                
+            </li>
+    
+
+    
+        <li><a href="/categories/writeup">writeup</a></li>
+    
+        <li><a href="/categories/sectalks">sectalks</a></li>
+    
+</ul>
+
+    </footer>
+</article>
+
+        
+
+        
+<ul class="actions pagination">
+    
+        <li><a href="#" class="disabled button big previous">Previous Page</a></li>
+    
+
+    
+        <li><a href="#" class="disabled button big next">Next Page</a></li>
+    
+</ul>
+
+    </div>
+    
+<section id="sidebar">
+
+    
+        <section id="intro">
+            
+            
+                
+                    <img src="/img/main/logo.png" class="intro-circle" width="" alt="Rasta Mouse" />
+                
+            
+            
+                <header>
+                    <h2>Cheesy Rumbles</h2>
+                    <p>of a Rasta Mouse</p>
+                </header>
+            
+            
+                <ul class="icons">
+                    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<li><a href="//twitter.com/_RastaMouse" target="_blank" title="Twitter" class="fa fa-twitter"></a></li>
+
+
+
+<li><a href="mailto:rasta@rastamouse.me" title="Email" class="fa fa-envelope"></a></li>
+
+
+                </ul>
+            
+        </section>
+
+    
+        <section id="recent-posts">
+            <ul class="posts">
+                <header>
+                    <h3>Recent Posts</h3>
+                </header>
+                
+                    
+                
+
+                
+                    
+                
+
+                
+                    <li>
+                        <article>
+                            <header>
+                                <h3><a href="http://rastamouse.me/writeups/2016/simple/">BNE0x03 - Simple</a></h3>
+                                
+                                    
+                                
+                                <time class="published" datetime=
+                                    '2016-04-16'>
+                                    April 16, 2016</time>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <h3><a href="http://rastamouse.me/writeups/2016/fuku/">BNE0x02 - Fuku</a></h3>
+                                
+                                    
+                                
+                                <time class="published" datetime=
+                                    '2016-04-15'>
+                                    April 15, 2016</time>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <h3><a href="http://rastamouse.me/writeups/2016/minotaur/">BNE0x00 - Minotaur</a></h3>
+                                
+                                    
+                                
+                                <time class="published" datetime=
+                                    '2016-04-15'>
+                                    April 15, 2016</time>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <h3><a href="http://rastamouse.me/writeups/2015/sickos-1-1/">SickOs 1.1</a></h3>
+                                
+                                    
+                                
+                                <time class="published" datetime=
+                                    '2015-12-12'>
+                                    December 12, 2015</time>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <h3><a href="http://rastamouse.me/writeups/2015/the-wall/">The Wall: 1</a></h3>
+                                
+                                    
+                                
+                                <time class="published" datetime=
+                                    '2015-11-27'>
+                                    November 27, 2015</time>
+                            </header>
+                        </article>
+                    </li>
+                
+
+                
+                    <li>
+                        <ul class="actions">
+                            <li><a href=
+                            
+                                "/post/"
+                            
+                            class="button">View more posts</a></li>
+                        </ul>
+                    </li>
+                
+            </ul>
+        </section>
+
+    
+    
+    
+    
+        <section id="categories">
+            <ul class="posts">
+                <header>
+                    <h3><a href="/categories/">Categories</a></h3>
+                </header>
+
+                
+                    
+                
+
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/writeup/">writeup</a>
+                                <span style="float:right;">47</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/brainpan/">brainpan</a>
+                                <span style="float:right;">6</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/guff/">guff</a>
+                                <span style="float:right;">6</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/kioptrix/">kioptrix</a>
+                                <span style="float:right;">5</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/de-ice/">de-ice</a>
+                                <span style="float:right;">4</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/tophatsec/">tophatsec</a>
+                                <span style="float:right;">3</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/sectalks/">sectalks</a>
+                                <span style="float:right;">3</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/scream/">scream</a>
+                                <span style="float:right;">2</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/flick/">flick</a>
+                                <span style="float:right;">2</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/hades/">hades</a>
+                                <span style="float:right;">2</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories//dev/random/">/dev/random</a>
+                                <span style="float:right;">2</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/xerxes/">xerxes</a>
+                                <span style="float:right;">2</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/pandoras-box/">pandora&#39;s box</a>
+                                <span style="float:right;">2</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/hell/">hell</a>
+                                <span style="float:right;">2</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/nullbyte/">nullbyte</a>
+                                <span style="float:right;">1</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/underdist/">underdist</a>
+                                <span style="float:right;">1</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/pegasus/">pegasus</a>
+                                <span style="float:right;">1</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/tr0ll/">tr0ll</a>
+                                <span style="float:right;">1</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/skytower/">skytower</a>
+                                <span style="float:right;">1</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/bot-challenges/">bot challenges</a>
+                                <span style="float:right;">1</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/sickos/">sickos</a>
+                                <span style="float:right;">1</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/rop-primer/">rop primer</a>
+                                <span style="float:right;">1</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/reviews/">reviews</a>
+                                <span style="float:right;">1</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/darknet/">darknet</a>
+                                <span style="float:right;">1</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/review/">review</a>
+                                <span style="float:right;">1</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/persistence/">persistence</a>
+                                <span style="float:right;">1</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/secos/">secos</a>
+                                <span style="float:right;">1</span>
+                            </header>
+                        </article>
+                    </li>
+                
+                    <li>
+                        <article>
+                            <header>
+                                <a href="/categories/the-wall/">the wall</a>
+                                <span style="float:right;">1</span>
+                            </header>
+                        </article>
+                    </li>
+                
+            </ul>
+        </section>
+    
+
+    
+        
+
+    
+        <section id="footer">
+            
+
+            <p class="copyright">&copy; Cheesy Rumbles. Design: <a href="http://html5up.net" target="_blank">HTML5 UP</a>. Ported by <a href="//github.com/jpescador" target="_blank">Julio Pescador</a>. Powered by <a href="//gohugo.io" target="_blank">Hugo</a></p>
+        </section>
+
+</section>
+
+            </div>
+        <a id="back-to-top" href="#" class="fa fa-arrow-up fa-border fa-2x"></a>
+        
+        
+
+        
+            
+                
+                    <script src="/js/main.min.js"></script>
+                
+            
+        
+            
+            <script>hljs.initHighlightingOnLoad();</script>
+            
+    </body>
+</html>
+

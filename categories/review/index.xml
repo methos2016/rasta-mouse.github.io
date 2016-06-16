@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Review on Cheesy Rumbles</title>
+    <link>http://rastamouse.me/categories/review/</link>
+    <description>Recent content in Review on Cheesy Rumbles</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 30 May 2015 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/categories/review/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>SANS SEC542 Course Review</title>
+      <link>http://rastamouse.me/guff/2015/sans-sec542-course-review/</link>
+      <pubDate>Sat, 30 May 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/guff/2015/sans-sec542-course-review/</guid>
+      <description>
+
+&lt;p&gt;As some may be aware, in January 2015 I started the SANS &amp;lsquo;&lt;a href=&#34;http://www.sans.org/selfstudy/course/web-app-penetration-testing-ethical-hacking&#34;&gt;SEC542: Web App Penetration Testing and Ethical Hacking&lt;/a&gt;&amp;rsquo; SelfStudy course.  I passed the GWAPT (GIAC Web Application Penetration Tester) certification at the end of May; so I figured I would write up a review of the course and summerise my experience.&lt;/p&gt;
+
+&lt;h2 id=&#34;course-syllabus:47501a26d997bbf1752d1f0ff59bfc19&#34;&gt;Course Syllabus&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The Attacker&amp;rsquo;s View of the Web&lt;/li&gt;
+&lt;li&gt;Reconnaissance and Mapping&lt;/li&gt;
+&lt;li&gt;Server-Side Discovery&lt;/li&gt;
+&lt;li&gt;Client-Side Discovery&lt;/li&gt;
+&lt;li&gt;Exploitation&lt;/li&gt;
+&lt;li&gt;Capture the Flag&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;SEC542 was designed to be delivered in the traditional classroom style, over the period of 6 days.  Each syllabus area is covered in roughly 1 day.&lt;/p&gt;
+
+&lt;h2 id=&#34;course-material:47501a26d997bbf1752d1f0ff59bfc19&#34;&gt;Course Material&lt;/h2&gt;
+
+&lt;p&gt;The course material is covered with a number of different mediums.  The SelfStudy student receives:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Audio Recordings (Online)&lt;/li&gt;
+&lt;li&gt;Books&lt;/li&gt;
+&lt;li&gt;Data DVD (containing 2 VM&amp;rsquo;s)&lt;/li&gt;
+&lt;li&gt;VPN Certificates&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The audio recordings are taken from a live delivery of SEC542 and the &amp;lsquo;books&amp;rsquo; are bound print-outs of the instructors Powerpoint Presentation.  The idea is that you listen to the instructor and follow along with the slides.  Each page is dedicated to a slide, with space to make your own notes etc.  The online recordings can only be accessed for a period of 4 months from your start date; but you could actually download them for offline use (there is no built-in functionality in the portal to do this, but we&amp;rsquo;re hackers, right&amp;hellip;?).&lt;/p&gt;
+
+&lt;p&gt;The DVD contains 2 virtual machines, but unfortunately they are only in VMware format and not something more universal.  SANS stipulate that you require VMWare Player 3.x, VMWare Workstation 7.x or newer or VMWare Fusion.  But I was using VirtualBox on a personal Mac, for which I have not bought Fusion.  Therefore, I had to convert the VMs using a trial version of Fusion.&lt;/p&gt;
+
+&lt;p&gt;The first VM is a customised version of &lt;a href=&#34;http://www.samurai-wtf.org&#34;&gt;SamuraiWTF&lt;/a&gt; (that stands for Web Testing Framework people!), the second is an Ubuntu VM with lots of additional vulnerable applications installed on top.  So these are your &amp;lsquo;attacker&amp;rsquo; and &amp;lsquo;victim&amp;rsquo; VMs, which are used for all of the exercises throughout the course.&lt;/p&gt;
+
+&lt;p&gt;This seems like a good time to mention that even though SANS advertise to have a virtual lab as part of this course, it is only used for the CTF at the end.&lt;/p&gt;
+
+&lt;p&gt;This whole setup works ok for the most part, as you could transfer everything to a laptop and do bits of the course &amp;lsquo;offline&amp;rsquo;, which some people may find convenient.  However, I did experience a few niggly issues.  There appears to be a few instances where the slides/audio vary from the exercise on the VM, as if the material has been updated but the VM hasn&amp;rsquo;t.  For me, this led to a few situations where some of the exercises weren&amp;rsquo;t working as expected; and because you can&amp;rsquo;t &amp;lsquo;see&amp;rsquo; what the instructor is doing it obviously makes it hard for you to confirm what you are doing is correct.&lt;/p&gt;
+
+&lt;h2 id=&#34;topics:47501a26d997bbf1752d1f0ff59bfc19&#34;&gt;Topics&lt;/h2&gt;
+
+&lt;p&gt;The syllabus areas above are rather broad statements, so which topics are actually covered?  Well, a lot&amp;hellip; To list the major ones:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Spidering&lt;/li&gt;
+&lt;li&gt;Information leakage&lt;/li&gt;
+&lt;li&gt;Username harvesting&lt;/li&gt;
+&lt;li&gt;Command injection&lt;/li&gt;
+&lt;li&gt;SQL injection (inc. Blind)&lt;/li&gt;
+&lt;li&gt;Cross-Site Scripting (XSS)&lt;/li&gt;
+&lt;li&gt;Cross-Site Request Forgery (CSRF)&lt;/li&gt;
+&lt;li&gt;Session issues&lt;/li&gt;
+&lt;li&gt;Fuzzing&lt;/li&gt;
+&lt;li&gt;Client-Side Vulnerabilities (inc. Flash, Java, AJAX)&lt;/li&gt;
+&lt;li&gt;Coverage of Tools (inc. BEEF, ZAP, BurpSuite)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This is a &lt;em&gt;lot&lt;/em&gt; of information to digest, so you may not be surprised to hear that SEC542 is not designed to cover any of these areas in any serious depth.  It is certainly more of an entry level course.&lt;/p&gt;
+
+&lt;h2 id=&#34;capture-the-flag:47501a26d997bbf1752d1f0ff59bfc19&#34;&gt;Capture the Flag&lt;/h2&gt;
+
+&lt;p&gt;You can connect to the lab via VPN at any time during your 4 months of access, where you can practice all of the techniques covered in the course.  It&amp;rsquo;s more of a consolidatory exercise in my eyes, rather than a necessity of the course.  How much benefit you gain from it is going to be personal to you.&lt;/p&gt;
+
+&lt;h2 id=&#34;the-exam:47501a26d997bbf1752d1f0ff59bfc19&#34;&gt;The Exam&lt;/h2&gt;
+
+&lt;p&gt;The GIAC Certification attempt is an optional extra when purchasing SEC542, so you can take the course and not attempt the certification if you wish.  The exam for the GIAC Silver Certification is a multiple choice test, where you must travel to a proctored test centre to complete.&lt;/p&gt;
+
+&lt;p&gt;What I did like, is that you get 2 free practice exams in your SANS portal, which you can take from home/work/wherever.  You can customise it to tell you when you get a question wrong, and it gives you a pretty good explanation as to why and what the correct answer was.  You can also make it tell you why you got a question correct (which is useful if you just happened to guess a question right).&lt;/p&gt;
+
+&lt;p&gt;At the end of the practice test it gives you a 5-star rating for the different topic areas, so you can identify your strongest areas and those where you may need to put more revision into.&lt;/p&gt;
+
+&lt;p&gt;Both the practice and actual exams give you a checkpoint of your progress at set intervals (I think it&amp;rsquo;s every 15 questions), so you can see if you are above or below the pass mark (which is 70%).&lt;/p&gt;
+
+&lt;p&gt;Oh yeah, and it&amp;rsquo;s open-book&amp;hellip;  You can take in all of the course slides, or any other paper resource (that could even include something like the Web Application Hackers Handbook).  You have a maximum time of 2 hours to complete the 75 questions, but since the course slides for example have no content or index pages there is a potential for you to waste a lot of time looking for things if you rely on them too much.&lt;/p&gt;
+
+&lt;p&gt;This actually makes the exam sound really easy, but there is a level of comprehension required as the information from the course can&amp;rsquo;t just be lifted and applied to the exam questions.&lt;/p&gt;
+
+&lt;h2 id=&#34;giac-gold:47501a26d997bbf1752d1f0ff59bfc19&#34;&gt;GIAC Gold&lt;/h2&gt;
+
+&lt;p&gt;Passing the exam gives you a &amp;lsquo;silver&amp;rsquo; certification, but if you fork over another ~$600 to SANS you can attempt the &amp;lsquo;gold&amp;rsquo; certification.  This involves writing a paper/technical report with guidance from a SANS Advisor which will then be published in their &lt;a href=&#34;http://www.sans.org/reading-room&#34;&gt;Reading Room&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

