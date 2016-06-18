@@ -2,19 +2,19 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Guff on rastamouse.me</title>
-    <link>http://rastamouse.me/categories/guff/</link>
+    <link>https://rastamouse.me/categories/guff/</link>
     <description>Recent content in Guff on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Tue, 21 Jul 2015 00:00:00 +0000</lastBuildDate>
-    <atom:link href="http://rastamouse.me/categories/guff/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://rastamouse.me/categories/guff/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
       <title>Paranoid Meterpreter</title>
-      <link>http://rastamouse.me/guff/2015/paranoid-meterpreter/</link>
+      <link>https://rastamouse.me/guff/2015/paranoid-meterpreter/</link>
       <pubDate>Tue, 21 Jul 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/guff/2015/paranoid-meterpreter/</guid>
+      <guid>https://rastamouse.me/guff/2015/paranoid-meterpreter/</guid>
       <description>
 
 &lt;p&gt;There I was, minding my own business… Casually scrolling down my Twitter feed when I noticed a post from &lt;a href=&#34;https://twitter.com/TheColonial&#34;&gt;OJ&lt;/a&gt;, entitled &lt;a href=&#34;https://github.com/rapid7/metasploit-framework/wiki/The-ins-and-outs-of-HTTP-and-HTTPS-communications-in-Meterpreter-and-Metasploit-Stagers&#34;&gt;The ins and outs of HTTP and HTTPS communications in Meterpreter and Metasploit Stagers&lt;/a&gt;. A bit of a mouthful, it summerises the difference between the WinInet and WinHTTP API’s and what that means for Meterpreter.&lt;/p&gt;
@@ -138,10 +138,10 @@ msf exploit(handler) &amp;gt; run
     
     <item>
       <title>SANS SEC542 Course Review</title>
-      <link>http://rastamouse.me/guff/2015/sans-sec542-course-review/</link>
+      <link>https://rastamouse.me/guff/2015/sans-sec542-course-review/</link>
       <pubDate>Sat, 30 May 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/guff/2015/sans-sec542-course-review/</guid>
+      <guid>https://rastamouse.me/guff/2015/sans-sec542-course-review/</guid>
       <description>
 
 &lt;p&gt;As some may be aware, in January 2015 I started the SANS &amp;lsquo;&lt;a href=&#34;http://www.sans.org/selfstudy/course/web-app-penetration-testing-ethical-hacking&#34;&gt;SEC542: Web App Penetration Testing and Ethical Hacking&lt;/a&gt;&amp;rsquo; SelfStudy course.  I passed the GWAPT (GIAC Web Application Penetration Tester) certification at the end of May; so I figured I would write up a review of the course and summerise my experience.&lt;/p&gt;
@@ -226,10 +226,10 @@ msf exploit(handler) &amp;gt; run
     
     <item>
       <title>Sokar: Author&#39;s Narrative</title>
-      <link>http://rastamouse.me/guff/2015/sokar-authors-narrative/</link>
+      <link>https://rastamouse.me/guff/2015/sokar-authors-narrative/</link>
       <pubDate>Sat, 21 Feb 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/guff/2015/sokar-authors-narrative/</guid>
+      <guid>https://rastamouse.me/guff/2015/sokar-authors-narrative/</guid>
       <description>
 
 &lt;p&gt;At the very moment I am typing this, ~4 hours remain on the countdown clock for &lt;a href=&#34;http://blog.vulnhub.com/2015/01/competition-sokar.html&#34;&gt;VulnHub&amp;rsquo;s Sokar Competition&lt;/a&gt;.  We have also received about 17 complete write-ups, which I&amp;rsquo;m really pleased with.&lt;/p&gt;
@@ -428,10 +428,10 @@ git version 2.2.0
     
     <item>
       <title>Offensive Security: The Playground (Beta) Review</title>
-      <link>http://rastamouse.me/guff/2014/offensive-security-the-playground-beta-review/</link>
+      <link>https://rastamouse.me/guff/2014/offensive-security-the-playground-beta-review/</link>
       <pubDate>Sat, 06 Dec 2014 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/guff/2014/offensive-security-the-playground-beta-review/</guid>
+      <guid>https://rastamouse.me/guff/2014/offensive-security-the-playground-beta-review/</guid>
       <description>&lt;p&gt;Offensive Security are launching a new Virtual Penetration Testing Lab, dubbed &lt;a href=&#34;http://www.offensive-security.com/offensive-security-solutions/virtual-penetration-testing-labs&#34;&gt;The Playground&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;For those who have already taken an Offensive Security course (e.g. PWK), you will already be familiar with the types of machines in the lab - mainly various flavours of Linux and Windows.  The Playground is even more versatile and also includes Citrix, Windows AD Domains, SCADA, IPS and anti-virus.&lt;/p&gt;
@@ -471,7 +471,7 @@ git version 2.2.0
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/guff/playground/dashboard.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/guff/playground/dashboard.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -507,10 +507,10 @@ git version 2.2.0
     
     <item>
       <title>Kvasir: I Follow Up</title>
-      <link>http://rastamouse.me/guff/2014/kvasir-1-follow-up/</link>
+      <link>https://rastamouse.me/guff/2014/kvasir-1-follow-up/</link>
       <pubDate>Sun, 16 Nov 2014 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/guff/2014/kvasir-1-follow-up/</guid>
+      <guid>https://rastamouse.me/guff/2014/kvasir-1-follow-up/</guid>
       <description>
 
 &lt;p&gt;It&amp;rsquo;s been about a month since Kvasir I was made available on &lt;a href=&#34;https://www.vulnhub.com/entry/kvasir-i,106/&#34;&gt;VulnHub&lt;/a&gt;, so I thought I would write a follow-up post about it.  In some ways, it was a vulnerable VM which went in a different direction to the ones we are used to.  It was also the first VM I have produced, so I wanted to jot down a few notes about what I thought worked well and what didn&amp;rsquo;t.&lt;/p&gt;
@@ -571,10 +571,10 @@ git version 2.2.0
     
     <item>
       <title>Kvasir: I Released</title>
-      <link>http://rastamouse.me/guff/2014/kvasir-1-released/</link>
+      <link>https://rastamouse.me/guff/2014/kvasir-1-released/</link>
       <pubDate>Fri, 16 May 2014 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/guff/2014/kvasir-1-released/</guid>
+      <guid>https://rastamouse.me/guff/2014/kvasir-1-released/</guid>
       <description>&lt;blockquote&gt;
 &lt;p&gt;After the war between the Aesir and Vanir, all the Gods made a truce by spitting into a bowl. They stirred up the mixture and created a new God of Knowledge. His name was Kvasir and he was made the most amazing diplomat to prevent further disagreements.&lt;/p&gt;
 

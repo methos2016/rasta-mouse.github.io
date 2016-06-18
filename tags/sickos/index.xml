@@ -2,19 +2,19 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Sickos on rastamouse.me</title>
-    <link>http://rastamouse.me/tags/sickos/</link>
+    <link>https://rastamouse.me/tags/sickos/</link>
     <description>Recent content in Sickos on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Sat, 12 Dec 2015 00:00:00 +0000</lastBuildDate>
-    <atom:link href="http://rastamouse.me/tags/sickos/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://rastamouse.me/tags/sickos/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
       <title>SickOs 1.1</title>
-      <link>http://rastamouse.me/writeups/2015/sickos-1-1/</link>
+      <link>https://rastamouse.me/writeups/2015/sickos-1-1/</link>
       <pubDate>Sat, 12 Dec 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2015/sickos-1-1/</guid>
+      <guid>https://rastamouse.me/writeups/2015/sickos-1-1/</guid>
       <description>
 
 &lt;p&gt;This VM was made by some chap called &lt;a href=&#34;https://twitter.com/D4rk36&#34;&gt;D4rk&lt;/a&gt;. His description:  This CTF gives a clear analogy how hacking strategies can be performed on a network to compromise it in a safe environment. This vm is very similar to labs I faced in OSCP. The objective being to compromise the network/machine and gain Administrative/root privileges on them.&lt;/p&gt;
@@ -145,7 +145,7 @@ BLEHHH!!!
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/sickos-1/dirbuster.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/sickos-1/dirbuster.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;

@@ -2,19 +2,19 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Secos on rastamouse.me</title>
-    <link>http://rastamouse.me/tags/secos/</link>
+    <link>https://rastamouse.me/tags/secos/</link>
     <description>Recent content in Secos on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Sun, 25 May 2014 00:00:00 +0000</lastBuildDate>
-    <atom:link href="http://rastamouse.me/tags/secos/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://rastamouse.me/tags/secos/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
       <title>SecOS 1</title>
-      <link>http://rastamouse.me/writeups/2014/secos-1/</link>
+      <link>https://rastamouse.me/writeups/2014/secos-1/</link>
       <pubDate>Sun, 25 May 2014 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2014/secos-1/</guid>
+      <guid>https://rastamouse.me/writeups/2014/secos-1/</guid>
       <description>
 
 &lt;p&gt;SecOS is a series of vulnerable VMs created by &lt;a href=&#34;https://twitter.com/PaulWebSec&#34;&gt;PaulSec&lt;/a&gt; - launched as part of his talk at BSides London 2014 (which I attended) and focus around CSRF vulnerabilities.  Paul is also the author of the &lt;a href=&#34;https://github.com/PaulSec/CSRFT&#34;&gt;CSRF Toolkit&lt;/a&gt;, which can be used to attack the SecOS VMs.&lt;/p&gt;
@@ -42,7 +42,7 @@ MAC Address: 08:00:27:74:13:C8 (Cadmus Computer Systems)
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/secos-1/webapp.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/secos-1/webapp.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -53,7 +53,7 @@ MAC Address: 08:00:27:74:13:C8 (Cadmus Computer Systems)
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/secos-1/users.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/secos-1/users.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -66,7 +66,7 @@ MAC Address: 08:00:27:74:13:C8 (Cadmus Computer Systems)
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/secos-1/hint1.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/secos-1/hint1.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -77,7 +77,7 @@ MAC Address: 08:00:27:74:13:C8 (Cadmus Computer Systems)
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/secos-1/hint2.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/secos-1/hint2.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -102,7 +102,7 @@ Listening on port 8080
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/secos-1/message.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/secos-1/message.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -117,7 +117,7 @@ Listening on port 8080
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/secos-1/password.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/secos-1/password.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;

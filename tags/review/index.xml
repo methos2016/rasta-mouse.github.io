@@ -2,19 +2,19 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Review on rastamouse.me</title>
-    <link>http://rastamouse.me/tags/review/</link>
+    <link>https://rastamouse.me/tags/review/</link>
     <description>Recent content in Review on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Sat, 30 May 2015 00:00:00 +0000</lastBuildDate>
-    <atom:link href="http://rastamouse.me/tags/review/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://rastamouse.me/tags/review/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
       <title>SANS SEC542 Course Review</title>
-      <link>http://rastamouse.me/guff/2015/sans-sec542-course-review/</link>
+      <link>https://rastamouse.me/guff/2015/sans-sec542-course-review/</link>
       <pubDate>Sat, 30 May 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/guff/2015/sans-sec542-course-review/</guid>
+      <guid>https://rastamouse.me/guff/2015/sans-sec542-course-review/</guid>
       <description>
 
 &lt;p&gt;As some may be aware, in January 2015 I started the SANS &amp;lsquo;&lt;a href=&#34;http://www.sans.org/selfstudy/course/web-app-penetration-testing-ethical-hacking&#34;&gt;SEC542: Web App Penetration Testing and Ethical Hacking&lt;/a&gt;&amp;rsquo; SelfStudy course.  I passed the GWAPT (GIAC Web Application Penetration Tester) certification at the end of May; so I figured I would write up a review of the course and summerise my experience.&lt;/p&gt;
@@ -99,10 +99,10 @@
     
     <item>
       <title>Offensive Security: The Playground (Beta) Review</title>
-      <link>http://rastamouse.me/guff/2014/offensive-security-the-playground-beta-review/</link>
+      <link>https://rastamouse.me/guff/2014/offensive-security-the-playground-beta-review/</link>
       <pubDate>Sat, 06 Dec 2014 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/guff/2014/offensive-security-the-playground-beta-review/</guid>
+      <guid>https://rastamouse.me/guff/2014/offensive-security-the-playground-beta-review/</guid>
       <description>&lt;p&gt;Offensive Security are launching a new Virtual Penetration Testing Lab, dubbed &lt;a href=&#34;http://www.offensive-security.com/offensive-security-solutions/virtual-penetration-testing-labs&#34;&gt;The Playground&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;For those who have already taken an Offensive Security course (e.g. PWK), you will already be familiar with the types of machines in the lab - mainly various flavours of Linux and Windows.  The Playground is even more versatile and also includes Citrix, Windows AD Domains, SCADA, IPS and anti-virus.&lt;/p&gt;
@@ -142,7 +142,7 @@
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/guff/playground/dashboard.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/guff/playground/dashboard.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;

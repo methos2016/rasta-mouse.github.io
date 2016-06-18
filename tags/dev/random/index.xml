@@ -2,19 +2,19 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>/dev/random on rastamouse.me</title>
-    <link>http://rastamouse.me/tags/dev/random/</link>
+    <link>https://rastamouse.me/tags/dev/random/</link>
     <description>Recent content in /dev/random on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Mon, 12 Oct 2015 00:00:00 +0000</lastBuildDate>
-    <atom:link href="http://rastamouse.me/tags/dev/random/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://rastamouse.me/tags/dev/random/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
       <title>/dev/random: Sleepy</title>
-      <link>http://rastamouse.me/writeups/2015/sleepy/</link>
+      <link>https://rastamouse.me/writeups/2015/sleepy/</link>
       <pubDate>Mon, 12 Oct 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2015/sleepy/</guid>
+      <guid>https://rastamouse.me/writeups/2015/sleepy/</guid>
       <description>
 
 &lt;p&gt;Sleepy is another ‘short’ VM created by &lt;a href=&#34;https://twitter.com/s4gi_&#34;&gt;Sagi-&lt;/a&gt;, although it’s slightly more difficult than &lt;a href=&#34;http://rastamouse.me/blog/2015/dev-random-pipe/&#34;&gt;Pipe&lt;/a&gt;.&lt;/p&gt;
@@ -66,7 +66,7 @@ root@kali:~# service apache2 restart
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/sleepy/tomcat.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/sleepy/tomcat.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -113,7 +113,7 @@ ftp&amp;gt; ls
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/sleepy/loop.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/sleepy/loop.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -203,7 +203,7 @@ sh: 1: /usr/bin/aafire: not found
 &lt;p&gt;I downloaded &lt;code&gt;/usr/bin/aafire&lt;/code&gt; and ran &lt;code&gt;nightmare&lt;/code&gt; again. This time I got saw cool ASCII fire going - but then another binary tries to get executed: &lt;code&gt;/usr/bin/sl&lt;/code&gt;. I downloaded this one too, and finally got this:&lt;/p&gt;
 
 &lt;video width=&#34;320&#34; height=&#34;240&#34; controls&gt;
-  &lt;source src=&#34;http://rastamouse.me/img/writeups/sleepy/vid.webm&#34; type=&#34;video/webm&#34;&gt;
+  &lt;source src=&#34;https://rastamouse.me/img/writeups/sleepy/vid.webm&#34; type=&#34;video/webm&#34;&gt;
 Your browser does not support the video tag.
 &lt;/video&gt;
 
@@ -324,10 +324,10 @@ Here&#39;s your flag: 3eb030c6ab099b0a355712fe38d59ffb
     
     <item>
       <title>/dev/random: Pipe</title>
-      <link>http://rastamouse.me/writeups/2015/pipe/</link>
+      <link>https://rastamouse.me/writeups/2015/pipe/</link>
       <pubDate>Fri, 02 Oct 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2015/pipe/</guid>
+      <guid>https://rastamouse.me/writeups/2015/pipe/</guid>
       <description>
 
 &lt;p&gt;Pipe was a VM created by &lt;a href=&#34;https://twitter.com/s4gi_&#34;&gt;Sagi-&lt;/a&gt; for &lt;a href=&#34;http://zacon.org.za&#34;&gt;ZaCon&lt;/a&gt;.  It&amp;rsquo;s quite a short VM, presumably to fit confortably in a con session - but it&amp;rsquo;s fun nonetheless!&lt;/p&gt;
@@ -366,7 +366,7 @@ PORT      STATE SERVICE VERSION
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/pipe/auth.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/pipe/auth.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -386,7 +386,7 @@ Host: 192.168.56.102
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/pipe/rene.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/pipe/rene.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -479,7 +479,7 @@ O:3:&amp;quot;Log&amp;quot;:2:{s:8:&amp;quot;filename&amp;quot;;s:30:&amp;quot;/
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/pipe/phpinfo.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/pipe/phpinfo.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;

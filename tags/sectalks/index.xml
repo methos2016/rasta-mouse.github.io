@@ -2,19 +2,19 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Sectalks on rastamouse.me</title>
-    <link>http://rastamouse.me/tags/sectalks/</link>
+    <link>https://rastamouse.me/tags/sectalks/</link>
     <description>Recent content in Sectalks on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Sat, 16 Apr 2016 00:00:00 +0000</lastBuildDate>
-    <atom:link href="http://rastamouse.me/tags/sectalks/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://rastamouse.me/tags/sectalks/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
       <title>BNE0x03 - Simple</title>
-      <link>http://rastamouse.me/writeups/2016/simple/</link>
+      <link>https://rastamouse.me/writeups/2016/simple/</link>
       <pubDate>Sat, 16 Apr 2016 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2016/simple/</guid>
+      <guid>https://rastamouse.me/writeups/2016/simple/</guid>
       <description>
 
 &lt;h3 id=&#34;simple-ctf:bec3ed8ba720b9073ab75abcf3ba5d97&#34;&gt;Simple CTF&lt;/h3&gt;
@@ -103,10 +103,10 @@ Hack the planet!
     
     <item>
       <title>BNE0x02 - Fuku</title>
-      <link>http://rastamouse.me/writeups/2016/fuku/</link>
+      <link>https://rastamouse.me/writeups/2016/fuku/</link>
       <pubDate>Fri, 15 Apr 2016 19:14:56 +0100</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2016/fuku/</guid>
+      <guid>https://rastamouse.me/writeups/2016/fuku/</guid>
       <description>
 
 &lt;h3 id=&#34;fuku-ctf:4620d038ef80856257f87c289da6c889&#34;&gt;Fuku CTF&lt;/h3&gt;
@@ -226,7 +226,7 @@ total 256612
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/fuku/joomla-admin.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/fuku/joomla-admin.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -289,10 +289,10 @@ Random keyboard smash: lkhI6u%RdFEtDjJKIuuiI7i&amp;amp;*iuGf)8$d4gfh%4
     
     <item>
       <title>BNE0x00 - Minotaur</title>
-      <link>http://rastamouse.me/writeups/2016/minotaur/</link>
+      <link>https://rastamouse.me/writeups/2016/minotaur/</link>
       <pubDate>Fri, 15 Apr 2016 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2016/minotaur/</guid>
+      <guid>https://rastamouse.me/writeups/2016/minotaur/</guid>
       <description>
 
 &lt;h3 id=&#34;minotaur-ctf:130852a9ee39e601e939903b24e77be6&#34;&gt;Minotaur CTF&lt;/h3&gt;
@@ -345,7 +345,7 @@ ID	Response   Lines      Word         Chars          Request
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/minotaur/bulls.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/minotaur/bulls.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;

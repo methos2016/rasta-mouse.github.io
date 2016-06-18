@@ -2,19 +2,19 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Xerxes on rastamouse.me</title>
-    <link>http://rastamouse.me/tags/xerxes/</link>
+    <link>https://rastamouse.me/tags/xerxes/</link>
     <description>Recent content in Xerxes on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Mon, 18 Aug 2014 00:00:00 +0000</lastBuildDate>
-    <atom:link href="http://rastamouse.me/tags/xerxes/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://rastamouse.me/tags/xerxes/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
       <title>Xerxes: 2</title>
-      <link>http://rastamouse.me/writeups/2014/xerxes-2/</link>
+      <link>https://rastamouse.me/writeups/2014/xerxes-2/</link>
       <pubDate>Mon, 18 Aug 2014 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2014/xerxes-2/</guid>
+      <guid>https://rastamouse.me/writeups/2014/xerxes-2/</guid>
       <description>
 
 &lt;p&gt;Before you lies the mainframe of XERXES.
@@ -55,7 +55,7 @@ out.bin: MPEG ADTS, layer III, v2,  64 kbps, 22.05 kHz, Monaural
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/xerxes-2/xerxes2.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/xerxes-2/xerxes2.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -68,7 +68,7 @@ out.bin: MPEG ADTS, layer III, v2,  64 kbps, 22.05 kHz, Monaural
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/xerxes-2/xerxeslogo.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/xerxes-2/xerxeslogo.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -81,7 +81,7 @@ out.bin: MPEG ADTS, layer III, v2,  64 kbps, 22.05 kHz, Monaural
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/xerxes-2/ipython.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/xerxes-2/ipython.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -175,7 +175,7 @@ RELRO     : disabled
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/xerxes-2/bf1.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/xerxes-2/bf1.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -271,7 +271,7 @@ polito
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/xerxes-2/qr.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/xerxes-2/qr.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -290,7 +290,7 @@ polito.pdf: x86 boot sector, code offset 0xe0
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/xerxes-2/qemu.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/xerxes-2/qemu.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -366,10 +366,10 @@ _d_  _)MM_ YMMMM9 _MM_    _d_  _)MM_ YMMMM9  MYMMMM9  MMMMMMMM
     
     <item>
       <title>Xerxes: 1</title>
-      <link>http://rastamouse.me/writeups/2014/xerxes-1/</link>
+      <link>https://rastamouse.me/writeups/2014/xerxes-1/</link>
       <pubDate>Fri, 16 May 2014 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2014/xerxes-1/</guid>
+      <guid>https://rastamouse.me/writeups/2014/xerxes-1/</guid>
       <description>
 
 &lt;p&gt;Xerxes is a great VM challenge, created by &lt;a href=&#34;http://barrebas.github.io&#34;&gt;barrebas&lt;/a&gt;.  It&amp;rsquo;s quite a devilish challenge, I found - especially getting the inital foothold.  The goal is to obtain root and access the flag.&lt;/p&gt;
@@ -420,7 +420,7 @@ _d_  _)MM_ YMMMM9 _MM_    _d_  _)MM_ YMMMM9  MYMMMM9  MMMMMMMM
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/xerxes-1/colour-picker.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/xerxes-1/colour-picker.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -449,7 +449,7 @@ _d_  _)MM_ YMMMM9 _MM_    _d_  _)MM_ YMMMM9  MYMMMM9  MMMMMMMM
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/xerxes-1/compileonline.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/xerxes-1/compileonline.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -692,7 +692,7 @@ flag: PNG image data, 250 x 269, 8-bit/color RGB, non-interlaced
 &lt;p&gt;&lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/xerxes-1/flag.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/xerxes-1/flag.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;

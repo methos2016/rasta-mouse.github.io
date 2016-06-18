@@ -2,19 +2,19 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Writeup on rastamouse.me</title>
-    <link>http://rastamouse.me/categories/writeup/</link>
+    <link>https://rastamouse.me/categories/writeup/</link>
     <description>Recent content in Writeup on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Sat, 21 May 2016 00:00:00 +0000</lastBuildDate>
-    <atom:link href="http://rastamouse.me/categories/writeup/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://rastamouse.me/categories/writeup/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
       <title>Gibson 0.2</title>
-      <link>http://rastamouse.me/writeups/2016/gibson/</link>
+      <link>https://rastamouse.me/writeups/2016/gibson/</link>
       <pubDate>Sat, 21 May 2016 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2016/gibson/</guid>
+      <guid>https://rastamouse.me/writeups/2016/gibson/</guid>
       <description>
 
 &lt;h1 id=&#34;livestream:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;Livestream&lt;/h1&gt;
@@ -259,10 +259,10 @@ to host the CTF once more.
     
     <item>
       <title>BNE0x03 - Simple</title>
-      <link>http://rastamouse.me/writeups/2016/simple/</link>
+      <link>https://rastamouse.me/writeups/2016/simple/</link>
       <pubDate>Sat, 16 Apr 2016 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2016/simple/</guid>
+      <guid>https://rastamouse.me/writeups/2016/simple/</guid>
       <description>
 
 &lt;h3 id=&#34;simple-ctf:bec3ed8ba720b9073ab75abcf3ba5d97&#34;&gt;Simple CTF&lt;/h3&gt;
@@ -351,10 +351,10 @@ Hack the planet!
     
     <item>
       <title>BNE0x02 - Fuku</title>
-      <link>http://rastamouse.me/writeups/2016/fuku/</link>
+      <link>https://rastamouse.me/writeups/2016/fuku/</link>
       <pubDate>Fri, 15 Apr 2016 19:14:56 +0100</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2016/fuku/</guid>
+      <guid>https://rastamouse.me/writeups/2016/fuku/</guid>
       <description>
 
 &lt;h3 id=&#34;fuku-ctf:4620d038ef80856257f87c289da6c889&#34;&gt;Fuku CTF&lt;/h3&gt;
@@ -474,7 +474,7 @@ total 256612
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/fuku/joomla-admin.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/fuku/joomla-admin.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -537,10 +537,10 @@ Random keyboard smash: lkhI6u%RdFEtDjJKIuuiI7i&amp;amp;*iuGf)8$d4gfh%4
     
     <item>
       <title>BNE0x00 - Minotaur</title>
-      <link>http://rastamouse.me/writeups/2016/minotaur/</link>
+      <link>https://rastamouse.me/writeups/2016/minotaur/</link>
       <pubDate>Fri, 15 Apr 2016 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2016/minotaur/</guid>
+      <guid>https://rastamouse.me/writeups/2016/minotaur/</guid>
       <description>
 
 &lt;h3 id=&#34;minotaur-ctf:130852a9ee39e601e939903b24e77be6&#34;&gt;Minotaur CTF&lt;/h3&gt;
@@ -593,7 +593,7 @@ ID	Response   Lines      Word         Chars          Request
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/minotaur/bulls.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/minotaur/bulls.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -760,10 +760,10 @@ Th3 Fl@g is: 5urr0nd3d bY @r$3h0l35
     
     <item>
       <title>SickOs 1.1</title>
-      <link>http://rastamouse.me/writeups/2015/sickos-1-1/</link>
+      <link>https://rastamouse.me/writeups/2015/sickos-1-1/</link>
       <pubDate>Sat, 12 Dec 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2015/sickos-1-1/</guid>
+      <guid>https://rastamouse.me/writeups/2015/sickos-1-1/</guid>
       <description>
 
 &lt;p&gt;This VM was made by some chap called &lt;a href=&#34;https://twitter.com/D4rk36&#34;&gt;D4rk&lt;/a&gt;. His description:  This CTF gives a clear analogy how hacking strategies can be performed on a network to compromise it in a safe environment. This vm is very similar to labs I faced in OSCP. The objective being to compromise the network/machine and gain Administrative/root privileges on them.&lt;/p&gt;
@@ -894,7 +894,7 @@ BLEHHH!!!
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/sickos-1/dirbuster.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/sickos-1/dirbuster.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -1098,10 +1098,10 @@ Thanks for Trying
     
     <item>
       <title>The Wall: 1</title>
-      <link>http://rastamouse.me/writeups/2015/the-wall/</link>
+      <link>https://rastamouse.me/writeups/2015/the-wall/</link>
       <pubDate>Fri, 27 Nov 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2015/the-wall/</guid>
+      <guid>https://rastamouse.me/writeups/2015/the-wall/</guid>
       <description>
 
 &lt;p&gt;In 1965, one of the most influential bands of our times was formed.. Pink Floyd. This boot2root box has been created to celebrate 50 years of Pink Floyd&amp;rsquo;s contribution to the music industry, with each challenge giving the attacker an introduction to each member of the Floyd.&lt;/p&gt;
@@ -1124,7 +1124,7 @@ All 1000 scanned ports on 192.168.56.104 are filtered
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/thewall-1/arps.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/thewall-1/arps.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -1135,7 +1135,7 @@ All 1000 scanned ports on 192.168.56.104 are filtered
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/thewall-1/1337.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/thewall-1/1337.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -1191,7 +1191,7 @@ PORT   STATE SERVICE
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/thewall-1/floyd.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/thewall-1/floyd.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -1340,7 +1340,7 @@ Scalpel is done, files carved = 1, elapsed = 0 seconds.
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/thewall-1/roger.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/thewall-1/roger.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -1436,7 +1436,7 @@ nick_mason_profile_pic.jpg: Ogg data, Vorbis audio, stereo, 44100 Hz, created by
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/thewall-1/morse.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/thewall-1/morse.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -1523,7 +1523,7 @@ New website for review:    pinkfloyd1965newblogsite50yearscelebration-temp/index
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/thewall-1/temp-index.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/thewall-1/temp-index.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -1540,7 +1540,7 @@ Can you see what the Dog sees? Perhaps hints of lightness streaming in on sunlig
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/thewall-1/dog.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/thewall-1/dog.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -1551,7 +1551,7 @@ Can you see what the Dog sees? Perhaps hints of lightness streaming in on sunlig
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/thewall-1/dog-light.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/thewall-1/dog-light.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -1717,10 +1717,10 @@ root
     
     <item>
       <title>/dev/random: Sleepy</title>
-      <link>http://rastamouse.me/writeups/2015/sleepy/</link>
+      <link>https://rastamouse.me/writeups/2015/sleepy/</link>
       <pubDate>Mon, 12 Oct 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2015/sleepy/</guid>
+      <guid>https://rastamouse.me/writeups/2015/sleepy/</guid>
       <description>
 
 &lt;p&gt;Sleepy is another ‘short’ VM created by &lt;a href=&#34;https://twitter.com/s4gi_&#34;&gt;Sagi-&lt;/a&gt;, although it’s slightly more difficult than &lt;a href=&#34;http://rastamouse.me/blog/2015/dev-random-pipe/&#34;&gt;Pipe&lt;/a&gt;.&lt;/p&gt;
@@ -1772,7 +1772,7 @@ root@kali:~# service apache2 restart
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/sleepy/tomcat.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/sleepy/tomcat.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -1819,7 +1819,7 @@ ftp&amp;gt; ls
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/sleepy/loop.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/sleepy/loop.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -1909,7 +1909,7 @@ sh: 1: /usr/bin/aafire: not found
 &lt;p&gt;I downloaded &lt;code&gt;/usr/bin/aafire&lt;/code&gt; and ran &lt;code&gt;nightmare&lt;/code&gt; again. This time I got saw cool ASCII fire going - but then another binary tries to get executed: &lt;code&gt;/usr/bin/sl&lt;/code&gt;. I downloaded this one too, and finally got this:&lt;/p&gt;
 
 &lt;video width=&#34;320&#34; height=&#34;240&#34; controls&gt;
-  &lt;source src=&#34;http://rastamouse.me/img/writeups/sleepy/vid.webm&#34; type=&#34;video/webm&#34;&gt;
+  &lt;source src=&#34;https://rastamouse.me/img/writeups/sleepy/vid.webm&#34; type=&#34;video/webm&#34;&gt;
 Your browser does not support the video tag.
 &lt;/video&gt;
 
@@ -2030,10 +2030,10 @@ Here&#39;s your flag: 3eb030c6ab099b0a355712fe38d59ffb
     
     <item>
       <title>/dev/random: Pipe</title>
-      <link>http://rastamouse.me/writeups/2015/pipe/</link>
+      <link>https://rastamouse.me/writeups/2015/pipe/</link>
       <pubDate>Fri, 02 Oct 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2015/pipe/</guid>
+      <guid>https://rastamouse.me/writeups/2015/pipe/</guid>
       <description>
 
 &lt;p&gt;Pipe was a VM created by &lt;a href=&#34;https://twitter.com/s4gi_&#34;&gt;Sagi-&lt;/a&gt; for &lt;a href=&#34;http://zacon.org.za&#34;&gt;ZaCon&lt;/a&gt;.  It&amp;rsquo;s quite a short VM, presumably to fit confortably in a con session - but it&amp;rsquo;s fun nonetheless!&lt;/p&gt;
@@ -2072,7 +2072,7 @@ PORT      STATE SERVICE VERSION
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/pipe/auth.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/pipe/auth.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -2092,7 +2092,7 @@ Host: 192.168.56.102
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/pipe/rene.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/pipe/rene.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -2185,7 +2185,7 @@ O:3:&amp;quot;Log&amp;quot;:2:{s:8:&amp;quot;filename&amp;quot;;s:30:&amp;quot;/
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/pipe/phpinfo.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/pipe/phpinfo.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -2322,10 +2322,10 @@ Here&#39;s your flag: 0089cd4f9ae79402cdd4e7b8931892b7
     
     <item>
       <title>Brainpan: 3 - Part 2</title>
-      <link>http://rastamouse.me/writeups/2015/brainpan-3-part-2/</link>
+      <link>https://rastamouse.me/writeups/2015/brainpan-3-part-2/</link>
       <pubDate>Sat, 26 Sep 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2015/brainpan-3-part-2/</guid>
+      <guid>https://rastamouse.me/writeups/2015/brainpan-3-part-2/</guid>
       <description>
 
 &lt;p&gt;Now that we&amp;rsquo;ve popped &lt;code&gt;anansi&lt;/code&gt; and &lt;code&gt;reynard&lt;/code&gt;, it&amp;rsquo;s time to go after &lt;code&gt;puck&lt;/code&gt; and &lt;code&gt;root&lt;/code&gt;!&lt;/p&gt;
@@ -2402,7 +2402,7 @@ Key file is compromised.
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-3/speedy-gonzales.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/brainpan-3/speedy-gonzales.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -2506,7 +2506,7 @@ f.close()
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-3/heap-layout.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/brainpan-3/heap-layout.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -2957,10 +2957,10 @@ TESTERS
     
     <item>
       <title>Brainpan: 3 - Part 1</title>
-      <link>http://rastamouse.me/writeups/2015/brainpan-3-part-1/</link>
+      <link>https://rastamouse.me/writeups/2015/brainpan-3-part-1/</link>
       <pubDate>Sat, 19 Sep 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2015/brainpan-3-part-1/</guid>
+      <guid>https://rastamouse.me/writeups/2015/brainpan-3-part-1/</guid>
       <description>
 
 &lt;p&gt;As with the rest of the series, the focus of brainpan3 is on binary explotation.  The challenges in this VM are certainly a step-up in terms of difficultly compared to brainpan&amp;rsquo;s 1 &amp;amp; 2, and require you to bypass many common protection mechanisms.  On-and-off, it took me about 2 months to solve :s&lt;/p&gt;
@@ -3161,7 +3161,7 @@ Aborted (core dumped)
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-3/hacked.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/brainpan-3/hacked.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -3172,7 +3172,7 @@ Aborted (core dumped)
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-3/mario.gif&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/brainpan-3/mario.gif&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -3247,7 +3247,7 @@ root@kali:~/bp3# ./report
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-3/matrix.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/brainpan-3/matrix.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -3611,10 +3611,10 @@ uid=1000(anansi) gid=1003(webdav) euid=1002(reynard) groups=1002(reynard)
     
     <item>
       <title>Flick II: The Flickening</title>
-      <link>http://rastamouse.me/writeups/2015/flick-ii/</link>
+      <link>https://rastamouse.me/writeups/2015/flick-ii/</link>
       <pubDate>Tue, 08 Sep 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2015/flick-ii/</guid>
+      <guid>https://rastamouse.me/writeups/2015/flick-ii/</guid>
       <description>
 
 &lt;p&gt;After the success of &lt;a href=&#34;https://www.vulnhub.com/entry/flick-1,99/&#34;&gt;Flick: I&lt;/a&gt;, &lt;a href=&#34;https://twitter.com/leonjza&#34;&gt;@leonjza&lt;/a&gt; decided that VulnHub needed a fresh dose of pain and suffering.  &lt;a href=&#34;https://www.vulnhub.com/entry/flick-2,122/&#34;&gt;Flick: II&lt;/a&gt; is a vulnerable machine with a mobile twist - it requires the attacker to wrestle with a custom Android application to breach the VM.  I was more than complimentary about it on &lt;a href=&#34;https://twitter.com/_RastaMouse/status/638789930261585921&#34;&gt;Twitter&lt;/a&gt; - it&amp;rsquo;s definitely worth checking out.&lt;/p&gt;
@@ -3668,7 +3668,7 @@ uid=1000(anansi) gid=1003(webdav) euid=1002(reynard) groups=1002(reynard)
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/flick-2/1-set-server.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/flick-2/1-set-server.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -3679,7 +3679,7 @@ uid=1000(anansi) gid=1003(webdav) euid=1002(reynard) groups=1002(reynard)
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/flick-2/2-ps.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/flick-2/2-ps.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -3735,7 +3735,7 @@ total 296
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/flick-2/handshake.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/flick-2/handshake.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -4341,10 +4341,10 @@ root
     
     <item>
       <title>NullByte 0x01</title>
-      <link>http://rastamouse.me/writeups/2015/nullbyte-0x01/</link>
+      <link>https://rastamouse.me/writeups/2015/nullbyte-0x01/</link>
       <pubDate>Fri, 21 Aug 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2015/nullbyte-0x01/</guid>
+      <guid>https://rastamouse.me/writeups/2015/nullbyte-0x01/</guid>
       <description>
 
 &lt;p&gt;NullByte is a hacking challenge created by &lt;a href=&#34;https://twitter.com/@ly0nx&#34;&gt;ly0n&lt;/a&gt;, pitched at a beginner-intermediate level.  The objective is to grab the flag.&lt;/p&gt;
@@ -4376,7 +4376,7 @@ PORT    STATE SERVICE VERSION
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/nullbyte0x01/eye.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/nullbyte0x01/eye.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -4450,7 +4450,7 @@ Key:&amp;lt;br&amp;gt;
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/nullbyte0x01/usrsearch.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/nullbyte0x01/usrsearch.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -4679,10 +4679,10 @@ USE THIS PGP PUBLIC KEY
     
     <item>
       <title>ROP Primer: Level 0</title>
-      <link>http://rastamouse.me/writeups/2015/rop-primer-level-0/</link>
+      <link>https://rastamouse.me/writeups/2015/rop-primer-level-0/</link>
       <pubDate>Thu, 23 Jul 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2015/rop-primer-level-0/</guid>
+      <guid>https://rastamouse.me/writeups/2015/rop-primer-level-0/</guid>
       <description>
 
 &lt;p&gt;This VM is meant as a small introduction to 32-bit return-oriented-programming on Linux. It contains three vulnerable binaries, that must be exploited using ROP. There are three levels in total (0 to 2).&lt;/p&gt;
@@ -4987,10 +4987,10 @@ flag{rop_the_night_away}
     
     <item>
       <title>The Darkside of Darknet</title>
-      <link>http://rastamouse.me/writeups/2015/the-darkside-of-darknet/</link>
+      <link>https://rastamouse.me/writeups/2015/the-darkside-of-darknet/</link>
       <pubDate>Tue, 09 Jun 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2015/the-darkside-of-darknet/</guid>
+      <guid>https://rastamouse.me/writeups/2015/the-darkside-of-darknet/</guid>
       <description>
 
 &lt;p&gt;It was coming up to the date of my SANS GWAPT exam when Darknet landed, which meant I couldn&amp;rsquo;t spend much time on it.  Since passing that exam, Darknet became my new evening activity.&lt;/p&gt;
@@ -5021,7 +5021,7 @@ flag{rop_the_night_away}
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/port80.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/darknet-1/port80.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -5045,7 +5045,7 @@ ID	Response   Lines      Word         Chars          Request
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/access.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/darknet-1/access.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -5066,7 +5066,7 @@ ID	Response   Lines      Word         Chars          Request
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/login.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/darknet-1/login.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -5085,7 +5085,7 @@ ID	Response   Lines      Word         Chars          Request
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/admin-sql.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/darknet-1/admin-sql.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -5113,7 +5113,7 @@ insert into rasta.test (code) VALUES (&amp;quot;&amp;lt;?php phpinfo(); ?&amp;gt
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/sqli-phpinfo.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/darknet-1/sqli-phpinfo.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -5194,7 +5194,7 @@ AllowOverride All
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/signal8.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/darknet-1/signal8.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -5205,7 +5205,7 @@ AllowOverride All
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/contact.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/darknet-1/contact.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -5216,7 +5216,7 @@ AllowOverride All
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/xpanel.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/darknet-1/xpanel.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -5291,7 +5291,7 @@ j4tC1P9aqmY
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/xpanel2.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/darknet-1/xpanel2.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -5310,7 +5310,7 @@ j4tC1P9aqmY
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/pin.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/darknet-1/pin.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -5332,7 +5332,7 @@ j4tC1P9aqmY
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/pin-post.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/darknet-1/pin-post.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -5345,7 +5345,7 @@ j4tC1P9aqmY
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/upload.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/darknet-1/upload.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -5358,7 +5358,7 @@ j4tC1P9aqmY
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/test-file.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/darknet-1/test-file.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -5381,7 +5381,7 @@ DirectoryIndex .htaccess
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/darknet-1/ht-phpinfo.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/darknet-1/ht-phpinfo.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -5631,10 +5631,10 @@ meterpreter &amp;gt; cat /root/flag.txt
     
     <item>
       <title>TopHatSec: FartKnocker</title>
-      <link>http://rastamouse.me/writeups/2015/fartknocker/</link>
+      <link>https://rastamouse.me/writeups/2015/fartknocker/</link>
       <pubDate>Fri, 10 Apr 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2015/fartknocker/</guid>
+      <guid>https://rastamouse.me/writeups/2015/fartknocker/</guid>
       <description>
 
 &lt;p&gt;This VM has a focus on port knocking, the clues for which are buried in packet captures.&lt;/p&gt;
@@ -5662,7 +5662,7 @@ PORT   STATE SERVICE VERSION
 &lt;p&gt;&lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/fartknocker/pcap1.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/fartknocker/pcap1.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -5670,7 +5670,7 @@ PORT   STATE SERVICE VERSION
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/fartknocker/pcap1-2.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/fartknocker/pcap1-2.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -5709,7 +5709,7 @@ root@kali:~# wireshark pcap2.pcap
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/fartknocker/pcap2.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/fartknocker/pcap2.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;

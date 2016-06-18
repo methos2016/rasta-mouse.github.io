@@ -2,19 +2,19 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Brainpan on rastamouse.me</title>
-    <link>http://rastamouse.me/tags/brainpan/</link>
+    <link>https://rastamouse.me/tags/brainpan/</link>
     <description>Recent content in Brainpan on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Sat, 26 Sep 2015 00:00:00 +0000</lastBuildDate>
-    <atom:link href="http://rastamouse.me/tags/brainpan/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://rastamouse.me/tags/brainpan/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
       <title>Brainpan: 3 - Part 2</title>
-      <link>http://rastamouse.me/writeups/2015/brainpan-3-part-2/</link>
+      <link>https://rastamouse.me/writeups/2015/brainpan-3-part-2/</link>
       <pubDate>Sat, 26 Sep 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2015/brainpan-3-part-2/</guid>
+      <guid>https://rastamouse.me/writeups/2015/brainpan-3-part-2/</guid>
       <description>
 
 &lt;p&gt;Now that we&amp;rsquo;ve popped &lt;code&gt;anansi&lt;/code&gt; and &lt;code&gt;reynard&lt;/code&gt;, it&amp;rsquo;s time to go after &lt;code&gt;puck&lt;/code&gt; and &lt;code&gt;root&lt;/code&gt;!&lt;/p&gt;
@@ -91,7 +91,7 @@ Key file is compromised.
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-3/speedy-gonzales.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/brainpan-3/speedy-gonzales.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -195,7 +195,7 @@ f.close()
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-3/heap-layout.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/brainpan-3/heap-layout.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -646,10 +646,10 @@ TESTERS
     
     <item>
       <title>Brainpan: 3 - Part 1</title>
-      <link>http://rastamouse.me/writeups/2015/brainpan-3-part-1/</link>
+      <link>https://rastamouse.me/writeups/2015/brainpan-3-part-1/</link>
       <pubDate>Sat, 19 Sep 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2015/brainpan-3-part-1/</guid>
+      <guid>https://rastamouse.me/writeups/2015/brainpan-3-part-1/</guid>
       <description>
 
 &lt;p&gt;As with the rest of the series, the focus of brainpan3 is on binary explotation.  The challenges in this VM are certainly a step-up in terms of difficultly compared to brainpan&amp;rsquo;s 1 &amp;amp; 2, and require you to bypass many common protection mechanisms.  On-and-off, it took me about 2 months to solve :s&lt;/p&gt;
@@ -850,7 +850,7 @@ Aborted (core dumped)
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-3/hacked.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/brainpan-3/hacked.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -861,7 +861,7 @@ Aborted (core dumped)
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-3/mario.gif&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/brainpan-3/mario.gif&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -936,7 +936,7 @@ root@kali:~/bp3# ./report
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-3/matrix.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/brainpan-3/matrix.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -1300,10 +1300,10 @@ uid=1000(anansi) gid=1003(webdav) euid=1002(reynard) groups=1002(reynard)
     
     <item>
       <title>Brainpan: 2 - Part 1</title>
-      <link>http://rastamouse.me/writeups/2014/brainpan-2-part-1/</link>
+      <link>https://rastamouse.me/writeups/2014/brainpan-2-part-1/</link>
       <pubDate>Sun, 01 Jun 2014 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2014/brainpan-2-part-1/</guid>
+      <guid>https://rastamouse.me/writeups/2014/brainpan-2-part-1/</guid>
       <description>
 
 &lt;p&gt;Following the popularity of Brainpan 1, Brainpan 2 was released as a competition on VulnHub.  I didn&amp;rsquo;t take part, but since the VM remains on VulnHub, I had a go at it retrospectively.  The goal is to gain root access and obtain /root/flag.txt.&lt;/p&gt;
@@ -1323,7 +1323,7 @@ PORT      STATE SERVICE VERSION
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-2/brainpan2.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/brainpan-2/brainpan2.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -1352,7 +1352,7 @@ brainpan.exe: JPEG image data, JFIF standard 1.01, comment: &amp;quot;CREATOR: g
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-2/mario.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/brainpan-2/mario.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -1626,10 +1626,10 @@ int main(void)
     
     <item>
       <title>Brainpan: 2 - Part 2</title>
-      <link>http://rastamouse.me/writeups/2014/brainpan-2-part-2/</link>
+      <link>https://rastamouse.me/writeups/2014/brainpan-2-part-2/</link>
       <pubDate>Sun, 01 Jun 2014 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2014/brainpan-2-part-2/</guid>
+      <guid>https://rastamouse.me/writeups/2014/brainpan-2-part-2/</guid>
       <description>
 
 &lt;h2 id=&#34;brainpan-1-8:57e48663af901e7c94c0472675ef84ed&#34;&gt;brainpan-1.8&lt;/h2&gt;
@@ -1843,7 +1843,7 @@ root
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-2/flag.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/brainpan-2/flag.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -1863,10 +1863,10 @@ root
     
     <item>
       <title>Brainpan: 1 - Part 1</title>
-      <link>http://rastamouse.me/writeups/2014/brainpan-1-part-1/</link>
+      <link>https://rastamouse.me/writeups/2014/brainpan-1-part-1/</link>
       <pubDate>Wed, 28 May 2014 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2014/brainpan-1-part-1/</guid>
+      <guid>https://rastamouse.me/writeups/2014/brainpan-1-part-1/</guid>
       <description>
 
 &lt;p&gt;Brainpan is a brilliant series of VMs created by &lt;a href=&#34;https://twitter.com/superkojiman&#34;&gt;superkojiman&lt;/a&gt; - the goal is to gain root access.  These challenges are quite long and involved as they&amp;rsquo;re not strictly at beginner level :), so I&amp;rsquo;ve split the solution into multiple parts.&lt;/p&gt;
@@ -1887,7 +1887,7 @@ PORT      STATE SERVICE VERSION
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-1/brainpan.png&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/brainpan-1/brainpan.png&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -1948,7 +1948,7 @@ strcpy
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-1/imdg.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/brainpan-1/imdg.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -1963,7 +1963,7 @@ strcpy
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-1/crash.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/brainpan-1/crash.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -1986,7 +1986,7 @@ strcpy
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-1/eip.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/brainpan-1/eip.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -2040,7 +2040,7 @@ except:
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-1/break.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/brainpan-1/break.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -2051,7 +2051,7 @@ except:
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
-        &lt;img src=&#34;http://rastamouse.me/img/writeups/brainpan-1/step.jpg&#34;  /&gt;
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/brainpan-1/step.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
@@ -2182,10 +2182,10 @@ pwd
     
     <item>
       <title>Brainpan: 1 - Part 2</title>
-      <link>http://rastamouse.me/writeups/2014/brainpan-1-part-2/</link>
+      <link>https://rastamouse.me/writeups/2014/brainpan-1-part-2/</link>
       <pubDate>Wed, 28 May 2014 00:00:00 +0000</pubDate>
       
-      <guid>http://rastamouse.me/writeups/2014/brainpan-1-part-2/</guid>
+      <guid>https://rastamouse.me/writeups/2014/brainpan-1-part-2/</guid>
       <description>
 
 &lt;h2 id=&#34;shell:edcb2de0cbbe69c925e398e09c0d9e58&#34;&gt;Shell&lt;/h2&gt;
