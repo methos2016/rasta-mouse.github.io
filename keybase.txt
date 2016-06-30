@@ -1,0 +1,72 @@
+==================================================================
+https://keybase.io/rasta_mouse
+--------------------------------------------------------------------
+
+I hereby claim:
+
+  * I am an admin of https://rastamouse.me
+  * I am rasta_mouse (https://keybase.io/rasta_mouse) on keybase.
+  * I have a public key with fingerprint CEA6 AEC4 CF95 06E1 90A2  F72A 6A6A 151A 9750 F89C
+
+To do so, I am signing this object:
+
+{
+    "body": {
+        "key": {
+            "eldest_kid": "01012d6434bae1d6947e4162e5fd914dbe7d51d61b659744067e76af0212fe509d2b0a",
+            "fingerprint": "cea6aec4cf9506e190a2f72a6a6a151a9750f89c",
+            "host": "keybase.io",
+            "key_id": "6a6a151a9750f89c",
+            "kid": "01012d6434bae1d6947e4162e5fd914dbe7d51d61b659744067e76af0212fe509d2b0a",
+            "uid": "1a08bb8724105b51ceed2b151a7f7f00",
+            "username": "rasta_mouse"
+        },
+        "revoke": {
+            "sig_ids": [
+                "d8fc344b93782ad297ae5267240b02cab1cdf84415ddd83c19fdf1d1c92b8af50f"
+            ]
+        },
+        "service": {
+            "hostname": "rastamouse.me",
+            "protocol": "https:"
+        },
+        "type": "web_service_binding",
+        "version": 1
+    },
+    "ctime": 1467318054,
+    "expire_in": 157680000,
+    "prev": "b2064ce0455768cac2b39dadee8f49b88c6d5fb540ca79a4e2d3100602ac5962",
+    "seqno": 28,
+    "tag": "signature"
+}
+
+which yields the signature:
+
+-----BEGIN PGP MESSAGE-----
+
+owGtUm2IVUUYvnezXbuxUizsj1oEpx+CXbaZuTNzztxEJWNJ6Icuhou63OZz97Dr
+Pbdzzq4usq6GEFpL2df9o1ehjBBMqAwFRQoLNsWWwtSIClO2VRN3w+/POZeCfvSz
++TO87/u8z/O878xbzQ9lctlnQn658clF3dljkzKzYmDk2fVAhnoIFNeDPlO/TL82
+cVLqCzQoAoggwpqRApHCIM048QxBDBtqNUdES+Np6vJIMso9QiDzjMeEhRhhayjk
+GksoQB7YoNxjokoUlBNHq4xgwiiiLKeQGcShwNbDLskEokhwj0Lrc+Uae8M47XDm
+pIhNexC6nAtKdXv/gf+ffQ/U6ZCAvpS+hwmCVFKkjHGAVNmznoUwBcYmKos1xqEj
+ESeitCZ0KTCcB5EZDPtMuto46HG+Y1BcBbRvVYEQyQuej4XG3BOGYuYUoIRYCYmU
+tj4hiGqt/YJC3GqLNFIcS19YNy7odtxOdDBQdfJ0Uf82UNdvd3EeVKIwCVXY70q9
+SVKJi6mt5OBQJQWvNbL0N01JBmXtHsq1DJooDsIyKCIHVUmQ8iLCvALyISV5YNZV
+gsiUghRBPeZDd1IhM+goJYaMKAMJTUtKKCwLXAttjG8Jl76vmKZWUgKV8LggBusC
+gpBBLBTlDIN0sFfKIShi3xkVPY7T7a4skoHIrTS3Jds2I5PNZRofbki/cCb3yGP/
+/GvvYtP9/m1jw1OXru3bfaojOHZv5Us/7eeXD+04+Seet5StvrrwA3m+i0w1DNwa
+efHlabpzz4bZXzbTExfOftz0epSf2nJide36khfO7M0v29VW681+P3NyH/n8+NE5
+1c6lC24/+u38+7vmdu5sOzrn5gF4em3fyulXx+S8G5PV9lWbloyfem7syPSBpuC9
+w18ffurNu2ff2VMbvXJTne8aOjdeHP1h8UL12yfL545UP/t52V8dDa2nL95e8cTm
+ey2NE2F7bVb3yIf77cSnnVcvVGvg0u/Hu3698sbkph8X/PHu7vGZr33U0tT6/PLx
+p7ce3PrVd4+/faY6fHLWN2PvZ5q/ONd6J7d977aWHb8URye2b+zADwA=
+=T8jN
+-----END PGP MESSAGE-----
+
+And finally, I am proving ownership of this host by posting or
+appending to this document.
+
+View my publicly-auditable identity here: https://keybase.io/rasta_mouse
+
+==================================================================
