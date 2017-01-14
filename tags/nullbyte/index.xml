@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Nullbyte on rastamouse.me</title>
-    <link>https://rastamouse.me/tags/nullbyte/</link>
-    <description>Recent content in Nullbyte on rastamouse.me</description>
+    <title>nullbyte on rastamouse.me</title>
+    <link>https://rastamouse.me/tags/nullbyte/index.xml</link>
+    <description>Recent content in nullbyte on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 21 Aug 2015 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/tags/nullbyte/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -15,11 +14,11 @@
       <pubDate>Fri, 21 Aug 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/nullbyte-0x01/</guid>
-      <description>
+      <description>&lt;p&gt;NullByte is a hacking challenge created by &lt;a href=&#34;https://twitter.com/@ly0nx&#34;&gt;ly0n&lt;/a&gt;, pitched at a beginner-intermediate level.  The objective is to grab the flag.&lt;/p&gt;
 
-&lt;p&gt;NullByte is a hacking challenge created by &lt;a href=&#34;https://twitter.com/@ly0nx&#34;&gt;ly0n&lt;/a&gt;, pitched at a beginner-intermediate level.  The objective is to grab the flag.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;port-scan:485cf21adfc47fdddfc7e45f092151aa&#34;&gt;Port Scan&lt;/h2&gt;
+&lt;h2 id=&#34;port-scan&#34;&gt;Port Scan&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -A 192.168.56.102
 
@@ -141,7 +140,7 @@ EMP POSITION : employee
 Fetched data successfully
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;sqli:485cf21adfc47fdddfc7e45f092151aa&#34;&gt;SQLi&lt;/h2&gt;
+&lt;h2 id=&#34;sqli&#34;&gt;SQLi&lt;/h2&gt;
 
 &lt;p&gt;I threw &lt;code&gt;sqlmap&lt;/code&gt; at the page, to try injections in the &lt;code&gt;usrtosearch&lt;/code&gt; field. Luckily, it returned a few blind-based possible injections.&lt;/p&gt;
 
@@ -198,7 +197,7 @@ Loaded 1 password hash (Raw-MD5 [MD5 32/32])
 omega            (?)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;ssh:485cf21adfc47fdddfc7e45f092151aa&#34;&gt;SSH&lt;/h2&gt;
+&lt;h2 id=&#34;ssh&#34;&gt;SSH&lt;/h2&gt;
 
 &lt;p&gt;The credentials &lt;code&gt;ramses:omega&lt;/code&gt; can also be used to log in via SSH, remember on port 777.&lt;/p&gt;
 
@@ -209,7 +208,7 @@ ramses@NullByte:~$ pwd
 /home/ramses
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;procwatch-suid:485cf21adfc47fdddfc7e45f092151aa&#34;&gt;procwatch SUID&lt;/h2&gt;
+&lt;h2 id=&#34;procwatch-suid&#34;&gt;procwatch SUID&lt;/h2&gt;
 
 &lt;p&gt;&lt;code&gt;.bash_history&lt;/code&gt; has references to &lt;code&gt;/var/www/backup/procwatch&lt;/code&gt;, which turns out to be a SUID binary owned by &lt;code&gt;root&lt;/code&gt;.&lt;/p&gt;
 
@@ -327,7 +326,7 @@ uid=1002(ramses) gid=1002(ramses) euid=0(root) groups=1002(ramses)
 root
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;flag:485cf21adfc47fdddfc7e45f092151aa&#34;&gt;Flag&lt;/h2&gt;
+&lt;h2 id=&#34;flag&#34;&gt;Flag&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;# cat /root/proof.txt
 adf11c7a9e6523e630aaf3b9b7acb51d
@@ -343,8 +342,7 @@ USE THIS PGP PUBLIC KEY
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 [...snip...]
 -----END PGP PUBLIC KEY BLOCK-----
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
   </channel>

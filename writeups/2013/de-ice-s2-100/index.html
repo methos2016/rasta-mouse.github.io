@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">De-ICE S2.100</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>This is how I solved the De-ICE S2.100 challenge.  The goal is to obtain salary information for the team of employees.</p>
 
-<p>This is how I solved the De-ICE S2.100 challenge.  The goal is to obtain salary information for the team of employees.</p>
+<p></p>
 
-<h2 id="netdiscover:ba134c7f85bed935eb6493dd99cdb880">Netdiscover</h2>
+<h2 id="netdiscover">Netdiscover</h2>
 
 <p>As usual I ran netdiscover on the subnet range, and straight away something jumped out.</p>
 
@@ -73,7 +73,7 @@ _____________________________________________________________________________
 192.168.2.101   08:00:27:f6:e8:1d    01    060   CADMUS COMPUTER SYSTEMS
 </code></pre>
 
-<h2 id="nmap:ba134c7f85bed935eb6493dd99cdb880">Nmap</h2>
+<h2 id="nmap">Nmap</h2>
 
 <p>I then scanned the two IPs with nmap.</p>
 
@@ -107,7 +107,7 @@ PORT   STATE SERVICE VERSION
 
 <p>The Apache service on .100 contained a page containing a long list of users, and as before I took these to form a potential list of users.  This list was quite a lot longer than in previous challenges, so the time it would take to bruteforce SSH logins would be longer than I was willing to spend.</p>
 
-<h2 id="smtp:ba134c7f85bed935eb6493dd99cdb880">SMTP</h2>
+<h2 id="smtp">SMTP</h2>
 
 <p>I decided to try and validate usernames via the SMTP service.  After experimenting with different the methods, I had a valid list of users.</p>
 
@@ -117,7 +117,7 @@ PORT   STATE SERVICE VERSION
 192.168.2.100: pirrip exists
 </code></pre>
 
-<h2 id="nikto:ba134c7f85bed935eb6493dd99cdb880">Nikto</h2>
+<h2 id="nikto">Nikto</h2>
 
 <p>I continued to enumerate the other services, but nothing popped until I ran <code>nikto</code> against the Apache service on .101 (I can imagine that send quite a few people crazy).</p>
 
@@ -127,7 +127,7 @@ PORT   STATE SERVICE VERSION
 
 <p>It seemed that the root user&rsquo;s home directory was accessible through Apache, although it appeared empty.</p>
 
-<h2 id="wfuzz:ba134c7f85bed935eb6493dd99cdb880">Wfuzz</h2>
+<h2 id="wfuzz">Wfuzz</h2>
 
 <p>Wfuzz is a web crawler and fuzzing tool.  With my list of valid users, I was able to locate their home directories also, but they also appeared empty.  I used <code>wfuzz</code> to try and find hidden directories that are likely to appear in users&rsquo; home directories (<code>.bashrc</code>, <code>.bash_history</code> etc).</p>
 
@@ -142,7 +142,7 @@ root@kali:~/de-ice/2.100# wfuzz -c -zfile,users --hc 404 http://192.168.2.101/~F
 00003:  C=301      9 L           29 W         329 Ch       &quot; - pirrip&quot;
 </code></pre>
 
-<h2 id="ssh:ba134c7f85bed935eb6493dd99cdb880">SSH</h2>
+<h2 id="ssh">SSH</h2>
 
 <p>I downloaded the id_rsa key and was able to SSH in, as pirrip.</p>
 
@@ -167,7 +167,7 @@ User pirrip may run the following commands on this host:
     (root) /usr/bin/cat ALL
 </code></pre>
 
-<h2 id="sudo:ba134c7f85bed935eb6493dd99cdb880">Sudo</h2>
+<h2 id="sudo">Sudo</h2>
 
 <p>I could now obtain a list of sudo rights for pirrip.  I could&rsquo;ve used this to obtain the shadow file, to try and crack the root password.  However, an easier route to get a root shell, is through the vi text editor.</p>
 
@@ -177,7 +177,7 @@ bash-3.1# id
 uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy)
 </code></pre>
 
-<h2 id="flag:ba134c7f85bed935eb6493dd99cdb880">Flag</h2>
+<h2 id="flag">Flag</h2>
 
 <p>I then found <code>great_expectations.zip</code> within <code>/root/.save/</code>.  Trying to extract this directly on the server resulted in error messages about limited disk space.  So I transfered the file to my Kali machine using netcat.</p>
 
@@ -191,7 +191,6 @@ Philip Pirrip:  734-67-0424 5.5% $74,224
 Abel Magwitch:  816-03-0028 4.0% $53,122
 Estella Havisham: 762-93-1073 12% $84,325
 </code></pre>
-
   </section>
 </article>
 

@@ -2,9 +2,8 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://rastamouse.me/</loc>
-    <lastmod>2016-09-09T00:00:00+00:00</lastmod>
-    <priority>0</priority>
+    <loc>https://rastamouse.me/guff/2016/automize/</loc>
+    <lastmod>2016-12-15T00:00:00+00:00</lastmod>
   </url>
   
   <url>
@@ -30,11 +29,6 @@
   <url>
     <loc>https://rastamouse.me/writeups/2016/minotaur/</loc>
     <lastmod>2016-04-15T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://rastamouse.me/writeups/2015/sickos-1-1/</loc>
-    <lastmod>2015-12-12T00:00:00+00:00</lastmod>
   </url>
   
   <url>
@@ -285,6 +279,208 @@
   <url>
     <loc>https://rastamouse.me/writeups/2013/de-ice-s1-100/</loc>
     <lastmod>2013-01-12T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/dev/random/</loc>
+    <lastmod>2015-10-12T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/categories/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/guff/</loc>
+    <lastmod>2016-12-15T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/writeups/</loc>
+    <lastmod>2016-09-09T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/automize/</loc>
+    <lastmod>2016-12-15T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/bot-challenges/</loc>
+    <lastmod>2014-06-16T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/brainpan/</loc>
+    <lastmod>2015-09-26T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/darknet/</loc>
+    <lastmod>2015-06-09T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/de-ice/</loc>
+    <lastmod>2014-04-23T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/flick/</loc>
+    <lastmod>2015-09-08T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/gibson/</loc>
+    <lastmod>2016-05-21T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/categories/guff/</loc>
+    <lastmod>2016-12-15T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/hades/</loc>
+    <lastmod>2014-06-05T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/hell/</loc>
+    <lastmod>2014-07-15T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/kioptrix/</loc>
+    <lastmod>2014-04-25T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/nullbyte/</loc>
+    <lastmod>2015-08-21T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/pandoras-box/</loc>
+    <lastmod>2015-03-15T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/pegasus/</loc>
+    <lastmod>2014-12-20T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/persistence/</loc>
+    <lastmod>2014-10-06T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/</loc>
+    <lastmod>2016-12-15T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/review/</loc>
+    <lastmod>2015-05-30T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/rop-primer/</loc>
+    <lastmod>2015-07-23T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/scream/</loc>
+    <lastmod>2014-05-16T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/secos/</loc>
+    <lastmod>2014-05-25T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/sectalks/</loc>
+    <lastmod>2016-04-16T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/skytower/</loc>
+    <lastmod>2014-06-29T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/the-wall/</loc>
+    <lastmod>2015-11-27T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/tophatsec/</loc>
+    <lastmod>2015-04-10T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/tr0ll/</loc>
+    <lastmod>2014-08-29T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/underdist/</loc>
+    <lastmod>2015-01-03T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/vulnos/</loc>
+    <lastmod>2016-09-09T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/categories/writeup/</loc>
+    <lastmod>2016-09-09T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://rastamouse.me/tags/xerxes/</loc>
+    <lastmod>2014-08-18T00:00:00+00:00</lastmod>
+    <priority>0</priority>
   </url>
   
 </urlset>

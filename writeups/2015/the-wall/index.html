@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">The Wall: 1</h1>
   <section class="body" itemprop="articleBody">
-    
-
-<p>In 1965, one of the most influential bands of our times was formed.. Pink Floyd. This boot2root box has been created to celebrate 50 years of Pink Floyd&rsquo;s contribution to the music industry, with each challenge giving the attacker an introduction to each member of the Floyd.</p>
+    <p>In 1965, one of the most influential bands of our times was formed.. Pink Floyd. This boot2root box has been created to celebrate 50 years of Pink Floyd&rsquo;s contribution to the music industry, with each challenge giving the attacker an introduction to each member of the Floyd.</p>
 
 <p>You challenge is simple&hellip; set your controls for the heart of the sun, get root, and grab the flag! Rock on!</p>
+
+<p></p>
 
 <p><a href="https://twitter.com/xerubus">Xerubus</a> asked if I would like to beta-test this VM prior to release and being a bit of a (closet) Pink Floyd fan, I jumped at the opportunity.  So obviously the first stage in any boot2root is to port scan the sucker.</p>
 
@@ -196,7 +196,7 @@ f831605ae34c2399d1e5bb3a4ab245d0 == pinkfloydrocks
 
 <p>So we have what looks like a set of credentials.  <code>SydBarrett:pinkfloydrocks</code>.  But where to use them?</p>
 
-<h2 id="sydbarrett:692b9b8dc88c7093a6facc13d9ec511d">SydBarrett</h2>
+<h2 id="sydbarrett">SydBarrett</h2>
 
 <p>I was stuck here for a while, but if we do a &lsquo;wider&rsquo; port scan, we find that port 1965 is open.</p>
 
@@ -296,7 +296,7 @@ Scalpel is done, files carved = 1, elapsed = 0 seconds.
 </figure>
 </div>
 
-<h2 id="rogerwaters:692b9b8dc88c7093a6facc13d9ec511d">RogerWaters</h2>
+<h2 id="rogerwaters">RogerWaters</h2>
 
 <p>So now we have the password for RogerWaters, <code>hello_is_there_anybody_in_there</code>. Let&rsquo;s try and connect via SSH this time.</p>
 
@@ -331,7 +331,7 @@ $
 
 <p>w00t shell.</p>
 
-<h2 id="nick-mason:692b9b8dc88c7093a6facc13d9ec511d">Nick Mason</h2>
+<h2 id="nick-mason">Nick Mason</h2>
 
 <p>After some standard Linux enumeration, we get a list of all users on the system.  It&rsquo;s logical to assume that we will have to progress through each user before reaching root.</p>
 
@@ -373,7 +373,7 @@ $ whoami
 NickMason
 </code></pre>
 
-<h2 id="richard-wright:692b9b8dc88c7093a6facc13d9ec511d">Richard Wright</h2>
+<h2 id="richard-wright">Richard Wright</h2>
 
 <p>In each home directory thus far, there has been a profile picture of the band member.  Although Nick&rsquo;s is something else in disguise.</p>
 
@@ -401,7 +401,7 @@ $ id
 uid=1003(RichardWright) gid=1003(RichardWright) groups=1003(RichardWright)
 </code></pre>
 
-<h2 id="david-gilmour:692b9b8dc88c7093a6facc13d9ec511d">David Gilmour</h2>
+<h2 id="david-gilmour">David Gilmour</h2>
 
 <p>Now we are Richard Wright, we can go back to the <code>shineon</code> binary we found previously.</p>
 
@@ -586,7 +586,7 @@ Congratulations... permission has been granted.
 You can now set your controls to the heart of the sun!
 </code></pre>
 
-<h2 id="root:692b9b8dc88c7093a6facc13d9ec511d">root</h2>
+<h2 id="root">root</h2>
 
 <p><code>permission granted</code> is a little cryptic.  It took me a while to realise it had given DavidGilmour sudo rights.</p>
 
@@ -662,7 +662,6 @@ root
 <p>It was also nice to read through the contents of <code>/root/scripts/</code> to see how the VM works.</p>
 
 <p>Many thanks to xerubus, and thanks for letting me beta-test :)</p>
-
   </section>
 </article>
 

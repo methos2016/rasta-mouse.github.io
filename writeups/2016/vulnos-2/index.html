@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,9 +52,9 @@
   </div>
   <h1 class="headline" itemprop="headline">VulnOS: 2</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>Your assignment is to pentest a company website, get root of the system and read the final flag.</p>
 
-<p>Your assignment is to pentest a company website, get root of the system and read the final flag.</p>
+<p></p>
 
 <pre><code>root@kali:~# nmap -n -A -p- 192.168.56.104
 
@@ -72,7 +72,7 @@ PORT     STATE SERVICE VERSION
 
 <p>We&rsquo;ll check out port 80 first.</p>
 
-<h2 id="drupal:39268561588adc281b818541b0b30b2a">Drupal</h2>
+<h2 id="drupal">Drupal</h2>
 
 <p>We follow the initial link to <code>/jabc</code> with a Drupal installation (given away by the favicon and bits of meta data such as <code>&lt;meta name=&quot;Generator&quot; content=&quot;Drupal 7 (http://drupal.org)&quot; /&gt;</code>).</p>
 
@@ -118,7 +118,7 @@ PORT     STATE SERVICE VERSION
 </figure>
 </div>
 
-<h2 id="sqli:39268561588adc281b818541b0b30b2a">SQLi</h2>
+<h2 id="sqli">SQLi</h2>
 
 <p>I looked up OpenDocMan 1.2.7 in exploitdb to see if there was anything I could take advantage of.</p>
 
@@ -355,7 +355,7 @@ Table: users
 +---------+---------------------------------------------------------+
 </code></pre>
 
-<h2 id="webmin1980:39268561588adc281b818541b0b30b2a">webmin1980</h2>
+<h2 id="webmin1980">webmin1980</h2>
 
 <p>I tried running this hash through <code>hashcat</code>, with the brute force mode.</p>
 
@@ -371,7 +371,7 @@ Press 'q' or Ctrl-C to abort, almost any other key for status
 webmin1980       (webmin)
 </code></pre>
 
-<h2 id="php-shell:39268561588adc281b818541b0b30b2a">PHP Shell</h2>
+<h2 id="php-shell">PHP Shell</h2>
 
 <p>So now that I can log in as a Drupal admin, I can start poking around the backend (uh er).  If you explore the <code>Modules</code> section, there&rsquo;s one called <code>PHP filter</code> which is currently unchecked.  It&rsquo;s description is rather attractive:
 <code>Allows embedded PHP code/snippets to be evaluated.</code></p>
@@ -413,7 +413,7 @@ OS          : Linux VulnOSv2 3.13.0-24-generic #47-Ubuntu SMP Fri May 2 23:31:42
 Meterpreter : php/linux
 </code></pre>
 
-<h2 id="priv-esc:39268561588adc281b818541b0b30b2a">Priv Esc</h2>
+<h2 id="priv-esc">Priv Esc</h2>
 
 <p>This turned out to be a rather simple task.  We can already see the kernel version: <code>3.13.0</code>, and we know it&rsquo;s Ubuntu.  We can quickly drop into a shell and find exactly which version:</p>
 
@@ -480,7 +480,6 @@ What do you think of A.I.?
 </code></pre>
 
 <p>Thanks <a href="https://twitter.com/@c4b3rw0lf">c4b3rw0lf</a> for taking the time to make this VM :)</p>
-
   </section>
 </article>
 

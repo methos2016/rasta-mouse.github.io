@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,13 +52,13 @@
   </div>
   <h1 class="headline" itemprop="headline">Xerxes: 2</h1>
   <section class="body" itemprop="articleBody">
-    
-
-<p>Before you lies the mainframe of XERXES.
+    <p>Before you lies the mainframe of XERXES.
 Compromise the subsystems and gain access to /root/flag.txt.
 Xerxes2 is the next installment of barrebas&rsquo; xerxes series of boot2roots.  This time around I had the pleasure of testing the VM before its public release, which I must say was an honour.</p>
 
-<h2 id="nmap:cc9f56357c0c2cbe051d571b76b80137">Nmap</h2>
+<p></p>
+
+<h2 id="nmap">Nmap</h2>
 
 <pre><code class="language-text">root@kali:~# nmap -n -sV -p- 192.168.127.132
  
@@ -72,7 +72,7 @@ PORT      STATE SERVICE VERSION
 1 service unrecognized despite returning data.
 </code></pre>
 
-<h2 id="easter-egg:cc9f56357c0c2cbe051d571b76b80137">Easter Egg</h2>
+<h2 id="easter-egg">Easter Egg</h2>
 
 <p>Connecting to the service on 4444 spews out a massive base64 string, which when decoded looks like a binary.  Then running it through file shows it to be an MPEG.</p>
 
@@ -111,7 +111,7 @@ out.bin: MPEG ADTS, layer III, v2,  64 kbps, 22.05 kHz, Monaural
 </figure>
 </div>
 
-<h2 id="ipython:cc9f56357c0c2cbe051d571b76b80137">IPython</h2>
+<h2 id="ipython">IPython</h2>
 
 <p>There&rsquo;s another web-based service running on 8888, called IPython Notebook.</p>
 
@@ -167,7 +167,7 @@ ____   ___  ____  ___  __ ____   ___  ____     ____     ____
 _d_  _)MM_ YMMMM9 _MM_    _d_  _)MM_ YMMMM9  MYMMMM9  MMMMMMMM 
 </code></pre>
 
-<h2 id="brainfucked:cc9f56357c0c2cbe051d571b76b80137">Brainfucked</h2>
+<h2 id="brainfucked">Brainfucked</h2>
 
 <p>Within delacroix&rsquo;s home directory is a file, <code>bf.c</code> and their <code>.bash_history</code> file contains the following line:</p>
 
@@ -295,7 +295,7 @@ uid=1001(polito) gid=1001(polito) groups=1001(polito)
 polito
 </code></pre>
 
-<h2 id="polito:cc9f56357c0c2cbe051d571b76b80137">Polito</h2>
+<h2 id="polito">Polito</h2>
 
 <p>Within polito&rsquo;s home directory are two interesting files.</p>
 
@@ -354,7 +354,7 @@ polito@xerxes2:~$ tar -xvf korenchkin.tar
 
 <p>These keys can be used to SSH as the user korenchkin.</p>
 
-<h2 id="korenchkin:cc9f56357c0c2cbe051d571b76b80137">Korenchkin</h2>
+<h2 id="korenchkin">Korenchkin</h2>
 
 <p>There are no files within the user&rsquo;s home directory, but they are a member of the sudoers group.</p>
 
@@ -373,7 +373,7 @@ uid=0(root) gid=0(root) groups=0(root),24(cdrom),25(floppy),29(audio),30(dip),44
 root
 </code></pre>
 
-<h2 id="flag:cc9f56357c0c2cbe051d571b76b80137">Flag</h2>
+<h2 id="flag">Flag</h2>
 
 <pre><code class="language-text">root@xerxes2:/root# cat flag.txt 
 ____   ___  ____  ___  __ ____   ___  ____     ____     ____   
@@ -398,7 +398,6 @@ _d_  _)MM_ YMMMM9 _MM_    _d_  _)MM_ YMMMM9  MYMMMM9  MMMMMMMM
 </code></pre>
 
 <p>Thanks for a brilliant challenge barrebas, and damn you for the xerxes-guard!</p>
-
   </section>
 </article>
 

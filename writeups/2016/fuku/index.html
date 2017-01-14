@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,22 +52,22 @@
   </div>
   <h1 class="headline" itemprop="headline">BNE0x02 - Fuku</h1>
   <section class="body" itemprop="articleBody">
-    
-
-<h3 id="fuku-ctf:4620d038ef80856257f87c289da6c889">Fuku CTF</h3>
+    <h3 id="fuku-ctf">Fuku CTF</h3>
 
 <p>Fuku (pronounced &ldquo;far queue&rdquo;) CTF is designed to fuck with people.</p>
 
 <p>There are a few flag.txt files to grab. The final one is in the /root/ directory. However, the ultimate goal is to get a root shell.</p>
 
-<h3 id="scenario:4620d038ef80856257f87c289da6c889">Scenario</h3>
+<h3 id="scenario">Scenario</h3>
 
 <p>&ldquo;Bull was pissed when you broke into his Minotaur box. He has taken precautions with another website that he is hosting, implementing IDS, whitelisting, and obfuscation techniques. He is now taunting hackers to try and hack him, believing himself to be safe. It is up to you to put him in his place.&rdquo;</p>
 
-<h3 id="hints:4620d038ef80856257f87c289da6c889">Hints</h3>
+<h3 id="hints">Hints</h3>
 
 <p>Some scripting will probably be needed to find a useful port.
 If the machine seems to go down after a while, it probably hasn&rsquo;t. This CTF isn&rsquo;t called Fuku for nothing!</p>
+
+<p></p>
 
 <p>This VM was supremely fuckin annoying, as its IP address changes at regular intervals :)</p>
 
@@ -162,7 +162,7 @@ total 256612
 
 <p>Reading the dump for port <code>13370</code>, we can see this is an installation of Jooma.  We can hop over in a browser for confirmation, and we see a lovely Japanese Rick Roll rendition.</p>
 
-<h2 id="joomla:4620d038ef80856257f87c289da6c889">Joomla</h2>
+<h2 id="joomla">Joomla</h2>
 
 <p>The version of Joomla installed is <code>1.5.0</code>, which has a remote admin password change vulnerability.  So we can navigate to <code>/index.php?option=com_user&amp;view=reset&amp;layout=confirm</code>, pop a <code>'</code> in the text box and we&rsquo;re free to set any new password we wish.</p>
 
@@ -193,7 +193,7 @@ haha! FUKU! Only root can run that command.
 
 <p>It seems there&rsquo;s some limitation going on with what commands we can run, which might get interesting.</p>
 
-<h2 id="flag-1:4620d038ef80856257f87c289da6c889">Flag 1</h2>
+<h2 id="flag-1">Flag 1</h2>
 
 <pre><code class="language-text">$ cat /var/www/html/flag.txt
 Did you find this flag by guessing? Or possibly by looking in the robots.txt file?
@@ -201,7 +201,7 @@ Maybe you found it after getting a shell, by using a command like &quot;find / -
 Random keyboard smash: J7&amp;fVbh2kTy[JgS&quot;98$vF4#;&gt;mGcT
 </code></pre>
 
-<h2 id="priv-esc:4620d038ef80856257f87c289da6c889">Priv Esc</h2>
+<h2 id="priv-esc">Priv Esc</h2>
 
 <pre><code class="language-text">$ ps aux
 root      1442  0.0  0.5   5732  2744 ?        S    04:24   0:00 /bin/bash /root/chkrootkit-0.49/run_chkrootkit
@@ -229,7 +229,6 @@ cat flag.txt
 Yep, this is a flag. It's worth over 9000 Internet points!
 Random keyboard smash: lkhI6u%RdFEtDjJKIuuiI7i&amp;*iuGf)8$d4gfh%4
 </code></pre>
-
   </section>
 </article>
 

@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">Xerxes: 1</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>Xerxes is a great VM challenge, created by <a href="http://barrebas.github.io">barrebas</a>.  It&rsquo;s quite a devilish challenge, I found - especially getting the inital foothold.  The goal is to obtain root and access the flag.</p>
 
-<p>Xerxes is a great VM challenge, created by <a href="http://barrebas.github.io">barrebas</a>.  It&rsquo;s quite a devilish challenge, I found - especially getting the inital foothold.  The goal is to obtain root and access the flag.</p>
+<p></p>
 
-<h2 id="nmap:e030175fb591c9e48fb1260bc12c80d4">Nmap</h2>
+<h2 id="nmap">Nmap</h2>
 
 <pre><code class="language-text">root@kali:~# nmap -n -sV -A -p- 192.168.127.128
 
@@ -73,7 +73,7 @@
 
 <p>Nmap picks out the contents of the robots.txt file, <code>/dev/</code>.  Before I got too ahead of myself, I ran <code>nikto</code>, <code>wfuzz</code> and <code>dirbuster</code>, but nothing else popped.</p>
 
-<h2 id="dev:e030175fb591c9e48fb1260bc12c80d4">/dev/</h2>
+<h2 id="dev">/dev/</h2>
 
 <p>This page has a password-protected upload function.</p>
 
@@ -93,7 +93,7 @@
 
 <p>I hate cryptic messages :)</p>
 
-<h2 id="looking-deeper:e030175fb591c9e48fb1260bc12c80d4">Looking Deeper</h2>
+<h2 id="looking-deeper">Looking Deeper</h2>
 
 <p>So I took the clue to &lsquo;look deeper&rsquo;, and had a closer look at the QR image.  I opened it up in The GIMP and pretty quickly something jumped out.  There is a row of transparent pixels at the top-left of the image.  You can&rsquo;t see them on the web page, as the white background of the page shows through the pixels, but in an editor, you can see the checkboard canvas.</p>
 
@@ -143,7 +143,7 @@
 
 <p>I went back to the upload page and uploaded my test file again with <code>45100</code> as the password, and received:  <em>&ldquo;test was uploaded. Have a nice day.&rdquo;</em>  Following the link showed that the files are uploaded to the <code>/dev/upload/</code> directory.</p>
 
-<h2 id="web-shell:e030175fb591c9e48fb1260bc12c80d4">Web Shell</h2>
+<h2 id="web-shell">Web Shell</h2>
 
 <p>Even though I expected it to fail as before, I tried to upload my PHP CMD file - it failed with the same error message.  I did some searching to find valid MimeTypes for Apache on Debian, and found what I was looking for fairly quickly on debian.org.</p>
 
@@ -197,7 +197,7 @@ b56d9d8b6077fb56127d1c8ff84ece11
 
 <p>A proper review of the <code>/etc/passwd</code> and <code>/etc/group</code> files showed that users amampour and curtiz were members of a notes group, and delacroix was a member of the sudo group.  This gave a good indication of the path I should be taking to obtain root.  Another interesting thing which I almost missed, was shell entries for each user.  amanpour and curtiz have <code>/bin/bash</code>, whereas delacroix has <code>/bin/delacroix</code>.  No doubt this will come into play later :).</p>
 
-<h2 id="suid:e030175fb591c9e48fb1260bc12c80d4">SUID</h2>
+<h2 id="suid">SUID</h2>
 
 <p>I had a look for SUID binaries and found one in <code>/opt/notes/</code>.</p>
 
@@ -271,7 +271,7 @@ $ id
 uid=1001(amanpour) gid=1001(amanpour) euid=1002(curtiz) egid=1003(notes) groups=1002(curtiz),1001(amanpour),1003(notes)
 </code></pre>
 
-<h2 id="curtiz-delacroix:e030175fb591c9e48fb1260bc12c80d4">Curtiz &amp; Delacroix</h2>
+<h2 id="curtiz-delacroix">Curtiz &amp; Delacroix</h2>
 
 <p>I now have access to <code>/home/curtiz</code>.  The only interesting file in there is <code>id_rsa</code>.  Reading the <code>.bash_history</code> file, it seems to indicate that this key is for the delacroix user, but curtiz was unable to log in properly and wrote the note we saw earlier.</p>
 
@@ -305,7 +305,7 @@ XERXES checking security...
 delacroix@xerxes:/home/delacroix$
 </code></pre>
 
-<h2 id="root:e030175fb591c9e48fb1260bc12c80d4">root</h2>
+<h2 id="root">root</h2>
 
 <p>I knew delacroix was a member of the sudo group, so tried to view her rights with <code>sudo -l</code>.  However, VonBraun was not her user password; *sigh*&hellip; Damn you Bas.</p>
 
@@ -371,15 +371,14 @@ flag: PNG image data, 250 x 269, 8-bit/color RGB, non-interlaced
 
 <p>Ah, that&rsquo;s not too bad :) Downloaded this to my machine, and&hellip;</p>
 
-<p><div align="center">
+<div align="center">
 	<figure style="background-color: #f2f0ec;" >
     
         <img src="/img/writeups/xerxes-1/flag.jpg"  />
     
     
 </figure>
-</div></p>
-
+</div>
   </section>
 </article>
 

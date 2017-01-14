@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,15 +52,19 @@
   </div>
   <h1 class="headline" itemprop="headline">Gibson 0.2</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p></p>
 
-<h1 id="livestream:d26d6d8097e91d38cfe3a5de2f2a51ff">Livestream</h1>
+<h1 id="livestream">Livestream</h1>
 
-<p><iframe src="https://player.twitch.tv/?video=v67731859" frameborder="0" scrolling="no" height="448" width="735"></iframe><a href="https://www.twitch.tv/rastamaus?tt_medium=live_embed&tt_content=text_link" target="_blank" style="padding:2px 0px 4px; display:block; width:345px; font-weight:normal; font-size:10px;text-decoration:underline;">Watch live video from RastaMaus on www.twitch.tv</a></p>
 
-<h1 id="writeup:d26d6d8097e91d38cfe3a5de2f2a51ff">Writeup</h1>
+<div style="position: relative; padding-bottom: 56.25%; padding-top: 30px; height: 0; overflow: hidden;">
+  <iframe src="//www.youtube.com/embed/XHqZ0uplIQE" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" allowfullscreen frameborder="0"></iframe>
+ </div>
 
-<h2 id="nmap:d26d6d8097e91d38cfe3a5de2f2a51ff">nmap</h2>
+
+<h1 id="writeup">Writeup</h1>
+
+<h2 id="nmap">nmap</h2>
 
 <pre><code>root@kali:~# nmap -n -p- -sV 192.168.56.102
 
@@ -68,7 +72,7 @@
 80/tcp open  http    Apache httpd 2.4.7
 </code></pre>
 
-<h2 id="davinci:d26d6d8097e91d38cfe3a5de2f2a51ff">davinci</h2>
+<h2 id="davinci">davinci</h2>
 
 <p>Opening the page in Iceweasel, we get a simple directory lising with <code>davinci.html</code>.</p>
 
@@ -82,7 +86,7 @@
 &lt;/body&gt;
 </code></pre>
 
-<h2 id="ssh:d26d6d8097e91d38cfe3a5de2f2a51ff">SSH</h2>
+<h2 id="ssh">SSH</h2>
 
 <p>We can use <code>margo:god</code> to establish an SSH session :)</p>
 
@@ -102,7 +106,7 @@ User margo may run the following commands on gibson:
     (ALL) NOPASSWD: /usr/bin/convert
 </code></pre>
 
-<h2 id="image-tragick:d26d6d8097e91d38cfe3a5de2f2a51ff">Image Tragick</h2>
+<h2 id="image-tragick">Image Tragick</h2>
 
 <p>We&rsquo;ll check the version first to make sure it is vulnerable.</p>
 
@@ -117,7 +121,7 @@ Version: ImageMagick 6.7.7-10
 uid=0(root) gid=0(root) groups=0(root)
 </code></pre>
 
-<h2 id="where-art-thou-flag:d26d6d8097e91d38cfe3a5de2f2a51ff">Where art thou, flag?</h2>
+<h2 id="where-art-thou-flag">Where art thou, flag?</h2>
 
 <p>There&rsquo;s no flag in <code>/root</code>, so it looks like we&rsquo;ll have to look at little deeper.</p>
 
@@ -160,7 +164,7 @@ root@kali:~# file ftpserv.img
 ftpserv.img: DOS/MBR boot sector, FREE-DOS Beta 0.9 MBR; partition 1 : ID=0xe, active, start-CHS (0x0,1,1), end-CHS (0xf,15,63), startsector 63, 1048257 sectors
 </code></pre>
 
-<h2 id="sleuthing:d26d6d8097e91d38cfe3a5de2f2a51ff">Sleuthing</h2>
+<h2 id="sleuthing">Sleuthing</h2>
 
 <p>First, display the partition layout of the volume with <code>mmls</code></p>
 
@@ -286,12 +290,11 @@ to host the CTF once more.
                                                               --Knightmare
 </code></pre>
 
-<h2 id="shout-outs:d26d6d8097e91d38cfe3a5de2f2a51ff">Shout outs</h2>
+<h2 id="shout-outs">Shout outs</h2>
 
 <p>Thanks <code>knightmare</code> for the VM and the continued hints throughout the livestream :)</p>
 
 <p>Thanks to everyone who stopped by for the livestream and particularly to those who posted in Twitch chat and the IRC channel.  Honourable mentions go to <code>rfc</code>, <code>dqi</code> and <code>superkojiman</code>.</p>
-
   </section>
 </article>
 

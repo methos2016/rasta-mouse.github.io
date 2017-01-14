@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,16 +52,16 @@
   </div>
   <h1 class="headline" itemprop="headline">Flick: 1</h1>
   <section class="body" itemprop="articleBody">
-    
-
-<p>Completing &ldquo;flick&rdquo; will require some sound thinking, good enumeration skills &amp; time!</p>
+    <p>Completing &ldquo;flick&rdquo; will require some sound thinking, good enumeration skills &amp; time!</p>
 
 <p>The objective is to find and read the flag that lives in /root/.
 As a bonus, can you get root command execution?</p>
 
 <p>Good Luck! @leonjza</p>
 
-<h2 id="port-scan:349ad66c7b20ba925d9eeb00398f8306">Port Scan</h2>
+<p></p>
+
+<h2 id="port-scan">Port Scan</h2>
 
 <p>When Flick boots up, it&rsquo;s nice enough to display its IP address at the login prompt.  I therefore went straight ahead with an Nmap scan.</p>
 
@@ -139,7 +139,7 @@ Accepted! The door should be open now :poolparty:
 
 <p>Another quick Nmap scan showed that port 80 was now open.</p>
 
-<h2 id="flick-a-photo:349ad66c7b20ba925d9eeb00398f8306">Flick-a-Photo</h2>
+<h2 id="flick-a-photo">Flick-a-Photo</h2>
 
 <div align="center">
 	<figure style="background-color: #f2f0ec;" >
@@ -265,7 +265,7 @@ robin: JoofimOwEakpalv4Jijyiat5GloonTojatticEirracksIg4yijovyirtAwUjad1J
 
 <p>The creds for Robin did not work, but I was able to SSH as Dean.</p>
 
-<h2 id="dean:349ad66c7b20ba925d9eeb00398f8306">Dean</h2>
+<h2 id="dean">Dean</h2>
 
 <p>Dean has two files in his home directory:</p>
 
@@ -346,7 +346,7 @@ VP0mqDppzOZ04B9FQD8Af6kUzxzGFH8tAN5SNYSW88I9Z8lVpfkn
 
 <p>After copying this key to my Kali VM, I was able to SSH in as Robin :)</p>
 
-<h2 id="robin:349ad66c7b20ba925d9eeb00398f8306">Robin</h2>
+<h2 id="robin">Robin</h2>
 
 <p>There was nothing in Robin&rsquo;s home directory, but a quick check of his sudo rights showed the following:</p>
 
@@ -504,7 +504,7 @@ uid=1000(robin) gid=1000(robin) euid=0(root) groups=0(root),999(docker),1000(rob
 root
 </code></pre>
 
-<h2 id="game-over:349ad66c7b20ba925d9eeb00398f8306">Game Over</h2>
+<h2 id="game-over">Game Over</h2>
 
 <p>Before collecting the flag, I echo&rsquo;d my public SSH key into root&rsquo;s authorised_keys, set the correct owners, permissions etc and logged in as root.</p>
 
@@ -521,7 +521,6 @@ You have completed 'flick'! I hope you have enjoyed doing it as much as I did cr
 ciao for now!
 @leonjza
 </code></pre>
-
   </section>
 </article>
 

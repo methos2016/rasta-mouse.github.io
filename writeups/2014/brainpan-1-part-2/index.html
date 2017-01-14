@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,9 +52,9 @@
   </div>
   <h1 class="headline" itemprop="headline">Brainpan: 1 - Part 2</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p></p>
 
-<h2 id="shell:edcb2de0cbbe69c925e398e09c0d9e58">Shell</h2>
+<h2 id="shell">Shell</h2>
 
 <p>Now I had a shell, I could start exploring the system.</p>
 
@@ -120,7 +120,7 @@ strcpy
 
 <p>So the user input is again passed using the vulnerable <code>strcpy</code> function.  If we could exploit this, we would gain access as <code>anansi</code>.</p>
 
-<h2 id="exploiting-validate:edcb2de0cbbe69c925e398e09c0d9e58">Exploiting Validate</h2>
+<h2 id="exploiting-validate">Exploiting Validate</h2>
 
 <pre><code class="language-text">root@kali:~/brainpan/1# ./validate `python -c 'print (&quot;A&quot; * 200)'`
 Segmentation fault
@@ -226,7 +226,6 @@ root
 
 <p>w00t!
 I couldn&rsquo;t find an obvious final flag, so assume the challenge ends here.</p>
-
   </section>
 </article>
 

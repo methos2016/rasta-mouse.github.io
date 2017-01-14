@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Hades on rastamouse.me</title>
-    <link>https://rastamouse.me/tags/hades/</link>
-    <description>Recent content in Hades on rastamouse.me</description>
+    <title>hades on rastamouse.me</title>
+    <link>https://rastamouse.me/tags/hades/index.xml</link>
+    <description>Recent content in hades on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Thu, 05 Jun 2014 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/tags/hades/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -15,13 +14,13 @@
       <pubDate>Thu, 05 Jun 2014 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2014/hades-part-1/</guid>
-      <description>
-
-&lt;p&gt;Hades is a new boot2root challenge pitched at the advanced hobbyist.  Solving this challenge will require skills in reverse engineering, exploit development and understanding of computer architecture.  The aim of this challenge is to incrementally increase access to the box until you can escalate to root.  The /root/flag.txt file is the final goal.&lt;/p&gt;
+      <description>&lt;p&gt;Hades is a new boot2root challenge pitched at the advanced hobbyist.  Solving this challenge will require skills in reverse engineering, exploit development and understanding of computer architecture.  The aim of this challenge is to incrementally increase access to the box until you can escalate to root.  The /root/flag.txt file is the final goal.&lt;/p&gt;
 
 &lt;p&gt;Let&amp;rsquo;s mosey&amp;hellip;&lt;/p&gt;
 
-&lt;h2 id=&#34;enumeration:cb235dd34a9cd98c7241a4f538aa5bc4&#34;&gt;Enumeration&lt;/h2&gt;
+&lt;p&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;enumeration&#34;&gt;Enumeration&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -A -p- 192.168.127.132
   
@@ -116,7 +115,7 @@ Enter up to two commands of less than 121 characters each.
 
 &lt;p&gt;So it looks as though I have a copy of the app running on Hades - time to exploit it!&lt;/p&gt;
 
-&lt;h2 id=&#34;burn-baby-burn:cb235dd34a9cd98c7241a4f538aa5bc4&#34;&gt;Burn Baby Burn&lt;/h2&gt;
+&lt;h2 id=&#34;burn-baby-burn&#34;&gt;Burn Baby Burn&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/hades# checksec --file binary 
 RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
@@ -265,8 +264,7 @@ except:
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;id; whoami
 uid=1000(loki) gid=1000(loki) groups=1000(loki),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),111(lpadmin),112(sambashare)
 loki
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
     <item>
@@ -275,9 +273,9 @@ loki
       <pubDate>Thu, 05 Jun 2014 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2014/hades-part-2/</guid>
-      <description>
+      <description>&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;ssh-persistence:b4994bab40eb34750ec826f32c93e1ca&#34;&gt;SSH Persistence&lt;/h2&gt;
+&lt;h2 id=&#34;ssh-persistence&#34;&gt;SSH Persistence&lt;/h2&gt;
 
 &lt;p&gt;With shell access as loki, I did some standard system enumeration and found that he was the only user, and that SSH was running.  Loki didn&amp;rsquo;t have a &lt;code&gt;.ssh&lt;/code&gt; directory in his home folder, so I created one and popped my public SSH key into &lt;code&gt;authorized_keys&lt;/code&gt;.&lt;/p&gt;
 
@@ -320,7 +318,7 @@ Connection to 192.168.127.128 closed.
 
 &lt;p&gt;The damn VM just rebooted itself!  I thought perhaps this may&amp;rsquo;ve been because I entered a long string of A&amp;rsquo;s, but I tried it again with normal words and the same thing happened.  I downloaded the file to my Kali VM for analysis.&lt;/p&gt;
 
-&lt;h2 id=&#34;give-me-key:b4994bab40eb34750ec826f32c93e1ca&#34;&gt;Give me Key!&lt;/h2&gt;
+&lt;h2 id=&#34;give-me-key&#34;&gt;Give me Key!&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/hades# checksec --file display_key
 RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
@@ -361,13 +359,13 @@ Segmentation fault
 [pid  2949] [b77d0424] write(2, &amp;quot;\n&amp;quot;, 1
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;v1-bug:b4994bab40eb34750ec826f32c93e1ca&#34;&gt;v1 Bug&lt;/h2&gt;
+&lt;h2 id=&#34;v1-bug&#34;&gt;v1 Bug&lt;/h2&gt;
 
 &lt;p&gt;This shows that &lt;code&gt;reboot&lt;/code&gt; is executed, but an absolute path is not coded into the binary, which is why it cycles through each of the envronmental paths (&lt;code&gt;PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin&lt;/code&gt;).  It was later reported that this was an unintentional bug in the VM, as it made it a little too easy to get root access.  All that was required was to place a binary or symlink into any directory, name it reboot, and insert a new directory into the PATH variable.  This could be used to execute a new instance of &lt;code&gt;/bin/bash&lt;/code&gt;, for example, as root.&lt;/p&gt;
 
 &lt;p&gt;This was fixed in v1.0.1 of the challenge.&lt;/p&gt;
 
-&lt;h2 id=&#34;a-man-s-solution:b4994bab40eb34750ec826f32c93e1ca&#34;&gt;A Man&amp;rsquo;s Solution!&lt;/h2&gt;
+&lt;h2 id=&#34;a-man-s-solution&#34;&gt;A Man&amp;rsquo;s Solution!&lt;/h2&gt;
 
 &lt;p&gt;I was able to crash the application by sending 100 A&amp;rsquo;s as a password.  I loaded it up in GDB to confirm.&lt;/p&gt;
 
@@ -463,7 +461,7 @@ Segmentation fault
 
 &lt;p&gt;The application still seg faults, but at least my exploit worked!&lt;/p&gt;
 
-&lt;h2 id=&#34;get-to-da-flag:b4994bab40eb34750ec826f32c93e1ca&#34;&gt;Get to da Flag&lt;/h2&gt;
+&lt;h2 id=&#34;get-to-da-flag&#34;&gt;Get to da Flag&lt;/h2&gt;
 
 &lt;p&gt;I coped the hades root private key to my Kali VM, and was able to SSH in as root :)&lt;/p&gt;
 
@@ -505,8 +503,7 @@ bad decrypt
     
     
 &lt;/figure&gt;
-&lt;/div&gt;
-</description>
+&lt;/div&gt;</description>
     </item>
     
   </channel>

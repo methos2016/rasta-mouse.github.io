@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,13 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">BNE0x03 - Simple</h1>
   <section class="body" itemprop="articleBody">
-    
-
-<h3 id="simple-ctf:bec3ed8ba720b9073ab75abcf3ba5d97">Simple CTF</h3>
+    <h3 id="simple-ctf">Simple CTF</h3>
 
 <p>Simple CTF is a boot2root that focuses on the basics of web based hacking.  /root/flag.txt is your ultimate goal.</p>
 
-<h3 id="hints:bec3ed8ba720b9073ab75abcf3ba5d97">Hints</h3>
+<h3 id="hints">Hints</h3>
 
 <ul>
 <li>Get a user shell by uploading a reverse shell and executing it.</li>
@@ -66,7 +64,9 @@
 <li>There are 3 known privesc exploits that work. Some people have had trouble executing one of them unless it was over a reverse shell using a netcat listener.</li>
 </ul>
 
-<h2 id="discovery:bec3ed8ba720b9073ab75abcf3ba5d97">Discovery</h2>
+<p></p>
+
+<h2 id="discovery">Discovery</h2>
 
 <pre><code class="language-text">root@kali:~# nmap -n -p- -A 192.168.56.104
 
@@ -76,7 +76,7 @@ PORT   STATE SERVICE VERSION
 |_http-title: Please Login / CuteNews
 </code></pre>
 
-<h2 id="shell:bec3ed8ba720b9073ab75abcf3ba5d97">Shell</h2>
+<h2 id="shell">Shell</h2>
 
 <p>CuteNews 2.0.3 has an arbitary file upload vulnerability, in the avatar function of a registered user.  I first registered an account as <code>rasta:mouse</code> and logged in.  Navigate to <code>Personal options</code> and select the <code>Browse</code> button to upload an avatar.</p>
 
@@ -103,7 +103,7 @@ uid=33(www-data) gid=33(www-data) groups=33(www-data)
 $ 
 </code></pre>
 
-<h2 id="priv-esc:bec3ed8ba720b9073ab75abcf3ba5d97">Priv esc</h2>
+<h2 id="priv-esc">Priv esc</h2>
 
 <p>This VM is running Ubuntu 14.04.1, which has a kernel vulnerability that will take us straight to <code>root</code>.</p>
 
@@ -129,13 +129,12 @@ sh: 0: can't access tty; job control turned off
 root
 </code></pre>
 
-<h2 id="flag:bec3ed8ba720b9073ab75abcf3ba5d97">Flag</h2>
+<h2 id="flag">Flag</h2>
 
 <pre><code class="language-text"># cat /root/flag.txt
 U wyn teh Interwebs!!1eleven11!!1!
 Hack the planet!
 </code></pre>
-
   </section>
 </article>
 

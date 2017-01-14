@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">TopHatSec: ZorZ</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>This VM contains 3 web application challenges, which focus on file upload and filter bypass.</p>
 
-<p>This VM contains 3 web application challenges, which focus on file upload and filter bypass.</p>
+<p></p>
 
-<h2 id="discovery:67b7c5d17181120e8623e1b28dc920b5">Discovery</h2>
+<h2 id="discovery">Discovery</h2>
 
 <p>Only ports 22 and 80 are open.</p>
 
@@ -77,7 +77,7 @@ SF:NULL,29,&quot;SSH-2\.0-OpenSSH_6\.6\.1p1\x20Ubuntu-2ubuntu2\r\n&quot;);
 
 <p>Let&rsquo;s head over to port 80 in a web browser.</p>
 
-<h2 id="level-1:67b7c5d17181120e8623e1b28dc920b5">Level 1</h2>
+<h2 id="level-1">Level 1</h2>
 
 <div align="center">
 	<figure style="background-color: #f2f0ec;" >
@@ -127,7 +127,7 @@ SF:NULL,29,&quot;SSH-2\.0-OpenSSH_6\.6\.1p1\x20Ubuntu-2ubuntu2\r\n&quot;);
 uid=33(www-data) gid=33(www-data) groups=33(www-data)
 </code></pre>
 
-<h2 id="level-2:67b7c5d17181120e8623e1b28dc920b5">Level 2</h2>
+<h2 id="level-2">Level 2</h2>
 
 <p>Attempting to upload the same PHP file for level 2 fails miserably.</p>
 
@@ -197,18 +197,18 @@ uid=33(www-data) gid=33(www-data) groups=33(www-data)
 <pre><code class="language-text">root@kali:~/vulnhub/zorz/2# cat rastamouse.jpg catflap2.php &gt; catflap2.php.jpg
 </code></pre>
 
-<h2 id="level-3:67b7c5d17181120e8623e1b28dc920b5">Level 3</h2>
+<h2 id="level-3">Level 3</h2>
 
 <p>It turns out that my file for Level 2 worked for Level 3 as well.  That was easy ^_^.</p>
 
-<p><div align="center">
+<div align="center">
 	<figure style="background-color: #f2f0ec;" >
     
         <img src="/img/writeups/zorz/3/zorz.jpg"  />
     
     
 </figure>
-</div></p>
+</div>
 
 <p>So let&rsquo;s collect the flag.</p>
 
@@ -232,7 +232,6 @@ admin@top-hat-sec.com
 Thanks for playing!
 http://www.top-hat-sec.com
 </code></pre>
-
   </section>
 </article>
 

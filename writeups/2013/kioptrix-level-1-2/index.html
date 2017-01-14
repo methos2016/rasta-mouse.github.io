@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">Kioptrix Level 1.2</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>This is a walkthough of how I completed the Kioptrix Level 1.2.  The goal of this challenge is to collect the flag.</p>
 
-<p>This is a walkthough of how I completed the Kioptrix Level 1.2.  The goal of this challenge is to collect the flag.</p>
+<p></p>
 
-<h2 id="nmap:dfc41ddb0541bee9ee434872f5cc4efd">Nmap</h2>
+<h2 id="nmap">Nmap</h2>
 
 <pre><code class="language-text">root@kali:~# nmap -n -sV -A -p- kioptrix3.com
 
@@ -70,7 +70,7 @@ PORT   STATE SERVICE VERSION
 |_http-title: Ligoat Security - Got Goat? Security ...
 </code></pre>
 
-<h2 id="lotuscms:dfc41ddb0541bee9ee434872f5cc4efd">LotusCMS</h2>
+<h2 id="lotuscms">LotusCMS</h2>
 
 <p>This little website is powered by LotusCMS, which is vulnerable to remote code execution.  However, I wasn&rsquo;t having much luck with anything other than the exploit in the Metasploit Framework.  Since I don&rsquo;t like to rely on this, I pressed on to find another route in.</p>
 
@@ -83,7 +83,7 @@ dreg:x:1001:1001:Dreg Gevans,0,555-5566,:/home/dreg:/bin/rbash
 
 <p>I actually decided to hold off on bruteforcing their SSH logins.  It was my assumption that at this level of challenge, the password would be too complex to bruteforce in a reasonable amount of time.</p>
 
-<h2 id="gallery:dfc41ddb0541bee9ee434872f5cc4efd">Gallery</h2>
+<h2 id="gallery">Gallery</h2>
 
 <p>One of the blog posts referes to a new gallery application at kioptrix3.com/gallery.</p>
 
@@ -100,7 +100,7 @@ dreg:x:1001:1001:Dreg Gevans,0,555-5566,:/home/dreg:/bin/rbash
 
 <p><code>kioptrix3.com/gallery/gallery.php?id=</code></p>
 
-<h2 id="sqlmap:dfc41ddb0541bee9ee434872f5cc4efd">SQLMap</h2>
+<h2 id="sqlmap">SQLMap</h2>
 
 <p>I plugged the URL into SQLMap and it confirmed the vulnerability.</p>
 
@@ -141,7 +141,7 @@ admin:n0t7t1k4
 
 <p>My original intent was to use the admin password for Gallarific and attempt to upload a PHP backdoor.  However, I first decided to try the two passwords from the dev_accounts with SSH.</p>
 
-<h2 id="ssh:dfc41ddb0541bee9ee434872f5cc4efd">SSH</h2>
+<h2 id="ssh">SSH</h2>
 
 <p>I was able to login as <code>loneferret</code> with the password <code>starwars</code> (blew my original SSH theory out of the water).</p>
 
@@ -176,7 +176,6 @@ loneferret@Kioptrix3:~$ sudo /bin/bash
 root@Kioptrix3:~# id
 uid=0(root) gid=0(root) groups=0(root)
 </code></pre>
-
   </section>
 </article>
 

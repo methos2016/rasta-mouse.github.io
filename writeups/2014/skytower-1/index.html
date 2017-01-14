@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">SkyTower: 1</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>SkyTower is a boot2root challenge hosted at VulnHub.  The goal is to reach /root/flag.txt.</p>
 
-<p>SkyTower is a boot2root challenge hosted at VulnHub.  The goal is to reach /root/flag.txt.</p>
+<p></p>
 
-<h2 id="nmap:9b0fe4d66100ab98a2421f7d860ef8e6">Nmap</h2>
+<h2 id="nmap">Nmap</h2>
 
 <pre><code class="language-text">root@kali:~# nmap -n -sV -A -p- 192.168.127.128
 
@@ -69,7 +69,7 @@ PORT     STATE    SERVICE    VERSION
 |_http-title: ERROR: The requested URL could not be retrieved
 </code></pre>
 
-<h2 id="skytower-login:9b0fe4d66100ab98a2421f7d860ef8e6">SkyTower Login</h2>
+<h2 id="skytower-login">SkyTower Login</h2>
 
 <p>I punched the IP into Iceweasel and was greeted with a login screen.</p>
 
@@ -118,7 +118,7 @@ There was an error running the query [You have an error in your SQL syntax; chec
 
 <p>$2 retirement fund&hellip; a bit stingy to say the least&hellip;</p>
 
-<h2 id="secure-shell:9b0fe4d66100ab98a2421f7d860ef8e6">Secure Shell</h2>
+<h2 id="secure-shell">Secure Shell</h2>
 
 <p>This message is very useful, in that it flat out tells us to SSH into the box and even provides a username and password.  However, if we recall the Nmap scan port 22 was filtered, but there is a Squid proxy running.  I used proxytunnel to establish a connection to port 22.</p>
 
@@ -161,7 +161,7 @@ $email = str_ireplace($sqlinjection, &quot;&quot;, $_POST['email']);
 $password = str_ireplace($sqlinjection, &quot;&quot;, $_POST['password']);
 </code></pre>
 
-<h2 id="mysql:9b0fe4d66100ab98a2421f7d860ef8e6">MySQL</h2>
+<h2 id="mysql">MySQL</h2>
 
 <p>With these credentials, I was able to log in and explore the SQL database and extract the passwords of two other users.</p>
 
@@ -206,7 +206,7 @@ User sara may run the following commands on this host:
 
 <p>The wildcard in these allowances are actually vulnerable to a directory traversal type effect.</p>
 
-<h2 id="root:9b0fe4d66100ab98a2421f7d860ef8e6">Root</h2>
+<h2 id="root">Root</h2>
 
 <pre><code class="language-text">sara@SkyTower:~$ sudo /bin/ls /accounts/../root/
 flag.txt
@@ -217,7 +217,6 @@ root password is theskytower
 </code></pre>
 
 <p>Even though I had root access, I wanted to explore William&rsquo;s account.  The password within the SkyTech database was incorrect for the user, so I cracked the real password by obtaining the shadow file.  William&rsquo;s real password is <code>sensable</code>, not <code>senseable</code> - not sure if this is a typo in the database or intentional.  Either way, I didn&rsquo;t find anything interesting within his user space.</p>
-
   </section>
 </article>
 

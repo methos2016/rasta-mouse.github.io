@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">Kioptrix Level 1.3</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>This is a walkthrough of how I completed the Kioptrix Level 1.3 challenge.  The goal is to find the flag.</p>
 
-<p>This is a walkthrough of how I completed the Kioptrix Level 1.3 challenge.  The goal is to find the flag.</p>
+<p></p>
 
-<h2 id="nmap:11cee1ea035c402a8bc4284762fd11a6">Nmap</h2>
+<h2 id="nmap">Nmap</h2>
 
 <pre><code class="language-text">root@kali:~# nmap -n -sV -A -p- 192.168.1.124
 
@@ -88,7 +88,7 @@ Host script results:
 |_smbv2-enabled: Server doesn't support SMBv2 protocol
 </code></pre>
 
-<h2 id="liggoat-login:11cee1ea035c402a8bc4284762fd11a6">LigGoat Login</h2>
+<h2 id="liggoat-login">LigGoat Login</h2>
 
 <p>I visited the web page takes you to a LigGoat login page.</p>
 
@@ -96,7 +96,7 @@ Host script results:
 
 <p>This suggests that the password field is vulnerable, so to do the heavy lifting, I used <code>sqlmap</code>.</p>
 
-<h2 id="sqlmap:11cee1ea035c402a8bc4284762fd11a6">SQLMap</h2>
+<h2 id="sqlmap">SQLMap</h2>
 
 <pre><code class="language-text">root@kali:~# sqlmap -u http://192.168.1.124/checklogin.php --data=&quot;myusername=admin&amp;mypassword=1&quot; -p mypassword
 </code></pre>
@@ -135,7 +135,7 @@ root@kali:~# sqlmap -u http://192.168.1.124/checklogin.php --data=&quot;myuserna
 
 <p>A few interesting bits of information there&hellip;</p>
 
-<h2 id="ssh:11cee1ea035c402a8bc4284762fd11a6">SSH</h2>
+<h2 id="ssh">SSH</h2>
 
 <p>In the previous challenge, information I obtained from a database allowed me to SSH into the system - so I tried this again with john and robert.
 I was able to login with both usernames and passwords, but each user was dropped into a limited shell of some description.</p>
@@ -165,7 +165,7 @@ john@Kioptrix4:~$
 
 <p>Another stroke of luck!</p>
 
-<h2 id="mysql:11cee1ea035c402a8bc4284762fd11a6">MySQL</h2>
+<h2 id="mysql">MySQL</h2>
 
 <p>I first made sure I could connect to MySQL as root, without a password.</p>
 
@@ -192,7 +192,7 @@ john@Kioptrix4:~$ ls -l /test
 
 <p>This shows that I can write to the filesystem, but more importantly, as the root user.</p>
 
-<h2 id="cron:11cee1ea035c402a8bc4284762fd11a6">Cron</h2>
+<h2 id="cron">Cron</h2>
 
 <p>I thought I could then use this to write a new job into <code>cron</code>, to automate a <code>netcat</code> connection to my IP.  Since I can write as root, I can ensure the resulting shell is run with root privileges.</p>
 
@@ -222,7 +222,7 @@ Congratulations!
 You've got root.
 </code></pre>
 
-<h2 id="epilogue:11cee1ea035c402a8bc4284762fd11a6">Epilogue</h2>
+<h2 id="epilogue">Epilogue</h2>
 
 <p>Getting the <code>cron</code> to work took a good amount of time - I thought I was getting the syntax incorrect.  I checked the running processes and saw more than a few instances of <code>netcat</code> running, but the connections weren&rsquo;t reaching me.</p>
 
@@ -248,7 +248,6 @@ DROP       tcp  --  anywhere             anywhere            tcp dpt:webcache
 DROP       tcp  --  anywhere             anywhere            tcp dpt:www 
 DROP       tcp  --  anywhere             anywhere            tcp dpt:ftp
 </code></pre>
-
   </section>
 </article>
 

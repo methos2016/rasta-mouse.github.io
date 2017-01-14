@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">/dev/random: Pipe</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>Pipe was a VM created by <a href="https://twitter.com/s4gi_">Sagi-</a> for <a href="http://zacon.org.za">ZaCon</a>.  It&rsquo;s quite a short VM, presumably to fit confortably in a con session - but it&rsquo;s fun nonetheless!</p>
 
-<p>Pipe was a VM created by <a href="https://twitter.com/s4gi_">Sagi-</a> for <a href="http://zacon.org.za">ZaCon</a>.  It&rsquo;s quite a short VM, presumably to fit confortably in a con session - but it&rsquo;s fun nonetheless!</p>
+<p></p>
 
-<h1 id="scan-dem-ports:378c41c5fac16f89c224b95690922b7e">Scan dem Ports</h1>
+<h1 id="scan-dem-ports">Scan dem Ports</h1>
 
 <pre><code class="language-text">root@kali:~# nmap -n -p- -A 192.168.56.102
 
@@ -83,7 +83,7 @@ PORT      STATE SERVICE VERSION
 36100/tcp open  status  1 (RPC #100024)
 </code></pre>
 
-<h2 id="verb-abuse:378c41c5fac16f89c224b95690922b7e">Verb Abuse</h2>
+<h2 id="verb-abuse">Verb Abuse</h2>
 
 <p>Hop on over to the web service, and we&rsquo;re blocked by an authorisation prompt.</p>
 
@@ -230,7 +230,7 @@ meterpreter &gt; getuid
 Server username: www-data (33)
 </code></pre>
 
-<h2 id="rene:378c41c5fac16f89c224b95690922b7e">Rene</h2>
+<h2 id="rene">Rene</h2>
 
 <p>After looking around the file system a bit, I spotted some files in rene&rsquo;s home directory.</p>
 
@@ -288,7 +288,7 @@ whoami
 root
 </code></pre>
 
-<h2 id="flag:378c41c5fac16f89c224b95690922b7e">Flag</h2>
+<h2 id="flag">Flag</h2>
 
 <pre><code class="language-text">                                                                   .aMMMMMMMMn.  ,aMMMMn.
                                                                  .aMccccccccc*YMMn.    `Mb
@@ -335,7 +335,6 @@ Y88b  d88PY8b.    Y88b.   888   888  888 Y8b.         X88Y88b.    888 d88P888  8
 Well Done!
 Here's your flag: 0089cd4f9ae79402cdd4e7b8931892b7
 </code></pre>
-
   </section>
 </article>
 

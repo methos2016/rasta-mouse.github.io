@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Bot challenges on rastamouse.me</title>
-    <link>https://rastamouse.me/tags/bot-challenges/</link>
-    <description>Recent content in Bot challenges on rastamouse.me</description>
+    <title>bot-challenges on rastamouse.me</title>
+    <link>https://rastamouse.me/tags/bot-challenges/index.xml</link>
+    <description>Recent content in bot-challenges on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 16 Jun 2014 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/tags/bot-challenges/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -15,11 +14,11 @@
       <pubDate>Mon, 16 Jun 2014 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2014/lobotomy/</guid>
-      <description>
+      <description>&lt;p&gt;The goal of the VM is to obtain a root shell.&lt;/p&gt;
 
-&lt;p&gt;The goal of the VM is to obtain a root shell.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;nmap:53aa007fdface966a5cc43503783e0d4&#34;&gt;Nmap&lt;/h2&gt;
+&lt;h2 id=&#34;nmap&#34;&gt;Nmap&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -A -p- 192.168.127.128
  
@@ -51,7 +50,7 @@ PORT    STATE SERVICE VERSION
 
 &lt;p&gt;The blog post is a pretty good read - it&amp;rsquo;s Brian&amp;rsquo;s original write up of the bot this challenge is based on.  The text here tells us two things really.  The first is that a copy of the bot&amp;rsquo;s source code is present on this web service somewhere; the second is that there&amp;rsquo;s a simulated client which regularily access the bot panel.&lt;/p&gt;
 
-&lt;h2 id=&#34;wfuzz:53aa007fdface966a5cc43503783e0d4&#34;&gt;WFuzz&lt;/h2&gt;
+&lt;h2 id=&#34;wfuzz&#34;&gt;WFuzz&lt;/h2&gt;
 
 &lt;p&gt;I next set about the task of finding the bot source code.  I suspected that it would be in some compressed format, so I used &lt;code&gt;WFuzz&lt;/code&gt; with the various Kali wordlists and prepended with various extensions (.tar.gz, .tar, .bz2, .zip etc)&lt;/p&gt;
 
@@ -95,7 +94,7 @@ drwxr-xr-x 2 root root 4096 Apr  5 02:44 sql (dont upload)
 
 &lt;p&gt;You can login and take a look around, though there isn&amp;rsquo;t much to see.&lt;/p&gt;
 
-&lt;h2 id=&#34;xss:53aa007fdface966a5cc43503783e0d4&#34;&gt;XSS&lt;/h2&gt;
+&lt;h2 id=&#34;xss&#34;&gt;XSS&lt;/h2&gt;
 
 &lt;p&gt;You could probably discover this yourself by reviewing the source code, but I came across this vulnerability whilst I was reading up on Madness.  There is also a SQLi vulnerability, but given the clue regarding an automated client, I stuck with the XSS.&lt;/p&gt;
 
@@ -154,7 +153,7 @@ drwxr-xr-x 2 root root 4096 Apr  5 02:44 sql (dont upload)
 
 &lt;p&gt;So we can see ports 22 and 80 (which are kind of expected as they&amp;rsquo;re usually bound to 0.0.0.0), and 3306 which makes sense to bind locally.  However, there is also 8080 which is an alternate to 80 and is unusual to see bound only to the localhost.&lt;/p&gt;
 
-&lt;h2 id=&#34;curl:53aa007fdface966a5cc43503783e0d4&#34;&gt;cURL&lt;/h2&gt;
+&lt;h2 id=&#34;curl&#34;&gt;cURL&lt;/h2&gt;
 
 &lt;p&gt;Running netstat on my Kali box, shows that the BeEF proxy is bound to port 6789.&lt;/p&gt;
 
@@ -226,8 +225,7 @@ uid=0(root) gid=0(root) groups=0(root)
 root
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;With a root shell, this is pretty much the end of the challenge.  The final step I took was to add my public SSH key into root&amp;rsquo;s &lt;code&gt;authorized_keys&lt;/code&gt; file for easy access.&lt;/p&gt;
-</description>
+&lt;p&gt;With a root shell, this is pretty much the end of the challenge.  The final step I took was to add my public SSH key into root&amp;rsquo;s &lt;code&gt;authorized_keys&lt;/code&gt; file for easy access.&lt;/p&gt;</description>
     </item>
     
   </channel>

@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Pegasus on rastamouse.me</title>
-    <link>https://rastamouse.me/tags/pegasus/</link>
-    <description>Recent content in Pegasus on rastamouse.me</description>
+    <title>pegasus on rastamouse.me</title>
+    <link>https://rastamouse.me/tags/pegasus/index.xml</link>
+    <description>Recent content in pegasus on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 20 Dec 2014 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/tags/pegasus/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -15,11 +14,11 @@
       <pubDate>Sat, 20 Dec 2014 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2014/pegasus-1/</guid>
-      <description>
+      <description>&lt;p&gt;Pegasus 1 is the first VM written by &lt;a href=&#34;https://twitter.com/@TheKnapsy&#34;&gt;Knapsy&lt;/a&gt;, which he describes as being pitched at &amp;lsquo;intermediate&amp;rsquo; difficulty.  It&amp;rsquo;s certainly a tricky VM, which I tore my hair out solving!&lt;/p&gt;
 
-&lt;p&gt;Pegasus 1 is the first VM written by &lt;a href=&#34;https://twitter.com/@TheKnapsy&#34;&gt;Knapsy&lt;/a&gt;, which he describes as being pitched at &amp;lsquo;intermediate&amp;rsquo; difficulty.  It&amp;rsquo;s certainly a tricky VM, which I tore my hair out solving!&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;nmap:91c607fe46b1f5fb0d58bc60ee1366ec&#34;&gt;Nmap&lt;/h2&gt;
+&lt;h2 id=&#34;nmap&#34;&gt;Nmap&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -A -p- 192.168.127.102
 
@@ -121,7 +120,7 @@ ID	Response   Lines      Word         Chars          Request
 Sorry, due to security precautions, Mike won&#39;t review any code containing system() function call.
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;reverse-shell:91c607fe46b1f5fb0d58bc60ee1366ec&#34;&gt;Reverse Shell?&lt;/h2&gt;
+&lt;h2 id=&#34;reverse-shell&#34;&gt;Reverse Shell?&lt;/h2&gt;
 
 &lt;p&gt;So it&amp;rsquo;s looking like C is what needs to be submitted, but we can&amp;rsquo;t use this function.  I submitted C code which, when compiled, would initial a reverse shell back to my machine.&lt;/p&gt;
 
@@ -141,7 +140,7 @@ int main()
 
 &lt;p&gt;This didn&amp;rsquo;t work however - tests on my local machine showed that it must be compiled with &lt;code&gt;no-stack-protector&lt;/code&gt; and &lt;code&gt;execstack&lt;/code&gt; for the binary to run; which is not being done on Pegasus.&lt;/p&gt;
 
-&lt;h2 id=&#34;bind-shell:91c607fe46b1f5fb0d58bc60ee1366ec&#34;&gt;Bind Shell!&lt;/h2&gt;
+&lt;h2 id=&#34;bind-shell&#34;&gt;Bind Shell!&lt;/h2&gt;
 
 &lt;p&gt;My next option was to attempt bind shellcode.  There&amp;rsquo;s no shortage of examples on the Internet, and I found a good post by &lt;a href=&#34;http://www.iodigitalsec.com/linux-shell-bind-tcp-shellcode/&#34;&gt;Adam Palmer&lt;/a&gt; made as part of the &lt;a href=&#34;http://www.securitytube-training.com/online-courses/securitytube-linux-assembly-expert/&#34;&gt;SLAE&lt;/a&gt; course.&lt;/p&gt;
 
@@ -194,7 +193,7 @@ uid=1001(mike) gid=1001(mike) groups=1001(mike)
 
 &lt;p&gt;There is a timeout to each process which gets executed, so my shell closed after a few minutes.  I just reconnected and echo&amp;rsquo;d my public SSH key into Mike&amp;rsquo;s .ssh authorized_keys file.&lt;/p&gt;
 
-&lt;h2 id=&#34;mike:91c607fe46b1f5fb0d58bc60ee1366ec&#34;&gt;Mike&lt;/h2&gt;
+&lt;h2 id=&#34;mike&#34;&gt;Mike&lt;/h2&gt;
 
 &lt;p&gt;Mike has an email waiting to be read:&lt;/p&gt;
 
@@ -236,7 +235,7 @@ Enter second number: %p
 Error details: 0xbf81186c
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;string-format:91c607fe46b1f5fb0d58bc60ee1366ec&#34;&gt;String Format&lt;/h2&gt;
+&lt;h2 id=&#34;string-format&#34;&gt;String Format&lt;/h2&gt;
 
 &lt;p&gt;I absolutely &lt;em&gt;hate&lt;/em&gt; string format vulns, because they&amp;rsquo;re so god damn picky to get working.  The first job is to determine where the string starts on the stack.&lt;/p&gt;
 
@@ -353,7 +352,7 @@ $ id
 uid=1001(mike) gid=1001(mike) euid=1000(john) groups=1000(john),1001(mike)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;uids-gids:91c607fe46b1f5fb0d58bc60ee1366ec&#34;&gt;UIDs &amp;amp; GIDs&lt;/h2&gt;
+&lt;h2 id=&#34;uids-gids&#34;&gt;UIDs &amp;amp; GIDs&lt;/h2&gt;
 
 &lt;p&gt;Currently, my &lt;code&gt;uid/gid=1001(mike)&lt;/code&gt; and &lt;code&gt;euid=1000(john)&lt;/code&gt;.  This means that I am able to browse john&amp;rsquo;s home directory and create files.  But I lack the proper permissions to setup authorized_keys for john.&lt;/p&gt;
 
@@ -398,7 +397,7 @@ User john may run the following commands on this host:
     (root) NOPASSWD: /usr/local/sbin/nfs
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;nfs:91c607fe46b1f5fb0d58bc60ee1366ec&#34;&gt;NFS&lt;/h2&gt;
+&lt;h2 id=&#34;nfs&#34;&gt;NFS&lt;/h2&gt;
 
 &lt;p&gt;John may run NFS as root, reviewing &lt;code&gt;/etc/exports&lt;/code&gt; reveals the following line:&lt;/p&gt;
 
@@ -445,7 +444,7 @@ uid=1000(john) gid=1001(mike) euid=0(root) groups=0(root),1001(mike)
 root
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;flag:91c607fe46b1f5fb0d58bc60ee1366ec&#34;&gt;Flag&lt;/h2&gt;
+&lt;h2 id=&#34;flag&#34;&gt;Flag&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;ls -l /root
 -rw------- 1 root root 1824 Dec 16 19:09 flag
@@ -492,8 +491,7 @@ and leave some feedback, I would love to hear from you!
 
 Also, make sure to follow @VulnHub on Twitter and keep checking vulnhub.com for
 more awesome boot2root VMs!
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
   </channel>

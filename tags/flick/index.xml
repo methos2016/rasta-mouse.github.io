@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Flick on rastamouse.me</title>
-    <link>https://rastamouse.me/tags/flick/</link>
-    <description>Recent content in Flick on rastamouse.me</description>
+    <title>flick on rastamouse.me</title>
+    <link>https://rastamouse.me/tags/flick/index.xml</link>
+    <description>Recent content in flick on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 08 Sep 2015 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/tags/flick/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -15,11 +14,11 @@
       <pubDate>Tue, 08 Sep 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/flick-ii/</guid>
-      <description>
+      <description>&lt;p&gt;After the success of &lt;a href=&#34;https://www.vulnhub.com/entry/flick-1,99/&#34;&gt;Flick: I&lt;/a&gt;, &lt;a href=&#34;https://twitter.com/leonjza&#34;&gt;@leonjza&lt;/a&gt; decided that VulnHub needed a fresh dose of pain and suffering.  &lt;a href=&#34;https://www.vulnhub.com/entry/flick-2,122/&#34;&gt;Flick: II&lt;/a&gt; is a vulnerable machine with a mobile twist - it requires the attacker to wrestle with a custom Android application to breach the VM.  I was more than complimentary about it on &lt;a href=&#34;https://twitter.com/_RastaMouse/status/638789930261585921&#34;&gt;Twitter&lt;/a&gt; - it&amp;rsquo;s definitely worth checking out.&lt;/p&gt;
 
-&lt;p&gt;After the success of &lt;a href=&#34;https://www.vulnhub.com/entry/flick-1,99/&#34;&gt;Flick: I&lt;/a&gt;, &lt;a href=&#34;https://twitter.com/leonjza&#34;&gt;@leonjza&lt;/a&gt; decided that VulnHub needed a fresh dose of pain and suffering.  &lt;a href=&#34;https://www.vulnhub.com/entry/flick-2,122/&#34;&gt;Flick: II&lt;/a&gt; is a vulnerable machine with a mobile twist - it requires the attacker to wrestle with a custom Android application to breach the VM.  I was more than complimentary about it on &lt;a href=&#34;https://twitter.com/_RastaMouse/status/638789930261585921&#34;&gt;Twitter&lt;/a&gt; - it&amp;rsquo;s definitely worth checking out.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;https:97d1000c18ea8816fa1721a8cb10b128&#34;&gt;HTTPS&lt;/h2&gt;
+&lt;h2 id=&#34;https&#34;&gt;HTTPS&lt;/h2&gt;
 
 &lt;p&gt;After a bit of port scanning we find that only port 443 is open.&lt;/p&gt;
 
@@ -52,7 +51,7 @@
 
 &lt;p&gt;Time to have a look at the Android application.&lt;/p&gt;
 
-&lt;h2 id=&#34;apk:97d1000c18ea8816fa1721a8cb10b128&#34;&gt;APK&lt;/h2&gt;
+&lt;h2 id=&#34;apk&#34;&gt;APK&lt;/h2&gt;
 
 &lt;p&gt;I used the Android Studio emulator to run the application.  After creating an AVD in the Studio, I wrote the following &lt;code&gt;BAT&lt;/code&gt; files.&lt;/p&gt;
 
@@ -185,7 +184,7 @@ bash-4.2$ id
 uid=998(nginx) gid=997(nginx) groups=997(nginx)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;robin:97d1000c18ea8816fa1721a8cb10b128&#34;&gt;Robin&lt;/h2&gt;
+&lt;h2 id=&#34;robin&#34;&gt;Robin&lt;/h2&gt;
 
 &lt;p&gt;The apk has an advertised capability to execute commands over SSH as well as HTTPS.  But since SSH doesn&amp;rsquo;t seem to be enabled on the VM, this doesn&amp;rsquo;t work.  However, there is functional code within the application to establish an SSH connection, but the credentials are rather obscure.&lt;/p&gt;
 
@@ -274,7 +273,7 @@ python -c &#39;import pty; pty.spawn(&amp;quot;/bin/bash&amp;quot;)&#39;
 uid=1000(robin) gid=1000(robin) groups=1000(robin)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;bryan:97d1000c18ea8816fa1721a8cb10b128&#34;&gt;Bryan&lt;/h2&gt;
+&lt;h2 id=&#34;bryan&#34;&gt;Bryan&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;[robin@fII ~]$ ls -l
 -rw-r--r-- 1 robin robin 1617 Jul 23 21:35 debug.gpg
@@ -360,7 +359,7 @@ Dice said: 4444
 uid=1001(bryan) gid=1001(bryan) groups=1001(bryan)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;sean:97d1000c18ea8816fa1721a8cb10b128&#34;&gt;Sean&lt;/h2&gt;
+&lt;h2 id=&#34;sean&#34;&gt;Sean&lt;/h2&gt;
 
 &lt;p&gt;&lt;code&gt;/usr/local/bin/&lt;/code&gt; actually contains 4 binaries.&lt;/p&gt;
 
@@ -493,7 +492,7 @@ uid=1002(sean) gid=1001(bryan) groups=1002(sean),1001(bryan)
 sean
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;root:97d1000c18ea8816fa1721a8cb10b128&#34;&gt;Root&lt;/h2&gt;
+&lt;h2 id=&#34;root&#34;&gt;Root&lt;/h2&gt;
 
 &lt;p&gt;Up next is &lt;code&gt;-rwsr-x---  1 root sean   866169 Aug 15 11:53 restore&lt;/code&gt;.  Trying to run it as we are results in a fail.&lt;/p&gt;
 
@@ -712,7 +711,7 @@ uid=0(root) gid=0(root) groups=0(root),1001(bryan),1002(sean)
 root
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;flag:97d1000c18ea8816fa1721a8cb10b128&#34;&gt;Flag&lt;/h2&gt;
+&lt;h2 id=&#34;flag&#34;&gt;Flag&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;cat /root/flag
 
@@ -735,8 +734,7 @@ root
  #vulnhub or on twitter @leonjza
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;Many thanks to leonjza for a brilliant VM - one of my favourites to date.  Shout-out to &lt;a href=&#34;https://twitter.com/superkojiman&#34;&gt;superkojiman&lt;/a&gt; for his excellent &lt;a href=&#34;http://blog.techorganic.com/2015/04/21/64-bit-linux-stack-smashing-tutorial-part-2/&#34;&gt;64-bit Stack Smashing Tutorial&lt;/a&gt; which came in super-handy for this final exercise.&lt;/p&gt;
-</description>
+&lt;p&gt;Many thanks to leonjza for a brilliant VM - one of my favourites to date.  Shout-out to &lt;a href=&#34;https://twitter.com/superkojiman&#34;&gt;superkojiman&lt;/a&gt; for his excellent &lt;a href=&#34;http://blog.techorganic.com/2015/04/21/64-bit-linux-stack-smashing-tutorial-part-2/&#34;&gt;64-bit Stack Smashing Tutorial&lt;/a&gt; which came in super-handy for this final exercise.&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -745,16 +743,16 @@ root
       <pubDate>Sat, 16 Aug 2014 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2014/flick-1/</guid>
-      <description>
-
-&lt;p&gt;Completing &amp;ldquo;flick&amp;rdquo; will require some sound thinking, good enumeration skills &amp;amp; time!&lt;/p&gt;
+      <description>&lt;p&gt;Completing &amp;ldquo;flick&amp;rdquo; will require some sound thinking, good enumeration skills &amp;amp; time!&lt;/p&gt;
 
 &lt;p&gt;The objective is to find and read the flag that lives in /root/.
 As a bonus, can you get root command execution?&lt;/p&gt;
 
 &lt;p&gt;Good Luck! @leonjza&lt;/p&gt;
 
-&lt;h2 id=&#34;port-scan:349ad66c7b20ba925d9eeb00398f8306&#34;&gt;Port Scan&lt;/h2&gt;
+&lt;p&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;port-scan&#34;&gt;Port Scan&lt;/h2&gt;
 
 &lt;p&gt;When Flick boots up, it&amp;rsquo;s nice enough to display its IP address at the login prompt.  I therefore went straight ahead with an Nmap scan.&lt;/p&gt;
 
@@ -832,7 +830,7 @@ Accepted! The door should be open now :poolparty:
 
 &lt;p&gt;Another quick Nmap scan showed that port 80 was now open.&lt;/p&gt;
 
-&lt;h2 id=&#34;flick-a-photo:349ad66c7b20ba925d9eeb00398f8306&#34;&gt;Flick-a-Photo&lt;/h2&gt;
+&lt;h2 id=&#34;flick-a-photo&#34;&gt;Flick-a-Photo&lt;/h2&gt;
 
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
@@ -958,7 +956,7 @@ robin: JoofimOwEakpalv4Jijyiat5GloonTojatticEirracksIg4yijovyirtAwUjad1J
 
 &lt;p&gt;The creds for Robin did not work, but I was able to SSH as Dean.&lt;/p&gt;
 
-&lt;h2 id=&#34;dean:349ad66c7b20ba925d9eeb00398f8306&#34;&gt;Dean&lt;/h2&gt;
+&lt;h2 id=&#34;dean&#34;&gt;Dean&lt;/h2&gt;
 
 &lt;p&gt;Dean has two files in his home directory:&lt;/p&gt;
 
@@ -1039,7 +1037,7 @@ VP0mqDppzOZ04B9FQD8Af6kUzxzGFH8tAN5SNYSW88I9Z8lVpfkn
 
 &lt;p&gt;After copying this key to my Kali VM, I was able to SSH in as Robin :)&lt;/p&gt;
 
-&lt;h2 id=&#34;robin:349ad66c7b20ba925d9eeb00398f8306&#34;&gt;Robin&lt;/h2&gt;
+&lt;h2 id=&#34;robin&#34;&gt;Robin&lt;/h2&gt;
 
 &lt;p&gt;There was nothing in Robin&amp;rsquo;s home directory, but a quick check of his sudo rights showed the following:&lt;/p&gt;
 
@@ -1197,7 +1195,7 @@ uid=1000(robin) gid=1000(robin) euid=0(root) groups=0(root),999(docker),1000(rob
 root
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;game-over:349ad66c7b20ba925d9eeb00398f8306&#34;&gt;Game Over&lt;/h2&gt;
+&lt;h2 id=&#34;game-over&#34;&gt;Game Over&lt;/h2&gt;
 
 &lt;p&gt;Before collecting the flag, I echo&amp;rsquo;d my public SSH key into root&amp;rsquo;s authorised_keys, set the correct owners, permissions etc and logged in as root.&lt;/p&gt;
 
@@ -1213,8 +1211,7 @@ You have completed &#39;flick&#39;! I hope you have enjoyed doing it as much as 
   
 ciao for now!
 @leonjza
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
   </channel>

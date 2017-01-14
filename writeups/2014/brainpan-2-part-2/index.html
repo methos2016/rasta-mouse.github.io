@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,9 +52,9 @@
   </div>
   <h1 class="headline" itemprop="headline">Brainpan: 2 - Part 2</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p></p>
 
-<h2 id="brainpan-1-8:57e48663af901e7c94c0472675ef84ed">brainpan-1.8</h2>
+<h2 id="brainpan-1-8">brainpan-1.8</h2>
 
 <p>It was mentioned in the <code>notes.txt</code> file that <code>brainpan-1.8</code> works from a configuration file.  It also contains the following line:</p>
 
@@ -115,7 +115,7 @@ Segmentation fault
 
 <p>Wow, excellent.</p>
 
-<h2 id="gdb:57e48663af901e7c94c0472675ef84ed">GDB</h2>
+<h2 id="gdb">GDB</h2>
 
 <p>The <code>EIP</code> offset is <code>44 bytes</code>.   A quick test to verify.</p>
 
@@ -160,7 +160,7 @@ No RELRO        No canary found   NX enabled    No PIE          No RPATH   No RU
 
 <p>This protection means that code located on the stack will not be executed, so even if I could find a JMP ESP insruction (of which there are none in the binary anyway), shellcode will not be executed.  A popular type of attack to bypass NX is called <code>ret-to-libc</code>.</p>
 
-<h2 id="return-to-libc:57e48663af901e7c94c0472675ef84ed">Return-to-libc</h2>
+<h2 id="return-to-libc">Return-to-libc</h2>
 
 <p>libc is the standard c library and provides multiple functionality for a programmer, including Operating System functions etc.  It makes it possible to call pre-loaded functions via this library, rather than having to inject your own code.  It bypasses the NX protection since nothing is being executed from the stack.</p>
 
@@ -213,7 +213,7 @@ uid=1000(anansi) gid=1000(anansi) euid=1001(puck) groups=1001(puck),50(staff),10
 puck
 </code></pre>
 
-<h2 id="robin-goodfellow:57e48663af901e7c94c0472675ef84ed">Robin Goodfellow&hellip;</h2>
+<h2 id="robin-goodfellow">Robin Goodfellow&hellip;</h2>
 
 <p>&hellip; I mean Puck&hellip;</p>
 
@@ -258,7 +258,7 @@ uid=0(root ) gid=0(root ) groups=0(root )
 root
 </code></pre>
 
-<h2 id="flag:57e48663af901e7c94c0472675ef84ed">Flag</h2>
+<h2 id="flag">Flag</h2>
 
 <p><code>root@brainpan2:~# cat /root/flag.txt</code></p>
 
@@ -280,7 +280,6 @@ root
 <li><a href="http://vulnhub.com/">VulnHub</a> for hosting,</li>
 <li><a href="https://twitter.com/teh_h3ck">teh3ck</a> for his kind words of encouragement.</li>
 </ul>
-
   </section>
 </article>
 

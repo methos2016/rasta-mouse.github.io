@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">Kioptrix Level 1.1</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>This is a walkthrough of how I completed Kioptrix Level 1.2.  The goal of the challenge is to obtain the flag.</p>
 
-<p>This is a walkthrough of how I completed Kioptrix Level 1.2.  The goal of the challenge is to obtain the flag.</p>
+<p></p>
 
-<h2 id="nmap:9a8c984df175a5e455bd837f325e544a">Nmap</h2>
+<h2 id="nmap">Nmap</h2>
 
 <pre><code class="language-text">root@kali:~/kioptrix/2# nmap -n -sV -A -p- 192.168.1.121
 
@@ -105,7 +105,7 @@ PORT     STATE SERVICE  VERSION
 3306/tcp open  mysql    MySQL (unauthorized)
 </code></pre>
 
-<h2 id="sql-injection-login-bypass:9a8c984df175a5e455bd837f325e544a">SQL Injection Login Bypass</h2>
+<h2 id="sql-injection-login-bypass">SQL Injection Login Bypass</h2>
 
 <p>I went and had a look at the Apache service running on port 80, and was greated with a login page.</p>
 
@@ -135,7 +135,7 @@ Password: ' or '1'='1
 </figure>
 </div>
 
-<h2 id="command-injection:9a8c984df175a5e455bd837f325e544a">Command Injection</h2>
+<h2 id="command-injection">Command Injection</h2>
 
 <p>Entering <code>127.0.0.1</code> in this box give me the expected output.</p>
 
@@ -158,7 +158,7 @@ drwxr-xr-x  8 root root 4096 Oct  7  2009 ..
 -rwxr-Sr-t  1 root root  199 Oct  8  2009 pingit.php
 </code></pre>
 
-<h2 id="exploring-mysql:9a8c984df175a5e455bd837f325e544a">Exploring MySQL</h2>
+<h2 id="exploring-mysql">Exploring MySQL</h2>
 
 <p>I used the shell to read <code>index.php</code>, which was the original paged used to login, and obtain the username and password it uses to connect to the database.  I spent some time exploring the databases within.</p>
 
@@ -174,7 +174,7 @@ mysql --user=john --password=hiroshima -e &quot;use webapp; show tables;&quot;
 mysql --user=john --password=hiroshima -e &quot;use webapp; select * from users;&quot;
 </code></pre>
 
-<h2 id="privilege-escalation:9a8c984df175a5e455bd837f325e544a">Privilege Escalation</h2>
+<h2 id="privilege-escalation">Privilege Escalation</h2>
 
 <p>In the end, I found a local kernel exploit that worked nicely in elevating my shell to root.  I transfered the exploit by hosting it on my own apache server and using <code>wget</code>.  It was then compiled with <code>gcc</code> and run.</p>
 
@@ -185,7 +185,6 @@ sh-3.00# id
 uid=0(root) gid=0(root) groups=48(apache)
 sh-3.00# cat /root/.mysql_history
 </code></pre>
-
   </section>
 </article>
 

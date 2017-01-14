@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">SecOS 1</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>SecOS is a series of vulnerable VMs created by <a href="https://twitter.com/PaulWebSec">PaulSec</a> - launched as part of his talk at BSides London 2014 (which I attended) and focus around CSRF vulnerabilities.  Paul is also the author of the <a href="https://github.com/PaulSec/CSRFT">CSRF Toolkit</a>, which can be used to attack the SecOS VMs.</p>
 
-<p>SecOS is a series of vulnerable VMs created by <a href="https://twitter.com/PaulWebSec">PaulSec</a> - launched as part of his talk at BSides London 2014 (which I attended) and focus around CSRF vulnerabilities.  Paul is also the author of the <a href="https://github.com/PaulSec/CSRFT">CSRF Toolkit</a>, which can be used to attack the SecOS VMs.</p>
+<p></p>
 
-<h2 id="nmap:a8f3f5408c20b5fb1272625cc4f385d6">Nmap</h2>
+<h2 id="nmap">Nmap</h2>
 
 <pre><code class="language-text">root@kali:~# nmap -n -sV -p- -A 192.168.127.133
 
@@ -74,7 +74,7 @@ SF:7,&quot;SSH-2\.0-OpenSSH_6\.6p1\x20Ubuntu-2ubuntu1\r\n&quot;);
 MAC Address: 08:00:27:74:13:C8 (Cadmus Computer Systems)
 </code></pre>
 
-<h2 id="secure-web-app:a8f3f5408c20b5fb1272625cc4f385d6">Secure Web App</h2>
+<h2 id="secure-web-app">Secure Web App</h2>
 
 <div align="center">
 	<figure style="background-color: #f2f0ec;" >
@@ -124,7 +124,7 @@ MAC Address: 08:00:27:74:13:C8 (Cadmus Computer Systems)
 
 <p>The web app allows users to send messages to each other.  I used my <code>rasta</code> account to send a message to <code>spiderman</code>, containing a URL which he will visit.  I will need to craft a special web request which will be &lsquo;unknowingly&rsquo; executed by <code>spiderman</code> - this can be done manually but I chose to use Pauls CSRF toolkit.</p>
 
-<h2 id="csrft:a8f3f5408c20b5fb1272625cc4f385d6">CSRFT</h2>
+<h2 id="csrft">CSRFT</h2>
 
 <p>The toolkit can be downloaded from GitHub, instructions for installation etc. are included.  A number of example exploits and configurations are included, which I used as a template to craft mine (included at the end of this article).</p>
 
@@ -147,7 +147,7 @@ Listening on port 8080
 
 <p>After a minute or so, I got a connection from the VM IP address and the &lsquo;exploit&rsquo; was launched.  Going back to the web app, I was now able to log in with username: <code>spiderman</code>, password: <code>spiderman</code>.</p>
 
-<h2 id="ssh:a8f3f5408c20b5fb1272625cc4f385d6">SSH</h2>
+<h2 id="ssh">SSH</h2>
 
 <p>There isn&rsquo;t anything much to see whilst logged in as <code>spiderman</code>, though on the Messages page I saw that the user called <code>pirate</code> was one-step ahead.</p>
 
@@ -164,7 +164,7 @@ Listening on port 8080
 
 <p>After some enumeration I found that <code>spiderman</code> was not a member of the sudoers group, and the kernel was quite new (therefore unlikely to find a local kernel exploit).</p>
 
-<h2 id="privilege-escalation:a8f3f5408c20b5fb1272625cc4f385d6">Privilege Escalation</h2>
+<h2 id="privilege-escalation">Privilege Escalation</h2>
 
 <p>I had a look at processes running as root.</p>
 
@@ -203,9 +203,9 @@ Twitter: @PaulWebSec
 GitHub : PaulSec
 </code></pre>
 
-<h2 id="notes:a8f3f5408c20b5fb1272625cc4f385d6">Notes</h2>
+<h2 id="notes">Notes</h2>
 
-<h3 id="exploits-secos1-change-password-html:a8f3f5408c20b5fb1272625cc4f385d6">exploits/secos1-change-password.html</h3>
+<h3 id="exploits-secos1-change-password-html">exploits/secos1-change-password.html</h3>
 
 <pre><code class="language-html">&lt;form class=&quot;form-signin&quot; action=&quot;http://127.0.0.1:8081/change-password&quot; method=&quot;POST&quot;&gt;
         &lt;input type=&quot;text&quot; name=&quot;username&quot; value=&quot;spiderman&quot;&gt;
@@ -213,7 +213,7 @@ GitHub : PaulSec
 &lt;/form&gt;
 </code></pre>
 
-<h3 id="conf-secos1-change-password-json:a8f3f5408c20b5fb1272625cc4f385d6">conf/secos1_change_password.json</h3>
+<h3 id="conf-secos1-change-password-json">conf/secos1_change_password.json</h3>
 
 <pre><code class="language-json">{
         &quot;audit&quot;: {
@@ -233,7 +233,7 @@ GitHub : PaulSec
 }
 </code></pre>
 
-<h2 id="update-26-05-2014:a8f3f5408c20b5fb1272625cc4f385d6">Update 26/05/2014</h2>
+<h2 id="update-26-05-2014">Update 26/05/2014</h2>
 
 <p>After having a rather informative discussion with Paul regarding this solution, he suggested I also try <code>csrft_utils.py</code>.  This is a script designed to automate much of the attack process (i.e. grabbing the form and creating the attack config files on the fly) and is included in the CSRF toolkit.</p>
 
@@ -254,7 +254,6 @@ GitHub : PaulSec
 <p>Due to the nature of how the admin access is simulated in this challange, you have to edit <code>/tmp/csrft/form.html</code>, so that the form action points to <code>127.0.0.1</code> rather than the actual IP assigned to the VM (as per the advice given on the <code>/hint</code> page).</p>
 
 <p>As previously, the <code>admin</code> user will access port <code>8080</code> on our machine and submit the bogus form.</p>
-
   </section>
 </article>
 

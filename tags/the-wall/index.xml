@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>The wall on rastamouse.me</title>
-    <link>https://rastamouse.me/tags/the-wall/</link>
-    <description>Recent content in The wall on rastamouse.me</description>
+    <title>the-wall on rastamouse.me</title>
+    <link>https://rastamouse.me/tags/the-wall/index.xml</link>
+    <description>Recent content in the-wall on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 27 Nov 2015 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/tags/the-wall/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -15,11 +14,11 @@
       <pubDate>Fri, 27 Nov 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/the-wall/</guid>
-      <description>
-
-&lt;p&gt;In 1965, one of the most influential bands of our times was formed.. Pink Floyd. This boot2root box has been created to celebrate 50 years of Pink Floyd&amp;rsquo;s contribution to the music industry, with each challenge giving the attacker an introduction to each member of the Floyd.&lt;/p&gt;
+      <description>&lt;p&gt;In 1965, one of the most influential bands of our times was formed.. Pink Floyd. This boot2root box has been created to celebrate 50 years of Pink Floyd&amp;rsquo;s contribution to the music industry, with each challenge giving the attacker an introduction to each member of the Floyd.&lt;/p&gt;
 
 &lt;p&gt;You challenge is simple&amp;hellip; set your controls for the heart of the sun, get root, and grab the flag! Rock on!&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
 
 &lt;p&gt;&lt;a href=&#34;https://twitter.com/xerubus&#34;&gt;Xerubus&lt;/a&gt; asked if I would like to beta-test this VM prior to release and being a bit of a (closet) Pink Floyd fan, I jumped at the opportunity.  So obviously the first stage in any boot2root is to port scan the sucker.&lt;/p&gt;
 
@@ -159,7 +158,7 @@ f831605ae34c2399d1e5bb3a4ab245d0 == pinkfloydrocks
 
 &lt;p&gt;So we have what looks like a set of credentials.  &lt;code&gt;SydBarrett:pinkfloydrocks&lt;/code&gt;.  But where to use them?&lt;/p&gt;
 
-&lt;h2 id=&#34;sydbarrett:692b9b8dc88c7093a6facc13d9ec511d&#34;&gt;SydBarrett&lt;/h2&gt;
+&lt;h2 id=&#34;sydbarrett&#34;&gt;SydBarrett&lt;/h2&gt;
 
 &lt;p&gt;I was stuck here for a while, but if we do a &amp;lsquo;wider&amp;rsquo; port scan, we find that port 1965 is open.&lt;/p&gt;
 
@@ -259,7 +258,7 @@ Scalpel is done, files carved = 1, elapsed = 0 seconds.
 &lt;/figure&gt;
 &lt;/div&gt;
 
-&lt;h2 id=&#34;rogerwaters:692b9b8dc88c7093a6facc13d9ec511d&#34;&gt;RogerWaters&lt;/h2&gt;
+&lt;h2 id=&#34;rogerwaters&#34;&gt;RogerWaters&lt;/h2&gt;
 
 &lt;p&gt;So now we have the password for RogerWaters, &lt;code&gt;hello_is_there_anybody_in_there&lt;/code&gt;. Let&amp;rsquo;s try and connect via SSH this time.&lt;/p&gt;
 
@@ -294,7 +293,7 @@ $
 
 &lt;p&gt;w00t shell.&lt;/p&gt;
 
-&lt;h2 id=&#34;nick-mason:692b9b8dc88c7093a6facc13d9ec511d&#34;&gt;Nick Mason&lt;/h2&gt;
+&lt;h2 id=&#34;nick-mason&#34;&gt;Nick Mason&lt;/h2&gt;
 
 &lt;p&gt;After some standard Linux enumeration, we get a list of all users on the system.  It&amp;rsquo;s logical to assume that we will have to progress through each user before reaching root.&lt;/p&gt;
 
@@ -336,7 +335,7 @@ $ whoami
 NickMason
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;richard-wright:692b9b8dc88c7093a6facc13d9ec511d&#34;&gt;Richard Wright&lt;/h2&gt;
+&lt;h2 id=&#34;richard-wright&#34;&gt;Richard Wright&lt;/h2&gt;
 
 &lt;p&gt;In each home directory thus far, there has been a profile picture of the band member.  Although Nick&amp;rsquo;s is something else in disguise.&lt;/p&gt;
 
@@ -364,7 +363,7 @@ $ id
 uid=1003(RichardWright) gid=1003(RichardWright) groups=1003(RichardWright)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;david-gilmour:692b9b8dc88c7093a6facc13d9ec511d&#34;&gt;David Gilmour&lt;/h2&gt;
+&lt;h2 id=&#34;david-gilmour&#34;&gt;David Gilmour&lt;/h2&gt;
 
 &lt;p&gt;Now we are Richard Wright, we can go back to the &lt;code&gt;shineon&lt;/code&gt; binary we found previously.&lt;/p&gt;
 
@@ -549,7 +548,7 @@ Congratulations... permission has been granted.
 You can now set your controls to the heart of the sun!
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;root:692b9b8dc88c7093a6facc13d9ec511d&#34;&gt;root&lt;/h2&gt;
+&lt;h2 id=&#34;root&#34;&gt;root&lt;/h2&gt;
 
 &lt;p&gt;&lt;code&gt;permission granted&lt;/code&gt; is a little cryptic.  It took me a while to realise it had given DavidGilmour sudo rights.&lt;/p&gt;
 
@@ -624,8 +623,7 @@ root
 
 &lt;p&gt;It was also nice to read through the contents of &lt;code&gt;/root/scripts/&lt;/code&gt; to see how the VM works.&lt;/p&gt;
 
-&lt;p&gt;Many thanks to xerubus, and thanks for letting me beta-test :)&lt;/p&gt;
-</description>
+&lt;p&gt;Many thanks to xerubus, and thanks for letting me beta-test :)&lt;/p&gt;</description>
     </item>
     
   </channel>

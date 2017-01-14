@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">Tr0ll: 1</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>Tr0ll is a boot2root, from <a href="https://twitter.com/@maleus21">Maleus</a>.  It was inspired by the constant trolling of the machines within the OSCP labs.  The goal is simple, gain root and get Proof.txt from the /root directory.  Not for the easily frustrated!  Fair warning, there be trolls ahead!</p>
 
-<p>Tr0ll is a boot2root, from <a href="https://twitter.com/@maleus21">Maleus</a>.  It was inspired by the constant trolling of the machines within the OSCP labs.  The goal is simple, gain root and get Proof.txt from the /root directory.  Not for the easily frustrated!  Fair warning, there be trolls ahead!</p>
+<p></p>
 
-<h2 id="nmap:5cf26261215ffd911b8d76378f87ff79">Nmap</h2>
+<h2 id="nmap">Nmap</h2>
 
 <pre><code class="language-text">root@kali:~# nmap -n -A -p- 192.168.127.103
  
@@ -161,7 +161,7 @@ Good_job_:)
 
 <p>I finally got a successful login with <code>overflow:Pass.txt</code>.  Woop.</p>
 
-<h2 id="ssh:5cf26261215ffd911b8d76378f87ff79">SSH</h2>
+<h2 id="ssh">SSH</h2>
 
 <p>I started some basic enumeration until this happened:</p>
 
@@ -212,7 +212,7 @@ uid=1002(overflow) gid=1002(overflow) euid=0(root) groups=0(root),1002(overflow)
 root
 </code></pre>
 
-<h2 id="flag:5cf26261215ffd911b8d76378f87ff79">Flag</h2>
+<h2 id="flag">Flag</h2>
 
 <p>From here, you can cat the flag.</p>
 
@@ -235,7 +235,6 @@ os.system('echo &quot;TIMES UP LOL!&quot;|wall')
 os.system(&quot;pkill -u 'overflow'&quot;)
 sys.exit()
 </code></pre>
-
   </section>
 </article>
 

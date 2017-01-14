@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Skytower on rastamouse.me</title>
-    <link>https://rastamouse.me/tags/skytower/</link>
-    <description>Recent content in Skytower on rastamouse.me</description>
+    <title>skytower on rastamouse.me</title>
+    <link>https://rastamouse.me/tags/skytower/index.xml</link>
+    <description>Recent content in skytower on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 29 Jun 2014 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/tags/skytower/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -15,11 +14,11 @@
       <pubDate>Sun, 29 Jun 2014 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2014/skytower-1/</guid>
-      <description>
+      <description>&lt;p&gt;SkyTower is a boot2root challenge hosted at VulnHub.  The goal is to reach /root/flag.txt.&lt;/p&gt;
 
-&lt;p&gt;SkyTower is a boot2root challenge hosted at VulnHub.  The goal is to reach /root/flag.txt.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;nmap:9b0fe4d66100ab98a2421f7d860ef8e6&#34;&gt;Nmap&lt;/h2&gt;
+&lt;h2 id=&#34;nmap&#34;&gt;Nmap&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -A -p- 192.168.127.128
 
@@ -32,7 +31,7 @@ PORT     STATE    SERVICE    VERSION
 |_http-title: ERROR: The requested URL could not be retrieved
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;skytower-login:9b0fe4d66100ab98a2421f7d860ef8e6&#34;&gt;SkyTower Login&lt;/h2&gt;
+&lt;h2 id=&#34;skytower-login&#34;&gt;SkyTower Login&lt;/h2&gt;
 
 &lt;p&gt;I punched the IP into Iceweasel and was greeted with a login screen.&lt;/p&gt;
 
@@ -81,7 +80,7 @@ There was an error running the query [You have an error in your SQL syntax; chec
 
 &lt;p&gt;$2 retirement fund&amp;hellip; a bit stingy to say the least&amp;hellip;&lt;/p&gt;
 
-&lt;h2 id=&#34;secure-shell:9b0fe4d66100ab98a2421f7d860ef8e6&#34;&gt;Secure Shell&lt;/h2&gt;
+&lt;h2 id=&#34;secure-shell&#34;&gt;Secure Shell&lt;/h2&gt;
 
 &lt;p&gt;This message is very useful, in that it flat out tells us to SSH into the box and even provides a username and password.  However, if we recall the Nmap scan port 22 was filtered, but there is a Squid proxy running.  I used proxytunnel to establish a connection to port 22.&lt;/p&gt;
 
@@ -124,7 +123,7 @@ $email = str_ireplace($sqlinjection, &amp;quot;&amp;quot;, $_POST[&#39;email&#39
 $password = str_ireplace($sqlinjection, &amp;quot;&amp;quot;, $_POST[&#39;password&#39;]);
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;mysql:9b0fe4d66100ab98a2421f7d860ef8e6&#34;&gt;MySQL&lt;/h2&gt;
+&lt;h2 id=&#34;mysql&#34;&gt;MySQL&lt;/h2&gt;
 
 &lt;p&gt;With these credentials, I was able to log in and explore the SQL database and extract the passwords of two other users.&lt;/p&gt;
 
@@ -169,7 +168,7 @@ User sara may run the following commands on this host:
 
 &lt;p&gt;The wildcard in these allowances are actually vulnerable to a directory traversal type effect.&lt;/p&gt;
 
-&lt;h2 id=&#34;root:9b0fe4d66100ab98a2421f7d860ef8e6&#34;&gt;Root&lt;/h2&gt;
+&lt;h2 id=&#34;root&#34;&gt;Root&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;sara@SkyTower:~$ sudo /bin/ls /accounts/../root/
 flag.txt
@@ -179,8 +178,7 @@ Congratz, have a cold one to celebrate!
 root password is theskytower
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;Even though I had root access, I wanted to explore William&amp;rsquo;s account.  The password within the SkyTech database was incorrect for the user, so I cracked the real password by obtaining the shadow file.  William&amp;rsquo;s real password is &lt;code&gt;sensable&lt;/code&gt;, not &lt;code&gt;senseable&lt;/code&gt; - not sure if this is a typo in the database or intentional.  Either way, I didn&amp;rsquo;t find anything interesting within his user space.&lt;/p&gt;
-</description>
+&lt;p&gt;Even though I had root access, I wanted to explore William&amp;rsquo;s account.  The password within the SkyTech database was incorrect for the user, so I cracked the real password by obtaining the shadow file.  William&amp;rsquo;s real password is &lt;code&gt;sensable&lt;/code&gt;, not &lt;code&gt;senseable&lt;/code&gt; - not sure if this is a typo in the database or intentional.  Either way, I didn&amp;rsquo;t find anything interesting within his user space.&lt;/p&gt;</description>
     </item>
     
   </channel>

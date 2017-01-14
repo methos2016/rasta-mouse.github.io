@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">De-ICE S1.100</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>This is a walkthrough of how I completed the De-ICE S1.100 challenge.  The end goal is to obtain the CEO&rsquo;s salary information.</p>
 
-<p>This is a walkthrough of how I completed the De-ICE S1.100 challenge.  The end goal is to obtain the CEO&rsquo;s salary information.</p>
+<p></p>
 
-<h2 id="nmap:7ae3df20909f7f73a6199fc5ab833e91">Nmap</h2>
+<h2 id="nmap">Nmap</h2>
 
 <pre><code class="language-text">root@kali:~# nmap -n -sV -A -p- 192.168.1.100
  
@@ -82,7 +82,7 @@ PORT    STATE  SERVICE  VERSION
 
 <p>This page contains some names and email addresses of employee&rsquo;s.  I took a copy of this information, and used it to create a list of possible usernames.</p>
 
-<h2 id="hydra:7ae3df20909f7f73a6199fc5ab833e91">Hydra</h2>
+<h2 id="hydra">Hydra</h2>
 
 <p>I then attempted to use these usernames to bruteforce the SSH login.</p>
 
@@ -98,7 +98,7 @@ PORT    STATE  SERVICE  VERSION
 1 of 1 target successfully completed, 1 valid password found
 </code></pre>
 
-<h2 id="ssh-enumeration:7ae3df20909f7f73a6199fc5ab833e91">SSH &amp; Enumeration</h2>
+<h2 id="ssh-enumeration">SSH &amp; Enumeration</h2>
 
 <pre><code class="language-text">root@kali:~/de-ice/1.100# ssh bbanter@192.168.1.100
 bbanter @ 192.168.1.100's password: 
@@ -127,7 +127,7 @@ users::100:
 
 <p>Now I knew that bbanter and ccoffee were both members of the users (gid=100) group; and aadams was in the wheel (gid=10) group.  The wheel group traditionally allows its users sudo privileges and would therefore be a better account to attack compared to ccoffee.</p>
 
-<h2 id="hyrda-again:7ae3df20909f7f73a6199fc5ab833e91">Hyrda (again)</h2>
+<h2 id="hyrda-again">Hyrda (again)</h2>
 
 <p><code>root@kali:~# hydra -l aadams -P /usr/share/wordlists/passwords 192.168.1.100 ssh</code></p>
 
@@ -135,7 +135,7 @@ users::100:
 
 <p><code>[22][ssh] host: 192.168.1.100   login: aadams   password: nostradamus</code></p>
 
-<h2 id="ssh-again:7ae3df20909f7f73a6199fc5ab833e91">SSH (again)</h2>
+<h2 id="ssh-again">SSH (again)</h2>
 
 <p>Since I was still logged in as bbanter, I used su to switch to aadams.</p>
 
@@ -164,7 +164,7 @@ bbanter:$1$hl312g8m$Cf9v9OoRN062STzYiWDTh1:13550:0:99999:7:::
 ccoffee:$1$nsHnABm3$OHraCR9ro.idCMtEiFPPA.:13550:0:99999:7:::
 </code></pre>
 
-<h2 id="john-the-ripper:7ae3df20909f7f73a6199fc5ab833e91">John the Ripper</h2>
+<h2 id="john-the-ripper">John the Ripper</h2>
 
 <p>I copied these hashes to my machine and set <code>john</code> to work on cracking them (excluding bbanter and aadams, I kept ccoffee in there for the sake of completeness).</p>
 
@@ -178,7 +178,7 @@ tarot            (root)
 
 <p>A little research into the string <code>Salted__</code>, revealed this was a file encrypted using OpenSSL.</p>
 
-<h2 id="openssl:7ae3df20909f7f73a6199fc5ab833e91">OpenSSL</h2>
+<h2 id="openssl">OpenSSL</h2>
 
 <p>There are lots of options within OpenSSL for encrypting files, different ciphers etc.  To this end, I wrote a script that would attempt each cipher on the encrypted file - not forgetting the little clue in the passwd file:  &ldquo;DO NOT CHANGE PASSWORD - WILL BREAK FTP ENCRYPTION&rdquo;.  This indicated to me that the root password was used during the encryption and that it would be required for the decryption (good job <code>john</code> was able to crack the hash for root).</p>
 
@@ -221,7 +221,6 @@ done
 ,9,Adam Adams,&quot;$76,250.00&quot;,1,5,2.30%,28.00%,6.30%,1.45%,38.05%,$125.00,$0.00,$125.00,183200299,2250900
 ,10,Chad Coffee,&quot;$55,000.00&quot;,1,1,2.30%,28.00%,6.30%,1.45%,38.05%,$125.00,$0.00,$125.00,183200299,1590264
 </code></pre>
-
   </section>
 </article>
 

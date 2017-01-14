@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">De-ICE S1.120</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>This is a walkthrough of how I completed the De-ICE S1.230 challenge.  The goal is to access various internal documents.</p>
 
-<p>This is a walkthrough of how I completed the De-ICE S1.230 challenge.  The goal is to access various internal documents.</p>
+<p></p>
 
-<h2 id="nmap:1a817b9b9b67bfd1b15cedf6dcbe70ff">Nmap</h2>
+<h2 id="nmap">Nmap</h2>
 
 <pre><code class="language-text">root@kali:~/de-ice/1.120# nmap -n -sV -A -p- 192.168.1.120
 
@@ -91,7 +91,7 @@ PORT     STATE SERVICE  VERSION
 3306/tcp open  mysql    MySQL (unauthorized)
 </code></pre>
 
-<h2 id="sql-injection:1a817b9b9b67bfd1b15cedf6dcbe70ff">SQL Injection</h2>
+<h2 id="sql-injection">SQL Injection</h2>
 
 <p>Visiting the apache service in a browser takes you to a Data Entry site.</p>
 
@@ -128,7 +128,7 @@ do you want to perform a dictionary-based attack against retrieved password hash
 
 <p><code>root@kali:~/de-ice/1.120# john /tmp/sqlmaphashes-BMaKet.txt</code></p>
 
-<h2 id="ssh:1a817b9b9b67bfd1b15cedf6dcbe70ff">SSH</h2>
+<h2 id="ssh">SSH</h2>
 
 <p>My next step was to try and use these DMBS usernames and passwords to login via SSH.  I noticed my old buddy bbanter on the this, so I tried those credentials first.  Luckily, the passwords were the same and I was granted a shell.</p>
 
@@ -159,12 +159,11 @@ root@slax:~# id
 uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),17(audio),18(video),19(cdrom),26(tape),83(plugdev)
 </code></pre>
 
-<h2 id="flag:1a817b9b9b67bfd1b15cedf6dcbe70ff">Flag</h2>
+<h2 id="flag">Flag</h2>
 
 <p>There is no specific flag for this challenge - the ability to browse through and read the various documents in the user directories indicates this challenge is complete.</p>
 
 <p><code>root@slax:~# ls -laR /home/</code></p>
-
   </section>
 </article>
 

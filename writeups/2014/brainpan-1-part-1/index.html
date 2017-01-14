@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">Brainpan: 1 - Part 1</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>Brainpan is a brilliant series of VMs created by <a href="https://twitter.com/superkojiman">superkojiman</a> - the goal is to gain root access.  These challenges are quite long and involved as they&rsquo;re not strictly at beginner level :), so I&rsquo;ve split the solution into multiple parts.</p>
 
-<p>Brainpan is a brilliant series of VMs created by <a href="https://twitter.com/superkojiman">superkojiman</a> - the goal is to gain root access.  These challenges are quite long and involved as they&rsquo;re not strictly at beginner level :), so I&rsquo;ve split the solution into multiple parts.</p>
+<p></p>
 
-<h2 id="nmap:3c5805e5caac0bbd6084b7628143b7fb">Nmap</h2>
+<h2 id="nmap">Nmap</h2>
 
 <pre><code class="language-text">root@kali:~# nmap -n -sV -A -p- 192.168.127.128
   
@@ -82,7 +82,7 @@ PORT      STATE SERVICE VERSION
 
 <p>I turned my attention back to the <code>SimpleHTTPServer</code> on port <code>10000</code>.</p>
 
-<h2 id="nikto:3c5805e5caac0bbd6084b7628143b7fb">Nikto</h2>
+<h2 id="nikto">Nikto</h2>
 
 <p>The index page on the web server didn&rsquo;t contain anything interesting, so I did some more enumeration.</p>
 
@@ -107,7 +107,7 @@ brainpan.exe: PE32 executable (console) Intel 80386 (stripped to external PDB), 
 
 <p>So it&rsquo;s bound itself to port <code>9999</code> - I connected to it with <code>netcat</code> and received the same output as the application running on brainpan.</p>
 
-<h2 id="time-to-debug:3c5805e5caac0bbd6084b7628143b7fb">Time to Debug</h2>
+<h2 id="time-to-debug">Time to Debug</h2>
 
 <p>If this application contains an exploitable vulnerability, then I may be able to leverage it to obtain a shell on brainpan.  I ran it through <code>strings</code>, to get an idea of the functions inside.</p>
 
@@ -362,7 +362,6 @@ pwd
 </code></pre>
 
 <p>Now I finally have a shell on brainpan - it&rsquo;s time to end Part 1&hellip;</p>
-
   </section>
 </article>
 

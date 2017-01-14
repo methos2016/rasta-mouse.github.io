@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Secos on rastamouse.me</title>
-    <link>https://rastamouse.me/tags/secos/</link>
-    <description>Recent content in Secos on rastamouse.me</description>
+    <title>secos on rastamouse.me</title>
+    <link>https://rastamouse.me/tags/secos/index.xml</link>
+    <description>Recent content in secos on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 25 May 2014 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/tags/secos/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -15,11 +14,11 @@
       <pubDate>Sun, 25 May 2014 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2014/secos-1/</guid>
-      <description>
+      <description>&lt;p&gt;SecOS is a series of vulnerable VMs created by &lt;a href=&#34;https://twitter.com/PaulWebSec&#34;&gt;PaulSec&lt;/a&gt; - launched as part of his talk at BSides London 2014 (which I attended) and focus around CSRF vulnerabilities.  Paul is also the author of the &lt;a href=&#34;https://github.com/PaulSec/CSRFT&#34;&gt;CSRF Toolkit&lt;/a&gt;, which can be used to attack the SecOS VMs.&lt;/p&gt;
 
-&lt;p&gt;SecOS is a series of vulnerable VMs created by &lt;a href=&#34;https://twitter.com/PaulWebSec&#34;&gt;PaulSec&lt;/a&gt; - launched as part of his talk at BSides London 2014 (which I attended) and focus around CSRF vulnerabilities.  Paul is also the author of the &lt;a href=&#34;https://github.com/PaulSec/CSRFT&#34;&gt;CSRF Toolkit&lt;/a&gt;, which can be used to attack the SecOS VMs.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;nmap:a8f3f5408c20b5fb1272625cc4f385d6&#34;&gt;Nmap&lt;/h2&gt;
+&lt;h2 id=&#34;nmap&#34;&gt;Nmap&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -p- -A 192.168.127.133
 
@@ -37,7 +36,7 @@ SF:7,&amp;quot;SSH-2\.0-OpenSSH_6\.6p1\x20Ubuntu-2ubuntu1\r\n&amp;quot;);
 MAC Address: 08:00:27:74:13:C8 (Cadmus Computer Systems)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;secure-web-app:a8f3f5408c20b5fb1272625cc4f385d6&#34;&gt;Secure Web App&lt;/h2&gt;
+&lt;h2 id=&#34;secure-web-app&#34;&gt;Secure Web App&lt;/h2&gt;
 
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
@@ -87,7 +86,7 @@ MAC Address: 08:00:27:74:13:C8 (Cadmus Computer Systems)
 
 &lt;p&gt;The web app allows users to send messages to each other.  I used my &lt;code&gt;rasta&lt;/code&gt; account to send a message to &lt;code&gt;spiderman&lt;/code&gt;, containing a URL which he will visit.  I will need to craft a special web request which will be &amp;lsquo;unknowingly&amp;rsquo; executed by &lt;code&gt;spiderman&lt;/code&gt; - this can be done manually but I chose to use Pauls CSRF toolkit.&lt;/p&gt;
 
-&lt;h2 id=&#34;csrft:a8f3f5408c20b5fb1272625cc4f385d6&#34;&gt;CSRFT&lt;/h2&gt;
+&lt;h2 id=&#34;csrft&#34;&gt;CSRFT&lt;/h2&gt;
 
 &lt;p&gt;The toolkit can be downloaded from GitHub, instructions for installation etc. are included.  A number of example exploits and configurations are included, which I used as a template to craft mine (included at the end of this article).&lt;/p&gt;
 
@@ -110,7 +109,7 @@ Listening on port 8080
 
 &lt;p&gt;After a minute or so, I got a connection from the VM IP address and the &amp;lsquo;exploit&amp;rsquo; was launched.  Going back to the web app, I was now able to log in with username: &lt;code&gt;spiderman&lt;/code&gt;, password: &lt;code&gt;spiderman&lt;/code&gt;.&lt;/p&gt;
 
-&lt;h2 id=&#34;ssh:a8f3f5408c20b5fb1272625cc4f385d6&#34;&gt;SSH&lt;/h2&gt;
+&lt;h2 id=&#34;ssh&#34;&gt;SSH&lt;/h2&gt;
 
 &lt;p&gt;There isn&amp;rsquo;t anything much to see whilst logged in as &lt;code&gt;spiderman&lt;/code&gt;, though on the Messages page I saw that the user called &lt;code&gt;pirate&lt;/code&gt; was one-step ahead.&lt;/p&gt;
 
@@ -127,7 +126,7 @@ Listening on port 8080
 
 &lt;p&gt;After some enumeration I found that &lt;code&gt;spiderman&lt;/code&gt; was not a member of the sudoers group, and the kernel was quite new (therefore unlikely to find a local kernel exploit).&lt;/p&gt;
 
-&lt;h2 id=&#34;privilege-escalation:a8f3f5408c20b5fb1272625cc4f385d6&#34;&gt;Privilege Escalation&lt;/h2&gt;
+&lt;h2 id=&#34;privilege-escalation&#34;&gt;Privilege Escalation&lt;/h2&gt;
 
 &lt;p&gt;I had a look at processes running as root.&lt;/p&gt;
 
@@ -166,9 +165,9 @@ Twitter: @PaulWebSec
 GitHub : PaulSec
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;notes:a8f3f5408c20b5fb1272625cc4f385d6&#34;&gt;Notes&lt;/h2&gt;
+&lt;h2 id=&#34;notes&#34;&gt;Notes&lt;/h2&gt;
 
-&lt;h3 id=&#34;exploits-secos1-change-password-html:a8f3f5408c20b5fb1272625cc4f385d6&#34;&gt;exploits/secos1-change-password.html&lt;/h3&gt;
+&lt;h3 id=&#34;exploits-secos1-change-password-html&#34;&gt;exploits/secos1-change-password.html&lt;/h3&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;form class=&amp;quot;form-signin&amp;quot; action=&amp;quot;http://127.0.0.1:8081/change-password&amp;quot; method=&amp;quot;POST&amp;quot;&amp;gt;
         &amp;lt;input type=&amp;quot;text&amp;quot; name=&amp;quot;username&amp;quot; value=&amp;quot;spiderman&amp;quot;&amp;gt;
@@ -176,7 +175,7 @@ GitHub : PaulSec
 &amp;lt;/form&amp;gt;
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h3 id=&#34;conf-secos1-change-password-json:a8f3f5408c20b5fb1272625cc4f385d6&#34;&gt;conf/secos1_change_password.json&lt;/h3&gt;
+&lt;h3 id=&#34;conf-secos1-change-password-json&#34;&gt;conf/secos1_change_password.json&lt;/h3&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-json&#34;&gt;{
         &amp;quot;audit&amp;quot;: {
@@ -196,7 +195,7 @@ GitHub : PaulSec
 }
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;update-26-05-2014:a8f3f5408c20b5fb1272625cc4f385d6&#34;&gt;Update 26/05/2014&lt;/h2&gt;
+&lt;h2 id=&#34;update-26-05-2014&#34;&gt;Update 26/05/2014&lt;/h2&gt;
 
 &lt;p&gt;After having a rather informative discussion with Paul regarding this solution, he suggested I also try &lt;code&gt;csrft_utils.py&lt;/code&gt;.  This is a script designed to automate much of the attack process (i.e. grabbing the form and creating the attack config files on the fly) and is included in the CSRF toolkit.&lt;/p&gt;
 
@@ -216,8 +215,7 @@ GitHub : PaulSec
 
 &lt;p&gt;Due to the nature of how the admin access is simulated in this challange, you have to edit &lt;code&gt;/tmp/csrft/form.html&lt;/code&gt;, so that the form action points to &lt;code&gt;127.0.0.1&lt;/code&gt; rather than the actual IP assigned to the VM (as per the advice given on the &lt;code&gt;/hint&lt;/code&gt; page).&lt;/p&gt;
 
-&lt;p&gt;As previously, the &lt;code&gt;admin&lt;/code&gt; user will access port &lt;code&gt;8080&lt;/code&gt; on our machine and submit the bogus form.&lt;/p&gt;
-</description>
+&lt;p&gt;As previously, the &lt;code&gt;admin&lt;/code&gt; user will access port &lt;code&gt;8080&lt;/code&gt; on our machine and submit the bogus form.&lt;/p&gt;</description>
     </item>
     
   </channel>

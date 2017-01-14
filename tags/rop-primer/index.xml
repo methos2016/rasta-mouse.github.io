@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Rop primer on rastamouse.me</title>
-    <link>https://rastamouse.me/tags/rop-primer/</link>
-    <description>Recent content in Rop primer on rastamouse.me</description>
+    <title>rop-primer on rastamouse.me</title>
+    <link>https://rastamouse.me/tags/rop-primer/index.xml</link>
+    <description>Recent content in rop-primer on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Thu, 23 Jul 2015 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/tags/rop-primer/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -15,9 +14,9 @@
       <pubDate>Thu, 23 Jul 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/rop-primer-level-0/</guid>
-      <description>
+      <description>&lt;p&gt;This VM is meant as a small introduction to 32-bit return-oriented-programming on Linux. It contains three vulnerable binaries, that must be exploited using ROP. There are three levels in total (0 to 2).&lt;/p&gt;
 
-&lt;p&gt;This VM is meant as a small introduction to 32-bit return-oriented-programming on Linux. It contains three vulnerable binaries, that must be exploited using ROP. There are three levels in total (0 to 2).&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
 &lt;p&gt;The VM is running a webserver with some instructions on how to get started with level0, by SSH’ing in.&lt;/p&gt;
 
@@ -129,7 +128,7 @@ Start      End        Perm    Name
 0xbffdf000 0xc0000000 rw-p    [stack]
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;mprotect:04d2e7465572fb94993a8c8ea7ea7ff0&#34;&gt;mprotect&lt;/h2&gt;
+&lt;h2 id=&#34;mprotect&#34;&gt;mprotect&lt;/h2&gt;
 
 &lt;p&gt;These are the areas of memory, none of which are executable (donated by the &lt;code&gt;x&lt;/code&gt; character). I’m going to make part of the &lt;code&gt;[stack]&lt;/code&gt; region executable, so let’s start building our exploit.&lt;/p&gt;
 
@@ -205,7 +204,7 @@ rop += &amp;quot;BBBB&amp;quot;
 0xbffdf000 0xbffe0000 rwxp    mapped
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;read:04d2e7465572fb94993a8c8ea7ea7ff0&#34;&gt;read&lt;/h2&gt;
+&lt;h2 id=&#34;read&#34;&gt;read&lt;/h2&gt;
 
 &lt;p&gt;Now we can set up our ROP to &lt;code&gt;read&lt;/code&gt;. This will allow us to read shellcode from &lt;code&gt;stdin&lt;/code&gt; into our mapped area of the stack, and execute.&lt;/p&gt;
 
@@ -253,7 +252,7 @@ rop += &amp;quot;BBBB&amp;quot;
 0x42424242 in ?? ()
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;stdin:04d2e7465572fb94993a8c8ea7ea7ff0&#34;&gt;stdin&lt;/h2&gt;
+&lt;h2 id=&#34;stdin&#34;&gt;stdin&lt;/h2&gt;
 
 &lt;p&gt;Now we need to test that we can actually read something in from stdin and have it execute. We’ll replace &lt;code&gt;BBBB&lt;/code&gt; with the address of our executable stack location and run the exploit outside gdb.&lt;/p&gt;
 
@@ -309,12 +308,11 @@ level1
 
 &lt;p&gt;The additional &lt;code&gt;cat&lt;/code&gt; keeps the shell alive.&lt;/p&gt;
 
-&lt;h2 id=&#34;flag:04d2e7465572fb94993a8c8ea7ea7ff0&#34;&gt;Flag&lt;/h2&gt;
+&lt;h2 id=&#34;flag&#34;&gt;Flag&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;cat flag
 flag{rop_the_night_away}
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
   </channel>

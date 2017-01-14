@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">Pegasus: 1</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>Pegasus 1 is the first VM written by <a href="https://twitter.com/@TheKnapsy">Knapsy</a>, which he describes as being pitched at &lsquo;intermediate&rsquo; difficulty.  It&rsquo;s certainly a tricky VM, which I tore my hair out solving!</p>
 
-<p>Pegasus 1 is the first VM written by <a href="https://twitter.com/@TheKnapsy">Knapsy</a>, which he describes as being pitched at &lsquo;intermediate&rsquo; difficulty.  It&rsquo;s certainly a tricky VM, which I tore my hair out solving!</p>
+<p></p>
 
-<h2 id="nmap:91c607fe46b1f5fb0d58bc60ee1366ec">Nmap</h2>
+<h2 id="nmap">Nmap</h2>
 
 <pre><code class="language-text">root@kali:~# nmap -n -A -p- 192.168.127.102
 
@@ -158,7 +158,7 @@ ID	Response   Lines      Word         Chars          Request
 Sorry, due to security precautions, Mike won't review any code containing system() function call.
 </code></pre>
 
-<h2 id="reverse-shell:91c607fe46b1f5fb0d58bc60ee1366ec">Reverse Shell?</h2>
+<h2 id="reverse-shell">Reverse Shell?</h2>
 
 <p>So it&rsquo;s looking like C is what needs to be submitted, but we can&rsquo;t use this function.  I submitted C code which, when compiled, would initial a reverse shell back to my machine.</p>
 
@@ -178,7 +178,7 @@ int main()
 
 <p>This didn&rsquo;t work however - tests on my local machine showed that it must be compiled with <code>no-stack-protector</code> and <code>execstack</code> for the binary to run; which is not being done on Pegasus.</p>
 
-<h2 id="bind-shell:91c607fe46b1f5fb0d58bc60ee1366ec">Bind Shell!</h2>
+<h2 id="bind-shell">Bind Shell!</h2>
 
 <p>My next option was to attempt bind shellcode.  There&rsquo;s no shortage of examples on the Internet, and I found a good post by <a href="http://www.iodigitalsec.com/linux-shell-bind-tcp-shellcode/">Adam Palmer</a> made as part of the <a href="http://www.securitytube-training.com/online-courses/securitytube-linux-assembly-expert/">SLAE</a> course.</p>
 
@@ -231,7 +231,7 @@ uid=1001(mike) gid=1001(mike) groups=1001(mike)
 
 <p>There is a timeout to each process which gets executed, so my shell closed after a few minutes.  I just reconnected and echo&rsquo;d my public SSH key into Mike&rsquo;s .ssh authorized_keys file.</p>
 
-<h2 id="mike:91c607fe46b1f5fb0d58bc60ee1366ec">Mike</h2>
+<h2 id="mike">Mike</h2>
 
 <p>Mike has an email waiting to be read:</p>
 
@@ -273,7 +273,7 @@ Enter second number: %p
 Error details: 0xbf81186c
 </code></pre>
 
-<h2 id="string-format:91c607fe46b1f5fb0d58bc60ee1366ec">String Format</h2>
+<h2 id="string-format">String Format</h2>
 
 <p>I absolutely <em>hate</em> string format vulns, because they&rsquo;re so god damn picky to get working.  The first job is to determine where the string starts on the stack.</p>
 
@@ -390,7 +390,7 @@ $ id
 uid=1001(mike) gid=1001(mike) euid=1000(john) groups=1000(john),1001(mike)
 </code></pre>
 
-<h2 id="uids-gids:91c607fe46b1f5fb0d58bc60ee1366ec">UIDs &amp; GIDs</h2>
+<h2 id="uids-gids">UIDs &amp; GIDs</h2>
 
 <p>Currently, my <code>uid/gid=1001(mike)</code> and <code>euid=1000(john)</code>.  This means that I am able to browse john&rsquo;s home directory and create files.  But I lack the proper permissions to setup authorized_keys for john.</p>
 
@@ -435,7 +435,7 @@ User john may run the following commands on this host:
     (root) NOPASSWD: /usr/local/sbin/nfs
 </code></pre>
 
-<h2 id="nfs:91c607fe46b1f5fb0d58bc60ee1366ec">NFS</h2>
+<h2 id="nfs">NFS</h2>
 
 <p>John may run NFS as root, reviewing <code>/etc/exports</code> reveals the following line:</p>
 
@@ -482,7 +482,7 @@ uid=1000(john) gid=1001(mike) euid=0(root) groups=0(root),1001(mike)
 root
 </code></pre>
 
-<h2 id="flag:91c607fe46b1f5fb0d58bc60ee1366ec">Flag</h2>
+<h2 id="flag">Flag</h2>
 
 <pre><code class="language-text">ls -l /root
 -rw------- 1 root root 1824 Dec 16 19:09 flag
@@ -530,7 +530,6 @@ and leave some feedback, I would love to hear from you!
 Also, make sure to follow @VulnHub on Twitter and keep checking vulnhub.com for
 more awesome boot2root VMs!
 </code></pre>
-
   </section>
 </article>
 

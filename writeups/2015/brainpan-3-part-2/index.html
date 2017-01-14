@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,9 +52,9 @@
   </div>
   <h1 class="headline" itemprop="headline">Brainpan: 3 - Part 2</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>Now that we&rsquo;ve popped <code>anansi</code> and <code>reynard</code>, it&rsquo;s time to go after <code>puck</code> and <code>root</code>!</p>
 
-<p>Now that we&rsquo;ve popped <code>anansi</code> and <code>reynard</code>, it&rsquo;s time to go after <code>puck</code> and <code>root</code>!</p>
+<p></p>
 
 <p>There is something listening on the loopback at port <code>7075</code>.  When we connect, we get a message about a key.</p>
 
@@ -134,7 +134,7 @@ Key file is compromised.
 </figure>
 </div>
 
-<h2 id="a-race-to-win:f6785c09a6136b44cc09f2d03fcc82fd">A Race to Win</h2>
+<h2 id="a-race-to-win">A Race to Win</h2>
 
 <pre><code class="language-python">#!/usr/bin/env python
 
@@ -160,7 +160,7 @@ $ id
 uid=1001(puck) gid=1004(dev) groups=1001(puck)
 </code></pre>
 
-<h2 id="path-to-root:f6785c09a6136b44cc09f2d03fcc82fd">Path to Root</h2>
+<h2 id="path-to-root">Path to Root</h2>
 
 <p>Now that we can read inside <code>puck's</code> home directory, we can get the content of <code>key.txt</code>.  I found it handy to grab this in case I lost shell access - you can write the content into <code>/mnt/usb/key.txt</code> so you don&rsquo;t have to win the race condition over again.</p>
 
@@ -186,7 +186,7 @@ $ ls -l /usr/local/bin/msg_admin
 -rwxr-xr-x 1 root root 12316 May 31 04:46 /usr/local/bin/msg_admin
 </code></pre>
 
-<h2 id="a-heap-of-trouble:f6785c09a6136b44cc09f2d03fcc82fd">A Heap of Trouble</h2>
+<h2 id="a-heap-of-trouble">A Heap of Trouble</h2>
 
 <pre><code class="language-text">root@kali:~/bp3# ./msg_admin 
 Usage: ./msg_admin priority message.txt
@@ -570,7 +570,7 @@ uid=0(root) gid=0(root) groups=0(root)
 
 <p>So it works on my local box - I just copied <code>/bin/sh</code> as a simple test.  Time to copy <code>message.txt</code> across to bp3 (again with <code>xxd</code>).  For the cronjob to pick it up, it must be within <code>/opt/.messenger/</code> and have the <code>.msg</code> extension.  You know the job has run, because after the message has been processed, it gets deleted.</p>
 
-<h2 id="failed:f6785c09a6136b44cc09f2d03fcc82fd">Failed?</h2>
+<h2 id="failed">Failed?</h2>
 
 <p>My <code>/tmp/foo</code> payload on bp3 was to create a SUID shell.</p>
 
@@ -678,7 +678,6 @@ TESTERS
 </code></pre>
 
 <p>I am now going on an extended leave of absense to recover.</p>
-
   </section>
 </article>
 

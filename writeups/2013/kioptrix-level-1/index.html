@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">Kioptrix Level 1</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>This is a walkthrough of how I completed Kioptrix Level 1.  The goal is to obtain the flag.</p>
 
-<p>This is a walkthrough of how I completed Kioptrix Level 1.  The goal is to obtain the flag.</p>
+<p></p>
 
-<h2 id="nmap:89aaf23838ef9c8ff34cb30ba3b2c2a1">Nmap</h2>
+<h2 id="nmap">Nmap</h2>
 
 <pre><code class="language-text">root@kali:~# nmap -n -sV -A -p- 192.168.1.123
 
@@ -103,7 +103,7 @@ PORT      STATE SERVICE     VERSION
 |_  100024  1          32770/udp  status
 </code></pre>
 
-<h2 id="smbclient:89aaf23838ef9c8ff34cb30ba3b2c2a1">SMBClient</h2>
+<h2 id="smbclient">SMBClient</h2>
 
 <p>The nmap scan showed that the Samba service was running, I used SMBClient to establish a NULL session.  This allowed me to see the available shares and the Samba version (2.2.1a).</p>
 
@@ -126,7 +126,7 @@ Domain=[MYGROUP] OS=[Unix] Server=[Samba 2.2.1a]
 
 <p>This is vulnerable to a buffer overflow in the <code>call_trans2open</code> function in <code>trans2.c</code>, for which there are many exploits available.  Some are more reliable others however.</p>
 
-<h2 id="0x333hate:89aaf23838ef9c8ff34cb30ba3b2c2a1">0x333hate</h2>
+<h2 id="0x333hate">0x333hate</h2>
 
 <p>The exploit which worked well for me was the <code>0x333hate</code> varient, downloaded from SecurityFocus.  After compiling and running the exploit, I was granted with a root shell.</p>
 
@@ -144,14 +144,13 @@ Linux kioptrix.level1 2.4.7-10 #1 Thu Sep 6 16:46:36 EDT 2001 i686 unknown
 uid=0(root) gid=0(root) groups=99(nobody)
 </code></pre>
 
-<h2 id="flag:89aaf23838ef9c8ff34cb30ba3b2c2a1">Flag</h2>
+<h2 id="flag">Flag</h2>
 
 <p>After searching through the system, I eventually found the flag in <code>/var/spool/mail</code>.</p>
 
 <pre><code class="language-text">If you are reading this, you got root. Congratulations.
 Level 2 won't be as easy...
 </code></pre>
-
   </section>
 </article>
 

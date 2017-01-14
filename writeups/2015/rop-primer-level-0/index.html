@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,9 +52,9 @@
   </div>
   <h1 class="headline" itemprop="headline">ROP Primer: Level 0</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>This VM is meant as a small introduction to 32-bit return-oriented-programming on Linux. It contains three vulnerable binaries, that must be exploited using ROP. There are three levels in total (0 to 2).</p>
 
-<p>This VM is meant as a small introduction to 32-bit return-oriented-programming on Linux. It contains three vulnerable binaries, that must be exploited using ROP. There are three levels in total (0 to 2).</p>
+<p></p>
 
 <p>The VM is running a webserver with some instructions on how to get started with level0, by SSH’ing in.</p>
 
@@ -166,7 +166,7 @@ Start      End        Perm    Name
 0xbffdf000 0xc0000000 rw-p    [stack]
 </code></pre>
 
-<h2 id="mprotect:04d2e7465572fb94993a8c8ea7ea7ff0">mprotect</h2>
+<h2 id="mprotect">mprotect</h2>
 
 <p>These are the areas of memory, none of which are executable (donated by the <code>x</code> character). I’m going to make part of the <code>[stack]</code> region executable, so let’s start building our exploit.</p>
 
@@ -242,7 +242,7 @@ rop += &quot;BBBB&quot;
 0xbffdf000 0xbffe0000 rwxp    mapped
 </code></pre>
 
-<h2 id="read:04d2e7465572fb94993a8c8ea7ea7ff0">read</h2>
+<h2 id="read">read</h2>
 
 <p>Now we can set up our ROP to <code>read</code>. This will allow us to read shellcode from <code>stdin</code> into our mapped area of the stack, and execute.</p>
 
@@ -290,7 +290,7 @@ rop += &quot;BBBB&quot;
 0x42424242 in ?? ()
 </code></pre>
 
-<h2 id="stdin:04d2e7465572fb94993a8c8ea7ea7ff0">stdin</h2>
+<h2 id="stdin">stdin</h2>
 
 <p>Now we need to test that we can actually read something in from stdin and have it execute. We’ll replace <code>BBBB</code> with the address of our executable stack location and run the exploit outside gdb.</p>
 
@@ -346,12 +346,11 @@ level1
 
 <p>The additional <code>cat</code> keeps the shell alive.</p>
 
-<h2 id="flag:04d2e7465572fb94993a8c8ea7ea7ff0">Flag</h2>
+<h2 id="flag">Flag</h2>
 
 <pre><code class="language-text">cat flag
 flag{rop_the_night_away}
 </code></pre>
-
   </section>
 </article>
 

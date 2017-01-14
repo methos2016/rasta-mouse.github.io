@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Vulnos on rastamouse.me</title>
-    <link>https://rastamouse.me/tags/vulnos/</link>
-    <description>Recent content in Vulnos on rastamouse.me</description>
+    <title>vulnos on rastamouse.me</title>
+    <link>https://rastamouse.me/tags/vulnos/index.xml</link>
+    <description>Recent content in vulnos on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 09 Sep 2016 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/tags/vulnos/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -15,9 +14,9 @@
       <pubDate>Fri, 09 Sep 2016 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2016/vulnos-2/</guid>
-      <description>
+      <description>&lt;p&gt;Your assignment is to pentest a company website, get root of the system and read the final flag.&lt;/p&gt;
 
-&lt;p&gt;Your assignment is to pentest a company website, get root of the system and read the final flag.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
 &lt;pre&gt;&lt;code&gt;root@kali:~# nmap -n -A -p- 192.168.56.104
 
@@ -35,7 +34,7 @@ PORT     STATE SERVICE VERSION
 
 &lt;p&gt;We&amp;rsquo;ll check out port 80 first.&lt;/p&gt;
 
-&lt;h2 id=&#34;drupal:39268561588adc281b818541b0b30b2a&#34;&gt;Drupal&lt;/h2&gt;
+&lt;h2 id=&#34;drupal&#34;&gt;Drupal&lt;/h2&gt;
 
 &lt;p&gt;We follow the initial link to &lt;code&gt;/jabc&lt;/code&gt; with a Drupal installation (given away by the favicon and bits of meta data such as &lt;code&gt;&amp;lt;meta name=&amp;quot;Generator&amp;quot; content=&amp;quot;Drupal 7 (http://drupal.org)&amp;quot; /&amp;gt;&lt;/code&gt;).&lt;/p&gt;
 
@@ -81,7 +80,7 @@ PORT     STATE SERVICE VERSION
 &lt;/figure&gt;
 &lt;/div&gt;
 
-&lt;h2 id=&#34;sqli:39268561588adc281b818541b0b30b2a&#34;&gt;SQLi&lt;/h2&gt;
+&lt;h2 id=&#34;sqli&#34;&gt;SQLi&lt;/h2&gt;
 
 &lt;p&gt;I looked up OpenDocMan 1.2.7 in exploitdb to see if there was anything I could take advantage of.&lt;/p&gt;
 
@@ -318,7 +317,7 @@ Table: users
 +---------+---------------------------------------------------------+
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;webmin1980:39268561588adc281b818541b0b30b2a&#34;&gt;webmin1980&lt;/h2&gt;
+&lt;h2 id=&#34;webmin1980&#34;&gt;webmin1980&lt;/h2&gt;
 
 &lt;p&gt;I tried running this hash through &lt;code&gt;hashcat&lt;/code&gt;, with the brute force mode.&lt;/p&gt;
 
@@ -334,7 +333,7 @@ Press &#39;q&#39; or Ctrl-C to abort, almost any other key for status
 webmin1980       (webmin)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;php-shell:39268561588adc281b818541b0b30b2a&#34;&gt;PHP Shell&lt;/h2&gt;
+&lt;h2 id=&#34;php-shell&#34;&gt;PHP Shell&lt;/h2&gt;
 
 &lt;p&gt;So now that I can log in as a Drupal admin, I can start poking around the backend (uh er).  If you explore the &lt;code&gt;Modules&lt;/code&gt; section, there&amp;rsquo;s one called &lt;code&gt;PHP filter&lt;/code&gt; which is currently unchecked.  It&amp;rsquo;s description is rather attractive:
 &lt;code&gt;Allows embedded PHP code/snippets to be evaluated.&lt;/code&gt;&lt;/p&gt;
@@ -376,7 +375,7 @@ OS          : Linux VulnOSv2 3.13.0-24-generic #47-Ubuntu SMP Fri May 2 23:31:42
 Meterpreter : php/linux
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;priv-esc:39268561588adc281b818541b0b30b2a&#34;&gt;Priv Esc&lt;/h2&gt;
+&lt;h2 id=&#34;priv-esc&#34;&gt;Priv Esc&lt;/h2&gt;
 
 &lt;p&gt;This turned out to be a rather simple task.  We can already see the kernel version: &lt;code&gt;3.13.0&lt;/code&gt;, and we know it&amp;rsquo;s Ubuntu.  We can quickly drop into a shell and find exactly which version:&lt;/p&gt;
 
@@ -442,8 +441,7 @@ Hope you enjoyed it.
 What do you think of A.I.?
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;Thanks &lt;a href=&#34;https://twitter.com/@c4b3rw0lf&#34;&gt;c4b3rw0lf&lt;/a&gt; for taking the time to make this VM :)&lt;/p&gt;
-</description>
+&lt;p&gt;Thanks &lt;a href=&#34;https://twitter.com/@c4b3rw0lf&#34;&gt;c4b3rw0lf&lt;/a&gt; for taking the time to make this VM :)&lt;/p&gt;</description>
     </item>
     
   </channel>

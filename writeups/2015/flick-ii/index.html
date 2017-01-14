@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">Flick II: The Flickening</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>After the success of <a href="https://www.vulnhub.com/entry/flick-1,99/">Flick: I</a>, <a href="https://twitter.com/leonjza">@leonjza</a> decided that VulnHub needed a fresh dose of pain and suffering.  <a href="https://www.vulnhub.com/entry/flick-2,122/">Flick: II</a> is a vulnerable machine with a mobile twist - it requires the attacker to wrestle with a custom Android application to breach the VM.  I was more than complimentary about it on <a href="https://twitter.com/_RastaMouse/status/638789930261585921">Twitter</a> - it&rsquo;s definitely worth checking out.</p>
 
-<p>After the success of <a href="https://www.vulnhub.com/entry/flick-1,99/">Flick: I</a>, <a href="https://twitter.com/leonjza">@leonjza</a> decided that VulnHub needed a fresh dose of pain and suffering.  <a href="https://www.vulnhub.com/entry/flick-2,122/">Flick: II</a> is a vulnerable machine with a mobile twist - it requires the attacker to wrestle with a custom Android application to breach the VM.  I was more than complimentary about it on <a href="https://twitter.com/_RastaMouse/status/638789930261585921">Twitter</a> - it&rsquo;s definitely worth checking out.</p>
+<p></p>
 
-<h2 id="https:97d1000c18ea8816fa1721a8cb10b128">HTTPS</h2>
+<h2 id="https">HTTPS</h2>
 
 <p>After a bit of port scanning we find that only port 443 is open.</p>
 
@@ -89,7 +89,7 @@
 
 <p>Time to have a look at the Android application.</p>
 
-<h2 id="apk:97d1000c18ea8816fa1721a8cb10b128">APK</h2>
+<h2 id="apk">APK</h2>
 
 <p>I used the Android Studio emulator to run the application.  After creating an AVD in the Studio, I wrote the following <code>BAT</code> files.</p>
 
@@ -222,7 +222,7 @@ bash-4.2$ id
 uid=998(nginx) gid=997(nginx) groups=997(nginx)
 </code></pre>
 
-<h2 id="robin:97d1000c18ea8816fa1721a8cb10b128">Robin</h2>
+<h2 id="robin">Robin</h2>
 
 <p>The apk has an advertised capability to execute commands over SSH as well as HTTPS.  But since SSH doesn&rsquo;t seem to be enabled on the VM, this doesn&rsquo;t work.  However, there is functional code within the application to establish an SSH connection, but the credentials are rather obscure.</p>
 
@@ -311,7 +311,7 @@ python -c 'import pty; pty.spawn(&quot;/bin/bash&quot;)'
 uid=1000(robin) gid=1000(robin) groups=1000(robin)
 </code></pre>
 
-<h2 id="bryan:97d1000c18ea8816fa1721a8cb10b128">Bryan</h2>
+<h2 id="bryan">Bryan</h2>
 
 <pre><code class="language-text">[robin@fII ~]$ ls -l
 -rw-r--r-- 1 robin robin 1617 Jul 23 21:35 debug.gpg
@@ -397,7 +397,7 @@ Dice said: 4444
 uid=1001(bryan) gid=1001(bryan) groups=1001(bryan)
 </code></pre>
 
-<h2 id="sean:97d1000c18ea8816fa1721a8cb10b128">Sean</h2>
+<h2 id="sean">Sean</h2>
 
 <p><code>/usr/local/bin/</code> actually contains 4 binaries.</p>
 
@@ -530,7 +530,7 @@ uid=1002(sean) gid=1001(bryan) groups=1002(sean),1001(bryan)
 sean
 </code></pre>
 
-<h2 id="root:97d1000c18ea8816fa1721a8cb10b128">Root</h2>
+<h2 id="root">Root</h2>
 
 <p>Up next is <code>-rwsr-x---  1 root sean   866169 Aug 15 11:53 restore</code>.  Trying to run it as we are results in a fail.</p>
 
@@ -749,7 +749,7 @@ uid=0(root) gid=0(root) groups=0(root),1001(bryan),1002(sean)
 root
 </code></pre>
 
-<h2 id="flag:97d1000c18ea8816fa1721a8cb10b128">Flag</h2>
+<h2 id="flag">Flag</h2>
 
 <pre><code class="language-text">cat /root/flag
 
@@ -773,7 +773,6 @@ root
 </code></pre>
 
 <p>Many thanks to leonjza for a brilliant VM - one of my favourites to date.  Shout-out to <a href="https://twitter.com/superkojiman">superkojiman</a> for his excellent <a href="http://blog.techorganic.com/2015/04/21/64-bit-linux-stack-smashing-tutorial-part-2/">64-bit Stack Smashing Tutorial</a> which came in super-handy for this final exercise.</p>
-
   </section>
 </article>
 

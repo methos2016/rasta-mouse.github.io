@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">LoBOTomy</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>The goal of the VM is to obtain a root shell.</p>
 
-<p>The goal of the VM is to obtain a root shell.</p>
+<p></p>
 
-<h2 id="nmap:53aa007fdface966a5cc43503783e0d4">Nmap</h2>
+<h2 id="nmap">Nmap</h2>
 
 <pre><code class="language-text">root@kali:~# nmap -n -sV -A -p- 192.168.127.128
  
@@ -88,7 +88,7 @@ PORT    STATE SERVICE VERSION
 
 <p>The blog post is a pretty good read - it&rsquo;s Brian&rsquo;s original write up of the bot this challenge is based on.  The text here tells us two things really.  The first is that a copy of the bot&rsquo;s source code is present on this web service somewhere; the second is that there&rsquo;s a simulated client which regularily access the bot panel.</p>
 
-<h2 id="wfuzz:53aa007fdface966a5cc43503783e0d4">WFuzz</h2>
+<h2 id="wfuzz">WFuzz</h2>
 
 <p>I next set about the task of finding the bot source code.  I suspected that it would be in some compressed format, so I used <code>WFuzz</code> with the various Kali wordlists and prepended with various extensions (.tar.gz, .tar, .bz2, .zip etc)</p>
 
@@ -132,7 +132,7 @@ drwxr-xr-x 2 root root 4096 Apr  5 02:44 sql (dont upload)
 
 <p>You can login and take a look around, though there isn&rsquo;t much to see.</p>
 
-<h2 id="xss:53aa007fdface966a5cc43503783e0d4">XSS</h2>
+<h2 id="xss">XSS</h2>
 
 <p>You could probably discover this yourself by reviewing the source code, but I came across this vulnerability whilst I was reading up on Madness.  There is also a SQLi vulnerability, but given the clue regarding an automated client, I stuck with the XSS.</p>
 
@@ -191,7 +191,7 @@ drwxr-xr-x 2 root root 4096 Apr  5 02:44 sql (dont upload)
 
 <p>So we can see ports 22 and 80 (which are kind of expected as they&rsquo;re usually bound to 0.0.0.0), and 3306 which makes sense to bind locally.  However, there is also 8080 which is an alternate to 80 and is unusual to see bound only to the localhost.</p>
 
-<h2 id="curl:53aa007fdface966a5cc43503783e0d4">cURL</h2>
+<h2 id="curl">cURL</h2>
 
 <p>Running netstat on my Kali box, shows that the BeEF proxy is bound to port 6789.</p>
 
@@ -264,7 +264,6 @@ root
 </code></pre>
 
 <p>With a root shell, this is pretty much the end of the challenge.  The final step I took was to add my public SSH key into root&rsquo;s <code>authorized_keys</code> file for easy access.</p>
-
   </section>
 </article>
 

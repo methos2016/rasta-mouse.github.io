@@ -2,11 +2,10 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>/dev/random on rastamouse.me</title>
-    <link>https://rastamouse.me/tags/dev/random/</link>
+    <link>https://rastamouse.me/tags/dev/random/index.xml</link>
     <description>Recent content in /dev/random on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 12 Oct 2015 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/tags/dev/random/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -15,11 +14,11 @@
       <pubDate>Mon, 12 Oct 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/sleepy/</guid>
-      <description>
+      <description>&lt;p&gt;Sleepy is another ‘short’ VM created by &lt;a href=&#34;https://twitter.com/s4gi_&#34;&gt;Sagi-&lt;/a&gt;, although it’s slightly more difficult than &lt;a href=&#34;http://rastamouse.me/blog/2015/dev-random-pipe/&#34;&gt;Pipe&lt;/a&gt;.&lt;/p&gt;
 
-&lt;p&gt;Sleepy is another ‘short’ VM created by &lt;a href=&#34;https://twitter.com/s4gi_&#34;&gt;Sagi-&lt;/a&gt;, although it’s slightly more difficult than &lt;a href=&#34;http://rastamouse.me/blog/2015/dev-random-pipe/&#34;&gt;Pipe&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;ports:98b6e5636154869990609b71ad7243a9&#34;&gt;Ports&lt;/h2&gt;
+&lt;h2 id=&#34;ports&#34;&gt;Ports&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sT -p- -A 192.168.56.103
 PORT     STATE SERVICE VERSION
@@ -32,7 +31,7 @@ PORT     STATE SERVICE VERSION
 FTP allows anonymous login where you can download an image of Sleepy, but there appears to be nothing of interest with it.
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;jserv:98b6e5636154869990609b71ad7243a9&#34;&gt;JServ&lt;/h2&gt;
+&lt;h2 id=&#34;jserv&#34;&gt;JServ&lt;/h2&gt;
 
 &lt;p&gt;Apache JServ is a really interesting protocol - it’s basically designed to proxy inbound requests from a web server through to an application server. If you try to access port 8009 directly, you get no response.&lt;/p&gt;
 
@@ -74,7 +73,7 @@ root@kali:~# service apache2 restart
 
 &lt;p&gt;I tried all the obvious/default passwords for Tomcat Manager, but no success. Time to turn my attention to JDWP.&lt;/p&gt;
 
-&lt;h2 id=&#34;jdwp:98b6e5636154869990609b71ad7243a9&#34;&gt;JDWP&lt;/h2&gt;
+&lt;h2 id=&#34;jdwp&#34;&gt;JDWP&lt;/h2&gt;
 
 &lt;p&gt;We find that we can attach to the JDWP service without any authentication.&lt;/p&gt;
 
@@ -160,7 +159,7 @@ USERNAME   sl33py
 meterpreter &amp;gt;
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;tty-nightmare:98b6e5636154869990609b71ad7243a9&#34;&gt;TTY Nightmare&lt;/h2&gt;
+&lt;h2 id=&#34;tty-nightmare&#34;&gt;TTY Nightmare&lt;/h2&gt;
 
 &lt;p&gt;If we go in search for SUID binaries (owned by root), we find a suspicious looking candidate.&lt;/p&gt;
 
@@ -308,7 +307,7 @@ uid=0(root) gid=0(root) group=0(root),91(tomcat)
 
 &lt;p&gt;Sagi- has a nice trick for getting a proper interactive shell using &lt;code&gt;busybox&lt;/code&gt;, which you should definitely check out.&lt;/p&gt;
 
-&lt;h2 id=&#34;flag:98b6e5636154869990609b71ad7243a9&#34;&gt;Flag&lt;/h2&gt;
+&lt;h2 id=&#34;flag&#34;&gt;Flag&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;sh-4.2# cat /root/flag.txt
 Well done!
@@ -318,8 +317,7 @@ Here&#39;s your flag: 3eb030c6ab099b0a355712fe38d59ffb
 
 &lt;p&gt;This is the MD5 of &lt;code&gt;pewpewpew&lt;/code&gt; :)&lt;/p&gt;
 
-&lt;p&gt;Thanks Sagi- for another awesome VM - I learned a lot doing this one!&lt;/p&gt;
-</description>
+&lt;p&gt;Thanks Sagi- for another awesome VM - I learned a lot doing this one!&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -328,11 +326,11 @@ Here&#39;s your flag: 3eb030c6ab099b0a355712fe38d59ffb
       <pubDate>Fri, 02 Oct 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/pipe/</guid>
-      <description>
+      <description>&lt;p&gt;Pipe was a VM created by &lt;a href=&#34;https://twitter.com/s4gi_&#34;&gt;Sagi-&lt;/a&gt; for &lt;a href=&#34;http://zacon.org.za&#34;&gt;ZaCon&lt;/a&gt;.  It&amp;rsquo;s quite a short VM, presumably to fit confortably in a con session - but it&amp;rsquo;s fun nonetheless!&lt;/p&gt;
 
-&lt;p&gt;Pipe was a VM created by &lt;a href=&#34;https://twitter.com/s4gi_&#34;&gt;Sagi-&lt;/a&gt; for &lt;a href=&#34;http://zacon.org.za&#34;&gt;ZaCon&lt;/a&gt;.  It&amp;rsquo;s quite a short VM, presumably to fit confortably in a con session - but it&amp;rsquo;s fun nonetheless!&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h1 id=&#34;scan-dem-ports:378c41c5fac16f89c224b95690922b7e&#34;&gt;Scan dem Ports&lt;/h1&gt;
+&lt;h1 id=&#34;scan-dem-ports&#34;&gt;Scan dem Ports&lt;/h1&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -p- -A 192.168.56.102
 
@@ -359,7 +357,7 @@ PORT      STATE SERVICE VERSION
 36100/tcp open  status  1 (RPC #100024)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;verb-abuse:378c41c5fac16f89c224b95690922b7e&#34;&gt;Verb Abuse&lt;/h2&gt;
+&lt;h2 id=&#34;verb-abuse&#34;&gt;Verb Abuse&lt;/h2&gt;
 
 &lt;p&gt;Hop on over to the web service, and we&amp;rsquo;re blocked by an authorisation prompt.&lt;/p&gt;
 
@@ -506,7 +504,7 @@ meterpreter &amp;gt; getuid
 Server username: www-data (33)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;rene:378c41c5fac16f89c224b95690922b7e&#34;&gt;Rene&lt;/h2&gt;
+&lt;h2 id=&#34;rene&#34;&gt;Rene&lt;/h2&gt;
 
 &lt;p&gt;After looking around the file system a bit, I spotted some files in rene&amp;rsquo;s home directory.&lt;/p&gt;
 
@@ -564,7 +562,7 @@ whoami
 root
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;flag:378c41c5fac16f89c224b95690922b7e&#34;&gt;Flag&lt;/h2&gt;
+&lt;h2 id=&#34;flag&#34;&gt;Flag&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;                                                                   .aMMMMMMMMn.  ,aMMMMn.
                                                                  .aMccccccccc*YMMn.    `Mb
@@ -610,8 +608,7 @@ Y88b  d88PY8b.    Y88b.   888   888  888 Y8b.         X88Y88b.    888 d88P888  8
                                                                   888                                                   888        888
 Well Done!
 Here&#39;s your flag: 0089cd4f9ae79402cdd4e7b8931892b7
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
   </channel>

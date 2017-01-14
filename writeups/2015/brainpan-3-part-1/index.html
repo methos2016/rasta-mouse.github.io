@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">Brainpan: 3 - Part 1</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>As with the rest of the series, the focus of brainpan3 is on binary explotation.  The challenges in this VM are certainly a step-up in terms of difficultly compared to brainpan&rsquo;s 1 &amp; 2, and require you to bypass many common protection mechanisms.  On-and-off, it took me about 2 months to solve :s</p>
 
-<p>As with the rest of the series, the focus of brainpan3 is on binary explotation.  The challenges in this VM are certainly a step-up in terms of difficultly compared to brainpan&rsquo;s 1 &amp; 2, and require you to bypass many common protection mechanisms.  On-and-off, it took me about 2 months to solve :s</p>
+<p></p>
 
-<h2 id="port-scan:7a4f5a6448fafb319eff7e8a031bbd6b">Port Scan</h2>
+<h2 id="port-scan">Port Scan</h2>
 
 <pre><code class="language-text">root@kali:~# nmap -n -sT -p- -T5 192.168.56.105
 
@@ -66,7 +66,7 @@ PORT     STATE  SERVICE
 8080/tcp closed http-proxy
 </code></pre>
 
-<h2 id="access-code:7a4f5a6448fafb319eff7e8a031bbd6b">Access Code</h2>
+<h2 id="access-code">Access Code</h2>
 
 <pre><code class="language-text">root@kali:~# nc 192.168.56.105 1337
 
@@ -161,7 +161,7 @@ total 0
 -rw-rw-r-- 1 reynard reynard  0 May 10 22:26 down
 </code></pre>
 
-<h2 id="session-name:7a4f5a6448fafb319eff7e8a031bbd6b">Session Name</h2>
+<h2 id="session-name">Session Name</h2>
 
 <p>We have this banner across the top.</p>
 
@@ -245,7 +245,7 @@ Aborted (core dumped)
 
 <p>It&rsquo;s at this point we have to take a step back, without the actual binary to analyse I couldn&rsquo;t see a way of progressing this further.</p>
 
-<h2 id="some-trolls:7a4f5a6448fafb319eff7e8a031bbd6b">Some Trolls</h2>
+<h2 id="some-trolls">Some Trolls</h2>
 
 <p>Option <code>2  - VIEW CODE REPOSITORY</code> opens up port <code>8080</code> that we saw closed earlier.</p>
 
@@ -300,7 +300,7 @@ Aborted (core dumped)
      here's your shell
 </code></pre>
 
-<h2 id="report:7a4f5a6448fafb319eff7e8a031bbd6b">Report</h2>
+<h2 id="report">Report</h2>
 
 <p>The <code>report</code> binary is really where we need to focus our effort.</p>
 
@@ -366,7 +366,7 @@ gdb-peda$ x/s 0x8048e98
 
 <p>So the hostname of the machine has to be <code>brainpan3</code> before it&rsquo;ll go any further.  I&rsquo;m sure you could just NOP it out in gdb, or just change the hostname of your machine.  With that now working, I ran the binary twice.</p>
 
-<h2 id="bof-ing:7a4f5a6448fafb319eff7e8a031bbd6b">BoF&rsquo;ing</h2>
+<h2 id="bof-ing">BoF&rsquo;ing</h2>
 
 <pre><code class="language-text">root@brainpan3:~/bp3# ./report test 1
 [+] WRITING REPORT TO /home/anansi/REPORTS/20150919213852.rep
@@ -540,7 +540,7 @@ $ id
 uid=1000(anansi) gid=1003(webdev) groups=1000(anansi)
 </code></pre>
 
-<h2 id="reynard:7a4f5a6448fafb319eff7e8a031bbd6b">Reynard</h2>
+<h2 id="reynard">Reynard</h2>
 
 <pre><code class="language-text">$ ls -l /home/reynard/private
 total 16
@@ -697,7 +697,6 @@ $ ./cryptor $(./cryptor.py)
 $ id
 uid=1000(anansi) gid=1003(webdav) euid=1002(reynard) groups=1002(reynard)
 </code></pre>
-
   </section>
 </article>
 

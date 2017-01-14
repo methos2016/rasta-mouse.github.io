@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">Hell: 1 - Part 2</h1>
   <section class="body" itemprop="articleBody">
-    
-
-<h2 id="bazza:b7fe5a88214a93180782efcb19cdbc62">Bazza</h2>
+    <h2 id="bazza">Bazza</h2>
 
 <p>With this private key, I was able to SSH in as another user, Bazza.  Within his home directory are two binary files with some interesting permissions.</p>
+
+<p></p>
 
 <pre><code class="language-text">-r-xr-sr-x 1 oj   developers 6239 Jul  6 18:39 part1
 -r-sr-xr-x 1 oj   oj         5312 Jul  6 18:34 part2
@@ -133,7 +133,7 @@ oj
 
 <p>Now I am OJ (I wish I was as good as OJ)  :)</p>
 
-<h2 id="thecolonial:b7fe5a88214a93180782efcb19cdbc62">TheColonial</h2>
+<h2 id="thecolonial">TheColonial</h2>
 
 <p>This is the final hurdle, but it&rsquo;s a doosy.  There is a binary, <code>echo</code> in his home directory, owned by root and has the SUID bit set.</p>
 
@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
 <p>to be completed</p>
 </blockquote>
 
-<h2 id="flag:b7fe5a88214a93180782efcb19cdbc62">Flag</h2>
+<h2 id="flag">Flag</h2>
 
 <pre><code class="language-text">Congratulations of beating Hell. 
  
@@ -206,7 +206,7 @@ Hit me up on irc.freenode.net in #vulnhub with your thoughts (Peleus) or follow 
 Flag: a95fc0742092c50579afae5965a9787c54f1c641663def1697f394350d03e5a53420635c54fffc47476980343ab99951018fa6f71f030b9986c8ecbfc3a3d5de
 </code></pre>
 
-<h2 id="shout-outs:b7fe5a88214a93180782efcb19cdbc62">Shout-outs</h2>
+<h2 id="shout-outs">Shout-outs</h2>
 
 <p>This was a really tough challenge, and I wouldn&rsquo;t have been able to complete it without the collaboration of the other guys in #VulnHub.  Special thanks go to:</p>
 
@@ -215,7 +215,6 @@ Flag: a95fc0742092c50579afae5965a9787c54f1c641663def1697f394350d03e5a53420635c54
 <li>barrebas - for your general pointers and guidance, and;</li>
 <li>c0ne - for graciously donating your python split code.</li>
 </ul>
-
   </section>
 </article>
 

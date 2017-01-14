@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">Underdist: 3</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>Underdist: 3 was a weekend challenge being run by the <a href="http://underc0de.org">Underc0de</a> group.  I didn&rsquo;t take part in the event, but the VM found its way onto <a href="https://www.vulnhub.com/entry/underdist-3,108/">VulnHub</a>.  On a quiet Saturday evening, I thought I&rsquo;d give it a go (because that&rsquo;s how rock-n-roll I am).</p>
 
-<p>Underdist: 3 was a weekend challenge being run by the <a href="http://underc0de.org">Underc0de</a> group.  I didn&rsquo;t take part in the event, but the VM found its way onto <a href="https://www.vulnhub.com/entry/underdist-3,108/">VulnHub</a>.  On a quiet Saturday evening, I thought I&rsquo;d give it a go (because that&rsquo;s how rock-n-roll I am).</p>
+<p></p>
 
-<h2 id="nmap:69270f6e9a12eebdce6e7f610e03857c">Nmap</h2>
+<h2 id="nmap">Nmap</h2>
 
 <pre><code class="language-text">rasta@mouse:~$ sudo nmap -n -sS -A -p- 192.168.56.103
 
@@ -82,7 +82,7 @@ PORT   STATE SERVICE VERSION
 Permission denied (publickey).
 </code></pre>
 
-<h2 id="local-file-inclusion:69270f6e9a12eebdce6e7f610e03857c">Local File Inclusion</h2>
+<h2 id="local-file-inclusion">Local File Inclusion</h2>
 
 <p>Browsing to port 80, you see some cool ASCII art.</p>
 
@@ -208,7 +208,7 @@ Received: from underdist (unknown [192.168.56.101])
 this is a test!
 </code></pre>
 
-<h2 id="php-shell:69270f6e9a12eebdce6e7f610e03857c">PHP Shell</h2>
+<h2 id="php-shell">PHP Shell</h2>
 
 <p>I was now able to email <code>www-data</code> with PHP reverse shellcode and execute with the LFI.</p>
 
@@ -254,7 +254,7 @@ OS          : Linux Underdist 3.2.0-4-486 #1 Debian 3.2.63-2 i686
 Meterpreter : php/php
 </code></pre>
 
-<h2 id="private-key:69270f6e9a12eebdce6e7f610e03857c">Private Key</h2>
+<h2 id="private-key">Private Key</h2>
 
 <p>Now that I had a shell on the system, I could browse the filesystem properly and straight away, I found a funny directory.</p>
 
@@ -298,7 +298,7 @@ rasta@mouse:~/vulnhub/underdist-3$ ssh cuervo@192.168.56.103 -i foo.backup
 cuervo@Underdist:~$
 </code></pre>
 
-<h2 id="cronping:69270f6e9a12eebdce6e7f610e03857c">Cronping</h2>
+<h2 id="cronping">Cronping</h2>
 
 <p><code>underdist's</code> home directory is (partially) readable.</p>
 
@@ -331,7 +331,7 @@ underdist
 
 <p>I created <code>.ssh/authorzed_keys</code> with my public key in <code>underdist's</code> home directory for SSH access.</p>
 
-<h2 id="echo:69270f6e9a12eebdce6e7f610e03857c">Echo</h2>
+<h2 id="echo">Echo</h2>
 
 <p>Also within <code>/home/underdist</code> is a &lsquo;hidden&rsquo; directory which can only be accessed by <code>underdist</code>.</p>
 
@@ -375,7 +375,7 @@ RELRO           STACK CANARY      NX            PIE             RPATH      RUNPA
 No RELRO        No canary found   NX disabled   No PIE          No RPATH   No RUNPATH   echo
 </code></pre>
 
-<h2 id="ret2libc:69270f6e9a12eebdce6e7f610e03857c">ret2libc</h2>
+<h2 id="ret2libc">ret2libc</h2>
 
 <p>Even though there&rsquo;s no NX (allowing one to include shellcode directly in the exploit), I find the ret2libc technique easier and quicker to get working.</p>
 
@@ -424,7 +424,7 @@ uid=1000(underdist) gid=1000(underdist) euid=0(root) grupos=0(root),24(cdrom),25
 root
 </code></pre>
 
-<h2 id="flag:69270f6e9a12eebdce6e7f610e03857c">Flag</h2>
+<h2 id="flag">Flag</h2>
 
 <pre><code class="language-text">
 
@@ -452,7 +452,6 @@ Felicidades H4x0r! resolviste el reto!
 
 Mandame tu solucionario a: a.denegado@gmail.com
 </code></pre>
-
   </section>
 </article>
 

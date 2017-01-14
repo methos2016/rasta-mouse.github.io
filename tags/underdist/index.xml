@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Underdist on rastamouse.me</title>
-    <link>https://rastamouse.me/tags/underdist/</link>
-    <description>Recent content in Underdist on rastamouse.me</description>
+    <title>underdist on rastamouse.me</title>
+    <link>https://rastamouse.me/tags/underdist/index.xml</link>
+    <description>Recent content in underdist on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 03 Jan 2015 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/tags/underdist/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -15,11 +14,11 @@
       <pubDate>Sat, 03 Jan 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/underdist-3/</guid>
-      <description>
+      <description>&lt;p&gt;Underdist: 3 was a weekend challenge being run by the &lt;a href=&#34;http://underc0de.org&#34;&gt;Underc0de&lt;/a&gt; group.  I didn&amp;rsquo;t take part in the event, but the VM found its way onto &lt;a href=&#34;https://www.vulnhub.com/entry/underdist-3,108/&#34;&gt;VulnHub&lt;/a&gt;.  On a quiet Saturday evening, I thought I&amp;rsquo;d give it a go (because that&amp;rsquo;s how rock-n-roll I am).&lt;/p&gt;
 
-&lt;p&gt;Underdist: 3 was a weekend challenge being run by the &lt;a href=&#34;http://underc0de.org&#34;&gt;Underc0de&lt;/a&gt; group.  I didn&amp;rsquo;t take part in the event, but the VM found its way onto &lt;a href=&#34;https://www.vulnhub.com/entry/underdist-3,108/&#34;&gt;VulnHub&lt;/a&gt;.  On a quiet Saturday evening, I thought I&amp;rsquo;d give it a go (because that&amp;rsquo;s how rock-n-roll I am).&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;nmap:69270f6e9a12eebdce6e7f610e03857c&#34;&gt;Nmap&lt;/h2&gt;
+&lt;h2 id=&#34;nmap&#34;&gt;Nmap&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;rasta@mouse:~$ sudo nmap -n -sS -A -p- 192.168.56.103
 
@@ -45,7 +44,7 @@ PORT   STATE SERVICE VERSION
 Permission denied (publickey).
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;local-file-inclusion:69270f6e9a12eebdce6e7f610e03857c&#34;&gt;Local File Inclusion&lt;/h2&gt;
+&lt;h2 id=&#34;local-file-inclusion&#34;&gt;Local File Inclusion&lt;/h2&gt;
 
 &lt;p&gt;Browsing to port 80, you see some cool ASCII art.&lt;/p&gt;
 
@@ -171,7 +170,7 @@ Received: from underdist (unknown [192.168.56.101])
 this is a test!
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;php-shell:69270f6e9a12eebdce6e7f610e03857c&#34;&gt;PHP Shell&lt;/h2&gt;
+&lt;h2 id=&#34;php-shell&#34;&gt;PHP Shell&lt;/h2&gt;
 
 &lt;p&gt;I was now able to email &lt;code&gt;www-data&lt;/code&gt; with PHP reverse shellcode and execute with the LFI.&lt;/p&gt;
 
@@ -217,7 +216,7 @@ OS          : Linux Underdist 3.2.0-4-486 #1 Debian 3.2.63-2 i686
 Meterpreter : php/php
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;private-key:69270f6e9a12eebdce6e7f610e03857c&#34;&gt;Private Key&lt;/h2&gt;
+&lt;h2 id=&#34;private-key&#34;&gt;Private Key&lt;/h2&gt;
 
 &lt;p&gt;Now that I had a shell on the system, I could browse the filesystem properly and straight away, I found a funny directory.&lt;/p&gt;
 
@@ -261,7 +260,7 @@ rasta@mouse:~/vulnhub/underdist-3$ ssh cuervo@192.168.56.103 -i foo.backup
 cuervo@Underdist:~$
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;cronping:69270f6e9a12eebdce6e7f610e03857c&#34;&gt;Cronping&lt;/h2&gt;
+&lt;h2 id=&#34;cronping&#34;&gt;Cronping&lt;/h2&gt;
 
 &lt;p&gt;&lt;code&gt;underdist&#39;s&lt;/code&gt; home directory is (partially) readable.&lt;/p&gt;
 
@@ -294,7 +293,7 @@ underdist
 
 &lt;p&gt;I created &lt;code&gt;.ssh/authorzed_keys&lt;/code&gt; with my public key in &lt;code&gt;underdist&#39;s&lt;/code&gt; home directory for SSH access.&lt;/p&gt;
 
-&lt;h2 id=&#34;echo:69270f6e9a12eebdce6e7f610e03857c&#34;&gt;Echo&lt;/h2&gt;
+&lt;h2 id=&#34;echo&#34;&gt;Echo&lt;/h2&gt;
 
 &lt;p&gt;Also within &lt;code&gt;/home/underdist&lt;/code&gt; is a &amp;lsquo;hidden&amp;rsquo; directory which can only be accessed by &lt;code&gt;underdist&lt;/code&gt;.&lt;/p&gt;
 
@@ -338,7 +337,7 @@ RELRO           STACK CANARY      NX            PIE             RPATH      RUNPA
 No RELRO        No canary found   NX disabled   No PIE          No RPATH   No RUNPATH   echo
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;ret2libc:69270f6e9a12eebdce6e7f610e03857c&#34;&gt;ret2libc&lt;/h2&gt;
+&lt;h2 id=&#34;ret2libc&#34;&gt;ret2libc&lt;/h2&gt;
 
 &lt;p&gt;Even though there&amp;rsquo;s no NX (allowing one to include shellcode directly in the exploit), I find the ret2libc technique easier and quicker to get working.&lt;/p&gt;
 
@@ -387,7 +386,7 @@ uid=1000(underdist) gid=1000(underdist) euid=0(root) grupos=0(root),24(cdrom),25
 root
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;flag:69270f6e9a12eebdce6e7f610e03857c&#34;&gt;Flag&lt;/h2&gt;
+&lt;h2 id=&#34;flag&#34;&gt;Flag&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;
 
@@ -414,8 +413,7 @@ root
 Felicidades H4x0r! resolviste el reto!
 
 Mandame tu solucionario a: a.denegado@gmail.com
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
   </channel>

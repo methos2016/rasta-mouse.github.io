@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">NullByte 0x01</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>NullByte is a hacking challenge created by <a href="https://twitter.com/@ly0nx">ly0n</a>, pitched at a beginner-intermediate level.  The objective is to grab the flag.</p>
 
-<p>NullByte is a hacking challenge created by <a href="https://twitter.com/@ly0nx">ly0n</a>, pitched at a beginner-intermediate level.  The objective is to grab the flag.</p>
+<p></p>
 
-<h2 id="port-scan:485cf21adfc47fdddfc7e45f092151aa">Port Scan</h2>
+<h2 id="port-scan">Port Scan</h2>
 
 <pre><code class="language-text">root@kali:~# nmap -n -A 192.168.56.102
 
@@ -178,7 +178,7 @@ EMP POSITION : employee
 Fetched data successfully
 </code></pre>
 
-<h2 id="sqli:485cf21adfc47fdddfc7e45f092151aa">SQLi</h2>
+<h2 id="sqli">SQLi</h2>
 
 <p>I threw <code>sqlmap</code> at the page, to try injections in the <code>usrtosearch</code> field. Luckily, it returned a few blind-based possible injections.</p>
 
@@ -235,7 +235,7 @@ Loaded 1 password hash (Raw-MD5 [MD5 32/32])
 omega            (?)
 </code></pre>
 
-<h2 id="ssh:485cf21adfc47fdddfc7e45f092151aa">SSH</h2>
+<h2 id="ssh">SSH</h2>
 
 <p>The credentials <code>ramses:omega</code> can also be used to log in via SSH, remember on port 777.</p>
 
@@ -246,7 +246,7 @@ ramses@NullByte:~$ pwd
 /home/ramses
 </code></pre>
 
-<h2 id="procwatch-suid:485cf21adfc47fdddfc7e45f092151aa">procwatch SUID</h2>
+<h2 id="procwatch-suid">procwatch SUID</h2>
 
 <p><code>.bash_history</code> has references to <code>/var/www/backup/procwatch</code>, which turns out to be a SUID binary owned by <code>root</code>.</p>
 
@@ -364,7 +364,7 @@ uid=1002(ramses) gid=1002(ramses) euid=0(root) groups=1002(ramses)
 root
 </code></pre>
 
-<h2 id="flag:485cf21adfc47fdddfc7e45f092151aa">Flag</h2>
+<h2 id="flag">Flag</h2>
 
 <pre><code class="language-text"># cat /root/proof.txt
 adf11c7a9e6523e630aaf3b9b7acb51d
@@ -381,7 +381,6 @@ USE THIS PGP PUBLIC KEY
 [...snip...]
 -----END PGP PUBLIC KEY BLOCK-----
 </code></pre>
-
   </section>
 </article>
 

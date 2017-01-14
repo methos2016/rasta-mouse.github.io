@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,11 +52,11 @@
   </div>
   <h1 class="headline" itemprop="headline">Kioptrix 2014</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p>After a 2 year (hiatus?) since the last Kioptrix VM challenge, loneferret has released Kioptrix 2014.  This is still an &lsquo;entry level&rsquo; challenge, though it does have some interesting spins typical of loneferret&rsquo;s style of VM challenges.  The goal of the challenge is to obtain the flag.</p>
 
-<p>After a 2 year (hiatus?) since the last Kioptrix VM challenge, loneferret has released Kioptrix 2014.  This is still an &lsquo;entry level&rsquo; challenge, though it does have some interesting spins typical of loneferret&rsquo;s style of VM challenges.  The goal of the challenge is to obtain the flag.</p>
+<p></p>
 
-<h2 id="nmap:026e58d39a8939d7b2fc2f771f0be136">Nmap</h2>
+<h2 id="nmap">Nmap</h2>
 
 <pre><code class="language-text">root@kali:~# nmap -n -sV -A -p- 192.168.1.125
 
@@ -73,7 +73,7 @@ OS CPE: cpe:/o:freebsd:freebsd:9
 OS details: FreeBSD 9.0-RELEASE
 </code></pre>
 
-<h2 id="nikto-wfuzz:026e58d39a8939d7b2fc2f771f0be136">Nikto, Wfuzz</h2>
+<h2 id="nikto-wfuzz">Nikto, Wfuzz</h2>
 
 <p>Since only web services are available, nikto and wfuzz seemed like a good place to start.</p>
 
@@ -92,7 +92,7 @@ root@kali:~# wfuzz -c -zfile,/usr/share/wfuzz/wordlist/general/common.txt --hc 4
 
 <p>This gives away the presence of another webapp.  Typing the address in manually takes you to <code>pChart 2.1.3</code>.</p>
 
-<h2 id="pchart:026e58d39a8939d7b2fc2f771f0be136">pChart</h2>
+<h2 id="pchart">pChart</h2>
 
 <div align="center">
 	<figure style="background-color: #f2f0ec;" >
@@ -141,7 +141,7 @@ Directory &quot;/usr/local/www/apache22/data2&quot;
 </figure>
 </div>
 
-<h2 id="phptax:026e58d39a8939d7b2fc2f771f0be136">phpTax</h2>
+<h2 id="phptax">phpTax</h2>
 
 <p>More research told me that this application was vulnerable to RCE - at last something that would help me get a shell!</p>
 
@@ -174,7 +174,7 @@ cmd.php data drawimage.php files icons.inc index.php maps pictures readme shell.
 
 <p><code>192.168.1.125:8080/phptax/shell.php</code></p>
 
-<h2 id="privilege-escalation:026e58d39a8939d7b2fc2f771f0be136">Privilege Escalation</h2>
+<h2 id="privilege-escalation">Privilege Escalation</h2>
 
 <p>It turned out that escalating myself to root was relatively simple.  I found a <a href="http://www.exploit-db.com/exploits/28718/">suitable kernel exploit</a> and transfered it across using <code>netcat</code>.  Compiled and ran:</p>
 
@@ -195,7 +195,6 @@ cat congrats.txt
 If you are reading this, it means you got root (or cheated).
 Congratulations either way...
 </code></pre>
-
   </section>
 </article>
 

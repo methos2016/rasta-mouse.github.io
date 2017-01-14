@@ -5,7 +5,7 @@
 <meta name="description" content="">
 <meta name="keywords" content="">
 <meta name="author" content="">
-<meta name="generator" content="Hugo 0.15" />
+<meta name="generator" content="Hugo 0.18.1" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://rastamouse.me/css/style.css" type="text/css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,700" type="text/css">
@@ -52,9 +52,9 @@
   </div>
   <h1 class="headline" itemprop="headline">The Infernal: Hades - Part 2</h1>
   <section class="body" itemprop="articleBody">
-    
+    <p></p>
 
-<h2 id="ssh-persistence:b4994bab40eb34750ec826f32c93e1ca">SSH Persistence</h2>
+<h2 id="ssh-persistence">SSH Persistence</h2>
 
 <p>With shell access as loki, I did some standard system enumeration and found that he was the only user, and that SSH was running.  Loki didn&rsquo;t have a <code>.ssh</code> directory in his home folder, so I created one and popped my public SSH key into <code>authorized_keys</code>.</p>
 
@@ -97,7 +97,7 @@ Connection to 192.168.127.128 closed.
 
 <p>The damn VM just rebooted itself!  I thought perhaps this may&rsquo;ve been because I entered a long string of A&rsquo;s, but I tried it again with normal words and the same thing happened.  I downloaded the file to my Kali VM for analysis.</p>
 
-<h2 id="give-me-key:b4994bab40eb34750ec826f32c93e1ca">Give me Key!</h2>
+<h2 id="give-me-key">Give me Key!</h2>
 
 <pre><code class="language-text">root@kali:~/hades# checksec --file display_key
 RELRO           STACK CANARY      NX            PIE             RPATH      RUNPATH      FILE
@@ -138,13 +138,13 @@ Segmentation fault
 [pid  2949] [b77d0424] write(2, &quot;\n&quot;, 1
 </code></pre>
 
-<h2 id="v1-bug:b4994bab40eb34750ec826f32c93e1ca">v1 Bug</h2>
+<h2 id="v1-bug">v1 Bug</h2>
 
 <p>This shows that <code>reboot</code> is executed, but an absolute path is not coded into the binary, which is why it cycles through each of the envronmental paths (<code>PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin</code>).  It was later reported that this was an unintentional bug in the VM, as it made it a little too easy to get root access.  All that was required was to place a binary or symlink into any directory, name it reboot, and insert a new directory into the PATH variable.  This could be used to execute a new instance of <code>/bin/bash</code>, for example, as root.</p>
 
 <p>This was fixed in v1.0.1 of the challenge.</p>
 
-<h2 id="a-man-s-solution:b4994bab40eb34750ec826f32c93e1ca">A Man&rsquo;s Solution!</h2>
+<h2 id="a-man-s-solution">A Man&rsquo;s Solution!</h2>
 
 <p>I was able to crash the application by sending 100 A&rsquo;s as a password.  I loaded it up in GDB to confirm.</p>
 
@@ -240,7 +240,7 @@ Segmentation fault
 
 <p>The application still seg faults, but at least my exploit worked!</p>
 
-<h2 id="get-to-da-flag:b4994bab40eb34750ec826f32c93e1ca">Get to da Flag</h2>
+<h2 id="get-to-da-flag">Get to da Flag</h2>
 
 <p>I coped the hades root private key to my Kali VM, and was able to SSH in as root :)</p>
 
@@ -283,7 +283,6 @@ bad decrypt
     
 </figure>
 </div>
-
   </section>
 </article>
 

@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Gibson on rastamouse.me</title>
-    <link>https://rastamouse.me/tags/gibson/</link>
-    <description>Recent content in Gibson on rastamouse.me</description>
+    <title>gibson on rastamouse.me</title>
+    <link>https://rastamouse.me/tags/gibson/index.xml</link>
+    <description>Recent content in gibson on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 21 May 2016 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/tags/gibson/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
@@ -15,15 +14,19 @@
       <pubDate>Sat, 21 May 2016 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2016/gibson/</guid>
-      <description>
+      <description>&lt;p&gt;&lt;/p&gt;
 
-&lt;h1 id=&#34;livestream:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;Livestream&lt;/h1&gt;
+&lt;h1 id=&#34;livestream&#34;&gt;Livestream&lt;/h1&gt;
 
-&lt;p&gt;&lt;iframe src=&#34;https://player.twitch.tv/?video=v67731859&#34; frameborder=&#34;0&#34; scrolling=&#34;no&#34; height=&#34;448&#34; width=&#34;735&#34;&gt;&lt;/iframe&gt;&lt;a href=&#34;https://www.twitch.tv/rastamaus?tt_medium=live_embed&amp;tt_content=text_link&#34; target=&#34;_blank&#34; style=&#34;padding:2px 0px 4px; display:block; width:345px; font-weight:normal; font-size:10px;text-decoration:underline;&#34;&gt;Watch live video from RastaMaus on www.twitch.tv&lt;/a&gt;&lt;/p&gt;
 
-&lt;h1 id=&#34;writeup:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;Writeup&lt;/h1&gt;
+&lt;div style=&#34;position: relative; padding-bottom: 56.25%; padding-top: 30px; height: 0; overflow: hidden;&#34;&gt;
+  &lt;iframe src=&#34;//www.youtube.com/embed/XHqZ0uplIQE&#34; style=&#34;position: absolute; top: 0; left: 0; width: 100%; height: 100%;&#34; allowfullscreen frameborder=&#34;0&#34;&gt;&lt;/iframe&gt;
+ &lt;/div&gt;
 
-&lt;h2 id=&#34;nmap:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;nmap&lt;/h2&gt;
+
+&lt;h1 id=&#34;writeup&#34;&gt;Writeup&lt;/h1&gt;
+
+&lt;h2 id=&#34;nmap&#34;&gt;nmap&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code&gt;root@kali:~# nmap -n -p- -sV 192.168.56.102
 
@@ -31,7 +34,7 @@
 80/tcp open  http    Apache httpd 2.4.7
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;davinci:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;davinci&lt;/h2&gt;
+&lt;h2 id=&#34;davinci&#34;&gt;davinci&lt;/h2&gt;
 
 &lt;p&gt;Opening the page in Iceweasel, we get a simple directory lising with &lt;code&gt;davinci.html&lt;/code&gt;.&lt;/p&gt;
 
@@ -45,7 +48,7 @@
 &amp;lt;/body&amp;gt;
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;ssh:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;SSH&lt;/h2&gt;
+&lt;h2 id=&#34;ssh&#34;&gt;SSH&lt;/h2&gt;
 
 &lt;p&gt;We can use &lt;code&gt;margo:god&lt;/code&gt; to establish an SSH session :)&lt;/p&gt;
 
@@ -65,7 +68,7 @@ User margo may run the following commands on gibson:
     (ALL) NOPASSWD: /usr/bin/convert
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;image-tragick:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;Image Tragick&lt;/h2&gt;
+&lt;h2 id=&#34;image-tragick&#34;&gt;Image Tragick&lt;/h2&gt;
 
 &lt;p&gt;We&amp;rsquo;ll check the version first to make sure it is vulnerable.&lt;/p&gt;
 
@@ -80,7 +83,7 @@ Version: ImageMagick 6.7.7-10
 uid=0(root) gid=0(root) groups=0(root)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;where-art-thou-flag:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;Where art thou, flag?&lt;/h2&gt;
+&lt;h2 id=&#34;where-art-thou-flag&#34;&gt;Where art thou, flag?&lt;/h2&gt;
 
 &lt;p&gt;There&amp;rsquo;s no flag in &lt;code&gt;/root&lt;/code&gt;, so it looks like we&amp;rsquo;ll have to look at little deeper.&lt;/p&gt;
 
@@ -123,7 +126,7 @@ root@kali:~# file ftpserv.img
 ftpserv.img: DOS/MBR boot sector, FREE-DOS Beta 0.9 MBR; partition 1 : ID=0xe, active, start-CHS (0x0,1,1), end-CHS (0xf,15,63), startsector 63, 1048257 sectors
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;sleuthing:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;Sleuthing&lt;/h2&gt;
+&lt;h2 id=&#34;sleuthing&#34;&gt;Sleuthing&lt;/h2&gt;
 
 &lt;p&gt;First, display the partition layout of the volume with &lt;code&gt;mmls&lt;/code&gt;&lt;/p&gt;
 
@@ -249,12 +252,11 @@ to host the CTF once more.
                                                               --Knightmare
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;shout-outs:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;Shout outs&lt;/h2&gt;
+&lt;h2 id=&#34;shout-outs&#34;&gt;Shout outs&lt;/h2&gt;
 
 &lt;p&gt;Thanks &lt;code&gt;knightmare&lt;/code&gt; for the VM and the continued hints throughout the livestream :)&lt;/p&gt;
 
-&lt;p&gt;Thanks to everyone who stopped by for the livestream and particularly to those who posted in Twitch chat and the IRC channel.  Honourable mentions go to &lt;code&gt;rfc&lt;/code&gt;, &lt;code&gt;dqi&lt;/code&gt; and &lt;code&gt;superkojiman&lt;/code&gt;.&lt;/p&gt;
-</description>
+&lt;p&gt;Thanks to everyone who stopped by for the livestream and particularly to those who posted in Twitch chat and the IRC channel.  Honourable mentions go to &lt;code&gt;rfc&lt;/code&gt;, &lt;code&gt;dqi&lt;/code&gt; and &lt;code&gt;superkojiman&lt;/code&gt;.&lt;/p&gt;</description>
     </item>
     
   </channel>

