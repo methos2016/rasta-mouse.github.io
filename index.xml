@@ -20,7 +20,38 @@
 
 &lt;div style=&#34;position: relative; padding-bottom: 56.25%; padding-top: 30px; height: 0; overflow: hidden;&#34;&gt;
   &lt;iframe src=&#34;//www.youtube.com/embed/9Lc2X1RjpZs&#34; style=&#34;position: absolute; top: 0; left: 0; width: 100%; height: 100%;&#34; allowfullscreen frameborder=&#34;0&#34;&gt;&lt;/iframe&gt;
- &lt;/div&gt;</description>
+ &lt;/div&gt;
+
+
+&lt;h3 id=&#34;event-timeline&#34;&gt;Event Timeline&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;13/12/16&lt;/strong&gt; Vulnerabilities Discovered&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;17/12/16&lt;/strong&gt; Vendor Notified:  Notified of vulnerabilities, requested channel for secure comms (no reply).&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;17/12/16&lt;/strong&gt; CVEs Requested&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;xx/xx/xx&lt;/strong&gt; Contact Vendor again&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;xx/xx/xx&lt;/strong&gt; Reply from Vendor: Not really interested - suggested to implement mitigating network defenses to prevent server hosting Automize being from compromised.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;03/01/17&lt;/strong&gt; CVEs Assigned&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;xx/xx/xx&lt;/strong&gt; Update to Vendor: Provided CVE details and final confirmation of any plans to fix.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;xx/xx/xx&lt;/strong&gt; Reply from Vendor:  Added to wishlist for 12.x, but no plans to issue a patch for older versions.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;14/01/17&lt;/strong&gt; Public Disclosure&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;cve-ids&#34;&gt;CVE IDs&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;CVE-2016-10101&lt;/li&gt;
+&lt;li&gt;CVE-2016-10102&lt;/li&gt;
+&lt;li&gt;CVE-2016-10103&lt;/li&gt;
+&lt;li&gt;CVE-2016-10104&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;shoutouts&#34;&gt;Shoutouts&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://twitter.com/sizzop&#34;&gt;sizzop&lt;/a&gt; - he knows why :)&lt;/li&gt;
+&lt;li&gt;CVE Assignment Team for accepting these requests, even though this vendor normally out of scope.&lt;/li&gt;
+&lt;/ul&gt;</description>
     </item>
     
     <item>
